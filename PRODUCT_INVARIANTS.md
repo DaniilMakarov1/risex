@@ -9,6 +9,8 @@
 
 ## PnL constants
 
+The single authoritative code contract for these constants is `ProductRules`.
+
 - Points value is `0`.
 - Expected airdrop value is `0`.
 - Leaderboard rewards are `0` in base PnL.
@@ -47,6 +49,10 @@ A route may be rejected only when:
 5. An exchange, market, or mode is disabled.
 6. The ledger is not reconciled.
 7. There is no fresh `CapturePlan`.
+8. The route does not meet `MIN_LEG_NOTIONAL_USD`.
+9. The order book cannot execute the configured minimum notional on a required leg.
+
+Code represents these with the centralized `RejectReason` enum.
 
 ## No artificial filters
 
@@ -55,3 +61,12 @@ Do not add arbitrary max spread, arbitrary max price impact, arbitrary max level
 ## Unknown values
 
 Unknown values must not silently become zero. If a fee is unknown, use only a user-configured default fee with source `USER_CONFIGURED`. If exact funding is unknown, a future task may use last observed funding before settlement with source `ESTIMATED_FROM_LAST_VALUE`. If there is no funding estimate, the route cannot be `LIVE_ELIGIBLE`.
+
+Allowed value sources are exactly:
+
+- `DOCUMENTED`
+- `OBSERVED`
+- `ESTIMATED_FROM_ORDERBOOK`
+- `ESTIMATED_FROM_LAST_VALUE`
+- `USER_CONFIGURED`
+- `UNKNOWN`

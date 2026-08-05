@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from core.accounting.ledger import InMemoryLedger, append_decision_event
 from core.config.product_rules import ProductRules
 from core.domain.contracts import Capture, CapturePlan, DecisionResult, RouteCandidate, VenueSnapshot
-from core.domain.enums import CaptureState, EvaluationMode, RouteStatus
+from core.domain.enums import CaptureState, EvaluationMode, RejectReason, RouteStatus
 from core.economics.ev import calculate_entry_ev
 from core.risk.gates import (
     check_live_capture_allowed,
@@ -21,7 +21,7 @@ def _reject(
     *,
     route: RouteCandidate,
     mode: EvaluationMode,
-    reason: str,
+    reason: RejectReason,
     ledger: InMemoryLedger | None,
 ) -> DecisionResult:
     decision = DecisionResult(
@@ -49,11 +49,21 @@ def evaluate_route(
 
     ok, reason = check_min_leg_notional(route, active_rules)
     if not ok:
-        return _reject(route=route, mode=mode, reason=reason or "min_leg_notional_not_met", ledger=ledger)
+        return _reject(
+            route=route,
+            mode=mode,
+            reason=reason or RejectReason.MIN_LEG_NOTIONAL_NOT_MET,
+            ledger=ledger,
+        )
 
     ok, reason = check_snapshot_executability(snapshot, active_rules)
     if not ok:
-        return _reject(route=route, mode=mode, reason=reason or "not_executable_for_min_notional", ledger=ledger)
+        return _reject(
+            route=route,
+            mode=mode,
+            reason=reason or RejectReason.ORDERBOOK_NOT_EXECUTABLE_FOR_MIN_NOTIONAL,
+            ledger=ledger,
+        )
 
     entry_ev = calculate_entry_ev(snapshot)
     ok, reason = check_min_net_profit(entry_ev.net_profit_usd, active_rules)
@@ -62,7 +72,7 @@ def evaluate_route(
             route_id=route.route_id,
             mode=mode,
             status=RouteStatus.REJECTED,
-            reasons=(reason or "min_net_profit_not_met",),
+            reasons=(reason or RejectReason.MIN_NET_PROFIT_NOT_MET,),
             net_profit_usd=entry_ev.net_profit_usd,
             entry_ev=entry_ev,
         )

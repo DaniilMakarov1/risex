@@ -38,9 +38,12 @@ tests/
 - `RouteCandidate`: a potential RiseX + hedge route.
 - `VenueSnapshot`: normalized current market and cash-flow inputs.
 - `ExecutableQuote`: current executable VWAP quote for a target notional.
+- `EstimatedValue`: numeric value plus explicit source, with `UNKNOWN` carrying no numeric fallback.
 - `DecisionResult`: result of the shared decision pipeline.
 - `RouteStatus`: `RESEARCH_ONLY`, `PAPER_ELIGIBLE`, `LIVE_ELIGIBLE`, `REJECTED`.
 - `EvaluationMode`: `DISCOVERY` or `ENTRY`.
+- `ValueSource`: `DOCUMENTED`, `OBSERVED`, `ESTIMATED_FROM_ORDERBOOK`, `ESTIMATED_FROM_LAST_VALUE`, `USER_CONFIGURED`, `UNKNOWN`.
+- `RejectReason`: the centralized route rejection and live-gate reason enum.
 
 ## Capture lifecycle state machine
 
@@ -90,22 +93,44 @@ Any non-terminal Capture may transition to `FAILED`. Capture states with possibl
 - Orders can be sent only through `core/execution/`.
 - Ledger writes happen only through `core/accounting/ledger.py`.
 
+## Product rules
+
+`core/config/product_rules.py` owns the single authoritative `ProductRules` object for product-level constants:
+
+- `min_leg_notional_usd = 500`
+- `min_net_profit_usd = 1`
+- `live_trading_enabled = false`
+- `points_value_usd = 0`
+- `expected_airdrop_value_usd = 0`
+- `leaderboard_rewards_base_pnl_usd = 0`
+- `unreceived_rebates_usd = 0`
+
+No other config object owns those same product constants.
+
 ## Evaluation pipeline
 
 `evaluate_route(route, snapshot, mode)` is the only route decision path.
 
-RX-000 behavior:
+RX-002 behavior:
 
 1. Verify the route and all fake executable VWAP quotes can represent the configured minimum notional.
 2. Calculate entry EV from explicit funding, explicit fees, and simulated immediate roundtrip cost.
-3. Reject only when technical executability fails or net profit is below the configured minimum.
-4. Return `PAPER_ELIGIBLE` for profitable fake routes while live gates are not implemented.
-5. Never place orders.
-6. Optionally append the decision event to the ledger through `core/accounting/ledger.py`.
+3. Reject through centralized `RejectReason` values, not ad hoc reason strings.
+4. Reject when minimum leg notional is not met, order-book quotes cannot execute the configured minimum notional, or net profit is below the configured minimum.
+5. Return `PAPER_ELIGIBLE` for profitable fake routes while live gates are not implemented.
+6. Never create a live `CapturePlan` while `live_trading_enabled = false`.
+7. Never place orders.
+8. Optionally append the decision event to the ledger through `core/accounting/ledger.py`.
 
 ## No artificial filters
 
 Spread, price impact, basis, slippage, and fees are not independent arbitrary reject filters. They must be represented in executable VWAP, fee, funding, and PnL calculations.
+
+`ProductRules` intentionally has no arbitrary `max_spread_bps`, `max_price_impact_bps`, `max_levels_consumed`, hidden conservative buffer, or safety margin fields. Invariant tests enforce that those fake runtime filters are not introduced.
+
+## Unknown values
+
+Unknown values must not silently become zero. `EstimatedValue` requires `source=UNKNOWN` values to carry no numeric value, and callers must use source-aware handling before a value can participate in economics. Future fee defaults must use `USER_CONFIGURED`; future last-observed funding estimates must use `ESTIMATED_FROM_LAST_VALUE`.
 
 ## Entry and exit economics
 

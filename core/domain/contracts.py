@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from decimal import Decimal
+from types import MappingProxyType
 from typing import Any, Literal
 
-from core.domain.enums import CaptureState, EvaluationMode, RouteStatus
+from core.domain.enums import CaptureState, EvaluationMode, RejectReason, RouteStatus, ValueSource
 
 OrderSide = Literal["buy", "sell"]
 
@@ -50,6 +52,34 @@ class ExecutableQuote:
 
 
 @dataclass(frozen=True, slots=True)
+class EstimatedValue:
+    """A numeric value with an explicit source.
+
+    UNKNOWN values intentionally carry no numeric fallback. Callers must choose
+    a source-aware default upstream instead of silently treating UNKNOWN as zero.
+    """
+
+    value: Decimal | None
+    source: ValueSource
+    description: str | None = None
+    metadata: Mapping[str, str] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "metadata", MappingProxyType(dict(self.metadata)))
+        if self.source is ValueSource.UNKNOWN and self.value is not None:
+            raise ValueError("UNKNOWN values must not carry a numeric value")
+        if self.source is not ValueSource.UNKNOWN and self.value is None:
+            raise ValueError("Known value sources require a numeric value")
+
+    def require_value(self) -> Decimal:
+        """Return the numeric value, rejecting UNKNOWN instead of returning zero."""
+
+        if self.source is ValueSource.UNKNOWN or self.value is None:
+            raise ValueError("UNKNOWN values must not silently become zero")
+        return self.value
+
+
+@dataclass(frozen=True, slots=True)
 class VenueSnapshot:
     """Fake normalized snapshot used by the non-trading walking skeleton."""
 
@@ -87,7 +117,7 @@ class DecisionResult:
     route_id: str
     mode: EvaluationMode
     status: RouteStatus
-    reasons: tuple[str, ...]
+    reasons: tuple[RejectReason, ...]
     net_profit_usd: Decimal | None = None
     entry_ev: Any | None = None
     capture_plan: CapturePlan | None = None

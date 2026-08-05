@@ -8,7 +8,12 @@ from decimal import Decimal
 
 @dataclass(frozen=True, slots=True)
 class ProductRules:
-    """Explicit product constants for the RiseX points farmer."""
+    """Authoritative product constants for the RiseX points farmer.
+
+    This contract intentionally contains no arbitrary max spread, max price
+    impact, max levels consumed, hidden conservative buffer, or safety margin
+    fields. Those market effects belong inside executable VWAP and PnL inputs.
+    """
 
     min_leg_notional_usd: Decimal = Decimal("500")
     min_net_profit_usd: Decimal = Decimal("1")
