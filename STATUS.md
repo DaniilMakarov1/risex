@@ -1,10 +1,10 @@
 # Status
 
-- Last accepted task: RX-001 — Domain Contracts and Capture State Machine
-- Accepted baseline RX-001 HEAD: `53f3b35c62f3ec510cb7c0f40d2784e3788ae2a5`
-- Current task: RX-002 — Product Rules, Config Contracts, and No-Artificial-Filters Enforcement
-- Current branch: task/rx-002-product-rules-config
-- Repository state at task start: clean checkout at accepted baseline RX-001 HEAD
+- Last accepted task: RX-002 — Product Rules, Config Contracts, and No-Artificial-Filters Enforcement
+- Accepted baseline RX-002 HEAD: `35dabda35fa569385a9f7c787346e176b5809e88`
+- Current task: RX-002A — Add GitHub CI Workflow
+- Current branch: task/rx-002a-github-ci
+- Repository state at task start: clean checkout at accepted baseline RX-002 HEAD
 
 ## Known limitations
 
@@ -17,6 +17,7 @@
 - Capture lifecycle transitions are in-memory domain operations only; no ledger persistence for lifecycle events exists yet.
 - Fee, funding, VWAP liquidity, basis, and entry EV are still fake/minimal walking-skeleton economics.
 - `EstimatedValue` is available as a source-aware domain value object, but the current fake `VenueSnapshot` still uses explicit decimal inputs until RX-003 economics contracts are implemented.
+- GitHub CI now runs the existing test suite and compile check only; it does not add linting, coverage, deployment, secrets, Docker, exchange connectivity, or live trading.
 
 ## Next recommended task
 
