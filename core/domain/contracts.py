@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any, Literal
@@ -91,4 +91,4 @@ class DecisionResult:
     net_profit_usd: Decimal | None = None
     entry_ev: Any | None = None
     capture_plan: CapturePlan | None = None
-    decided_at: datetime = datetime.now(UTC)
+    decided_at: datetime = field(default_factory=lambda: datetime.now(UTC))
