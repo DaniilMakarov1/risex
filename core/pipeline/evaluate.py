@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from core.accounting.ledger import InMemoryLedger, append_decision_event
 from core.config.product_rules import ProductRules
 from core.domain.contracts import Capture, CapturePlan, DecisionResult, RouteCandidate, VenueSnapshot
-from core.domain.enums import EvaluationMode, RouteStatus
+from core.domain.enums import CaptureState, EvaluationMode, RouteStatus
 from core.economics.ev import calculate_entry_ev
 from core.risk.gates import (
     check_live_capture_allowed,
@@ -76,7 +76,7 @@ def evaluate_route(
             capture_id=route.capture_id,
             route_id=route.route_id,
             settlement_time=snapshot.captured_at,
-            status=RouteStatus.LIVE_ELIGIBLE,
+            state=CaptureState.APPROVED,
         )
         capture_plan = CapturePlan(
             plan_id=f"plan-{route.capture_id}",

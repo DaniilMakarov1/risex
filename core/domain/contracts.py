@@ -1,4 +1,4 @@
-"""Minimal capture-centric domain contracts for RX-000."""
+"""Capture-centric domain contracts."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any, Literal
 
-from core.domain.enums import EvaluationMode, RouteStatus
+from core.domain.enums import CaptureState, EvaluationMode, RouteStatus
 
 OrderSide = Literal["buy", "sell"]
 
@@ -16,13 +16,13 @@ OrderSide = Literal["buy", "sell"]
 class Capture:
     """One funding settlement opportunity.
 
-    RX-000 does not execute captures. This object only anchors the domain language.
+    The lifecycle state is separate from route eligibility status.
     """
 
     capture_id: str
     route_id: str
     settlement_time: datetime
-    status: RouteStatus = RouteStatus.RESEARCH_ONLY
+    state: CaptureState = CaptureState.DISCOVERED
 
 
 @dataclass(frozen=True, slots=True)

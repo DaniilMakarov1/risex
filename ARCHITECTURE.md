@@ -34,12 +34,49 @@ tests/
 ## Core domain
 
 - `Capture`: one funding settlement opportunity.
+- `CaptureState`: lifecycle state for a `Capture`, separate from route eligibility.
 - `RouteCandidate`: a potential RiseX + hedge route.
 - `VenueSnapshot`: normalized current market and cash-flow inputs.
 - `ExecutableQuote`: current executable VWAP quote for a target notional.
 - `DecisionResult`: result of the shared decision pipeline.
 - `RouteStatus`: `RESEARCH_ONLY`, `PAPER_ELIGIBLE`, `LIVE_ELIGIBLE`, `REJECTED`.
 - `EvaluationMode`: `DISCOVERY` or `ENTRY`.
+
+## Capture lifecycle state machine
+
+`core/domain/state_machine.py` is the single authoritative Capture lifecycle state machine. It owns the allowed transition table, validates transitions, and returns updated immutable `Capture` instances. It does not send orders, call venue adapters, write ledger events, or import execution modules.
+
+Allowed lifecycle states:
+
+- `DISCOVERED`
+- `UNDERWRITING`
+- `REJECTED`
+- `APPROVED`
+- `ENTERING`
+- `PARTIALLY_ENTERED`
+- `HEDGED`
+- `WAITING_SETTLEMENT`
+- `SETTLED`
+- `EXITING`
+- `CLOSED`
+- `FAILED`
+- `EMERGENCY_FLATTENED`
+
+Normal transitions:
+
+- `DISCOVERED -> UNDERWRITING`
+- `UNDERWRITING -> APPROVED`
+- `UNDERWRITING -> REJECTED`
+- `APPROVED -> ENTERING`
+- `ENTERING -> PARTIALLY_ENTERED`
+- `ENTERING -> HEDGED`
+- `PARTIALLY_ENTERED -> HEDGED`
+- `HEDGED -> WAITING_SETTLEMENT`
+- `WAITING_SETTLEMENT -> SETTLED`
+- `SETTLED -> EXITING`
+- `EXITING -> CLOSED`
+
+Any non-terminal Capture may transition to `FAILED`. Capture states with possible market exposure (`ENTERING`, `PARTIALLY_ENTERED`, `HEDGED`, `WAITING_SETTLEMENT`, `SETTLED`, `EXITING`) may transition to `EMERGENCY_FLATTENED`. Terminal states are `REJECTED`, `CLOSED`, `FAILED`, and `EMERGENCY_FLATTENED`.
 
 ## Single-owner business logic
 
