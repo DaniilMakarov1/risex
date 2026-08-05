@@ -39,6 +39,9 @@ This repository is the source of truth for RiseX Points Farmer implementation wo
 
 ## Required report format
 
+Return final RX task reports in one fenced Markdown code block for one-click copy.
+The report must have no extra prose outside the code block.
+
 End every RX task with:
 
 - Task ID
