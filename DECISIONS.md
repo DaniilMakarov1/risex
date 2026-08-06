@@ -41,3 +41,12 @@
 - Preserved the no-artificial-filters rule: insufficient order-book depth for the configured minimum notional is a technical rejection, while poor executable liquidity changes roundtrip cost and net PnL instead of becoming a standalone reject filter.
 - Kept basis logic as current unwind PnL from executable quotes only; RX-003 does not forecast future basis or introduce `expected_basis_change`.
 - Kept live trading blocked by `LIVE_TRADING_DISABLED` / `LIVE_GATES_NOT_IMPLEMENTED`; RX-003 does not create orders, real adapters, or live capture plans by default.
+
+## RX-004
+
+- Placed offline Broad Scan and Focused Refresh orchestration in `apps/research_runner/scanning.py`, keeping scanning at the research-app layer instead of adding a second core decision pipeline.
+- Broad Scan and Focused Refresh both call the shared `evaluate_route(route, snapshot, mode)` path; the orchestration-level mode difference is `EvaluationMode.DISCOVERY` versus `EvaluationMode.ENTRY`.
+- Kept scanner code out of economics, risk, venue-adapter, execution, order, dashboard, database, and persistence ownership.
+- Added an in-memory watchlist that admits only non-rejected discovery decisions and rejects candidates with capture plans.
+- Focused Refresh must obtain a fresh `VenueSnapshot` through an injected offline refresher before evaluating a watched route.
+- RX-004 does not introduce real exchange connectivity, live order placement, real paper execution, secrets, migrations, or persistent ledger storage.

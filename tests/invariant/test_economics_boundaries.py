@@ -1,3 +1,4 @@
+import ast
 import re
 from pathlib import Path
 
@@ -53,3 +54,22 @@ def test_business_logic_function_definitions_stay_in_single_owner_modules() -> N
             if re.search(rf"^def {function_name}\(", path.read_text(), flags=re.MULTILINE)
         ]
         assert definitions == [expected_path]
+
+
+def test_scanning_orchestration_does_not_import_business_logic_execution_or_venues() -> None:
+    tree = ast.parse(Path("apps/research_runner/scanning.py").read_text())
+    imported_modules: list[str] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            imported_modules.extend(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.module is not None:
+            imported_modules.append(node.module)
+
+    assert "core.economics" not in imported_modules
+    assert not any(module.startswith("core.economics.") for module in imported_modules)
+    assert "core.risk" not in imported_modules
+    assert not any(module.startswith("core.risk.") for module in imported_modules)
+    assert "core.execution" not in imported_modules
+    assert not any(module.startswith("core.execution.") for module in imported_modules)
+    assert "core.venues" not in imported_modules
+    assert not any(module.startswith("core.venues.") for module in imported_modules)
