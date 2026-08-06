@@ -1,25 +1,57 @@
-# RX-004 — Broad Scan and Focused Refresh Over Shared `evaluate_route()`
-
 ## Task ID
 
-RX-004 — Broad Scan and Focused Refresh Over Shared `evaluate_route()`
+RX-004 — Per-Venue Observation and Route Snapshot Contracts
 
 ## Objective
 
-Implement the first offline scanning orchestration that feeds candidate routes into the single shared `evaluate_route(route, snapshot, mode)` pipeline without adding a second decision path or real exchange connectivity.
+Define the offline contracts that turn normalized per-venue observations into one route-aligned `VenueSnapshot` for the existing single `evaluate_route(route, snapshot, mode)` path, without implementing scanning orchestration or real adapters.
 
-## Scope
+## Allowed scope
 
-- Add fake-data-compatible Broad Scan code that identifies potential routes and records watchlist candidates only.
-- Add fake-data-compatible Focused Refresh code that refreshes a watched route snapshot and calls the same `evaluate_route()` function.
-- Keep Broad Scan and Focused Refresh rule-equivalent; the only intended difference is `EvaluationMode.DISCOVERY` versus `EvaluationMode.ENTRY`.
-- Keep all behavior deterministic, offline, non-trading, and tested.
-- Keep live trading disabled by default and do not place orders.
+- Add fake-data-compatible per-venue observation contracts for normalized order books and source-aware economics inputs.
+- Add one route snapshot assembly contract that verifies required RiseX and hedge observations are present before creating a `VenueSnapshot`.
+- Keep all behavior deterministic, offline, read-only, and non-trading.
+- Reuse the existing `RouteCandidate`, `VenueSnapshot`, economics modules, risk gates, and `evaluate_route()` pipeline.
+- Add focused unit and invariant tests for contract construction, missing data, and route alignment compatibility.
 
-## Out of scope
+## Forbidden scope
 
-- Real RiseX, Hyperliquid, or other venue adapters.
-- API keys, secrets, credentials, production configuration, or network exchange calls.
-- Live order placement or real paper execution.
-- Dashboard work, database migrations, or persistent ledger storage.
-- A second EV path, second route decision pipeline, canary architecture, or hold-to-next-cycle logic.
+- Do not implement Broad Scan.
+- Do not implement Focused Refresh.
+- Do not implement real RiseX, Hyperliquid, network, API, authentication, or production adapters.
+- Do not implement paper execution, order placement, persistence, migrations, dashboard code, or live trading.
+- Do not add a second route model, second EV path, second route decision function, canary architecture, hold-next-cycle logic, artificial filters, secrets, or production credentials.
+
+## Required files
+
+- `core/domain/contracts.py`
+- `core/venues/base.py`
+- `apps/research_runner/fake_data.py`
+- `tests/unit/`
+- `tests/invariant/`
+- `ARCHITECTURE.md`
+- `DECISIONS.md`
+- `STATUS.md`
+- `NEXT_TASK.md`
+
+## Required tests
+
+- Contract tests for per-venue observation inputs.
+- Contract tests for route snapshot assembly with complete fake observations.
+- Fail-closed tests for missing RiseX observation, missing hedge observation, missing funding input, missing fee input, and quote/route mismatch.
+- Invariant tests proving `evaluate_route()` remains the only route decision function and `VenueAdapter` remains per-venue.
+- Invariant tests proving no Broad Scan, Focused Refresh, real adapter, paper execution, persistence, dashboard, live trading, canary, hold-next-cycle, artificial filter, secret, or order-placement code is introduced.
+
+## Required report format
+
+- Task ID
+- Branch
+- Starting HEAD
+- Final HEAD
+- Changed files
+- What was implemented
+- Tests run
+- Test results
+- Known limitations
+- Risk impact
+- Next suggested task

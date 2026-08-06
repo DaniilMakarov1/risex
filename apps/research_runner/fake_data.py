@@ -39,9 +39,12 @@ def build_fake_route_and_snapshot() -> tuple[RouteCandidate, VenueSnapshot]:
     route = RouteCandidate(
         route_id="fake-risex-hl-btc",
         capture_id="capture-000",
+        risex_venue="RiseX",
         risex_symbol="BTC-PERP",
+        risex_entry_side="buy",
         hedge_venue="Hyperliquid",
         hedge_symbol="BTC",
+        hedge_entry_side="sell",
         target_notional_usd=target_notional,
     )
     snapshot = VenueSnapshot(

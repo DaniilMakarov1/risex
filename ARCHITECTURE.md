@@ -35,7 +35,7 @@ tests/
 
 - `Capture`: one funding settlement opportunity.
 - `CaptureState`: lifecycle state for a `Capture`, separate from route eligibility.
-- `RouteCandidate`: a potential RiseX + hedge route.
+- `RouteCandidate`: a potential RiseX + hedge route with authoritative venues, symbols, target notional, and intended opposing entry sides.
 - `VenueSnapshot`: normalized current market and cash-flow inputs.
 - `OrderBookLevel`: one normalized price level where size is base asset quantity.
 - `OrderBook`: normalized current bids and asks used for offline VWAP calculations.
@@ -117,14 +117,49 @@ No other config object owns those same product constants.
 
 RX-003 behavior:
 
-1. Verify the route and all executable VWAP quotes can represent the configured minimum notional.
-2. Calculate entry EV from source-aware funding, source-aware fees, and simulated immediate roundtrip cost.
-3. Reject through centralized `RejectReason` values, not ad hoc reason strings.
-4. Reject when minimum leg notional is not met, required order-book liquidity cannot execute the configured minimum notional, required economics data is missing, or net profit is below the configured minimum.
-5. Return `PAPER_ELIGIBLE` for profitable offline routes while live gates are not implemented.
-6. Never create a live `CapturePlan` while `live_trading_enabled = false`.
-7. Never place orders.
-8. Optionally append the decision event to the ledger through `core/accounting/ledger.py`.
+1. Verify the route target notional meets the configured minimum.
+2. Verify route/snapshot alignment through `core/risk/gates.py` before any Entry EV calculation.
+3. Verify all executable VWAP quotes can represent the configured minimum notional.
+4. Calculate entry EV from source-aware funding, source-aware fees, and simulated immediate roundtrip cost.
+5. Reject through centralized `RejectReason` values, not ad hoc reason strings.
+6. Reject when minimum leg notional is not met, route/snapshot alignment fails, required order-book liquidity cannot execute the configured minimum notional, required economics data is missing, or net profit is below the configured minimum.
+7. Return `PAPER_ELIGIBLE` for profitable offline routes while live gates are not implemented.
+8. Never create a live `CapturePlan` in RX-003, even if `ProductRules(live_trading_enabled=True)` is passed manually.
+9. Never place orders.
+10. Optionally append the decision event to the ledger through `core/accounting/ledger.py`.
+
+## Route/snapshot alignment
+
+`RouteCandidate` is the authoritative route contract for one RiseX leg and one hedge leg. It owns:
+
+- RiseX venue and symbol.
+- RiseX intended entry side.
+- Hedge venue and symbol.
+- Hedge intended entry side.
+- Target notional in USD.
+
+`core/risk/gates.py` owns the centralized route/snapshot alignment gate. Before Entry EV, it verifies:
+
+- RiseX entry and estimated-exit quotes match the route venue and symbol.
+- Hedge entry and estimated-exit quotes match the route venue and symbol.
+- RiseX and hedge entry sides are opposing market exposure.
+- Entry quote sides match the route contract.
+- Each estimated-exit side is opposite its corresponding entry side.
+- All four quotes use `route.target_notional_usd`.
+- All four quotes are sourced from `ValueSource.ESTIMATED_FROM_ORDERBOOK`.
+- Entry and estimated-exit quotes paired for roundtrip math use the same venue and symbol.
+
+Alignment failures fail closed through centralized `RejectReason.TECHNICALLY_NOT_EXECUTABLE`. They are not spread, price-impact, levels-consumed, safety-margin, or conservative-buffer filters.
+
+## Venue adapter boundary
+
+Venue adapters are read-only and per-venue. The base adapter protocol exposes only a normalized per-symbol order-book primitive:
+
+```python
+fetch_order_book(symbol: str) -> OrderBook
+```
+
+Adapters must not return or construct cross-venue route snapshots, calculate EV, evaluate routes, send orders, write ledger events, persist data, or assemble RiseX + hedge inputs. Cross-venue route snapshot assembly belongs to future offline observation/orchestration contracts outside venue adapters.
 
 ## No artificial filters
 

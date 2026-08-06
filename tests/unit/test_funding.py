@@ -4,6 +4,7 @@ import pytest
 
 from core.domain.contracts import EstimatedValue, FundingSnapshot
 from core.domain.enums import ValueSource
+from core.economics.errors import EconomicsInputError
 from core.economics.funding import calculate_total_expected_funding_usd
 
 
@@ -28,7 +29,7 @@ def test_missing_funding_estimate_cannot_become_zero() -> None:
         hedge_funding_usd=EstimatedValue(value=Decimal("0"), source=ValueSource.OBSERVED),
     )
 
-    with pytest.raises(ValueError, match="UNKNOWN"):
+    with pytest.raises(EconomicsInputError, match="UNKNOWN"):
         calculate_total_expected_funding_usd(funding)
 
 
@@ -38,5 +39,5 @@ def test_user_configured_funding_is_not_a_valid_rx003_funding_estimate() -> None
         hedge_funding_usd=EstimatedValue(value=Decimal("0"), source=ValueSource.OBSERVED),
     )
 
-    with pytest.raises(ValueError, match="USER_CONFIGURED"):
+    with pytest.raises(EconomicsInputError, match="USER_CONFIGURED"):
         calculate_total_expected_funding_usd(funding)

@@ -12,6 +12,7 @@ from core.domain.contracts import (
     VenueSnapshot,
 )
 from core.domain.enums import ValueSource
+from core.economics.errors import EconomicsInputError
 
 
 BPS = Decimal("10000")
@@ -114,13 +115,19 @@ def calculate_quote_roundtrip_cost_usd(
     """Estimate immediate unwind cost from current executable VWAP quotes."""
 
     if not entry_quote.executable or entry_quote.vwap_price is None:
-        raise ValueError("entry_quote must be executable")
+        raise EconomicsInputError("entry_quote must be executable with vwap_price")
     if not exit_quote.executable or exit_quote.vwap_price is None:
-        raise ValueError("exit_quote must be executable")
+        raise EconomicsInputError("exit_quote must be executable with vwap_price")
+    if entry_quote.venue != exit_quote.venue:
+        raise EconomicsInputError("entry and exit quotes must use the same venue")
+    if entry_quote.symbol != exit_quote.symbol:
+        raise EconomicsInputError("entry and exit quotes must use the same symbol")
     if entry_quote.side == exit_quote.side:
-        raise ValueError("entry and exit quotes must use opposite sides")
+        raise EconomicsInputError("entry and exit quotes must use opposite sides")
+    if entry_quote.target_notional_usd != exit_quote.target_notional_usd:
+        raise EconomicsInputError("entry and exit quotes must use the same target notional")
     if entry_quote.target_notional_usd <= Decimal("0"):
-        raise ValueError("entry_quote.target_notional_usd must be positive")
+        raise EconomicsInputError("entry_quote.target_notional_usd must be positive")
 
     if entry_quote.side == "buy":
         price_delta = entry_quote.vwap_price - exit_quote.vwap_price

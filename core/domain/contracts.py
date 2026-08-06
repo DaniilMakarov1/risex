@@ -61,9 +61,12 @@ class RouteCandidate:
 
     route_id: str
     capture_id: str
+    risex_venue: str
     risex_symbol: str
+    risex_entry_side: OrderSide
     hedge_venue: str
     hedge_symbol: str
+    hedge_entry_side: OrderSide
     target_notional_usd: Decimal
 
 

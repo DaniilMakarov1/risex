@@ -41,3 +41,13 @@
 - Preserved the no-artificial-filters rule: insufficient order-book depth for the configured minimum notional is a technical rejection, while poor executable liquidity changes roundtrip cost and net PnL instead of becoming a standalone reject filter.
 - Kept basis logic as current unwind PnL from executable quotes only; RX-003 does not forecast future basis or introduce `expected_basis_change`.
 - Kept live trading blocked by `LIVE_TRADING_DISABLED` / `LIVE_GATES_NOT_IMPLEMENTED`; RX-003 does not create orders, real adapters, or live capture plans by default.
+
+## 2026-08-06 — RX-003 FIX
+
+- Date: 2026-08-06
+- Decision: `RouteCandidate` is the authoritative route contract for RiseX venue/symbol, hedge venue/symbol, target notional, and intended opposing entry sides; `core/risk/gates.py` owns centralized route/snapshot alignment before Entry EV.
+- Reason: RX-003 review found that executable quotes could be mismatched by venue, symbol, side, source, or notional and still enter EV/roundtrip math. Alignment must fail closed before economics calculations.
+- Affected files/modules: `core/domain/contracts.py`, `core/risk/gates.py`, `core/pipeline/evaluate.py`, `core/economics/liquidity.py`, `core/economics/fees.py`, `core/economics/funding.py`, `core/economics/errors.py`, `core/venues/base.py`, `apps/research_runner/fake_data.py`, tests, and governance docs.
+- Superseded decision: the previous `VenueAdapter.fetch_snapshot() -> VenueSnapshot` boundary is superseded. Adapters are now per-venue and expose only `fetch_order_book(symbol: str) -> OrderBook`; cross-venue route snapshot assembly is reserved for future observation/orchestration contracts.
+- Decision: RX-003 `evaluate_route()` does not construct `CapturePlan`, does not invent settlement timestamps, and does not bypass the Capture state machine. Even with `ProductRules(live_trading_enabled=True)`, profitable ENTRY evaluations remain `PAPER_ELIGIBLE` with `LIVE_GATES_NOT_IMPLEMENTED`.
+- Reason: RX-003 has no implemented live gates, funding settlement timestamp contract, fresh CapturePlan contract, or live execution boundary.

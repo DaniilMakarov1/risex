@@ -6,6 +6,7 @@ from decimal import Decimal
 
 from core.domain.contracts import EstimatedValue, FundingSnapshot
 from core.domain.enums import ValueSource
+from core.economics.errors import EconomicsInputError
 
 
 ALLOWED_FUNDING_SOURCES = frozenset(
@@ -21,7 +22,7 @@ def calculate_expected_funding_usd(value: EstimatedValue) -> Decimal:
     """Return one source-aware funding estimate in USD."""
 
     if value.source not in ALLOWED_FUNDING_SOURCES:
-        raise ValueError(f"funding estimate has unsupported source {value.source.value}")
+        raise EconomicsInputError(f"funding estimate has unsupported source {value.source.value}")
     return value.require_value()
 
 

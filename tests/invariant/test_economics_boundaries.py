@@ -1,5 +1,9 @@
 import re
 from pathlib import Path
+from typing import get_type_hints
+
+from core.domain.contracts import OrderBook
+from core.venues.base import VenueAdapter
 
 
 PRODUCTION_ROOTS = (Path("apps"), Path("core"))
@@ -53,3 +57,28 @@ def test_business_logic_function_definitions_stay_in_single_owner_modules() -> N
             if re.search(rf"^def {function_name}\(", path.read_text(), flags=re.MULTILINE)
         ]
         assert definitions == [expected_path]
+
+
+def test_venue_adapter_contract_is_per_venue_order_book_only() -> None:
+    adapter_source = Path("core/venues/base.py").read_text()
+    return_hints = get_type_hints(VenueAdapter.fetch_order_book)
+
+    assert hasattr(VenueAdapter, "fetch_order_book")
+    assert not hasattr(VenueAdapter, "fetch_snapshot")
+    assert return_hints["return"] is OrderBook
+    assert "VenueSnapshot" not in adapter_source
+    assert "fetch_snapshot" not in adapter_source
+
+
+def test_no_real_adapters_secrets_persistence_or_dashboard_code_are_introduced() -> None:
+    production_text = "\n".join(path.read_text().lower() for path in _production_python_files())
+    venue_python_files = {path.relative_to(Path("core/venues")) for path in Path("core/venues").rglob("*.py")}
+    dashboard_python_files = tuple(Path("apps/dashboard").rglob("*.py"))
+    storage_python_files = {path.relative_to(Path("storage")) for path in Path("storage").rglob("*.py")}
+
+    assert venue_python_files == {Path("__init__.py"), Path("base.py")}
+    assert all(path.name == "__init__.py" and path.read_text() == "" for path in dashboard_python_files)
+    assert storage_python_files == {Path("__init__.py"), Path("sqlite/__init__.py")}
+    assert "api_key" not in production_text
+    assert "secret_key" not in production_text
+    assert "private_key" not in production_text

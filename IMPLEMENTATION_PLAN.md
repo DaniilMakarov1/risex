@@ -8,12 +8,32 @@ Create repository docs, structure, Python test setup, minimal domain contracts, 
 
 Strengthen domain contracts and introduce the formal state machine for `Capture`, route lifecycle, decision history, and future `CapturePlan` freshness rules.
 
-## Later task themes
+## RX-002 — Product Rules, Value Sources, and Central Reject Reasons
 
-- Fee source modeling and user-configured default fee handling.
-- Funding estimate source modeling and settlement verifier design.
-- VWAP/order-book models for the `$500` target notional.
-- Broad Scan and Focused Refresh using the same `evaluate_route()` function.
-- Paper runner lifecycle and append-only ledger persistence.
-- Dashboard and monitoring snapshots.
-- Real venue adapters only after contracts and fake/paper paths are stable.
+Make `ProductRules`, `ValueSource`, `EstimatedValue`, and `RejectReason` authoritative. Keep live trading disabled by default and enforce no-artificial-filter invariants.
+
+## RX-002A — GitHub CI Workflow
+
+Add minimal CI for pytest and compileall without secrets, deployment, linting, coverage, exchange connectivity, or live trading.
+
+## RX-003 — Economics Engine Candidate
+
+Add source-aware offline economics for fees, funding, order-book VWAP liquidity, immediate roundtrip cost, basis/unwind PnL, and Entry EV through the single `evaluate_route()` pipeline.
+
+RX-003 FIX repairs the candidate contract before review acceptance:
+
+- Route/snapshot alignment is centralized in `core/risk/gates.py`.
+- `RouteCandidate` explicitly owns route venues, symbols, target notional, and intended opposing entry sides.
+- Roundtrip quote pairing rejects venue, symbol, side, target-notional, executability, and VWAP mismatches.
+- Expected missing economics input failures use a scoped exception contract.
+- RX-003 never constructs `CapturePlan` or `LIVE_ELIGIBLE` decisions.
+- `VenueAdapter` is read-only and per-venue with an order-book primitive only.
+
+## Next Sequence
+
+1. RX-004 — Per-Venue Observation and Route Snapshot Contracts.
+2. Offline fake observation assembly using the RX-004 contracts.
+3. Broad Scan and Focused Refresh orchestration over the same `evaluate_route()` function.
+4. Paper runner lifecycle and append-only ledger persistence.
+5. Funding settlement verifier design and fake replay coverage.
+6. Real venue adapters only after contracts, fake observation, paper paths, and settlement verification are stable.

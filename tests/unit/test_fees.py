@@ -4,6 +4,7 @@ import pytest
 
 from core.domain.contracts import EstimatedValue, FeeComponent, FeeModel
 from core.domain.enums import ValueSource
+from core.economics.errors import EconomicsInputError
 from core.economics.fees import calculate_total_fees_usd
 
 
@@ -32,7 +33,7 @@ def test_non_user_configured_fee_default_is_rejected() -> None:
         )
     )
 
-    with pytest.raises(ValueError, match="USER_CONFIGURED"):
+    with pytest.raises(EconomicsInputError, match="USER_CONFIGURED"):
         calculate_total_fees_usd(fee_model)
 
 
@@ -46,12 +47,12 @@ def test_unknown_fee_cannot_participate_as_zero() -> None:
         )
     )
 
-    with pytest.raises(ValueError, match="UNKNOWN"):
+    with pytest.raises(EconomicsInputError, match="UNKNOWN"):
         calculate_total_fees_usd(fee_model)
 
 
 def test_empty_fee_model_cannot_mean_zero_fees() -> None:
-    with pytest.raises(ValueError, match="source-aware"):
+    with pytest.raises(EconomicsInputError, match="source-aware"):
         calculate_total_fees_usd(FeeModel(components=()))
 
 
@@ -65,5 +66,5 @@ def test_negative_fee_is_rejected_until_rebates_are_modeled() -> None:
         )
     )
 
-    with pytest.raises(ValueError, match="negative fees"):
+    with pytest.raises(EconomicsInputError, match="negative fees"):
         calculate_total_fees_usd(fee_model)

@@ -6,6 +6,7 @@ from decimal import Decimal
 
 from core.domain.contracts import FeeComponent, FeeModel
 from core.domain.enums import ValueSource
+from core.economics.errors import EconomicsInputError
 
 
 ALLOWED_FEE_SOURCES = frozenset(
@@ -22,13 +23,13 @@ def validate_fee_component(component: FeeComponent) -> None:
 
     source = component.amount_usd.source
     if source not in ALLOWED_FEE_SOURCES:
-        raise ValueError(
+        raise EconomicsInputError(
             f"fee component {component.name!r} has unsupported source {source.value}"
         )
     if component.is_default and source is not ValueSource.USER_CONFIGURED:
-        raise ValueError("fee defaults require ValueSource.USER_CONFIGURED")
+        raise EconomicsInputError("fee defaults require ValueSource.USER_CONFIGURED")
     if component.amount_usd.require_value() < Decimal("0"):
-        raise ValueError("negative fees are not modeled in RX-003")
+        raise EconomicsInputError("negative fees are not modeled in RX-003")
 
 
 def calculate_fee_component_usd(component: FeeComponent) -> Decimal:
@@ -42,7 +43,7 @@ def calculate_total_fees_usd(fee_model: FeeModel) -> Decimal:
     """Return total documented, observed, or user-configured fees in USD."""
 
     if not fee_model.components:
-        raise ValueError("fee model requires at least one source-aware component")
+        raise EconomicsInputError("fee model requires at least one source-aware component")
 
     total = Decimal("0")
     for component in fee_model.components:

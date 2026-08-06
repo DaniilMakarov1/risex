@@ -6,6 +6,7 @@ import pytest
 from apps.research_runner.fake_data import build_fake_route_and_snapshot
 from core.domain.contracts import EstimatedValue, FundingSnapshot, OrderBook, OrderBookLevel
 from core.domain.enums import ValueSource
+from core.economics.errors import EconomicsInputError
 from core.economics.ev import EntryEV
 from core.economics.ev import calculate_entry_ev
 from core.economics.liquidity import calculate_executable_quote
@@ -61,5 +62,5 @@ def test_missing_funding_estimate_cannot_produce_numeric_entry_ev() -> None:
         ),
     )
 
-    with pytest.raises(ValueError, match="UNKNOWN"):
+    with pytest.raises(EconomicsInputError, match="UNKNOWN"):
         calculate_entry_ev(missing_funding_snapshot)

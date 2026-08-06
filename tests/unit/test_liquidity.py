@@ -1,7 +1,24 @@
+from dataclasses import replace
 from decimal import Decimal
 
-from core.domain.contracts import OrderBook, OrderBookLevel
+import pytest
+
+from core.domain.contracts import ExecutableQuote, OrderBook, OrderBookLevel
+from core.domain.enums import ValueSource
+from core.economics.errors import EconomicsInputError
 from core.economics.liquidity import calculate_executable_quote, calculate_quote_roundtrip_cost_usd
+
+
+def _executable_quote(*, side: str, venue: str = "RiseX", symbol: str = "BTC-PERP") -> ExecutableQuote:
+    return ExecutableQuote(
+        venue=venue,
+        symbol=symbol,
+        side=side,
+        target_notional_usd=Decimal("500"),
+        vwap_price=Decimal("100"),
+        executable=True,
+        source=ValueSource.ESTIMATED_FROM_ORDERBOOK,
+    )
 
 
 def test_vwap_consumes_asks_for_buy_target_notional() -> None:
@@ -118,3 +135,47 @@ def test_poor_executable_prices_increase_roundtrip_cost() -> None:
         entry_quote=entry_quote,
         exit_quote=good_exit_quote,
     )
+
+
+@pytest.mark.parametrize(
+    ("entry_quote", "exit_quote", "message"),
+    (
+        (
+            _executable_quote(side="buy", venue="RiseX"),
+            _executable_quote(side="sell", venue="Hyperliquid"),
+            "same venue",
+        ),
+        (
+            _executable_quote(side="buy", symbol="BTC-PERP"),
+            _executable_quote(side="sell", symbol="ETH-PERP"),
+            "same symbol",
+        ),
+        (
+            _executable_quote(side="buy"),
+            _executable_quote(side="buy"),
+            "opposite sides",
+        ),
+        (
+            _executable_quote(side="buy"),
+            replace(_executable_quote(side="sell"), target_notional_usd=Decimal("1000")),
+            "same target notional",
+        ),
+        (
+            replace(_executable_quote(side="buy"), executable=False, vwap_price=None),
+            _executable_quote(side="sell"),
+            "entry_quote must be executable with vwap_price",
+        ),
+        (
+            _executable_quote(side="buy"),
+            replace(_executable_quote(side="sell"), executable=False, vwap_price=None),
+            "exit_quote must be executable with vwap_price",
+        ),
+    ),
+)
+def test_roundtrip_cost_rejects_mismatched_quote_pairs(
+    entry_quote: ExecutableQuote,
+    exit_quote: ExecutableQuote,
+    message: str,
+) -> None:
+    with pytest.raises(EconomicsInputError, match=message):
+        calculate_quote_roundtrip_cost_usd(entry_quote=entry_quote, exit_quote=exit_quote)
