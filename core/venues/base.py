@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from core.domain.contracts import OrderBook
+from core.domain.contracts import VenueObservation
 
 
 class VenueAdapter(Protocol):
@@ -16,5 +16,5 @@ class VenueAdapter(Protocol):
 
     name: str
 
-    def fetch_order_book(self, symbol: str) -> OrderBook:
-        """Fetch and normalize one venue's order book for one requested symbol."""
+    def fetch_observation(self, symbol: str) -> VenueObservation:
+        """Fetch and normalize one venue observation for one requested symbol."""

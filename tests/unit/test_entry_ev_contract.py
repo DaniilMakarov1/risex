@@ -37,6 +37,10 @@ def test_poor_executable_exit_price_reduces_entry_ev_net_profit() -> None:
     )
     poor_snapshot = snapshot.__class__(
         captured_at=snapshot.captured_at,
+        risex_observed_at=snapshot.risex_observed_at,
+        hedge_observed_at=snapshot.hedge_observed_at,
+        risex_funding_settlement_at=snapshot.risex_funding_settlement_at,
+        hedge_funding_settlement_at=snapshot.hedge_funding_settlement_at,
         risex_entry_quote=snapshot.risex_entry_quote,
         hedge_entry_quote=snapshot.hedge_entry_quote,
         risex_estimated_exit_quote=calculate_executable_quote(

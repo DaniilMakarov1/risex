@@ -12,6 +12,7 @@ from core.domain.contracts import (
     OrderBook,
     OrderBookLevel,
     RouteCandidate,
+    VenueObservation,
     VenueSnapshot,
 )
 from core.domain.enums import CaptureState, EvaluationMode, RejectReason, RouteStatus, ValueSource
@@ -49,6 +50,7 @@ __all__ = [
     "RouteStatus",
     "TERMINAL_CAPTURE_STATES",
     "ValueSource",
+    "VenueObservation",
     "VenueSnapshot",
     "is_capture_transition_allowed",
     "is_terminal_capture_state",

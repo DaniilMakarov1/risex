@@ -22,6 +22,15 @@ def validate_order_side(side: str) -> None:
         raise ValueError("order side must be 'buy' or 'sell'")
 
 
+def _datetime_is_timezone_aware(value: datetime) -> bool:
+    return value.tzinfo is not None and value.utcoffset() is not None
+
+
+def validate_timezone_aware_datetime(value: datetime, field_name: str) -> None:
+    if not _datetime_is_timezone_aware(value):
+        raise ValueError(f"{field_name} must be timezone-aware")
+
+
 @dataclass(frozen=True, slots=True)
 class OrderBookLevel:
     """One normalized price level where size is base asset quantity."""
@@ -193,16 +202,60 @@ class FundingSnapshot:
 
 
 @dataclass(frozen=True, slots=True)
+class VenueObservation:
+    """Normalized read-only observation for one venue and one symbol."""
+
+    venue: str
+    symbol: str
+    observed_at: datetime
+    order_book: OrderBook
+    expected_funding_usd: EstimatedValue
+    funding_settlement_at: datetime
+    fees: FeeModel
+
+    def __post_init__(self) -> None:
+        if not self.venue.strip():
+            raise ValueError("venue must be non-empty")
+        if not self.symbol.strip():
+            raise ValueError("symbol must be non-empty")
+        validate_timezone_aware_datetime(self.observed_at, "observed_at")
+        validate_timezone_aware_datetime(self.funding_settlement_at, "funding_settlement_at")
+        if self.order_book.venue != self.venue:
+            raise ValueError("order book venue must match observation venue")
+        if self.order_book.symbol != self.symbol:
+            raise ValueError("order book symbol must match observation symbol")
+        if not self.fees.components:
+            raise ValueError("venue observation requires at least one source-aware fee component")
+
+
+@dataclass(frozen=True, slots=True)
 class VenueSnapshot:
-    """Fake normalized snapshot used by the non-trading walking skeleton."""
+    """Route-aligned normalized snapshot used by the non-trading pipeline."""
 
     captured_at: datetime
+    risex_observed_at: datetime
+    hedge_observed_at: datetime
+    risex_funding_settlement_at: datetime
+    hedge_funding_settlement_at: datetime
     risex_entry_quote: ExecutableQuote
     hedge_entry_quote: ExecutableQuote
     risex_estimated_exit_quote: ExecutableQuote
     hedge_estimated_exit_quote: ExecutableQuote
     funding: FundingSnapshot
     fees: FeeModel
+
+    def __post_init__(self) -> None:
+        validate_timezone_aware_datetime(self.captured_at, "captured_at")
+        validate_timezone_aware_datetime(self.risex_observed_at, "risex_observed_at")
+        validate_timezone_aware_datetime(self.hedge_observed_at, "hedge_observed_at")
+        validate_timezone_aware_datetime(
+            self.risex_funding_settlement_at,
+            "risex_funding_settlement_at",
+        )
+        validate_timezone_aware_datetime(
+            self.hedge_funding_settlement_at,
+            "hedge_funding_settlement_at",
+        )
 
     def executable_quotes(self) -> tuple[ExecutableQuote, ...]:
         return (

@@ -36,7 +36,8 @@ tests/
 - `Capture`: one funding settlement opportunity.
 - `CaptureState`: lifecycle state for a `Capture`, separate from route eligibility.
 - `RouteCandidate`: a potential RiseX + hedge route with authoritative venues, symbols, target notional, and intended opposing entry sides.
-- `VenueSnapshot`: normalized current market and cash-flow inputs.
+- `VenueObservation`: normalized read-only data for one venue and one symbol: timezone-aware observation timestamp, order book, expected funding cash flow, funding settlement timestamp, and per-venue fee model.
+- `VenueSnapshot`: one route-aligned normalized snapshot assembled from a RiseX observation and a hedge observation for the shared decision pipeline.
 - `OrderBookLevel`: one normalized price level where size is base asset quantity.
 - `OrderBook`: normalized current bids and asks used for offline VWAP calculations.
 - `ExecutableQuote`: current executable VWAP quote for a target notional; `executable=True` means the full quote target notional is filled.
@@ -93,6 +94,7 @@ Any non-terminal Capture may transition to `FAILED`. Capture states with possibl
 - Basis and unwind tracking belong only in `core/economics/basis.py`.
 - Entry EV is calculated only in `core/economics/ev.py`.
 - Risk gates belong only in `core/risk/gates.py`.
+- Route snapshot assembly happens only in `core/pipeline/snapshot.py`.
 - Route decisions happen only in `core/pipeline/evaluate.py`.
 - Orders can be sent only through `core/execution/`.
 - Ledger writes happen only through `core/accounting/ledger.py`.
@@ -127,6 +129,15 @@ RX-003 behavior:
 8. Never create a live `CapturePlan` in RX-003, even if `ProductRules(live_trading_enabled=True)` is passed manually.
 9. Never place orders.
 10. Optionally append the decision event to the ledger through `core/accounting/ledger.py`.
+
+RX-004 adds a deterministic offline snapshot assembly layer before evaluation:
+
+1. Venue adapters return per-venue `VenueObservation` objects, never cross-venue snapshots.
+2. `core/pipeline/snapshot.py` owns the single `assemble_route_snapshot()` function.
+3. The assembly function accepts one `RouteCandidate`, a mapping of `(venue, symbol)` observations, and an explicit timezone-aware assembly timestamp.
+4. It locates the required RiseX and hedge observations, fails explicitly on missing or contradictory metadata, and uses `calculate_executable_quote()` for all four entry/immediate-unwind quotes.
+5. It preserves per-leg observation timestamps and funding settlement timestamps on the resulting `VenueSnapshot`.
+6. It does not call `evaluate_route()`, calculate EV, apply eligibility, rank routes, write ledger events, create `Capture`/`CapturePlan`, connect to venues, or place orders.
 
 ## Route/snapshot alignment
 
@@ -164,13 +175,13 @@ Poor executable prices, high price impact, and many consumed order-book levels a
 
 ## Venue adapter boundary
 
-Venue adapters are read-only and per-venue. The base adapter protocol exposes only a normalized per-symbol order-book primitive:
+Venue adapters are read-only and per-venue. The base adapter protocol exposes only a normalized per-symbol observation primitive:
 
 ```python
-fetch_order_book(symbol: str) -> OrderBook
+fetch_observation(symbol: str) -> VenueObservation
 ```
 
-Adapters must not return or construct cross-venue route snapshots, calculate EV, evaluate routes, send orders, write ledger events, persist data, or assemble RiseX + hedge inputs. Cross-venue route snapshot assembly belongs to future offline observation/orchestration contracts outside venue adapters.
+Adapters must not return or construct cross-venue route snapshots, calculate EV, evaluate routes, send orders, write ledger events, persist data, or assemble RiseX + hedge inputs. Cross-venue route snapshot assembly belongs to `core/pipeline/snapshot.py`.
 
 ## No artificial filters
 

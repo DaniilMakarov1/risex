@@ -2,7 +2,7 @@ import re
 from pathlib import Path
 from typing import get_type_hints
 
-from core.domain.contracts import OrderBook
+from core.domain.contracts import VenueObservation
 from core.venues.base import VenueAdapter
 
 
@@ -40,6 +40,15 @@ def test_evaluate_route_is_the_single_route_decision_function() -> None:
     assert definitions == [Path("core/pipeline/evaluate.py")]
 
 
+def test_assemble_route_snapshot_is_the_single_snapshot_assembly_function() -> None:
+    definitions: list[Path] = []
+    for path in _production_python_files():
+        if re.search(r"^def assemble_route_snapshot\(", path.read_text(), flags=re.MULTILINE):
+            definitions.append(path)
+
+    assert definitions == [Path("core/pipeline/snapshot.py")]
+
+
 def test_business_logic_function_definitions_stay_in_single_owner_modules() -> None:
     expected_owners = {
         "calculate_total_fees_usd": Path("core/economics/fees.py"),
@@ -48,6 +57,7 @@ def test_business_logic_function_definitions_stay_in_single_owner_modules() -> N
         "calculate_current_unwind_pnl_usd": Path("core/economics/basis.py"),
         "calculate_entry_ev": Path("core/economics/ev.py"),
         "evaluate_route": Path("core/pipeline/evaluate.py"),
+        "assemble_route_snapshot": Path("core/pipeline/snapshot.py"),
     }
 
     for function_name, expected_path in expected_owners.items():
@@ -76,17 +86,20 @@ def test_business_logic_modules_stay_in_expected_files() -> None:
     assert {path.relative_to(Path("core/pipeline")) for path in Path("core/pipeline").rglob("*.py")} == {
         Path("__init__.py"),
         Path("evaluate.py"),
+        Path("snapshot.py"),
     }
 
 
-def test_venue_adapter_contract_is_per_venue_order_book_only() -> None:
+def test_venue_adapter_contract_is_per_venue_observation_only() -> None:
     adapter_source = Path("core/venues/base.py").read_text()
-    return_hints = get_type_hints(VenueAdapter.fetch_order_book)
+    return_hints = get_type_hints(VenueAdapter.fetch_observation)
 
-    assert hasattr(VenueAdapter, "fetch_order_book")
+    assert hasattr(VenueAdapter, "fetch_observation")
+    assert not hasattr(VenueAdapter, "fetch_order_book")
     assert not hasattr(VenueAdapter, "fetch_snapshot")
-    assert return_hints["return"] is OrderBook
+    assert return_hints["return"] is VenueObservation
     assert "VenueSnapshot" not in adapter_source
+    assert "fetch_order_book" not in adapter_source
     assert "fetch_snapshot" not in adapter_source
 
 
@@ -102,3 +115,15 @@ def test_no_real_adapters_secrets_persistence_or_dashboard_code_are_introduced()
     assert "api_key" not in production_text
     assert "secret_key" not in production_text
     assert "private_key" not in production_text
+
+
+def test_no_scan_watchlist_or_stale_rx004_archive_code_is_introduced() -> None:
+    production_paths = tuple(path.as_posix().lower() for path in _production_python_files())
+    production_text = "\n".join(path.read_text().lower() for path in _production_python_files())
+
+    assert not Path("archive").exists()
+    assert not any("rx-004-scan-refresh" in path for path in production_paths)
+    assert not any("watchlist" in path for path in production_paths)
+    assert "broad_scan" not in production_text
+    assert "focused_refresh" not in production_text
+    assert "watchlist" not in production_text

@@ -61,3 +61,15 @@
 - Superseded decision: no previous decision is superseded; this tightens the RX-003 executable quote contract.
 - Decision: order sides are runtime-validated as exactly `buy` or `sell` in `RouteCandidate`, `ExecutableQuote`, and order-book VWAP selection.
 - Reason: invalid side strings must not silently fall through to sell-side bid consumption.
+
+## 2026-08-06 — RX-004
+
+- Date: 2026-08-06
+- Decision: Introduced immutable `VenueObservation` as the normalized read-only per-venue/per-symbol input contract containing a timezone-aware observation timestamp, matching `OrderBook`, source-aware expected funding cash flow, funding settlement timestamp, and per-venue source-aware `FeeModel`.
+- Reason: RX-004 needs fake-data-compatible observation contracts that preserve unknown economics and timestamps before any route-level evaluation.
+- Decision: `core/pipeline/snapshot.py` owns the single authoritative `assemble_route_snapshot()` function. It accepts one `RouteCandidate`, an explicit observation mapping, and an explicit assembly timestamp, then builds the existing `VenueSnapshot` shape for `evaluate_route()`.
+- Reason: Cross-venue snapshot assembly must be deterministic and offline while keeping `evaluate_route()` as the only route decision function and keeping liquidity VWAP in `core/economics/liquidity.py`.
+- Decision: `VenueAdapter.fetch_order_book(symbol) -> OrderBook` is superseded by `VenueAdapter.fetch_observation(symbol) -> VenueObservation`.
+- Reason: Future adapters should remain read-only and per-venue, but RX-004 requires normalized funding, fee, timestamp, and order-book inputs from one venue without allowing adapters to assemble route snapshots or calculate EV.
+- Affected files/modules: `core/domain/contracts.py`, `core/domain/__init__.py`, `core/pipeline/snapshot.py`, `core/venues/base.py`, `apps/research_runner/fake_data.py`, tests, and governance docs.
+- Non-decisions: RX-004 does not implement Broad Scan, Focused Refresh, Watchlist, real adapters, paper execution, persistence, dashboard, order placement, live trading, canary architecture, hold-next-cycle logic, or artificial filters.
