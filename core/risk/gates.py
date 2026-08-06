@@ -42,7 +42,7 @@ def check_min_net_profit(net_profit_usd: Decimal, rules: ProductRules) -> tuple[
 
 
 def check_live_capture_allowed(rules: ProductRules) -> tuple[bool, RejectReason | None]:
-    """RX-002 cannot authorize live capture plans."""
+    """Live capture plans remain blocked until future live gates are implemented."""
 
     if not rules.live_trading_enabled:
         return False, RejectReason.LIVE_TRADING_DISABLED

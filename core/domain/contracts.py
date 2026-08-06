@@ -15,6 +15,34 @@ OrderSide = Literal["buy", "sell"]
 
 
 @dataclass(frozen=True, slots=True)
+class OrderBookLevel:
+    """One normalized price level where size is base asset quantity."""
+
+    price: Decimal
+    size: Decimal
+
+    def __post_init__(self) -> None:
+        if self.price <= Decimal("0"):
+            raise ValueError("order book level price must be positive")
+        if self.size <= Decimal("0"):
+            raise ValueError("order book level size must be positive")
+
+
+@dataclass(frozen=True, slots=True)
+class OrderBook:
+    """Normalized order book used by offline VWAP calculations."""
+
+    venue: str
+    symbol: str
+    bids: tuple[OrderBookLevel, ...]
+    asks: tuple[OrderBookLevel, ...]
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "bids", tuple(self.bids))
+        object.__setattr__(self, "asks", tuple(self.asks))
+
+
+@dataclass(frozen=True, slots=True)
 class Capture:
     """One funding settlement opportunity.
 
@@ -47,8 +75,46 @@ class ExecutableQuote:
     symbol: str
     side: OrderSide
     target_notional_usd: Decimal
-    vwap_price: Decimal
+    vwap_price: Decimal | None
     executable: bool
+    source: ValueSource = ValueSource.ESTIMATED_FROM_ORDERBOOK
+    consumed_base_quantity: Decimal | None = None
+    consumed_levels: int = 0
+    notional_filled_usd: Decimal | None = None
+    best_price: Decimal | None = None
+    worst_price: Decimal | None = None
+    price_impact_bps: Decimal | None = None
+
+    def __post_init__(self) -> None:
+        if self.target_notional_usd <= Decimal("0"):
+            raise ValueError("target_notional_usd must be positive")
+        if self.vwap_price is not None and self.vwap_price <= Decimal("0"):
+            raise ValueError("vwap_price must be positive when provided")
+        if self.executable and self.vwap_price is None:
+            raise ValueError("executable quotes require vwap_price")
+        if self.source is ValueSource.UNKNOWN:
+            raise ValueError("executable quote source cannot be UNKNOWN")
+
+        notional_filled = self.notional_filled_usd
+        if notional_filled is None:
+            notional_filled = self.target_notional_usd if self.executable else Decimal("0")
+            object.__setattr__(self, "notional_filled_usd", notional_filled)
+        if notional_filled < Decimal("0"):
+            raise ValueError("notional_filled_usd cannot be negative")
+
+        consumed_base = self.consumed_base_quantity
+        if consumed_base is None:
+            if self.executable and self.vwap_price is not None:
+                consumed_base = self.target_notional_usd / self.vwap_price
+            else:
+                consumed_base = Decimal("0")
+            object.__setattr__(self, "consumed_base_quantity", consumed_base)
+        if consumed_base < Decimal("0"):
+            raise ValueError("consumed_base_quantity cannot be negative")
+        if self.consumed_levels < 0:
+            raise ValueError("consumed_levels cannot be negative")
+        if self.price_impact_bps is not None and self.price_impact_bps < Decimal("0"):
+            raise ValueError("price_impact_bps cannot be negative")
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,6 +146,33 @@ class EstimatedValue:
 
 
 @dataclass(frozen=True, slots=True)
+class FeeComponent:
+    """One source-aware fee input in USD."""
+
+    name: str
+    amount_usd: EstimatedValue
+    is_default: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class FeeModel:
+    """Source-aware fee model for the current entry and immediate unwind path."""
+
+    components: tuple[FeeComponent, ...]
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "components", tuple(self.components))
+
+
+@dataclass(frozen=True, slots=True)
+class FundingSnapshot:
+    """Source-aware expected funding cash flows for one capture opportunity."""
+
+    risex_funding_usd: EstimatedValue
+    hedge_funding_usd: EstimatedValue
+
+
+@dataclass(frozen=True, slots=True)
 class VenueSnapshot:
     """Fake normalized snapshot used by the non-trading walking skeleton."""
 
@@ -88,9 +181,8 @@ class VenueSnapshot:
     hedge_entry_quote: ExecutableQuote
     risex_estimated_exit_quote: ExecutableQuote
     hedge_estimated_exit_quote: ExecutableQuote
-    expected_risex_funding_usd: Decimal
-    expected_hedge_funding_usd: Decimal
-    documented_fees_usd: Decimal
+    funding: FundingSnapshot
+    fees: FeeModel
 
     def executable_quotes(self) -> tuple[ExecutableQuote, ...]:
         return (

@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import importlib
 import sys
+from dataclasses import replace
 from decimal import Decimal
 
 from apps.research_runner.fake_data import build_fake_route_and_snapshot
 from core.config.product_rules import ProductRules
-from core.domain.enums import EvaluationMode, RejectReason, RouteStatus
+from core.domain.contracts import EstimatedValue, FeeComponent, FeeModel, FundingSnapshot
+from core.domain.enums import EvaluationMode, RejectReason, RouteStatus, ValueSource
 from core.pipeline.evaluate import evaluate_route
 
 
@@ -26,15 +28,20 @@ def test_evaluate_route_does_not_create_live_capture_plan_when_live_disabled() -
 
 def test_evaluate_route_rejects_when_net_profit_below_minimum() -> None:
     route, snapshot = build_fake_route_and_snapshot()
-    low_profit_snapshot = snapshot.__class__(
-        captured_at=snapshot.captured_at,
-        risex_entry_quote=snapshot.risex_entry_quote,
-        hedge_entry_quote=snapshot.hedge_entry_quote,
-        risex_estimated_exit_quote=snapshot.risex_estimated_exit_quote,
-        hedge_estimated_exit_quote=snapshot.hedge_estimated_exit_quote,
-        expected_risex_funding_usd=Decimal("0.1"),
-        expected_hedge_funding_usd=Decimal("0"),
-        documented_fees_usd=Decimal("0"),
+    low_profit_snapshot = replace(
+        snapshot,
+        funding=FundingSnapshot(
+            risex_funding_usd=EstimatedValue(value=Decimal("0.1"), source=snapshot.funding.risex_funding_usd.source),
+            hedge_funding_usd=EstimatedValue(value=Decimal("0"), source=snapshot.funding.hedge_funding_usd.source),
+        ),
+        fees=FeeModel(
+            components=(
+                FeeComponent(
+                    name="zero_fees",
+                    amount_usd=EstimatedValue(value=Decimal("0"), source=snapshot.fees.components[0].amount_usd.source),
+                ),
+            )
+        ),
     )
 
     decision = evaluate_route(route, low_profit_snapshot, EvaluationMode.ENTRY)
@@ -53,16 +60,7 @@ def test_evaluate_route_rejects_when_500_not_executable() -> None:
         vwap_price=snapshot.risex_entry_quote.vwap_price,
         executable=True,
     )
-    bad_snapshot = snapshot.__class__(
-        captured_at=snapshot.captured_at,
-        risex_entry_quote=bad_quote,
-        hedge_entry_quote=snapshot.hedge_entry_quote,
-        risex_estimated_exit_quote=snapshot.risex_estimated_exit_quote,
-        hedge_estimated_exit_quote=snapshot.hedge_estimated_exit_quote,
-        expected_risex_funding_usd=snapshot.expected_risex_funding_usd,
-        expected_hedge_funding_usd=snapshot.expected_hedge_funding_usd,
-        documented_fees_usd=snapshot.documented_fees_usd,
-    )
+    bad_snapshot = replace(snapshot, risex_entry_quote=bad_quote)
 
     decision = evaluate_route(route, bad_snapshot, EvaluationMode.ENTRY)
 
@@ -100,6 +98,44 @@ def test_evaluate_route_keeps_live_gates_closed_even_when_live_switch_is_enabled
     assert decision.status is RouteStatus.PAPER_ELIGIBLE
     assert decision.capture_plan is None
     assert decision.reasons == (RejectReason.LIVE_GATES_NOT_IMPLEMENTED,)
+
+
+def test_evaluate_route_rejects_missing_funding_economics_data() -> None:
+    route, snapshot = build_fake_route_and_snapshot()
+    missing_funding_snapshot = replace(
+        snapshot,
+        funding=FundingSnapshot(
+            risex_funding_usd=EstimatedValue(value=None, source=ValueSource.UNKNOWN),
+            hedge_funding_usd=snapshot.funding.hedge_funding_usd,
+        ),
+    )
+
+    decision = evaluate_route(route, missing_funding_snapshot, EvaluationMode.ENTRY)
+
+    assert decision.status is RouteStatus.REJECTED
+    assert decision.reasons == (RejectReason.REQUIRED_LIVE_DATA_MISSING,)
+    assert decision.capture_plan is None
+
+
+def test_evaluate_route_rejects_missing_fee_economics_data() -> None:
+    route, snapshot = build_fake_route_and_snapshot()
+    missing_fee_snapshot = replace(
+        snapshot,
+        fees=FeeModel(
+            components=(
+                FeeComponent(
+                    name="unknown_fee",
+                    amount_usd=EstimatedValue(value=None, source=ValueSource.UNKNOWN),
+                ),
+            )
+        ),
+    )
+
+    decision = evaluate_route(route, missing_fee_snapshot, EvaluationMode.ENTRY)
+
+    assert decision.status is RouteStatus.REJECTED
+    assert decision.reasons == (RejectReason.REQUIRED_LIVE_DATA_MISSING,)
+    assert decision.capture_plan is None
 
 
 def test_evaluate_route_does_not_import_execution_order_placement() -> None:

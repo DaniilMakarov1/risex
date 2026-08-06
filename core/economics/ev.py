@@ -16,7 +16,7 @@ class EntryEV:
     """Current-entry EV based on executable VWAP and explicit cash-flow inputs."""
 
     expected_funding_usd: Decimal
-    documented_fees_usd: Decimal
+    total_fees_usd: Decimal
     simulated_roundtrip_cost_usd: Decimal
     net_profit_usd: Decimal
 
@@ -24,18 +24,13 @@ class EntryEV:
 def calculate_entry_ev(snapshot: VenueSnapshot) -> EntryEV:
     """Calculate entry EV without future basis prediction."""
 
-    expected_funding_usd = calculate_total_expected_funding_usd(
-        expected_risex_funding_usd=snapshot.expected_risex_funding_usd,
-        expected_hedge_funding_usd=snapshot.expected_hedge_funding_usd,
-    )
-    documented_fees_usd = calculate_total_fees_usd(
-        documented_fees_usd=snapshot.documented_fees_usd,
-    )
+    expected_funding_usd = calculate_total_expected_funding_usd(snapshot.funding)
+    total_fees_usd = calculate_total_fees_usd(snapshot.fees)
     simulated_roundtrip_cost_usd = calculate_total_simulated_roundtrip_cost_usd(snapshot)
-    net_profit_usd = expected_funding_usd - documented_fees_usd - simulated_roundtrip_cost_usd
+    net_profit_usd = expected_funding_usd - total_fees_usd - simulated_roundtrip_cost_usd
     return EntryEV(
         expected_funding_usd=expected_funding_usd,
-        documented_fees_usd=documented_fees_usd,
+        total_fees_usd=total_fees_usd,
         simulated_roundtrip_cost_usd=simulated_roundtrip_cost_usd,
         net_profit_usd=net_profit_usd,
     )

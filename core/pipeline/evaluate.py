@@ -65,7 +65,15 @@ def evaluate_route(
             ledger=ledger,
         )
 
-    entry_ev = calculate_entry_ev(snapshot)
+    try:
+        entry_ev = calculate_entry_ev(snapshot)
+    except ValueError:
+        return _reject(
+            route=route,
+            mode=mode,
+            reason=RejectReason.REQUIRED_LIVE_DATA_MISSING,
+            ledger=ledger,
+        )
     ok, reason = check_min_net_profit(entry_ev.net_profit_usd, active_rules)
     if not ok:
         decision = DecisionResult(

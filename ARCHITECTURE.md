@@ -37,8 +37,12 @@ tests/
 - `CaptureState`: lifecycle state for a `Capture`, separate from route eligibility.
 - `RouteCandidate`: a potential RiseX + hedge route.
 - `VenueSnapshot`: normalized current market and cash-flow inputs.
+- `OrderBookLevel`: one normalized price level where size is base asset quantity.
+- `OrderBook`: normalized current bids and asks used for offline VWAP calculations.
 - `ExecutableQuote`: current executable VWAP quote for a target notional.
 - `EstimatedValue`: numeric value plus explicit source, with `UNKNOWN` carrying no numeric fallback.
+- `FeeModel`: source-aware fee components for entry and immediate unwind economics.
+- `FundingSnapshot`: source-aware expected funding cash flows for one capture opportunity.
 - `DecisionResult`: result of the shared decision pipeline.
 - `RouteStatus`: `RESEARCH_ONLY`, `PAPER_ELIGIBLE`, `LIVE_ELIGIBLE`, `REJECTED`.
 - `EvaluationMode`: `DISCOVERY` or `ENTRY`.
@@ -111,13 +115,13 @@ No other config object owns those same product constants.
 
 `evaluate_route(route, snapshot, mode)` is the only route decision path.
 
-RX-002 behavior:
+RX-003 behavior:
 
-1. Verify the route and all fake executable VWAP quotes can represent the configured minimum notional.
-2. Calculate entry EV from explicit funding, explicit fees, and simulated immediate roundtrip cost.
+1. Verify the route and all executable VWAP quotes can represent the configured minimum notional.
+2. Calculate entry EV from source-aware funding, source-aware fees, and simulated immediate roundtrip cost.
 3. Reject through centralized `RejectReason` values, not ad hoc reason strings.
-4. Reject when minimum leg notional is not met, order-book quotes cannot execute the configured minimum notional, or net profit is below the configured minimum.
-5. Return `PAPER_ELIGIBLE` for profitable fake routes while live gates are not implemented.
+4. Reject when minimum leg notional is not met, required order-book liquidity cannot execute the configured minimum notional, required economics data is missing, or net profit is below the configured minimum.
+5. Return `PAPER_ELIGIBLE` for profitable offline routes while live gates are not implemented.
 6. Never create a live `CapturePlan` while `live_trading_enabled = false`.
 7. Never place orders.
 8. Optionally append the decision event to the ledger through `core/accounting/ledger.py`.
@@ -130,8 +134,8 @@ Spread, price impact, basis, slippage, and fees are not independent arbitrary re
 
 ## Unknown values
 
-Unknown values must not silently become zero. `EstimatedValue` requires `source=UNKNOWN` values to carry no numeric value, and callers must use source-aware handling before a value can participate in economics. Future fee defaults must use `USER_CONFIGURED`; future last-observed funding estimates must use `ESTIMATED_FROM_LAST_VALUE`.
+Unknown values must not silently become zero. `EstimatedValue` requires `source=UNKNOWN` values to carry no numeric value, and callers must use source-aware handling before a value can participate in economics. Fee defaults must use `USER_CONFIGURED`; last-observed funding estimates must use `ESTIMATED_FROM_LAST_VALUE`.
 
 ## Entry and exit economics
 
-Entry EV does not use `expected_basis_change` as a prediction. Before entry, the architecture uses current executable VWAP and simulated immediate roundtrip cost. After entry, future work must monitor `current_unwind_pnl_usd`, meaning the PnL if both legs were closed using current order books.
+Entry EV does not use `expected_basis_change` as a prediction. Before entry, the architecture uses current executable VWAP from order books and simulated immediate roundtrip cost. After entry, basis logic monitors `current_unwind_pnl_usd`, meaning the PnL if both legs were closed using current executable quotes.
