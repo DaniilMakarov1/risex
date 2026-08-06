@@ -279,6 +279,60 @@ def test_assembly_rejects_naive_assembly_timestamp() -> None:
         )
 
 
+def test_observation_rejects_missing_expected_funding_before_assembly() -> None:
+    with pytest.raises(ValueError, match="expected_funding_usd"):
+        _observation(
+            venue="RiseX",
+            symbol="BTC-PERP",
+            observed_at=RISEX_OBSERVED_AT,
+            settlement_at=RISEX_SETTLEMENT_AT,
+            funding=None,
+            fees=_fees("risex_fees"),
+        )
+
+
+def test_observation_rejects_missing_fee_model_before_assembly() -> None:
+    with pytest.raises(ValueError, match="fees must be a FeeModel"):
+        _observation(
+            venue="RiseX",
+            symbol="BTC-PERP",
+            observed_at=RISEX_OBSERVED_AT,
+            settlement_at=RISEX_SETTLEMENT_AT,
+            funding=EstimatedValue(value=Decimal("3"), source=ValueSource.OBSERVED),
+            fees=None,
+        )
+
+
+def test_observation_rejects_fee_component_missing_amount_before_assembly() -> None:
+    malformed_fees = FeeModel(
+        components=(FeeComponent(name="missing_fee_amount", amount_usd=None),)
+    )
+
+    with pytest.raises(ValueError, match="amount_usd"):
+        _observation(
+            venue="RiseX",
+            symbol="BTC-PERP",
+            observed_at=RISEX_OBSERVED_AT,
+            settlement_at=RISEX_SETTLEMENT_AT,
+            funding=EstimatedValue(value=Decimal("3"), source=ValueSource.OBSERVED),
+            fees=malformed_fees,
+        )
+
+
+def test_observation_rejects_non_fee_component_before_assembly() -> None:
+    malformed_fees = FeeModel(components=(None,))
+
+    with pytest.raises(ValueError, match="FeeComponent"):
+        _observation(
+            venue="RiseX",
+            symbol="BTC-PERP",
+            observed_at=RISEX_OBSERVED_AT,
+            settlement_at=RISEX_SETTLEMENT_AT,
+            funding=EstimatedValue(value=Decimal("3"), source=ValueSource.OBSERVED),
+            fees=malformed_fees,
+        )
+
+
 def test_unknown_funding_survives_assembly_and_cannot_become_live_eligible() -> None:
     route = _route()
     _, hedge_observation = _observations()

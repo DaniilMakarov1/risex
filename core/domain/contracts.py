@@ -220,12 +220,21 @@ class VenueObservation:
             raise ValueError("symbol must be non-empty")
         validate_timezone_aware_datetime(self.observed_at, "observed_at")
         validate_timezone_aware_datetime(self.funding_settlement_at, "funding_settlement_at")
+        if not isinstance(self.expected_funding_usd, EstimatedValue):
+            raise ValueError("expected_funding_usd must be an EstimatedValue")
+        if not isinstance(self.fees, FeeModel):
+            raise ValueError("fees must be a FeeModel")
+        if not self.fees.components:
+            raise ValueError("venue observation requires at least one source-aware fee component")
+        for component in self.fees.components:
+            if not isinstance(component, FeeComponent):
+                raise ValueError("fees.components must contain FeeComponent values")
+            if not isinstance(component.amount_usd, EstimatedValue):
+                raise ValueError("fee component amount_usd must be an EstimatedValue")
         if self.order_book.venue != self.venue:
             raise ValueError("order book venue must match observation venue")
         if self.order_book.symbol != self.symbol:
             raise ValueError("order book symbol must match observation symbol")
-        if not self.fees.components:
-            raise ValueError("venue observation requires at least one source-aware fee component")
 
 
 @dataclass(frozen=True, slots=True)
