@@ -1,66 +1,49 @@
 # Status
 
-- Last accepted task: RX-002A — Add GitHub CI Workflow
-- Accepted baseline RX-002A HEAD: `0ad00d8f7ac9796351d932950c4bd4b4864ebd94`
-- Current completed candidate task: RX-003 — Economics Engine: Fees, Funding, VWAP Liquidity, Basis, and Entry EV
-- Current branch: task/rx-003-economics-engine
-- Starting HEAD for RX-003: `0ad00d8f7ac9796351d932950c4bd4b4864ebd94`
-- Starting HEAD for RX-003 FIX: `a53100fc4f45540ccd31769bc867e81d3cc5aa94`
-- Starting HEAD for RX-003 FIX 2: `e676b8a10a5265148db3484e0f3c0373faa7e2a2`
-- RX-003 review status: completed candidate awaiting reviewer acceptance
-- RX-003 FIX 2 candidate HEAD: final branch HEAD after this status update; exact hash is reported in the task report after commit and push
-- Repository state at RX-003 FIX start: clean checkout at `a53100fc4f45540ccd31769bc867e81d3cc5aa94`
-- Repository state at RX-003 FIX 2 start: clean checkout at `e676b8a10a5265148db3484e0f3c0373faa7e2a2`
+- Last accepted task: RX-003 — Economics Engine: Fees, Funding, VWAP Liquidity, Basis, and Entry EV
+- Accepted RX-003 implementation HEAD: `05ecdc4bf146f1c436a7c888f82117772419d743`
+- Accepted baseline branch: `main`
+- Current RX task: none active
 
-## Completed candidate work summary
+The accepted implementation HEAD is `05ecdc4bf146f1c436a7c888f82117772419d743`.
+The later governance commit on `main` that updates this file is the recommended starting baseline for RX-004.
 
-- Added source-aware order book, executable quote, fee model, and funding snapshot contracts.
-- Implemented VWAP from order-book levels for the configured minimum leg notional, including partial final-level consumption and insufficient-liquidity non-executable quotes.
-- Implemented fee calculations that accept documented, observed, or user-configured values and reject unknown, invalid default-source, or negative fee inputs.
-- Implemented funding calculations that accept documented, observed, or last-observed estimates and reject missing or unsupported funding sources.
-- Implemented entry EV from expected funding, source-aware fees, and simulated immediate unwind cost from executable VWAP quotes.
-- Implemented current unwind PnL support in the basis module without forecasting future basis.
-- Strengthened `evaluate_route()` to fail closed through centralized `RejectReason` values when required economics data is missing.
-- Updated fake data and CLI path to use offline order-book VWAP instead of hardcoded fake VWAP shortcuts.
-- Added unit, integration, and invariant tests for RX-003 economics contracts and forbidden architecture drift.
+## Completed tasks
 
-## RX-003 FIX summary
+- RX-000
+- RX-001
+- RX-002
+- RX-002A
+- RX-003
 
-- Extended `RouteCandidate` with explicit RiseX venue, RiseX entry side, and hedge entry side.
-- Added centralized route/snapshot alignment in `core/risk/gates.py` before Entry EV.
-- Enforced route target notional, quote venue, quote symbol, quote side, quote source, and quote-pair consistency before economics math.
-- Strengthened roundtrip quote-pair validation in `core/economics/liquidity.py`.
-- Added scoped `EconomicsInputError` handling so expected missing economics input fails closed while unexpected programming errors remain visible.
-- Removed `CapturePlan` construction from the RX-003 evaluation path; live gates remain unimplemented and profitable ENTRY decisions remain `PAPER_ELIGIBLE`.
-- Replaced the cross-venue adapter protocol with a read-only per-venue `fetch_order_book(symbol) -> OrderBook` contract.
-- Updated architecture, decisions, implementation plan, status, next-task governance, and tests.
+## Current architecture status
 
-## RX-003 FIX 2 summary
+- Offline modular monolith.
+- Capture-centric domain.
+- One shared `evaluate_route()` decision path.
+- Source-aware fees and funding.
+- Route/snapshot alignment.
+- Full-target order-book VWAP executability.
+- Unknown economics fail closed.
+- Live `CapturePlan` creation blocked.
 
-- Enforced that executable quotes must fully fill their selected `target_notional_usd`, not only the product minimum notional.
-- Kept `MIN_LEG_NOTIONAL_USD` as a separate product gate from full selected-route executability.
-- Added runtime order-side validation for `RouteCandidate`, `ExecutableQuote`, and order-book VWAP side selection.
-- Preserved the no-artificial-filters invariant: poor full-fill liquidity still affects PnL instead of becoming an independent rejection reason.
+## Tests last reported for accepted RX-003
 
-## Latest RX-003 FIX 2 verification
-
-- `python3 -m apps.cli.main`: `fake-risex-hl-btc: PAPER_ELIGIBLE net_profit_usd=1.50000000000000000000000000`
-- `python3 -m pytest`: `98 passed in 0.09s`
+- `python3 -m pytest`: `98 passed`
 - `python3 -m compileall apps core storage tests`: exit 0
 - `git diff --check`: exit 0
 
 ## Known limitations
 
-- RX-003 is not accepted until reviewer approval.
-- Only fake offline data is available.
-- No real RiseX or Hyperliquid adapters exist.
-- No live order placement exists.
-- No persistent SQLite ledger exists yet.
-- Funding settlement verification is not implemented.
-- Broad Scan and Focused Refresh orchestration is not implemented yet.
-- Live eligibility remains blocked by intentionally unimplemented live gates, even if the live trading switch is manually enabled.
-- Fee rebates and negative fee modeling are intentionally not implemented in RX-003.
-- Current unwind PnL is quote-based and deterministic; it does not persist capture lifecycle or accounting events.
+- Fake data only.
+- No per-venue observation assembly.
+- No Broad Scan.
+- No Focused Refresh.
+- No real venue adapters.
+- No persistent ledger or reconciliation.
+- No paper runner.
+- No funding settlement verifier.
+- No live trading.
 
 ## Next recommended task
 
