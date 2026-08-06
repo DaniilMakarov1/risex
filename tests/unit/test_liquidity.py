@@ -1,4 +1,4 @@
-from dataclasses import replace
+from dataclasses import fields, replace
 from decimal import Decimal
 
 import pytest
@@ -6,19 +6,38 @@ import pytest
 from core.domain.contracts import ExecutableQuote, OrderBook, OrderBookLevel
 from core.domain.enums import ValueSource
 from core.economics.errors import EconomicsInputError
-from core.economics.liquidity import calculate_executable_quote, calculate_quote_roundtrip_cost_usd
+from core.economics.liquidity import (
+    calculate_executable_quote,
+    calculate_quote_roundtrip_cost_usd,
+    quote_is_executable_for_notional,
+)
 
 
-def _executable_quote(*, side: str, venue: str = "RiseX", symbol: str = "BTC-PERP") -> ExecutableQuote:
+def _executable_quote(
+    *,
+    side: str,
+    venue: str = "RiseX",
+    symbol: str = "BTC-PERP",
+    target_notional_usd: Decimal = Decimal("500"),
+) -> ExecutableQuote:
     return ExecutableQuote(
         venue=venue,
         symbol=symbol,
         side=side,
-        target_notional_usd=Decimal("500"),
+        target_notional_usd=target_notional_usd,
         vwap_price=Decimal("100"),
         executable=True,
         source=ValueSource.ESTIMATED_FROM_ORDERBOOK,
     )
+
+
+def _forge_quote(quote: ExecutableQuote, **changes) -> ExecutableQuote:
+    values = {field.name: getattr(quote, field.name) for field in fields(ExecutableQuote)}
+    values.update(changes)
+    forged = object.__new__(ExecutableQuote)
+    for name, value in values.items():
+        object.__setattr__(forged, name, value)
+    return forged
 
 
 def test_vwap_consumes_asks_for_buy_target_notional() -> None:
@@ -92,6 +111,91 @@ def test_vwap_marks_insufficient_liquidity_as_non_executable() -> None:
     assert quote.consumed_levels == 1
 
 
+def test_quote_is_not_executable_when_fill_is_below_quote_target() -> None:
+    quote = ExecutableQuote(
+        venue="RiseX",
+        symbol="BTC-PERP",
+        side="buy",
+        target_notional_usd=Decimal("10000"),
+        vwap_price=Decimal("100"),
+        executable=False,
+        source=ValueSource.ESTIMATED_FROM_ORDERBOOK,
+        consumed_base_quantity=Decimal("5"),
+        notional_filled_usd=Decimal("500"),
+    )
+
+    assert quote_is_executable_for_notional(
+        quote,
+        min_leg_notional_usd=Decimal("500"),
+    ) is False
+
+
+def test_fully_filled_large_quote_is_technically_executable() -> None:
+    order_book = OrderBook(
+        venue="RiseX",
+        symbol="BTC-PERP",
+        bids=(),
+        asks=(OrderBookLevel(price=Decimal("100"), size=Decimal("200")),),
+    )
+
+    quote = calculate_executable_quote(
+        order_book=order_book,
+        side="buy",
+        target_notional_usd=Decimal("10000"),
+    )
+
+    assert quote.notional_filled_usd == Decimal("10000")
+    assert quote_is_executable_for_notional(
+        quote,
+        min_leg_notional_usd=Decimal("500"),
+    ) is True
+
+
+def test_executable_quote_cannot_claim_partial_fill_is_executable() -> None:
+    with pytest.raises(ValueError, match="fill target_notional_usd"):
+        ExecutableQuote(
+            venue="RiseX",
+            symbol="BTC-PERP",
+            side="buy",
+            target_notional_usd=Decimal("10000"),
+            vwap_price=Decimal("100"),
+            executable=True,
+            source=ValueSource.ESTIMATED_FROM_ORDERBOOK,
+            consumed_base_quantity=Decimal("5"),
+            notional_filled_usd=Decimal("500"),
+        )
+
+
+def test_calculate_executable_quote_rejects_invalid_side() -> None:
+    order_book = OrderBook(
+        venue="RiseX",
+        symbol="BTC-PERP",
+        bids=(OrderBookLevel(price=Decimal("100"), size=Decimal("100")),),
+        asks=(OrderBookLevel(price=Decimal("101"), size=Decimal("100")),),
+    )
+
+    with pytest.raises(ValueError, match="order side"):
+        calculate_executable_quote(
+            order_book=order_book,
+            side="hold",
+            target_notional_usd=Decimal("500"),
+        )
+
+
+def test_roundtrip_cost_rejects_forged_executable_quote_with_partial_fill() -> None:
+    entry_quote = _forge_quote(
+        _executable_quote(side="buy"),
+        target_notional_usd=Decimal("10000"),
+        executable=True,
+        notional_filled_usd=Decimal("500"),
+        consumed_base_quantity=Decimal("5"),
+    )
+    exit_quote = _executable_quote(side="sell", target_notional_usd=Decimal("10000"))
+
+    with pytest.raises(EconomicsInputError, match="entry_quote must fully fill"):
+        calculate_quote_roundtrip_cost_usd(entry_quote=entry_quote, exit_quote=exit_quote)
+
+
 def test_poor_executable_prices_increase_roundtrip_cost() -> None:
     entry_book = OrderBook(
         venue="RiseX",
@@ -157,7 +261,7 @@ def test_poor_executable_prices_increase_roundtrip_cost() -> None:
         ),
         (
             _executable_quote(side="buy"),
-            replace(_executable_quote(side="sell"), target_notional_usd=Decimal("1000")),
+            _executable_quote(side="sell", target_notional_usd=Decimal("1000")),
             "same target notional",
         ),
         (

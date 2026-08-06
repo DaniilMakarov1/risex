@@ -39,7 +39,7 @@ tests/
 - `VenueSnapshot`: normalized current market and cash-flow inputs.
 - `OrderBookLevel`: one normalized price level where size is base asset quantity.
 - `OrderBook`: normalized current bids and asks used for offline VWAP calculations.
-- `ExecutableQuote`: current executable VWAP quote for a target notional.
+- `ExecutableQuote`: current executable VWAP quote for a target notional; `executable=True` means the full quote target notional is filled.
 - `EstimatedValue`: numeric value plus explicit source, with `UNKNOWN` carrying no numeric fallback.
 - `FeeModel`: source-aware fee components for entry and immediate unwind economics.
 - `FundingSnapshot`: source-aware expected funding cash flows for one capture opportunity.
@@ -119,7 +119,7 @@ RX-003 behavior:
 
 1. Verify the route target notional meets the configured minimum.
 2. Verify route/snapshot alignment through `core/risk/gates.py` before any Entry EV calculation.
-3. Verify all executable VWAP quotes can represent the configured minimum notional.
+3. Verify all executable VWAP quotes meet the configured minimum notional and fully fill their own target notional.
 4. Calculate entry EV from source-aware funding, source-aware fees, and simulated immediate roundtrip cost.
 5. Reject through centralized `RejectReason` values, not ad hoc reason strings.
 6. Reject when minimum leg notional is not met, route/snapshot alignment fails, required order-book liquidity cannot execute the configured minimum notional, required economics data is missing, or net profit is below the configured minimum.
@@ -150,6 +150,17 @@ RX-003 behavior:
 - Entry and estimated-exit quotes paired for roundtrip math use the same venue and symbol.
 
 Alignment failures fail closed through centralized `RejectReason.TECHNICALLY_NOT_EXECUTABLE`. They are not spread, price-impact, levels-consumed, safety-margin, or conservative-buffer filters.
+
+## Executable quote invariant
+
+The product minimum notional and full quote executability are separate checks:
+
+- `RouteCandidate.target_notional_usd` must meet `ProductRules.min_leg_notional_usd`.
+- Every quote used by `evaluate_route()` must target the route's selected target notional.
+- `ExecutableQuote(executable=True)` must have a valid VWAP, positive consumed base quantity, and `notional_filled_usd >= target_notional_usd`.
+- A quote that only fills the product minimum is not executable for a larger selected route target.
+
+Poor executable prices, high price impact, and many consumed order-book levels are not independent rejection filters when the full target can be filled. They affect Entry EV through VWAP and roundtrip PnL.
 
 ## Venue adapter boundary
 

@@ -51,3 +51,13 @@
 - Superseded decision: the previous `VenueAdapter.fetch_snapshot() -> VenueSnapshot` boundary is superseded. Adapters are now per-venue and expose only `fetch_order_book(symbol: str) -> OrderBook`; cross-venue route snapshot assembly is reserved for future observation/orchestration contracts.
 - Decision: RX-003 `evaluate_route()` does not construct `CapturePlan`, does not invent settlement timestamps, and does not bypass the Capture state machine. Even with `ProductRules(live_trading_enabled=True)`, profitable ENTRY evaluations remain `PAPER_ELIGIBLE` with `LIVE_GATES_NOT_IMPLEMENTED`.
 - Reason: RX-003 has no implemented live gates, funding settlement timestamp contract, fresh CapturePlan contract, or live execution boundary.
+
+## 2026-08-06 — RX-003 FIX 2
+
+- Date: 2026-08-06
+- Decision: `ExecutableQuote(executable=True)` means the quote fully fills its own `target_notional_usd`; filling only `ProductRules.min_leg_notional_usd` is insufficient for larger route targets.
+- Reason: RX-003 FIX review found that an internally inconsistent quote could claim `target_notional_usd=10000` and `executable=True` while only filling `500`, allowing a larger selected route to pass the minimum-notional executability gate.
+- Affected files/modules: `core/domain/contracts.py`, `core/economics/liquidity.py`, `core/risk/gates.py`, `tests/unit/test_liquidity.py`, `tests/unit/test_evaluate_route.py`, `ARCHITECTURE.md`, `DECISIONS.md`, and `STATUS.md`.
+- Superseded decision: no previous decision is superseded; this tightens the RX-003 executable quote contract.
+- Decision: order sides are runtime-validated as exactly `buy` or `sell` in `RouteCandidate`, `ExecutableQuote`, and order-book VWAP selection.
+- Reason: invalid side strings must not silently fall through to sell-side bid consumption.

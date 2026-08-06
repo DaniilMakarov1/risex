@@ -9,7 +9,9 @@ from core.domain.contracts import (
     OrderBook,
     OrderBookLevel,
     OrderSide,
+    VALID_ORDER_SIDES,
     VenueSnapshot,
+    validate_order_side,
 )
 from core.domain.enums import ValueSource
 from core.economics.errors import EconomicsInputError
@@ -19,6 +21,7 @@ BPS = Decimal("10000")
 
 
 def _levels_for_side(order_book: OrderBook, side: OrderSide) -> tuple[OrderBookLevel, ...]:
+    validate_order_side(side)
     if side == "buy":
         return tuple(sorted(order_book.asks, key=lambda level: level.price))
     return tuple(sorted(order_book.bids, key=lambda level: level.price, reverse=True))
@@ -96,14 +99,20 @@ def quote_is_executable_for_notional(
     """Check technical executability for the configured target notional.
 
     This is not a spread, price impact, or slippage filter. It only checks whether
-    the requested notional can be represented by the provided executable VWAP.
+    the quote fully executes its own target notional and still meets the product
+    minimum notional.
     """
 
+    notional_filled = quote.notional_filled_usd or Decimal("0")
+    consumed_base_quantity = quote.consumed_base_quantity or Decimal("0")
     return (
         quote.executable
         and quote.vwap_price is not None
+        and quote.vwap_price > Decimal("0")
+        and quote.side in VALID_ORDER_SIDES
         and quote.target_notional_usd >= min_leg_notional_usd
-        and (quote.notional_filled_usd or Decimal("0")) >= min_leg_notional_usd
+        and notional_filled >= quote.target_notional_usd
+        and consumed_base_quantity > Decimal("0")
     )
 
 
@@ -118,6 +127,10 @@ def calculate_quote_roundtrip_cost_usd(
         raise EconomicsInputError("entry_quote must be executable with vwap_price")
     if not exit_quote.executable or exit_quote.vwap_price is None:
         raise EconomicsInputError("exit_quote must be executable with vwap_price")
+    if entry_quote.side not in VALID_ORDER_SIDES:
+        raise EconomicsInputError("entry_quote side must be buy or sell")
+    if exit_quote.side not in VALID_ORDER_SIDES:
+        raise EconomicsInputError("exit_quote side must be buy or sell")
     if entry_quote.venue != exit_quote.venue:
         raise EconomicsInputError("entry and exit quotes must use the same venue")
     if entry_quote.symbol != exit_quote.symbol:
@@ -128,6 +141,16 @@ def calculate_quote_roundtrip_cost_usd(
         raise EconomicsInputError("entry and exit quotes must use the same target notional")
     if entry_quote.target_notional_usd <= Decimal("0"):
         raise EconomicsInputError("entry_quote.target_notional_usd must be positive")
+    if not quote_is_executable_for_notional(
+        entry_quote,
+        min_leg_notional_usd=entry_quote.target_notional_usd,
+    ):
+        raise EconomicsInputError("entry_quote must fully fill target_notional_usd")
+    if not quote_is_executable_for_notional(
+        exit_quote,
+        min_leg_notional_usd=exit_quote.target_notional_usd,
+    ):
+        raise EconomicsInputError("exit_quote must fully fill target_notional_usd")
 
     if entry_quote.side == "buy":
         price_delta = entry_quote.vwap_price - exit_quote.vwap_price

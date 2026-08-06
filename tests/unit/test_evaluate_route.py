@@ -2,20 +2,38 @@ from __future__ import annotations
 
 import importlib
 import sys
-from dataclasses import replace
+from dataclasses import fields, replace
 from decimal import Decimal
 
 import pytest
 
 from apps.research_runner.fake_data import build_fake_route_and_snapshot
 from core.config.product_rules import ProductRules
-from core.domain.contracts import EstimatedValue, FeeComponent, FeeModel, FundingSnapshot
+from core.domain.contracts import (
+    EstimatedValue,
+    ExecutableQuote,
+    FeeComponent,
+    FeeModel,
+    FundingSnapshot,
+    OrderBook,
+    OrderBookLevel,
+)
 from core.domain.enums import EvaluationMode, RejectReason, RouteStatus, ValueSource
+from core.economics.liquidity import calculate_executable_quote
 from core.pipeline.evaluate import evaluate_route
 
 
 def _replace_snapshot_quote(snapshot, quote_name: str, **changes):
     return replace(snapshot, **{quote_name: replace(getattr(snapshot, quote_name), **changes)})
+
+
+def _forge_quote(quote: ExecutableQuote, **changes) -> ExecutableQuote:
+    values = {field.name: getattr(quote, field.name) for field in fields(ExecutableQuote)}
+    values.update(changes)
+    forged = object.__new__(ExecutableQuote)
+    for name, value in values.items():
+        object.__setattr__(forged, name, value)
+    return forged
 
 
 def test_evaluate_route_does_not_create_live_capture_plan_when_live_disabled() -> None:
@@ -95,6 +113,49 @@ def test_evaluate_route_rejects_route_notional_mismatched_with_quote_notional() 
     assert decision.capture_plan is None
 
 
+def test_evaluate_route_rejects_large_route_when_quotes_only_partially_fill_target() -> None:
+    route, snapshot = build_fake_route_and_snapshot()
+    large_route = replace(route, target_notional_usd=Decimal("10000"))
+    partial_snapshot = replace(
+        snapshot,
+        risex_entry_quote=_forge_quote(
+            snapshot.risex_entry_quote,
+            target_notional_usd=Decimal("10000"),
+            executable=True,
+            notional_filled_usd=Decimal("500"),
+            consumed_base_quantity=Decimal("5"),
+        ),
+        hedge_entry_quote=_forge_quote(
+            snapshot.hedge_entry_quote,
+            target_notional_usd=Decimal("10000"),
+            executable=True,
+            notional_filled_usd=Decimal("500"),
+            consumed_base_quantity=Decimal("5"),
+        ),
+        risex_estimated_exit_quote=_forge_quote(
+            snapshot.risex_estimated_exit_quote,
+            target_notional_usd=Decimal("10000"),
+            executable=True,
+            notional_filled_usd=Decimal("500"),
+            consumed_base_quantity=Decimal("5"),
+        ),
+        hedge_estimated_exit_quote=_forge_quote(
+            snapshot.hedge_estimated_exit_quote,
+            target_notional_usd=Decimal("10000"),
+            executable=True,
+            notional_filled_usd=Decimal("500"),
+            consumed_base_quantity=Decimal("5"),
+        ),
+    )
+
+    decision = evaluate_route(large_route, partial_snapshot, EvaluationMode.ENTRY)
+
+    assert decision.status is RouteStatus.REJECTED
+    assert decision.status is not RouteStatus.PAPER_ELIGIBLE
+    assert decision.reasons == (RejectReason.ORDERBOOK_NOT_EXECUTABLE_FOR_MIN_NOTIONAL,)
+    assert decision.capture_plan is None
+
+
 def test_evaluate_route_rejects_wrong_risex_quote_symbol() -> None:
     route, snapshot = build_fake_route_and_snapshot()
     bad_snapshot = _replace_snapshot_quote(
@@ -149,6 +210,13 @@ def test_evaluate_route_rejects_non_opposing_route_entry_sides() -> None:
     assert decision.reasons == (RejectReason.TECHNICALLY_NOT_EXECUTABLE,)
 
 
+def test_route_candidate_rejects_invalid_entry_side_string() -> None:
+    route, _ = build_fake_route_and_snapshot()
+
+    with pytest.raises(ValueError, match="order side"):
+        replace(route, risex_entry_side="hold")
+
+
 def test_evaluate_route_rejects_quote_not_sourced_from_orderbook() -> None:
     route, snapshot = build_fake_route_and_snapshot()
     bad_snapshot = _replace_snapshot_quote(
@@ -174,6 +242,7 @@ def test_evaluate_route_keeps_live_gates_closed_even_when_live_switch_is_enabled
     )
 
     assert decision.status is RouteStatus.PAPER_ELIGIBLE
+    assert decision.status is not RouteStatus.LIVE_ELIGIBLE
     assert decision.capture_plan is None
     assert decision.reasons == (RejectReason.LIVE_GATES_NOT_IMPLEMENTED,)
 
@@ -256,6 +325,62 @@ def test_poor_executable_price_impact_changes_pnl_without_technical_rejection() 
     assert decision.entry_ev.simulated_roundtrip_cost_usd > baseline_decision.entry_ev.simulated_roundtrip_cost_usd
     assert RejectReason.TECHNICALLY_NOT_EXECUTABLE not in decision.reasons
     assert RejectReason.ORDERBOOK_NOT_EXECUTABLE_FOR_MIN_NOTIONAL not in decision.reasons
+
+
+def test_poor_prices_for_fully_filled_large_target_affect_pnl_without_liquidity_rejection() -> None:
+    route, snapshot = build_fake_route_and_snapshot()
+    large_route = replace(route, target_notional_usd=Decimal("10000"))
+    risex_book = OrderBook(
+        venue="RiseX",
+        symbol="BTC-PERP",
+        bids=(OrderBookLevel(price=Decimal("80"), size=Decimal("200")),),
+        asks=(
+            OrderBookLevel(price=Decimal("100"), size=Decimal("50")),
+            OrderBookLevel(price=Decimal("120"), size=Decimal("100")),
+        ),
+    )
+    hedge_book = OrderBook(
+        venue="Hyperliquid",
+        symbol="BTC",
+        bids=(OrderBookLevel(price=Decimal("100"), size=Decimal("200")),),
+        asks=(OrderBookLevel(price=Decimal("130"), size=Decimal("200")),),
+    )
+    large_snapshot = replace(
+        snapshot,
+        risex_entry_quote=calculate_executable_quote(
+            order_book=risex_book,
+            side=large_route.risex_entry_side,
+            target_notional_usd=large_route.target_notional_usd,
+        ),
+        hedge_entry_quote=calculate_executable_quote(
+            order_book=hedge_book,
+            side=large_route.hedge_entry_side,
+            target_notional_usd=large_route.target_notional_usd,
+        ),
+        risex_estimated_exit_quote=calculate_executable_quote(
+            order_book=risex_book,
+            side="sell",
+            target_notional_usd=large_route.target_notional_usd,
+        ),
+        hedge_estimated_exit_quote=calculate_executable_quote(
+            order_book=hedge_book,
+            side="buy",
+            target_notional_usd=large_route.target_notional_usd,
+        ),
+        funding=FundingSnapshot(
+            risex_funding_usd=EstimatedValue(value=Decimal("6000"), source=ValueSource.OBSERVED),
+            hedge_funding_usd=EstimatedValue(value=Decimal("0"), source=ValueSource.OBSERVED),
+        ),
+    )
+
+    decision = evaluate_route(large_route, large_snapshot, EvaluationMode.ENTRY)
+
+    assert decision.status is RouteStatus.PAPER_ELIGIBLE
+    assert decision.entry_ev is not None
+    assert decision.entry_ev.simulated_roundtrip_cost_usd > Decimal("0")
+    assert all(quote.notional_filled_usd == large_route.target_notional_usd for quote in large_snapshot.executable_quotes())
+    assert RejectReason.ORDERBOOK_NOT_EXECUTABLE_FOR_MIN_NOTIONAL not in decision.reasons
+    assert RejectReason.TECHNICALLY_NOT_EXECUTABLE not in decision.reasons
 
 
 def test_evaluate_route_does_not_import_execution_order_placement() -> None:

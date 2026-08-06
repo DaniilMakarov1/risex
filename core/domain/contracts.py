@@ -12,6 +12,14 @@ from typing import Any, Literal
 from core.domain.enums import CaptureState, EvaluationMode, RejectReason, RouteStatus, ValueSource
 
 OrderSide = Literal["buy", "sell"]
+VALID_ORDER_SIDES = frozenset({"buy", "sell"})
+
+
+def validate_order_side(side: str) -> None:
+    """Reject runtime values outside the order-side contract."""
+
+    if side not in VALID_ORDER_SIDES:
+        raise ValueError("order side must be 'buy' or 'sell'")
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,6 +77,10 @@ class RouteCandidate:
     hedge_entry_side: OrderSide
     target_notional_usd: Decimal
 
+    def __post_init__(self) -> None:
+        validate_order_side(self.risex_entry_side)
+        validate_order_side(self.hedge_entry_side)
+
 
 @dataclass(frozen=True, slots=True)
 class ExecutableQuote:
@@ -89,6 +101,7 @@ class ExecutableQuote:
     price_impact_bps: Decimal | None = None
 
     def __post_init__(self) -> None:
+        validate_order_side(self.side)
         if self.target_notional_usd <= Decimal("0"):
             raise ValueError("target_notional_usd must be positive")
         if self.vwap_price is not None and self.vwap_price <= Decimal("0"):
@@ -104,6 +117,8 @@ class ExecutableQuote:
             object.__setattr__(self, "notional_filled_usd", notional_filled)
         if notional_filled < Decimal("0"):
             raise ValueError("notional_filled_usd cannot be negative")
+        if self.executable and notional_filled < self.target_notional_usd:
+            raise ValueError("executable quotes must fill target_notional_usd")
 
         consumed_base = self.consumed_base_quantity
         if consumed_base is None:
@@ -114,6 +129,8 @@ class ExecutableQuote:
             object.__setattr__(self, "consumed_base_quantity", consumed_base)
         if consumed_base < Decimal("0"):
             raise ValueError("consumed_base_quantity cannot be negative")
+        if self.executable and consumed_base <= Decimal("0"):
+            raise ValueError("executable quotes require positive consumed_base_quantity")
         if self.consumed_levels < 0:
             raise ValueError("consumed_levels cannot be negative")
         if self.price_impact_bps is not None and self.price_impact_bps < Decimal("0"):

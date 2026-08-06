@@ -6,9 +6,11 @@
 - Current branch: task/rx-003-economics-engine
 - Starting HEAD for RX-003: `0ad00d8f7ac9796351d932950c4bd4b4864ebd94`
 - Starting HEAD for RX-003 FIX: `a53100fc4f45540ccd31769bc867e81d3cc5aa94`
+- Starting HEAD for RX-003 FIX 2: `e676b8a10a5265148db3484e0f3c0373faa7e2a2`
 - RX-003 review status: completed candidate awaiting reviewer acceptance
-- RX-003 FIX candidate HEAD: final branch HEAD after this status update; exact hash is reported in the task report after commit and push
+- RX-003 FIX 2 candidate HEAD: final branch HEAD after this status update; exact hash is reported in the task report after commit and push
 - Repository state at RX-003 FIX start: clean checkout at `a53100fc4f45540ccd31769bc867e81d3cc5aa94`
+- Repository state at RX-003 FIX 2 start: clean checkout at `e676b8a10a5265148db3484e0f3c0373faa7e2a2`
 
 ## Completed candidate work summary
 
@@ -33,10 +35,17 @@
 - Replaced the cross-venue adapter protocol with a read-only per-venue `fetch_order_book(symbol) -> OrderBook` contract.
 - Updated architecture, decisions, implementation plan, status, next-task governance, and tests.
 
-## Latest RX-003 FIX verification
+## RX-003 FIX 2 summary
+
+- Enforced that executable quotes must fully fill their selected `target_notional_usd`, not only the product minimum notional.
+- Kept `MIN_LEG_NOTIONAL_USD` as a separate product gate from full selected-route executability.
+- Added runtime order-side validation for `RouteCandidate`, `ExecutableQuote`, and order-book VWAP side selection.
+- Preserved the no-artificial-filters invariant: poor full-fill liquidity still affects PnL instead of becoming an independent rejection reason.
+
+## Latest RX-003 FIX 2 verification
 
 - `python3 -m apps.cli.main`: `fake-risex-hl-btc: PAPER_ELIGIBLE net_profit_usd=1.50000000000000000000000000`
-- `python3 -m pytest`: `89 passed in 0.09s`
+- `python3 -m pytest`: `98 passed in 0.09s`
 - `python3 -m compileall apps core storage tests`: exit 0
 - `git diff --check`: exit 0
 

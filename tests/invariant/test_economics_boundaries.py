@@ -59,6 +59,26 @@ def test_business_logic_function_definitions_stay_in_single_owner_modules() -> N
         assert definitions == [expected_path]
 
 
+def test_business_logic_modules_stay_in_expected_files() -> None:
+    assert {path.relative_to(Path("core/economics")) for path in Path("core/economics").rglob("*.py")} == {
+        Path("__init__.py"),
+        Path("basis.py"),
+        Path("errors.py"),
+        Path("ev.py"),
+        Path("fees.py"),
+        Path("funding.py"),
+        Path("liquidity.py"),
+    }
+    assert {path.relative_to(Path("core/risk")) for path in Path("core/risk").rglob("*.py")} == {
+        Path("__init__.py"),
+        Path("gates.py"),
+    }
+    assert {path.relative_to(Path("core/pipeline")) for path in Path("core/pipeline").rglob("*.py")} == {
+        Path("__init__.py"),
+        Path("evaluate.py"),
+    }
+
+
 def test_venue_adapter_contract_is_per_venue_order_book_only() -> None:
     adapter_source = Path("core/venues/base.py").read_text()
     return_hints = get_type_hints(VenueAdapter.fetch_order_book)

@@ -5,13 +5,18 @@ from __future__ import annotations
 from decimal import Decimal
 
 from core.config.product_rules import ProductRules
-from core.domain.contracts import ExecutableQuote, OrderSide, RouteCandidate, VenueSnapshot
+from core.domain.contracts import (
+    ExecutableQuote,
+    OrderSide,
+    RouteCandidate,
+    VALID_ORDER_SIDES,
+    VenueSnapshot,
+)
 from core.domain.enums import RejectReason, ValueSource
 from core.economics.liquidity import quote_is_executable_for_notional
 
 
 REQUIRED_ORDERBOOK_QUOTE_SOURCE = ValueSource.ESTIMATED_FROM_ORDERBOOK
-VALID_ORDER_SIDES = frozenset({"buy", "sell"})
 
 
 def _side_is_valid(side: str) -> bool:
