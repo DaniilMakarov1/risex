@@ -2,7 +2,7 @@
 
 RiseX Points Farmer is a modular-monolith research system for capture-centric hedged funding opportunities on RiseX with hedge venue support, initially Hyperliquid.
 
-RX-000 is only a non-trading walking skeleton. It uses fake data, does not connect to exchanges, does not place orders, and does not contain real API keys.
+The current baseline is a non-trading research skeleton. It uses fake data, does not connect to exchanges, does not place orders, and does not contain real API keys.
 
 ## Product baseline
 
@@ -15,9 +15,9 @@ RX-000 is only a non-trading walking skeleton. It uses fake data, does not conne
 - Route statuses are `RESEARCH_ONLY`, `PAPER_ELIGIBLE`, `LIVE_ELIGIBLE`, and `REJECTED`.
 - `CANARY_ELIGIBLE` and a separate canary runner are forbidden.
 
-## Walking skeleton
+## Offline research runner
 
-The fake runner builds a `RouteCandidate` and `VenueSnapshot`, evaluates them through the single `evaluate_route()` pipeline, and writes a decision event to an append-only in-memory ledger.
+The fake runner builds multiple `RouteCandidate` values and normalized `VenueObservation` inputs. Offline orchestration assembles each route snapshot through the single `assemble_route_snapshot()` path and evaluates every route through the single `evaluate_route()` decision pipeline.
 
 ```bash
 python -m apps.cli.main

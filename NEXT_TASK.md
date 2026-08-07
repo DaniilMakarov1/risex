@@ -1,25 +1,27 @@
 ## Task ID
 
-RX-005 — Offline Scan Orchestration over Per-Venue Observations
+RX-006 — Broad Scan and Focused Refresh Orchestration
 
 ## Objective
 
-Add deterministic offline orchestration that evaluates multiple fake route candidates through the RX-004 `VenueObservation` and `assemble_route_snapshot()` contracts, while preserving the single `evaluate_route(route, snapshot, mode)` decision path.
+Add explicit Broad Scan and Focused Refresh orchestration over the existing offline `VenueObservation`, `assemble_route_snapshot()`, and `evaluate_route(route, snapshot, mode)` path without introducing a second route decision function.
 
 ## Allowed scope
 
-- Add offline fake route candidate orchestration over normalized `VenueObservation` inputs.
-- Reuse `assemble_route_snapshot()` for every candidate.
+- Define deterministic fake Broad Scan and Focused Refresh orchestration inputs.
+- Reuse the RX-005 offline candidate orchestration path.
+- Reuse `assemble_route_snapshot()` for every route snapshot.
 - Reuse `evaluate_route()` for every route decision.
-- Keep all behavior deterministic, offline, read-only, and non-trading.
-- Add focused unit and invariant tests for route iteration, missing observations, and single-path evaluation.
+- Keep behavior offline, fake-data-only, read-only, and non-trading.
+- Add focused tests for scan mode boundaries, focused refresh boundaries, and single-path reuse.
 
 ## Forbidden scope
 
 - Do not implement real RiseX, Hyperliquid, network, API, authentication, or production adapters.
 - Do not implement order placement, paper execution lifecycle, persistent ledger storage, migrations, dashboard code, or live trading.
-- Do not create `CapturePlan` objects.
+- Do not create live `CapturePlan` objects.
 - Do not add a second route model, second EV path, second route decision function, canary architecture, hold-next-cycle logic, artificial filters, secrets, or production credentials.
+- Do not let Focused Refresh create a live `CapturePlan` until future tasks implement fresh plan checks, reconciled ledger state, live gates, funding settlement verification, and execution capability.
 
 ## Required report format
 

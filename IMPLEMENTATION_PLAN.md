@@ -27,13 +27,19 @@ RX-003 FIX repairs the candidate contract before review acceptance:
 - Roundtrip quote pairing rejects venue, symbol, side, target-notional, executability, and VWAP mismatches.
 - Expected missing economics input failures use a scoped exception contract.
 - RX-003 never constructs `CapturePlan` or `LIVE_ELIGIBLE` decisions.
-- `VenueAdapter` is read-only and per-venue with an order-book primitive only.
+- `VenueAdapter` is read-only and per-venue; RX-004 supersedes the order-book primitive with `fetch_observation()`.
+
+## RX-004 — Per-Venue Observation and Route Snapshot Contracts
+
+Add normalized per-venue `VenueObservation` inputs and the single `assemble_route_snapshot()` path that converts route-aligned observations into `VenueSnapshot` values for `evaluate_route()`.
+
+## RX-005 — Offline Scan Orchestration over Per-Venue Observations
+
+Add deterministic fake offline orchestration over multiple `RouteCandidate` values and normalized observation mappings. Every successful candidate uses `assemble_route_snapshot()` and then `evaluate_route()`. Missing or contradictory observations fail closed before evaluation without trades, orders, ledger writes, paper lifecycle, live trading, or `CapturePlan` creation.
 
 ## Next Sequence
 
-1. RX-004 — Per-Venue Observation and Route Snapshot Contracts.
-2. Offline fake observation assembly using the RX-004 contracts.
-3. Broad Scan and Focused Refresh orchestration over the same `evaluate_route()` function.
-4. Paper runner lifecycle and append-only ledger persistence.
-5. Funding settlement verifier design and fake replay coverage.
-6. Real venue adapters only after contracts, fake observation, paper paths, and settlement verification are stable.
+1. RX-006 — Broad Scan and Focused Refresh orchestration over the same offline observation, snapshot assembly, and `evaluate_route()` path.
+2. Paper runner lifecycle and append-only ledger persistence.
+3. Funding settlement verifier design and fake replay coverage.
+4. Real venue adapters only after contracts, fake observation, paper paths, and settlement verification are stable.

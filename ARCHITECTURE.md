@@ -96,6 +96,7 @@ Any non-terminal Capture may transition to `FAILED`. Capture states with possibl
 - Risk gates belong only in `core/risk/gates.py`.
 - Route snapshot assembly happens only in `core/pipeline/snapshot.py`.
 - Route decisions happen only in `core/pipeline/evaluate.py`.
+- Offline route-candidate orchestration happens only in `core/pipeline/offline_scan.py`.
 - Orders can be sent only through `core/execution/`.
 - Ledger writes happen only through `core/accounting/ledger.py`.
 
@@ -138,6 +139,15 @@ RX-004 adds a deterministic offline snapshot assembly layer before evaluation:
 4. It locates the required RiseX and hedge observations, fails explicitly on missing or contradictory metadata, and uses `calculate_executable_quote()` for all four entry/immediate-unwind quotes.
 5. It preserves per-leg observation timestamps and funding settlement timestamps on the resulting `VenueSnapshot`.
 6. It does not call `evaluate_route()`, calculate EV, apply eligibility, rank routes, write ledger events, create `Capture`/`CapturePlan`, connect to venues, or place orders.
+
+RX-005 adds deterministic offline orchestration over multiple fake route candidates:
+
+1. `core/pipeline/offline_scan.py` owns the route-candidate iteration layer.
+2. The orchestration function accepts `RouteCandidate` values, one normalized observation mapping, an explicit timezone-aware assembly timestamp, and an explicit `EvaluationMode`.
+3. For every candidate, it calls the single `assemble_route_snapshot()` function and then calls the single `evaluate_route(route, snapshot, mode)` decision path.
+4. If snapshot assembly fails because required normalized observations are missing or contradictory, the candidate fails closed as a deterministic `DecisionResult` with `RejectReason.REQUIRED_LIVE_DATA_MISSING`; `evaluate_route()` is not called for that candidate.
+5. The orchestration layer does not calculate VWAP, fees, funding, EV, risk gates, ranking, acceptance, or route eligibility for successfully assembled snapshots outside the existing owner modules.
+6. It does not create `CapturePlan` objects, write ledger events, connect to venues, import execution modules, start paper execution, or place orders.
 
 ## Route/snapshot alignment
 

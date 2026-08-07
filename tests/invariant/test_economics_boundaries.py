@@ -86,8 +86,21 @@ def test_business_logic_modules_stay_in_expected_files() -> None:
     assert {path.relative_to(Path("core/pipeline")) for path in Path("core/pipeline").rglob("*.py")} == {
         Path("__init__.py"),
         Path("evaluate.py"),
+        Path("offline_scan.py"),
         Path("snapshot.py"),
     }
+
+
+def test_offline_scan_orchestration_does_not_import_business_logic_or_execution() -> None:
+    offline_scan_source = Path("core/pipeline/offline_scan.py").read_text()
+
+    assert "core.economics" not in offline_scan_source
+    assert "core.risk" not in offline_scan_source
+    assert "core.execution" not in offline_scan_source
+    assert "apps.paper_runner" not in offline_scan_source
+    assert "apps.live_runner" not in offline_scan_source
+    assert "def evaluate_route(" not in offline_scan_source
+    assert "def assemble_route_snapshot(" not in offline_scan_source
 
 
 def test_venue_adapter_contract_is_per_venue_observation_only() -> None:

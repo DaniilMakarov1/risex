@@ -73,3 +73,15 @@
 - Reason: Future adapters should remain read-only and per-venue, but RX-004 requires normalized funding, fee, timestamp, and order-book inputs from one venue without allowing adapters to assemble route snapshots or calculate EV.
 - Affected files/modules: `core/domain/contracts.py`, `core/domain/__init__.py`, `core/pipeline/snapshot.py`, `core/venues/base.py`, `apps/research_runner/fake_data.py`, tests, and governance docs.
 - Non-decisions: RX-004 does not implement Broad Scan, Focused Refresh, Watchlist, real adapters, paper execution, persistence, dashboard, order placement, live trading, canary architecture, hold-next-cycle logic, or artificial filters.
+
+## 2026-08-07 — RX-005
+
+- Date: 2026-08-07
+- Decision: `core/pipeline/offline_scan.py` owns deterministic offline iteration over multiple `RouteCandidate` values and normalized `VenueObservation` mappings.
+- Reason: RX-005 needs a repeatable fake orchestration layer while preserving `assemble_route_snapshot()` as the only snapshot assembly path and `evaluate_route(route, snapshot, mode)` as the only route decision path.
+- Decision: For each candidate, offline orchestration first calls `assemble_route_snapshot()`. Only successfully assembled snapshots are passed to `evaluate_route()`.
+- Reason: The orchestration layer must not calculate VWAP, EV, fees, funding, risk gates, or route eligibility itself.
+- Decision: Snapshot assembly failures caused by missing or contradictory normalized observations produce a deterministic per-route `DecisionResult` with `RouteStatus.REJECTED` and `RejectReason.REQUIRED_LIVE_DATA_MISSING` before evaluation.
+- Reason: Missing required observations must fail closed without creating trades, orders, ledger records, or `CapturePlan` objects.
+- Affected files/modules: `core/pipeline/offline_scan.py`, `apps/research_runner/fake_data.py`, `apps/cli/main.py`, tests, and governance docs.
+- Non-decisions: RX-005 does not implement Broad Scan, Focused Refresh, Watchlist, real adapters, network/API/authentication, paper execution lifecycle, persistent ledger storage, dashboard code, order placement, live trading, canary architecture, hold-next-cycle logic, ranking, artificial filters, or `CapturePlan` creation.
