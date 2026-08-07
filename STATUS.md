@@ -1,14 +1,11 @@
 # Status
 
-- Last accepted task: RX-005 — Offline Scan Orchestration over Per-Venue Observations
-- Accepted RX-005 implementation HEAD: `42858c5a4468145fff590e4277acb6868745323f`
+- Last accepted task: RX-006 — Broad Scan and Focused Refresh Orchestration
+- Accepted RX-006 implementation HEAD: `b71a93c66370183454863ec3841d564cf53c083a`
 - Accepted baseline branch: `main`
-- Current RX task: RX-006 — Broad Scan and Focused Refresh Orchestration, implemented on review branch
-- RX-006 starting baseline: `1aeae05a9f07965e5c02a816bc737628cba97715`
-- RX-006 task branch: `task/rx-006-broad-focused-refresh`
+- Current RX task: none active
 
-The accepted RX-005 implementation remains the latest accepted baseline on `main`.
-RX-006 is implemented on a task branch for review and has not been merged to `main`.
+The accepted RX-006 implementation is the latest accepted baseline on `main`.
 
 ## Completed accepted tasks
 
@@ -19,6 +16,7 @@ RX-006 is implemented on a task branch for review and has not been merged to `ma
 - RX-003
 - RX-004
 - RX-005
+- RX-006
 
 ## Current architecture status
 
@@ -38,7 +36,7 @@ RX-006 is implemented on a task branch for review and has not been merged to `ma
 - Live `CapturePlan` creation blocked.
 - No live or paper execution from scan orchestration.
 
-## Tests last reported for RX-006 branch
+## Tests last reported for accepted RX-006
 
 - `python3 -m apps.cli.main`:
   - `Broad Scan`
@@ -48,6 +46,9 @@ RX-006 is implemented on a task branch for review and has not been merged to `ma
   - `fake-risex-hl-btc: PAPER_ELIGIBLE net_profit_usd=1.50000000000000000000000000`
   - `fake-risex-hl-eth: REJECTED net_profit_usd=-0.2499625093726568357910522369`
 - `python3 -m pytest`: `131 passed in 0.13s`
+- `python3 -m compileall apps core storage tests`: exit 0
+- `git diff --check`: exit 0
+- `git diff --cached --check`: exit 0
 
 ## Known limitations
 
