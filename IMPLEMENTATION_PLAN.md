@@ -45,7 +45,10 @@ Add deterministic fake Broad Scan and Focused Refresh over the same offline obse
 
 Add deterministic fake paper lifecycle downstream of existing `DecisionResult` values and append-only ledger persistence scaffolding. Start paper capture execution only for `PAPER_ELIGIBLE` decisions, use the single Capture state machine, write all fake paper history through `core/accounting/ledger.py`, and keep real adapters, orders, live trading, live runner behavior, `CapturePlan` creation, second decision paths, second EV paths, and second snapshot assembly paths out of scope.
 
+## RX-008 — Funding Settlement Verifier Design and Fake Replay Coverage
+
+Add deterministic offline funding settlement verifier contracts and fake replay coverage. Model required pre-settlement checkpoints at T-20 minutes, T-60 seconds, T-10 seconds, and T-5 seconds. Write checkpoint evidence, observed settlement evidence, and verification results through append-only ledger helpers. Replay ledger events to compare fake expected funding/notional inputs against fake observed settlement records, failing closed on missing, unknown, or inconsistent evidence. Keep the verifier downstream of existing route decisions, snapshots, Capture lifecycle, and ledger boundaries without real adapters, order placement, live `CapturePlan` creation, route eligibility mutation, or live trading.
+
 ## Next Sequence
 
-1. RX-008 — Funding settlement verifier design and fake replay coverage.
-2. Real venue adapters only after contracts, fake observation, paper paths, and settlement verification are stable.
+1. RX-009 — Ledger Reconciliation Gate Design and Fake Replay Coverage.

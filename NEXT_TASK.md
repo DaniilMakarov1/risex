@@ -1,18 +1,19 @@
 ## Task ID
 
-RX-008 — Funding Settlement Verifier Design and Fake Replay Coverage
+RX-009 — Ledger Reconciliation Gate Design and Fake Replay Coverage
 
 ## Objective
 
-Add deterministic offline funding settlement verifier contracts and fake replay coverage that can later prove settlement-time capture inputs before any live trading path exists.
+Add deterministic offline ledger reconciliation contracts and fake replay coverage that can later block any live Capture path unless append-only ledger history is internally consistent and explicitly reconciled.
 
 ## Allowed scope
 
-- Define verifier contracts for required pre-settlement snapshots such as T-20m, T-60s, T-10s, and T-5s.
-- Use fake deterministic observations and append-only ledger events only.
-- Keep verifier behavior downstream of existing route decisions, snapshots, Capture lifecycle, and ledger boundaries.
-- Add replay tests that compare expected funding inputs with observed fake settlement records.
-- Keep live trading disabled and require ledger history for any future live eligibility.
+- Define deterministic offline ledger reconciliation contracts.
+- Use fake deterministic ledger events only.
+- Keep reconciliation downstream of existing route decisions, Capture lifecycle, paper history, funding settlement verification, and ledger boundaries.
+- Add replay tests proving reconciled and unreconciled ledger histories are deterministic.
+- Add tests proving missing, duplicated, out-of-order, or contradictory ledger evidence fails closed.
+- Keep live trading disabled and do not create live `CapturePlan` objects.
 
 ## Forbidden scope
 

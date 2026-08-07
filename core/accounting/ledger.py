@@ -10,7 +10,7 @@ from enum import Enum, StrEnum
 from types import MappingProxyType
 from typing import Any, Mapping, Protocol
 
-from core.domain.contracts import Capture, DecisionResult, validate_timezone_aware_datetime
+from core.domain.contracts import Capture, DecisionResult, EstimatedValue, validate_timezone_aware_datetime
 from core.domain.enums import CaptureState
 from core.domain.state_machine import transition_capture
 
@@ -23,6 +23,9 @@ class LedgerEventType(StrEnum):
     PAPER_SETTLEMENT_OBSERVED = "paper_settlement_observed"
     PAPER_CAPTURE_CLOSED = "paper_capture_closed"
     PAPER_REJECTION_RECORDED = "paper_rejection_recorded"
+    FUNDING_CHECKPOINT_OBSERVED = "funding_checkpoint_observed"
+    FUNDING_SETTLEMENT_EVIDENCE_RECORDED = "funding_settlement_evidence_recorded"
+    FUNDING_SETTLEMENT_VERIFICATION_RECORDED = "funding_settlement_verification_recorded"
 
 
 def _event_type_value(event_type: str | LedgerEventType) -> str:
@@ -227,6 +230,135 @@ def append_paper_rejection_event(
             "capture_started": False,
         },
         recorded_at=recorded_at or decision.decided_at,
+    )
+
+
+def _estimated_value_payload(value: EstimatedValue) -> Mapping[str, Any]:
+    if not isinstance(value, EstimatedValue):
+        raise ValueError("funding settlement evidence requires EstimatedValue inputs")
+    return {
+        "value": str(value.value) if value.value is not None else None,
+        "source": value.source.value,
+        "description": value.description,
+        "metadata": dict(value.metadata),
+    }
+
+
+def _validate_non_empty(value: str, field_name: str) -> None:
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{field_name} must be non-empty")
+
+
+def append_funding_checkpoint_observed_event(
+    ledger: Ledger,
+    *,
+    capture_id: str,
+    route_id: str,
+    checkpoint: str,
+    settlement_time: datetime,
+    observed_at: datetime,
+    target_notional_usd: Decimal,
+    risex_expected_funding_usd: EstimatedValue,
+    hedge_expected_funding_usd: EstimatedValue,
+    recorded_at: datetime | None = None,
+) -> LedgerEvent:
+    """Record one required fake pre-settlement funding checkpoint."""
+
+    _validate_non_empty(capture_id, "capture_id")
+    _validate_non_empty(route_id, "route_id")
+    _validate_non_empty(checkpoint, "checkpoint")
+    validate_timezone_aware_datetime(settlement_time, "settlement_time")
+    validate_timezone_aware_datetime(observed_at, "observed_at")
+    if target_notional_usd <= Decimal("0"):
+        raise ValueError("target_notional_usd must be positive")
+
+    return ledger.append(
+        event_type=LedgerEventType.FUNDING_CHECKPOINT_OBSERVED,
+        payload={
+            "capture_id": capture_id,
+            "route_id": route_id,
+            "checkpoint": checkpoint,
+            "settlement_time": settlement_time.isoformat(),
+            "observed_at": observed_at.isoformat(),
+            "target_notional_usd": str(target_notional_usd),
+            "risex_expected_funding_usd": _estimated_value_payload(risex_expected_funding_usd),
+            "hedge_expected_funding_usd": _estimated_value_payload(hedge_expected_funding_usd),
+        },
+        recorded_at=recorded_at or observed_at,
+    )
+
+
+def append_funding_settlement_evidence_event(
+    ledger: Ledger,
+    *,
+    capture_id: str,
+    route_id: str,
+    settlement_time: datetime,
+    observed_at: datetime,
+    actual_risex_funding_usd: EstimatedValue,
+    actual_hedge_funding_usd: EstimatedValue,
+    actual_risex_notional_usd: EstimatedValue,
+    actual_hedge_notional_usd: EstimatedValue,
+    recorded_at: datetime | None = None,
+) -> LedgerEvent:
+    """Record deterministic fake observed funding and notional at settlement."""
+
+    _validate_non_empty(capture_id, "capture_id")
+    _validate_non_empty(route_id, "route_id")
+    validate_timezone_aware_datetime(settlement_time, "settlement_time")
+    validate_timezone_aware_datetime(observed_at, "observed_at")
+
+    return ledger.append(
+        event_type=LedgerEventType.FUNDING_SETTLEMENT_EVIDENCE_RECORDED,
+        payload={
+            "capture_id": capture_id,
+            "route_id": route_id,
+            "settlement_time": settlement_time.isoformat(),
+            "observed_at": observed_at.isoformat(),
+            "actual_risex_funding_usd": _estimated_value_payload(actual_risex_funding_usd),
+            "actual_hedge_funding_usd": _estimated_value_payload(actual_hedge_funding_usd),
+            "actual_risex_notional_usd": _estimated_value_payload(actual_risex_notional_usd),
+            "actual_hedge_notional_usd": _estimated_value_payload(actual_hedge_notional_usd),
+        },
+        recorded_at=recorded_at or observed_at,
+    )
+
+
+def append_funding_settlement_verification_event(
+    ledger: Ledger,
+    *,
+    capture_id: str,
+    route_id: str | None,
+    settlement_time: datetime,
+    verified: bool,
+    reasons: Sequence[str | Enum],
+    required_checkpoints: Sequence[str | Enum],
+    checkpoint_event_sequences: Sequence[int],
+    settlement_event_sequence: int | None,
+    recorded_at: datetime,
+) -> LedgerEvent:
+    """Record one deterministic funding settlement verification result."""
+
+    _validate_non_empty(capture_id, "capture_id")
+    validate_timezone_aware_datetime(settlement_time, "settlement_time")
+    validate_timezone_aware_datetime(recorded_at, "recorded_at")
+
+    return ledger.append(
+        event_type=LedgerEventType.FUNDING_SETTLEMENT_VERIFICATION_RECORDED,
+        payload={
+            "capture_id": capture_id,
+            "route_id": route_id,
+            "settlement_time": settlement_time.isoformat(),
+            "verified": verified,
+            "reasons": tuple(reason.value if isinstance(reason, Enum) else str(reason) for reason in reasons),
+            "required_checkpoints": tuple(
+                checkpoint.value if isinstance(checkpoint, Enum) else str(checkpoint)
+                for checkpoint in required_checkpoints
+            ),
+            "checkpoint_event_sequences": tuple(checkpoint_event_sequences),
+            "settlement_event_sequence": settlement_event_sequence,
+        },
+        recorded_at=recorded_at,
     )
 
 

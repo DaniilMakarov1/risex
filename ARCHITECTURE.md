@@ -49,6 +49,8 @@ tests/
 - `EvaluationMode`: `DISCOVERY` or `ENTRY`.
 - `ValueSource`: `DOCUMENTED`, `OBSERVED`, `ESTIMATED_FROM_ORDERBOOK`, `ESTIMATED_FROM_LAST_VALUE`, `USER_CONFIGURED`, `UNKNOWN`.
 - `RejectReason`: the centralized route rejection and live-gate reason enum.
+- `FundingCheckpointRequirement`: one required pre-settlement observation offset for future settlement proof.
+- `FundingSettlementVerificationResult`: deterministic replay result proving whether fake checkpoint evidence and fake observed settlement evidence agree for one Capture settlement.
 
 ## Capture lifecycle state machine
 
@@ -100,6 +102,7 @@ Any non-terminal Capture may transition to `FAILED`. Capture states with possibl
 - Broad Scan and Focused Refresh orchestration happens only in `core/pipeline/scan_refresh.py`.
 - Orders can be sent only through `core/execution/`.
 - Ledger writes happen only through `core/accounting/ledger.py`.
+- Funding settlement verification happens only in `core/monitoring/funding_settlement.py`.
 - Fake paper lifecycle orchestration happens only in `apps/paper_runner/lifecycle.py`.
 
 ## Product rules
@@ -173,6 +176,16 @@ RX-007 adds deterministic fake paper lifecycle and append-only ledger persistenc
 8. `core/accounting/ledger.py` owns immutable ledger event contracts, append helper functions, and deterministic paper replay into final `Capture` states.
 9. `storage/sqlite/ledger.py` is minimal SQLite append-only persistence scaffolding for deterministic offline tests; it does not introduce migrations, adapters, exchange connectivity, secrets, or live trading.
 10. RX-007 does not call `evaluate_route()`, assemble route snapshots, calculate EV, import economics/risk/execution/live runner modules, place orders, mutate route eligibility decisions, create `CapturePlan` objects, enable live trading, or hold a Capture into another funding cycle.
+
+RX-008 adds deterministic offline funding settlement verifier contracts and fake replay coverage:
+
+1. `core/monitoring/funding_settlement.py` owns the funding settlement verifier.
+2. The verifier models required pre-settlement checkpoints at T-20 minutes, T-60 seconds, T-10 seconds, and T-5 seconds.
+3. Checkpoint evidence, observed settlement evidence, and verification results are written only through append-only helper functions in `core/accounting/ledger.py`.
+4. Replay compares source-aware fake expected RiseX and hedge funding inputs plus target notional from required checkpoints with fake observed settlement funding and actual leg notionals.
+5. Missing required checkpoints, missing observed settlement evidence, unknown funding/notional values, inconsistent capture identity, inconsistent settlement time, inconsistent checkpoint timing, inconsistent funding evidence, or inconsistent notional evidence fail closed as not verified.
+6. The verifier stays downstream of existing route decisions, snapshots, Capture lifecycle, and ledger events. It does not decide route profitability, call route evaluation, call route snapshot assembly, calculate EV, place orders, create `CapturePlan` objects, mutate route eligibility decisions, or enable live trading.
+7. Future live eligibility remains blocked until live gates, ledger reconciliation, fresh plan handling, execution capability, and proven funding settlement verification are implemented together in a future task.
 
 ## Route/snapshot alignment
 

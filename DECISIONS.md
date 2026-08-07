@@ -113,3 +113,19 @@
 - Reason: RX-007 needs deterministic append-only persistence tests without broad storage design, migrations, real adapters, exchange connectivity, secrets, or live trading.
 - Affected files/modules: `apps/paper_runner/lifecycle.py`, `core/accounting/ledger.py`, `storage/sqlite/ledger.py`, tests, and governance docs.
 - Non-decisions: RX-007 does not implement real RiseX or Hyperliquid adapters, network calls, API clients, authentication, order placement, live runner behavior, live trading, live `CapturePlan` creation, canary architecture, hold-next-cycle logic, artificial filters, a second route model, a second EV path, a second route decision function, or a second snapshot assembly function.
+
+## 2026-08-07 — RX-008
+
+- Date: 2026-08-07
+- Decision: `core/monitoring/funding_settlement.py` owns deterministic offline funding settlement verification.
+- Reason: Settlement-time evidence must be replayable from append-only history without becoming a route decision path, EV path, snapshot assembly path, execution path, or live trading gate.
+- Decision: Required fake pre-settlement checkpoints are T-20 minutes, T-60 seconds, T-10 seconds, and T-5 seconds before the funding settlement timestamp.
+- Reason: Future live work must be able to prove settlement-time capture inputs from explicit checkpoint evidence rather than trusting a single late observation.
+- Decision: `core/accounting/ledger.py` owns append-only event helpers for funding checkpoint evidence, observed settlement evidence, and funding settlement verification results.
+- Reason: Evidence and verification history must remain immutable and replayable through the accounting boundary.
+- Decision: Funding settlement verification fails closed when required checkpoints are missing, observed settlement evidence is missing, funding/notional evidence is unknown, capture identity or settlement time is inconsistent, checkpoint timing is inconsistent, or fake expected funding/notional inputs do not match fake observed settlement records.
+- Reason: Unknown or contradictory evidence must never silently become zero or success.
+- Decision: RX-008 verification results do not mutate route eligibility decisions and do not satisfy live eligibility by themselves.
+- Reason: Live trading still requires future live gates, ledger reconciliation, fresh plan handling, execution capability, and explicit safe live path implementation.
+- Affected files/modules: `core/accounting/ledger.py`, `core/monitoring/funding_settlement.py`, tests, and governance docs.
+- Non-decisions: RX-008 does not implement real RiseX or Hyperliquid adapters, network calls, API clients, authentication, order placement, live runner behavior, live trading, live `CapturePlan` creation, canary architecture, hold-next-cycle logic, artificial filters, a second route model, a second EV path, a second route decision function, or a second snapshot assembly function.

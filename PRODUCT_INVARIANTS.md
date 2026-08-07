@@ -24,6 +24,7 @@ The single authoritative code contract for these constants is `ProductRules`.
 - RX-000 must not connect to exchanges.
 - RX-000 must not place live orders.
 - Future live eligibility requires explicit live gates, fresh executable data, reconciled ledger state, and funding settlement verification.
+- Offline funding settlement verification evidence is not permission to trade live by itself.
 
 ## Route statuses
 

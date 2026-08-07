@@ -30,6 +30,12 @@ The fake paper runner is downstream of route decisions. It consumes existing `De
 
 Paper history is written through `core/accounting/ledger.py` as append-only events. `storage/sqlite/ledger.py` is a minimal deterministic SQLite implementation of the same ledger contract for offline persistence and replay tests.
 
+## Offline funding settlement verifier
+
+The deterministic fake funding settlement verifier is downstream of paper lifecycle and ledger evidence. It models required pre-settlement checkpoints at T-20 minutes, T-60 seconds, T-10 seconds, and T-5 seconds, then replays append-only ledger events to compare fake expected funding/notional inputs with observed fake settlement evidence.
+
+The verifier records evidence and verification results only through `core/accounting/ledger.py`. Missing, unknown, or inconsistent settlement evidence fails closed as not verified. It does not evaluate route profitability, assemble snapshots, calculate EV, place orders, create `CapturePlan` objects, or enable live trading.
+
 ## Boundaries
 
 Business logic has single-owner modules:
@@ -43,5 +49,6 @@ Business logic has single-owner modules:
 - route decision: `core/pipeline/evaluate.py`
 - orders: `core/execution/`
 - ledger writes: `core/accounting/ledger.py`
+- funding settlement verification: `core/monitoring/funding_settlement.py`
 
 Venue adapters may fetch and normalize data only. They must not calculate EV, make route decisions, send orders, or write ledger events.
