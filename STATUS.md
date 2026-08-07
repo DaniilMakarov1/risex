@@ -1,11 +1,11 @@
 # Status
 
-- Last accepted task: RX-007 — Paper Runner Lifecycle and Append-only Ledger Persistence
-- Accepted RX-007 implementation HEAD: `27b4251cf2f0c7c5b831d325b16a621d322ecc70`
+- Last accepted task: RX-008 — Funding Settlement Verifier Design and Fake Replay Coverage
+- Accepted RX-008 implementation HEAD: `c4c38424d420312a64730f44ffebb5de38b2af62`
 - Accepted baseline branch: `main`
-- Current RX task: RX-008 FIX — Funding verifier requires `OBSERVED` actual settlement evidence, implemented on `task/rx-008-funding-settlement-verifier`, awaiting review
+- Current RX task: none active
 
-The accepted RX-007 implementation is the latest accepted baseline on `main`.
+The accepted RX-008 implementation is the latest accepted baseline on `main`.
 
 ## Completed accepted tasks
 
@@ -18,11 +18,7 @@ The accepted RX-007 implementation is the latest accepted baseline on `main`.
 - RX-005
 - RX-006
 - RX-007
-
-## Implemented candidate tasks awaiting review
-
 - RX-008 — Funding Settlement Verifier Design and Fake Replay Coverage
-- RX-008 FIX — Funding verifier requires `OBSERVED` actual settlement evidence
 
 ## Current architecture status
 
@@ -44,9 +40,9 @@ The accepted RX-007 implementation is the latest accepted baseline on `main`.
 - Deterministic offline funding settlement verifier lives in `core/monitoring/funding_settlement.py`.
 - Funding settlement verifier models required checkpoints at T-20 minutes, T-60 seconds, T-10 seconds, and T-5 seconds.
 - Funding checkpoint evidence, observed settlement evidence, and verification result history are written through append-only ledger helpers.
-- Funding settlement verifier replay compares fake expected funding/notional inputs against fake observed settlement records and fails closed on missing, unknown, unobserved, or inconsistent evidence.
 - Actual settlement funding and actual settlement notional evidence must use `ValueSource.OBSERVED`; user-configured, documented, estimated, unknown, missing, malformed, or non-positive notional actuals cannot verify settlement.
 - Pre-settlement expected funding checkpoints remain source-aware expected inputs and are not restricted to `ValueSource.OBSERVED`.
+- Funding settlement verifier replay compares fake expected funding/notional inputs against fake observed settlement records and fails closed on missing, unknown, unobserved, or inconsistent evidence.
 - In-memory Broad Scan to Focused Refresh handoff using existing `RouteCandidate` contracts.
 - Per-venue `VenueObservation` input contract.
 - Source-aware fees and funding.
@@ -56,7 +52,7 @@ The accepted RX-007 implementation is the latest accepted baseline on `main`.
 - Live `CapturePlan` creation blocked.
 - No real adapters, orders, paper exchange simulation, live runner behavior, or live trading.
 
-## Tests last reported for RX-008 FIX
+## Tests last reported for accepted RX-008
 
 - `python3 -m apps.cli.main`:
   - `Broad Scan`
@@ -65,37 +61,21 @@ The accepted RX-007 implementation is the latest accepted baseline on `main`.
   - `Focused Refresh`
   - `fake-risex-hl-btc: PAPER_ELIGIBLE net_profit_usd=1.50000000000000000000000000`
   - `fake-risex-hl-eth: REJECTED net_profit_usd=-0.2499625093726568357910522369`
-- `python3 -m pytest`: `159 passed`
-- `python3 -m compileall apps core storage tests`: exit 0
-- `git diff --check`: exit 0
-- `git diff --cached --check`: exit 0
-
-## Tests last reported for accepted RX-007
-
-- `python3 -m apps.cli.main`:
-  - `Broad Scan`
-  - `fake-risex-hl-btc: PAPER_ELIGIBLE net_profit_usd=1.50000000000000000000000000`
-  - `fake-risex-hl-eth: REJECTED net_profit_usd=-0.2499625093726568357910522369`
-  - `Focused Refresh`
-  - `fake-risex-hl-btc: PAPER_ELIGIBLE net_profit_usd=1.50000000000000000000000000`
-  - `fake-risex-hl-eth: REJECTED net_profit_usd=-0.2499625093726568357910522369`
-- `python3 -m pytest`: `144 passed in 0.13s`
+- `python3 -m pytest`: `159 passed in 0.16s`
 - `python3 -m compileall apps core storage tests`: exit 0
 - `git diff --check`: exit 0
 - `git diff --cached --check`: exit 0
 
 ## Known limitations
 
-- Fake data only.
-- Paper lifecycle is deterministic offline scaffolding, not an exchange simulator.
-- Funding settlement verifier is deterministic fake replay scaffolding, not real settlement proof.
-- Funding settlement verification is not connected to live route eligibility.
-- No persistent Watchlist storage.
-- No real venue adapters.
-- No ledger reconciliation.
-- No dashboard behavior.
-- No order placement.
+- Verifier remains deterministic fake offline replay scaffolding.
+- No real RiseX/Hyperliquid adapters.
+- No network calls.
+- No orders.
+- No live runner behavior.
 - No live trading.
+- No `CapturePlan` creation.
+- No ledger reconciliation.
 
 ## Next recommended task
 
