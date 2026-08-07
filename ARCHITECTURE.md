@@ -45,6 +45,7 @@ tests/
 - `FeeModel`: source-aware fee components for entry and immediate unwind economics.
 - `FundingSnapshot`: source-aware expected funding cash flows for one capture opportunity.
 - `DecisionResult`: result of the shared decision pipeline.
+- `CapturePlanFreshnessEvidence`: fake non-executable evidence that one plan id/version is fresh for exactly one `capture_id`, one `route_id`, and one funding settlement timestamp.
 - `RouteStatus`: `RESEARCH_ONLY`, `PAPER_ELIGIBLE`, `LIVE_ELIGIBLE`, `REJECTED`.
 - `EvaluationMode`: `DISCOVERY` or `ENTRY`.
 - `ValueSource`: `DOCUMENTED`, `OBSERVED`, `ESTIMATED_FROM_ORDERBOOK`, `ESTIMATED_FROM_LAST_VALUE`, `USER_CONFIGURED`, `UNKNOWN`.
@@ -143,7 +144,16 @@ RX-009 tightens future live gating without enabling live trading:
 1. `core/risk/gates.py` requires explicit `ledger_explicitly_reconciled=True` before a future live path can pass the ledger reconciliation gate.
 2. Missing or false reconciliation fails closed through centralized `RejectReason.LEDGER_NOT_RECONCILED`.
 3. Tests derive that true value from `is_ledger_explicitly_reconciled(ledger.records())`, not from a manually supplied success flag.
-4. Even with `ProductRules(live_trading_enabled=True)` and `ledger_explicitly_reconciled=True`, current route decisions remain `PAPER_ELIGIBLE` with `RejectReason.LIVE_GATES_NOT_IMPLEMENTED`; no live `CapturePlan` is created.
+4. RX-010 inserts a fresh CapturePlan evidence gate after this ledger gate; no live `CapturePlan` is created.
+
+RX-010 adds deterministic offline fresh CapturePlan gate contracts and fake replay coverage:
+
+1. `CapturePlanFreshnessEvidence` is fake plan evidence only. It records `plan_id`, `plan_version`, `capture_id`, `route_id`, one `settlement_time`, `planned_at`, `valid_until`, a source, and an optional referenced ledger reconciliation sequence.
+2. `CapturePlanFreshnessEvidence` rejects non-timezone-aware timestamps, empty identity fields, `ValueSource.UNKNOWN`, invalid validity windows, and non-positive referenced reconciliation sequences at construction.
+3. `core/risk/gates.py` owns `check_capture_plan_freshness_gate()`. Missing, duplicated, stale, future-dated, cross-capture, cross-route, cross-settlement, malformed, or unknown-source fake plan evidence fails closed through `RejectReason.CAPTURE_PLAN_NOT_FRESH`.
+4. `check_live_capture_allowed()` evaluates live gates in this order: live trading switch, explicit ledger reconciliation, fresh CapturePlan evidence, then `RejectReason.LIVE_GATES_NOT_IMPLEMENTED`.
+5. `evaluate_route()` may receive fake plan evidence for future live gating, but it does not read ledger/storage, mutate profitability decisions, create live `CapturePlan` objects, import execution/live runner modules, or return `LIVE_ELIGIBLE`.
+6. Even with live trading manually enabled, helper-derived ledger reconciliation, and exact fresh plan evidence, current route decisions remain `PAPER_ELIGIBLE` with `RejectReason.LIVE_GATES_NOT_IMPLEMENTED`.
 
 RX-004 adds a deterministic offline snapshot assembly layer before evaluation:
 

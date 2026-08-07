@@ -285,6 +285,41 @@ class CapturePlan:
 
 
 @dataclass(frozen=True, slots=True)
+class CapturePlanFreshnessEvidence:
+    """Fake non-executable evidence that one plan is fresh for one settlement."""
+
+    plan_id: str
+    plan_version: str
+    capture_id: str
+    route_id: str
+    settlement_time: datetime
+    planned_at: datetime
+    valid_until: datetime
+    source: ValueSource
+    ledger_reconciliation_event_sequence: int | None = None
+
+    def __post_init__(self) -> None:
+        for field_name in ("plan_id", "plan_version", "capture_id", "route_id"):
+            value = getattr(self, field_name)
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"{field_name} must be non-empty")
+        validate_timezone_aware_datetime(self.settlement_time, "settlement_time")
+        validate_timezone_aware_datetime(self.planned_at, "planned_at")
+        validate_timezone_aware_datetime(self.valid_until, "valid_until")
+        if self.valid_until <= self.planned_at:
+            raise ValueError("valid_until must be after planned_at")
+        if not isinstance(self.source, ValueSource):
+            raise ValueError("CapturePlan freshness evidence source must be a ValueSource")
+        if self.source is ValueSource.UNKNOWN:
+            raise ValueError("CapturePlan freshness evidence source cannot be UNKNOWN")
+        if (
+            self.ledger_reconciliation_event_sequence is not None
+            and self.ledger_reconciliation_event_sequence <= 0
+        ):
+            raise ValueError("ledger_reconciliation_event_sequence must be positive")
+
+
+@dataclass(frozen=True, slots=True)
 class DecisionResult:
     """Result returned by the single route decision pipeline."""
 

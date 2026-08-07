@@ -3,6 +3,7 @@
 from core.domain.contracts import (
     Capture,
     CapturePlan,
+    CapturePlanFreshnessEvidence,
     DecisionResult,
     EstimatedValue,
     ExecutableQuote,
@@ -32,6 +33,7 @@ __all__ = [
     "ALLOWED_CAPTURE_TRANSITIONS",
     "Capture",
     "CapturePlan",
+    "CapturePlanFreshnessEvidence",
     "CaptureState",
     "DecisionResult",
     "EMERGENCY_FLATTENABLE_CAPTURE_STATES",

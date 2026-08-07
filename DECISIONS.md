@@ -187,3 +187,16 @@
 - Reason: Pytest's normal import order can mask package-level circular imports.
 - Affected files/modules: `core/accounting/reconciliation.py`, `tests/replay/test_ledger_reconciliation.py`, `ARCHITECTURE.md`, `DECISIONS.md`, and `STATUS.md`.
 - Non-decisions: RX-009 FIX 3 does not duplicate funding verifier logic, remove the canonical verifier replay comparison, implement real adapters, network calls, orders, live runner behavior, live trading, `CapturePlan` creation, canary architecture, hold-next-cycle logic, artificial filters, route profitability recalculation, route eligibility mutation, a second route model, a second EV path, a second route decision function, or a second snapshot assembly function.
+
+## 2026-08-07 — RX-010
+
+- Date: 2026-08-07
+- Decision: Added `CapturePlanFreshnessEvidence` as deterministic fake, non-executable plan freshness evidence for exactly one `capture_id`, one `route_id`, and one funding settlement timestamp.
+- Reason: Future live Capture paths need an explicit fail-closed plan freshness contract without turning RX-010 into live execution architecture or executable order planning.
+- Decision: `core/risk/gates.py` owns `check_capture_plan_freshness_gate()`. Missing, stale, duplicated, cross-capture, cross-route, cross-settlement, malformed, future-dated, or unknown-source fake plan evidence fails closed with centralized `RejectReason.CAPTURE_PLAN_NOT_FRESH`.
+- Reason: Fresh plan gating is a risk/live boundary concern and must not mutate route profitability decisions or duplicate the route decision, EV, ledger reconciliation, or funding settlement verification paths.
+- Decision: `check_live_capture_allowed()` now orders future live blockers as live trading switch, explicit ledger reconciliation, fresh CapturePlan evidence, and then `LIVE_GATES_NOT_IMPLEMENTED`.
+- Reason: Live trading remains disabled by default, reconciliation remains required first, and a fresh plan alone must never permit live trading.
+- Affected files/modules: `core/domain/contracts.py`, `core/domain/__init__.py`, `core/risk/gates.py`, `core/pipeline/evaluate.py`, `tests/unit/test_risk_gates.py`, `tests/replay/test_capture_plan_freshness.py`, `tests/replay/test_ledger_reconciliation.py`, and governance docs.
+- Superseded decisions: RX-009's final live-gate stopping point after successful ledger reconciliation is narrowed. Successful reconciliation without fresh CapturePlan evidence now stops at `CAPTURE_PLAN_NOT_FRESH`; successful reconciliation plus exact fresh fake evidence still stops at `LIVE_GATES_NOT_IMPLEMENTED`.
+- Non-decisions: RX-010 does not implement real RiseX or Hyperliquid adapters, network calls, API clients, authentication, order placement, live runner behavior, live trading, executable live order plans, live `CapturePlan` creation, canary architecture, hold-next-cycle logic, artificial filters, route profitability recalculation, route eligibility mutation, a second route model, a second EV path, a second route decision function, or a second snapshot assembly function.

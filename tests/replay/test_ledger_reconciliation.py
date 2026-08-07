@@ -820,7 +820,7 @@ def test_future_live_gate_requires_helper_derived_explicit_reconciliation() -> N
         EvaluationMode.ENTRY,
         rules=ProductRules(live_trading_enabled=True),
     )
-    reconciled_decision = evaluate_route(
+    missing_plan_decision = evaluate_route(
         route,
         snapshot,
         EvaluationMode.ENTRY,
@@ -832,10 +832,10 @@ def test_future_live_gate_requires_helper_derived_explicit_reconciliation() -> N
     assert unreconciled_decision.status is not RouteStatus.LIVE_ELIGIBLE
     assert unreconciled_decision.capture_plan is None
     assert unreconciled_decision.reasons == (RejectReason.LEDGER_NOT_RECONCILED,)
-    assert reconciled_decision.status is RouteStatus.PAPER_ELIGIBLE
-    assert reconciled_decision.status is not RouteStatus.LIVE_ELIGIBLE
-    assert reconciled_decision.capture_plan is None
-    assert reconciled_decision.reasons == (RejectReason.LIVE_GATES_NOT_IMPLEMENTED,)
+    assert missing_plan_decision.status is RouteStatus.PAPER_ELIGIBLE
+    assert missing_plan_decision.status is not RouteStatus.LIVE_ELIGIBLE
+    assert missing_plan_decision.capture_plan is None
+    assert missing_plan_decision.reasons == (RejectReason.CAPTURE_PLAN_NOT_FRESH,)
 
     ledger.append(
         event_type=LedgerEventType.PAPER_REJECTION_RECORDED,

@@ -1,13 +1,13 @@
 # Status
 
 - Last accepted task: RX-009 — Ledger Reconciliation Gate Design and Fake Replay Coverage
-- Accepted RX-009 implementation HEAD: `8bd176b76bc0835b2cd46db897428be944603ca8`
+- Accepted RX-009 baseline HEAD: `f20b100de8ccc86306bede58702b53d535188ab4`
 - Accepted baseline branch: `main`
-- Current RX task: none active
-- Current RX task branch: none
-- Current RX task status: none active
+- Current RX task: RX-010 — Fresh CapturePlan Gate Design and Fake Replay Coverage
+- Current RX task branch: `task/rx-010-fresh-captureplan-gate`
+- Current RX task status: candidate pending review
 
-The accepted RX-009 implementation is the latest accepted baseline on `main`.
+The accepted RX-009 implementation remains the latest accepted baseline on `main` until RX-010 is reviewed and accepted.
 
 ## Completed accepted tasks
 
@@ -33,28 +33,16 @@ The accepted RX-009 implementation is the latest accepted baseline on `main`.
 - Deterministic fake Broad Scan orchestration using `EvaluationMode.DISCOVERY`.
 - Deterministic fake Focused Refresh orchestration using `EvaluationMode.ENTRY`.
 - Deterministic fake paper lifecycle downstream of existing `DecisionResult` values.
-- Paper lifecycle starts only from `PAPER_ELIGIBLE` input decisions in `EvaluationMode.ENTRY`.
-- Broad Scan `PAPER_ELIGIBLE` decisions remain non-starting discovery signals.
-- Paper lifecycle uses the single Capture state machine.
 - One fake paper `Capture` represents one funding settlement opportunity.
 - Append-only ledger event contracts and helpers live in `core/accounting/ledger.py`.
-- Minimal SQLite append-only persistence scaffolding lives in `storage/sqlite/ledger.py`.
-- Deterministic paper replay reconstructs final `Capture` states from ledger events.
 - Deterministic offline funding settlement verifier lives in `core/monitoring/funding_settlement.py`.
-- Funding settlement verifier models required checkpoints at T-20 minutes, T-60 seconds, T-10 seconds, and T-5 seconds.
-- Funding checkpoint evidence, observed settlement evidence, and verification result history are written through append-only ledger helpers.
-- Actual settlement funding and actual settlement notional evidence must use `ValueSource.OBSERVED`; user-configured, documented, estimated, unknown, missing, malformed, or non-positive notional actuals cannot verify settlement.
-- Pre-settlement expected funding checkpoints remain source-aware expected inputs and are not restricted to `ValueSource.OBSERVED`.
-- Funding settlement verifier replay compares fake expected funding/notional inputs against fake observed settlement records and fails closed on missing, unknown, unobserved, or inconsistent evidence.
 - Deterministic offline ledger reconciliation lives in `core/accounting/reconciliation.py`.
-- Ledger reconciliation replays append-only route decision, fake paper lifecycle, funding evidence, and funding settlement verification events for one Capture.
-- Ledger reconciliation recomputes recorded funding settlement verification results through `core/monitoring/funding_settlement.py` and fails closed when raw checkpoint or settlement evidence contradicts the recorded verification event.
-- Ledger reconciliation keeps the funding verifier dependency lazy so `core.monitoring.funding_settlement` and `core.accounting.reconciliation` remain directly importable in fresh Python processes.
-- Ledger reconciliation records results through `core/accounting/ledger.py` as `ledger_reconciliation_recorded`.
-- Ledger reconciliation results record checked `event_count` and `last_sequence`.
-- Ledger reconciliation validates supplied sequence order exactly; duplicate, missing, non-contiguous, or out-of-order sequences fail closed.
-- Unknown event types, malformed known event payloads, stale reconciliation, or contradictory ledger evidence fail closed as unreconciled with explicit reconciliation reasons.
-- Future live gating now requires `ledger_explicitly_reconciled=True` derived from `is_ledger_explicitly_reconciled(ledger.records())`; otherwise `RejectReason.LEDGER_NOT_RECONCILED` blocks the path before later live gates.
+- Ledger reconciliation records checked `event_count` and `last_sequence`, and `is_ledger_explicitly_reconciled(ledger.records())` returns true only for the exact current append-only history.
+- Deterministic fake CapturePlan freshness evidence lives in `core/domain/contracts.py` as `CapturePlanFreshnessEvidence`.
+- CapturePlan freshness gating lives in `core/risk/gates.py`.
+- Missing, stale, duplicated, future-dated, cross-capture, cross-route, cross-settlement, malformed, or unknown-source fake plan evidence fails closed with `RejectReason.CAPTURE_PLAN_NOT_FRESH`.
+- Future live gating now checks live trading switch, explicit ledger reconciliation, CapturePlan freshness evidence, and then the still-unimplemented live gates.
+- `evaluate_route()` may receive fake freshness evidence but still does not read ledger/storage directly, create live `CapturePlan` objects, import execution/live runner modules, place orders, or return `LIVE_ELIGIBLE`.
 - In-memory Broad Scan to Focused Refresh handoff using existing `RouteCandidate` contracts.
 - Per-venue `VenueObservation` input contract.
 - Source-aware fees and funding.
@@ -64,10 +52,10 @@ The accepted RX-009 implementation is the latest accepted baseline on `main`.
 - Live `CapturePlan` creation blocked.
 - No real adapters, orders, paper exchange simulation, live runner behavior, or live trading.
 
-## Tests last reported for accepted RX-009
+## Tests run for RX-010 candidate
 
 - `python3 -m apps.cli.main`: exit 0
-- `python3 -m pytest`: `185 passed in 0.27s`
+- `python3 -m pytest`: `198 passed in 0.28s`
 - `python3 -m compileall apps core storage tests`: exit 0
 - `python3 -c "import core.monitoring.funding_settlement; import core.accounting.reconciliation"`: exit 0
 - `python3 -c "from core.monitoring.funding_settlement import replay_funding_settlement_verification; from core.accounting.reconciliation import replay_ledger_reconciliation"`: exit 0
@@ -76,15 +64,16 @@ The accepted RX-009 implementation is the latest accepted baseline on `main`.
 
 ## Known limitations
 
-- Funding settlement verifier and ledger reconciliation remain deterministic fake offline replay scaffolding only.
+- Funding settlement verifier, ledger reconciliation, and CapturePlan freshness remain deterministic fake offline replay scaffolding only.
+- CapturePlan freshness evidence is not executable live order planning.
 - No real RiseX/Hyperliquid adapters.
 - No network calls.
 - No orders.
 - No live runner behavior.
 - No live trading.
-- No `CapturePlan` creation.
-- Ledger reconciliation is not permission to trade live by itself.
+- No live `CapturePlan` creation.
+- Fresh CapturePlan evidence is not permission to trade live by itself.
 
 ## Next recommended task
 
-RX-010 — Fresh CapturePlan Gate Design and Fake Replay Coverage.
+RX-011 — Offline Execution Capability Gate Design and Fake Replay Coverage.

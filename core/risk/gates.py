@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+from datetime import datetime
 from decimal import Decimal
 
 from core.config.product_rules import ProductRules
 from core.domain.contracts import (
+    CapturePlanFreshnessEvidence,
     ExecutableQuote,
     OrderSide,
     RouteCandidate,
@@ -21,6 +24,10 @@ REQUIRED_ORDERBOOK_QUOTE_SOURCE = ValueSource.ESTIMATED_FROM_ORDERBOOK
 
 def _side_is_valid(side: str) -> bool:
     return side in VALID_ORDER_SIDES
+
+
+def _datetime_is_timezone_aware(value: datetime) -> bool:
+    return value.tzinfo is not None and value.utcoffset() is not None
 
 
 def _opposite_side(side: OrderSide) -> OrderSide | None:
@@ -124,16 +131,68 @@ def check_ledger_reconciliation_gate(
     return True, None
 
 
+def check_capture_plan_freshness_gate(
+    *,
+    route: RouteCandidate,
+    settlement_time: datetime,
+    evaluated_at: datetime,
+    plan_evidence: Sequence[CapturePlanFreshnessEvidence] | None,
+) -> tuple[bool, RejectReason | None]:
+    """Future live paths require exactly one fresh fake plan evidence record."""
+
+    if not _datetime_is_timezone_aware(settlement_time) or not _datetime_is_timezone_aware(
+        evaluated_at
+    ):
+        return False, RejectReason.CAPTURE_PLAN_NOT_FRESH
+    if plan_evidence is None or len(plan_evidence) != 1:
+        return False, RejectReason.CAPTURE_PLAN_NOT_FRESH
+
+    evidence = plan_evidence[0]
+    if not isinstance(evidence, CapturePlanFreshnessEvidence):
+        return False, RejectReason.CAPTURE_PLAN_NOT_FRESH
+    if (
+        not _datetime_is_timezone_aware(evidence.settlement_time)
+        or not _datetime_is_timezone_aware(evidence.planned_at)
+        or not _datetime_is_timezone_aware(evidence.valid_until)
+    ):
+        return False, RejectReason.CAPTURE_PLAN_NOT_FRESH
+    if not isinstance(evidence.source, ValueSource) or evidence.source is ValueSource.UNKNOWN:
+        return False, RejectReason.CAPTURE_PLAN_NOT_FRESH
+    if evidence.capture_id != route.capture_id:
+        return False, RejectReason.CAPTURE_PLAN_NOT_FRESH
+    if evidence.route_id != route.route_id:
+        return False, RejectReason.CAPTURE_PLAN_NOT_FRESH
+    if evidence.settlement_time != settlement_time:
+        return False, RejectReason.CAPTURE_PLAN_NOT_FRESH
+    if evidence.planned_at > evaluated_at:
+        return False, RejectReason.CAPTURE_PLAN_NOT_FRESH
+    if evaluated_at >= evidence.valid_until:
+        return False, RejectReason.CAPTURE_PLAN_NOT_FRESH
+    return True, None
+
+
 def check_live_capture_allowed(
     rules: ProductRules,
     *,
+    route: RouteCandidate,
+    settlement_time: datetime,
+    evaluated_at: datetime,
     ledger_explicitly_reconciled: bool = False,
+    capture_plan_evidence: Sequence[CapturePlanFreshnessEvidence] | None = None,
 ) -> tuple[bool, RejectReason | None]:
     """Live capture plans remain blocked until future live gates are implemented."""
 
     if not rules.live_trading_enabled:
         return False, RejectReason.LIVE_TRADING_DISABLED
     ok, reason = check_ledger_reconciliation_gate(ledger_explicitly_reconciled)
+    if not ok:
+        return False, reason
+    ok, reason = check_capture_plan_freshness_gate(
+        route=route,
+        settlement_time=settlement_time,
+        evaluated_at=evaluated_at,
+        plan_evidence=capture_plan_evidence,
+    )
     if not ok:
         return False, reason
     return False, RejectReason.LIVE_GATES_NOT_IMPLEMENTED

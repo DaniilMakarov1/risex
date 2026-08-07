@@ -2,9 +2,16 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 from core.accounting.ledger import InMemoryLedger, append_decision_event
 from core.config.product_rules import ProductRules
-from core.domain.contracts import DecisionResult, RouteCandidate, VenueSnapshot
+from core.domain.contracts import (
+    CapturePlanFreshnessEvidence,
+    DecisionResult,
+    RouteCandidate,
+    VenueSnapshot,
+)
 from core.domain.enums import EvaluationMode, RejectReason, RouteStatus
 from core.economics.errors import EconomicsInputError
 from core.economics.ev import calculate_entry_ev
@@ -43,6 +50,7 @@ def evaluate_route(
     rules: ProductRules | None = None,
     ledger: InMemoryLedger | None = None,
     ledger_explicitly_reconciled: bool = False,
+    capture_plan_evidence: Sequence[CapturePlanFreshnessEvidence] | None = None,
 ) -> DecisionResult:
     """Evaluate one fake route snapshot without exchange APIs or order placement."""
 
@@ -100,7 +108,11 @@ def evaluate_route(
 
     _, live_reason = check_live_capture_allowed(
         active_rules,
+        route=route,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        evaluated_at=snapshot.captured_at,
         ledger_explicitly_reconciled=ledger_explicitly_reconciled,
+        capture_plan_evidence=capture_plan_evidence,
     )
     reasons = (live_reason,) if mode is EvaluationMode.ENTRY and live_reason else ()
     decision = DecisionResult(

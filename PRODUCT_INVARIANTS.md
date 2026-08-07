@@ -27,6 +27,8 @@ The single authoritative code contract for these constants is `ProductRules`.
 - Offline funding settlement verification evidence is not permission to trade live by itself.
 - Offline ledger reconciliation evidence is not permission to trade live by itself.
 - A future live path must fail closed with `LEDGER_NOT_RECONCILED` unless ledger reconciliation is explicitly true for the current append-only ledger history.
+- Offline CapturePlan freshness evidence is not permission to trade live by itself.
+- A future live path must fail closed with `CAPTURE_PLAN_NOT_FRESH` unless exactly one fake freshness evidence record matches the current `capture_id`, `route_id`, and funding settlement timestamp and is still inside its explicit validity window.
 
 ## Route statuses
 
