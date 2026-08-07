@@ -7,7 +7,10 @@ from pathlib import Path
 
 import pytest
 
-from apps.research_runner.fake_data import build_fake_route_and_snapshot
+from apps.research_runner.fake_data import (
+    build_fake_route_and_snapshot,
+    build_fake_route_candidates_and_observations,
+)
 from core.accounting.ledger import (
     InMemoryLedger,
     LedgerEventType,
@@ -16,6 +19,7 @@ from core.accounting.ledger import (
 from core.domain.contracts import DecisionResult
 from core.domain.enums import CaptureState, EvaluationMode, RejectReason, RouteStatus
 from core.pipeline.evaluate import evaluate_route
+from core.pipeline.scan_refresh import run_broad_scan
 
 
 def _paper_eligible_decision() -> tuple:
@@ -24,7 +28,18 @@ def _paper_eligible_decision() -> tuple:
     return route, snapshot, replace(decision, decided_at=snapshot.captured_at)
 
 
-def test_paper_lifecycle_starts_only_from_paper_eligible_decision() -> None:
+def _assert_non_started_with_rejection_events(result, ledger: InMemoryLedger) -> None:
+    assert result.started is False
+    assert result.capture is None
+    assert result.state_path == ()
+    assert [event.event_type for event in ledger.records()] == [
+        LedgerEventType.ROUTE_DECISION_RECORDED.value,
+        LedgerEventType.PAPER_REJECTION_RECORDED.value,
+    ]
+    assert ledger.records()[1].payload["capture_started"] is False
+
+
+def test_paper_lifecycle_starts_only_from_entry_paper_eligible_decision() -> None:
     route, snapshot, decision = _paper_eligible_decision()
     ledger = InMemoryLedger()
     paper_runner = importlib.import_module("apps.paper_runner.lifecycle")
@@ -61,6 +76,53 @@ def test_paper_lifecycle_starts_only_from_paper_eligible_decision() -> None:
     ]
 
 
+def test_paper_eligible_discovery_decision_does_not_start_capture_execution() -> None:
+    route, snapshot, entry_decision = _paper_eligible_decision()
+    discovery_decision = replace(entry_decision, mode=EvaluationMode.DISCOVERY)
+    ledger = InMemoryLedger()
+    paper_runner = importlib.import_module("apps.paper_runner.lifecycle")
+
+    result = paper_runner.run_paper_lifecycle(
+        route=route,
+        decision=discovery_decision,
+        funding_settlement_at=snapshot.risex_funding_settlement_at,
+        ledger=ledger,
+    )
+
+    _assert_non_started_with_rejection_events(result, ledger)
+    assert result.decision is discovery_decision
+    assert discovery_decision.status is RouteStatus.PAPER_ELIGIBLE
+    assert discovery_decision.mode is EvaluationMode.DISCOVERY
+
+
+def test_broad_scan_paper_eligible_decisions_do_not_start_capture_execution() -> None:
+    routes, observations, scanned_at = build_fake_route_candidates_and_observations()
+    broad_scan = run_broad_scan(
+        routes=routes,
+        observations=observations,
+        scanned_at=scanned_at,
+    )
+    eligible_index = next(
+        index
+        for index, decision in enumerate(broad_scan.decisions)
+        if decision.status is RouteStatus.PAPER_ELIGIBLE
+    )
+    route = routes[eligible_index]
+    decision = broad_scan.decisions[eligible_index]
+    ledger = InMemoryLedger()
+    paper_runner = importlib.import_module("apps.paper_runner.lifecycle")
+
+    result = paper_runner.run_paper_lifecycle(
+        route=route,
+        decision=decision,
+        funding_settlement_at=observations[(route.risex_venue, route.risex_symbol)].funding_settlement_at,
+        ledger=ledger,
+    )
+
+    assert decision.mode is EvaluationMode.DISCOVERY
+    _assert_non_started_with_rejection_events(result, ledger)
+
+
 @pytest.mark.parametrize(
     "status",
     (RouteStatus.REJECTED, RouteStatus.RESEARCH_ONLY, RouteStatus.LIVE_ELIGIBLE),
@@ -85,14 +147,7 @@ def test_non_paper_eligible_decisions_do_not_start_capture_execution(status: Rou
         ledger=ledger,
     )
 
-    assert result.started is False
-    assert result.capture is None
-    assert result.state_path == ()
-    assert [event.event_type for event in ledger.records()] == [
-        LedgerEventType.ROUTE_DECISION_RECORDED.value,
-        LedgerEventType.PAPER_REJECTION_RECORDED.value,
-    ]
-    assert ledger.records()[1].payload["capture_started"] is False
+    _assert_non_started_with_rejection_events(result, ledger)
 
 
 def test_lifecycle_transitions_use_single_capture_state_machine(monkeypatch: pytest.MonkeyPatch) -> None:

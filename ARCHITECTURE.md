@@ -165,8 +165,8 @@ RX-007 adds deterministic fake paper lifecycle and append-only ledger persistenc
 
 1. `apps/paper_runner/lifecycle.py` owns the fake paper lifecycle runner.
 2. The paper runner accepts an existing `RouteCandidate`, an existing `DecisionResult`, an explicit funding settlement timestamp, and an append-only ledger.
-3. The paper runner starts fake capture execution only when the input decision status is `PAPER_ELIGIBLE`.
-4. `REJECTED`, `RESEARCH_ONLY`, and `LIVE_ELIGIBLE` decisions are recorded as paper rejections and do not create a `Capture`.
+3. The paper runner starts fake capture execution only when the input decision status is `PAPER_ELIGIBLE` and the input decision mode is `EvaluationMode.ENTRY`.
+4. `PAPER_ELIGIBLE` discovery decisions, `REJECTED`, `RESEARCH_ONLY`, and `LIVE_ELIGIBLE` decisions are recorded as paper rejections and do not create a `Capture`.
 5. A started paper lifecycle creates exactly one `Capture` using the route `capture_id`, route `route_id`, and the settlement timestamp for one funding settlement opportunity.
 6. Every fake paper state change uses the single `core/domain/state_machine.py` transition contract.
 7. Paper history is written only through `core/accounting/ledger.py` event helpers: route decision, paper capture opened, paper settlement observed, paper capture closed, and paper rejection recorded.

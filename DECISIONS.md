@@ -103,8 +103,8 @@
 - Date: 2026-08-07
 - Decision: `apps/paper_runner/lifecycle.py` owns the deterministic fake paper lifecycle downstream of existing `DecisionResult` values.
 - Reason: Paper execution must not become a second route decision path, second EV path, second snapshot assembly path, or live execution path.
-- Decision: Fake paper capture execution starts only for `PAPER_ELIGIBLE` input decisions. `REJECTED`, `RESEARCH_ONLY`, and `LIVE_ELIGIBLE` decisions are recorded as paper rejections and do not create a `Capture`.
-- Reason: Route eligibility decisions must remain immutable inputs to the paper lifecycle, and live eligibility must not be treated as permission to paper-execute or live-execute.
+- Decision: Fake paper capture execution starts only for `PAPER_ELIGIBLE` input decisions in `EvaluationMode.ENTRY`. `PAPER_ELIGIBLE` discovery decisions, `REJECTED`, `RESEARCH_ONLY`, and `LIVE_ELIGIBLE` decisions are recorded as paper rejections and do not create a `Capture`.
+- Reason: Broad Scan discovery decisions are research-stage signals only. Route eligibility decisions must remain immutable inputs to the paper lifecycle, and live eligibility must not be treated as permission to paper-execute or live-execute.
 - Decision: A started fake paper lifecycle creates one `Capture` for one funding settlement opportunity and advances it through `core/domain/state_machine.py`.
 - Reason: Capture lifecycle behavior must remain centralized and separate from route status.
 - Decision: `core/accounting/ledger.py` owns append-only paper event contracts, event append helpers, immutable payload freezing, and deterministic replay of paper lifecycle events into final `Capture` states.

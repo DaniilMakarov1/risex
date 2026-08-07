@@ -31,7 +31,8 @@ The accepted RX-006 implementation is the latest accepted baseline on `main`. RX
 - Deterministic fake Broad Scan orchestration using `EvaluationMode.DISCOVERY`.
 - Deterministic fake Focused Refresh orchestration using `EvaluationMode.ENTRY`.
 - Deterministic fake paper lifecycle downstream of existing `DecisionResult` values.
-- Paper lifecycle starts only from `PAPER_ELIGIBLE` input decisions.
+- Paper lifecycle starts only from `PAPER_ELIGIBLE` input decisions in `EvaluationMode.ENTRY`.
+- Broad Scan `PAPER_ELIGIBLE` decisions remain non-starting discovery signals.
 - Paper lifecycle uses the single Capture state machine.
 - One fake paper `Capture` represents one funding settlement opportunity.
 - Append-only ledger event contracts and helpers live in `core/accounting/ledger.py`.
@@ -55,7 +56,7 @@ The accepted RX-006 implementation is the latest accepted baseline on `main`. RX
   - `Focused Refresh`
   - `fake-risex-hl-btc: PAPER_ELIGIBLE net_profit_usd=1.50000000000000000000000000`
   - `fake-risex-hl-eth: REJECTED net_profit_usd=-0.2499625093726568357910522369`
-- `python3 -m pytest`: `142 passed in 0.13s`
+- `python3 -m pytest`: `144 passed in 0.13s`
 - `python3 -m compileall apps core storage tests`: exit 0
 - `git diff --check`: exit 0
 - `git diff --cached --check`: exit 0

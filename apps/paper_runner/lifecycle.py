@@ -20,7 +20,7 @@ from core.domain.contracts import (
     RouteCandidate,
     validate_timezone_aware_datetime,
 )
-from core.domain.enums import CaptureState, RouteStatus
+from core.domain.enums import CaptureState, EvaluationMode, RouteStatus
 from core.domain.state_machine import transition_capture
 
 
@@ -74,7 +74,7 @@ def run_paper_lifecycle(
         raise ValueError("paper lifecycle must not consume live CapturePlan decisions")
 
     events = [append_decision_event(ledger, decision)]
-    if decision.status is not RouteStatus.PAPER_ELIGIBLE:
+    if decision.status is not RouteStatus.PAPER_ELIGIBLE or decision.mode is not EvaluationMode.ENTRY:
         events.append(append_paper_rejection_event(ledger, decision))
         return PaperRunResult(
             decision=decision,
