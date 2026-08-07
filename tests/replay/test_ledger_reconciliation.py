@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib
+import subprocess
 import sys
 from dataclasses import replace
 from datetime import timedelta
@@ -346,6 +347,26 @@ def test_reconciled_replay_from_sqlite_ledger_events_is_deterministic(tmp_path: 
     assert records[-1].event_type == LedgerEventType.LEDGER_RECONCILIATION_RECORDED.value
     assert records[-1].payload["reconciled"] is True
     reopened.close()
+
+
+def test_accounting_and_monitoring_direct_imports_work_from_fresh_process() -> None:
+    repo_root = Path(__file__).resolve().parents[2]
+    commands = (
+        "import core.monitoring.funding_settlement; import core.accounting.reconciliation",
+        "from core.monitoring.funding_settlement import replay_funding_settlement_verification; "
+        "from core.accounting.reconciliation import replay_ledger_reconciliation",
+    )
+
+    for command in commands:
+        completed = subprocess.run(
+            [sys.executable, "-c", command],
+            cwd=repo_root,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+        assert completed.returncode == 0, completed.stderr
 
 
 def test_forged_verified_funding_result_fails_when_raw_funding_evidence_contradicts_checkpoints() -> None:

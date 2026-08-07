@@ -18,10 +18,6 @@ from core.accounting.ledger import (
 )
 from core.domain.contracts import validate_timezone_aware_datetime
 from core.domain.enums import CaptureState, EvaluationMode, RouteStatus, ValueSource
-from core.monitoring.funding_settlement import (
-    REQUIRED_FUNDING_CHECKPOINTS,
-    replay_funding_settlement_verification,
-)
 
 
 class LedgerReconciliationReason(StrEnum):
@@ -74,9 +70,6 @@ _FUNDING_VERIFICATION_EVENT_TYPE = (
 )
 _LEDGER_RECONCILIATION_EVENT_TYPE = LedgerEventType.LEDGER_RECONCILIATION_RECORDED.value
 _KNOWN_EVENT_TYPES = frozenset(event_type.value for event_type in LedgerEventType)
-_CANONICAL_REQUIRED_FUNDING_CHECKPOINTS = tuple(
-    requirement.checkpoint.value for requirement in REQUIRED_FUNDING_CHECKPOINTS
-)
 
 _PAPER_LIFECYCLE_EVENT_ORDER = (
     _PAPER_OPENED_EVENT_TYPE,
@@ -614,10 +607,18 @@ def _funding_verification_matches_canonical_replay(
     capture_id: str,
     settlement_time: datetime,
 ) -> bool:
+    from core.monitoring.funding_settlement import (
+        REQUIRED_FUNDING_CHECKPOINTS,
+        replay_funding_settlement_verification,
+    )
+
     replayed_result = replay_funding_settlement_verification(
         events,
         capture_id=capture_id,
         settlement_time=settlement_time,
+    )
+    canonical_required_checkpoints = tuple(
+        requirement.checkpoint.value for requirement in REQUIRED_FUNDING_CHECKPOINTS
     )
     recorded_required_checkpoints = _payload_str_sequence(
         verification_event.payload,
@@ -634,7 +635,7 @@ def _funding_verification_matches_canonical_replay(
     recorded_settlement_sequence = None if recorded_settlement_sequence == 0 else recorded_settlement_sequence
 
     return (
-        recorded_required_checkpoints == _CANONICAL_REQUIRED_FUNDING_CHECKPOINTS
+        recorded_required_checkpoints == canonical_required_checkpoints
         and verification_event.payload.get("capture_id") == replayed_result.capture_id
         and verification_event.payload.get("route_id") == replayed_result.route_id
         and _payload_datetime(verification_event.payload, "settlement_time")

@@ -177,3 +177,13 @@
 - Reason: Future live gating must be based on append-only evidence coverage, not on manually supplied or stale success claims.
 - Affected files/modules: `core/accounting/reconciliation.py`, replay tests, `ARCHITECTURE.md`, `PRODUCT_INVARIANTS.md`, `DECISIONS.md`, and `STATUS.md`.
 - Non-decisions: RX-009 FIX 2 does not implement real adapters, network calls, orders, live runner behavior, live trading, `CapturePlan` creation, canary architecture, hold-next-cycle logic, artificial filters, route profitability recalculation, route eligibility mutation, a second route model, a second EV path, a second route decision function, or a second snapshot assembly function.
+
+## 2026-08-07 — RX-009 FIX 3
+
+- Date: 2026-08-07
+- Decision: Ledger reconciliation keeps the funding verifier dependency lazy inside the canonical replay comparison helper.
+- Reason: `core.monitoring.funding_settlement` imports `core.accounting.ledger`, and `core/accounting/__init__.py` re-exports reconciliation; a top-level reconciliation import of monitoring creates a circular import risk in fresh Python processes.
+- Decision: Direct import regression coverage now checks both module imports and function imports for `core.monitoring.funding_settlement` and `core.accounting.reconciliation` in subprocesses.
+- Reason: Pytest's normal import order can mask package-level circular imports.
+- Affected files/modules: `core/accounting/reconciliation.py`, `tests/replay/test_ledger_reconciliation.py`, `ARCHITECTURE.md`, `DECISIONS.md`, and `STATUS.md`.
+- Non-decisions: RX-009 FIX 3 does not duplicate funding verifier logic, remove the canonical verifier replay comparison, implement real adapters, network calls, orders, live runner behavior, live trading, `CapturePlan` creation, canary architecture, hold-next-cycle logic, artificial filters, route profitability recalculation, route eligibility mutation, a second route model, a second EV path, a second route decision function, or a second snapshot assembly function.
