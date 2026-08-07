@@ -132,7 +132,7 @@ def test_venue_adapter_contract_is_per_venue_observation_only() -> None:
     assert "fetch_snapshot" not in adapter_source
 
 
-def test_no_real_adapters_secrets_persistence_or_dashboard_code_are_introduced() -> None:
+def test_no_real_adapters_secrets_or_dashboard_code_are_introduced() -> None:
     production_text = "\n".join(path.read_text().lower() for path in _production_python_files())
     venue_python_files = {path.relative_to(Path("core/venues")) for path in Path("core/venues").rglob("*.py")}
     dashboard_python_files = tuple(Path("apps/dashboard").rglob("*.py"))
@@ -140,10 +140,27 @@ def test_no_real_adapters_secrets_persistence_or_dashboard_code_are_introduced()
 
     assert venue_python_files == {Path("__init__.py"), Path("base.py")}
     assert all(path.name == "__init__.py" and path.read_text() == "" for path in dashboard_python_files)
-    assert storage_python_files == {Path("__init__.py"), Path("sqlite/__init__.py")}
+    assert storage_python_files == {
+        Path("__init__.py"),
+        Path("sqlite/__init__.py"),
+        Path("sqlite/ledger.py"),
+    }
     assert "api_key" not in production_text
     assert "secret_key" not in production_text
     assert "private_key" not in production_text
+
+
+def test_paper_runner_stays_downstream_of_route_decisions() -> None:
+    paper_runner_source = Path("apps/paper_runner/lifecycle.py").read_text()
+
+    assert "evaluate_route" not in paper_runner_source
+    assert "assemble_route_snapshot" not in paper_runner_source
+    assert "calculate_entry_ev" not in paper_runner_source
+    assert "core.economics" not in paper_runner_source
+    assert "core.risk" not in paper_runner_source
+    assert "core.execution" not in paper_runner_source
+    assert "apps.live_runner" not in paper_runner_source
+    assert "CapturePlan(" not in paper_runner_source
 
 
 def test_no_stale_rx004_archive_code_is_introduced() -> None:

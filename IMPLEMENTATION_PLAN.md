@@ -37,9 +37,15 @@ Add normalized per-venue `VenueObservation` inputs and the single `assemble_rout
 
 Add deterministic fake offline orchestration over multiple `RouteCandidate` values and normalized observation mappings. Every successful candidate uses `assemble_route_snapshot()` and then `evaluate_route()`. Missing or contradictory observations fail closed before evaluation without trades, orders, ledger writes, paper lifecycle, live trading, or `CapturePlan` creation.
 
+## RX-006 — Broad Scan and Focused Refresh orchestration
+
+Add deterministic fake Broad Scan and Focused Refresh over the same offline observation, snapshot assembly, and `evaluate_route()` path. Keep the scan/refresh layer fake-data-only, read-only, non-trading, and free of paper execution, ledger writes, real adapters, live trading, or `CapturePlan` creation.
+
+## RX-007 — Paper Runner Lifecycle and Append-only Ledger Persistence
+
+Add deterministic fake paper lifecycle downstream of existing `DecisionResult` values and append-only ledger persistence scaffolding. Start paper capture execution only for `PAPER_ELIGIBLE` decisions, use the single Capture state machine, write all fake paper history through `core/accounting/ledger.py`, and keep real adapters, orders, live trading, live runner behavior, `CapturePlan` creation, second decision paths, second EV paths, and second snapshot assembly paths out of scope.
+
 ## Next Sequence
 
-1. RX-006 — Broad Scan and Focused Refresh orchestration over the same offline observation, snapshot assembly, and `evaluate_route()` path.
-2. Paper runner lifecycle and append-only ledger persistence.
-3. Funding settlement verifier design and fake replay coverage.
-4. Real venue adapters only after contracts, fake observation, paper paths, and settlement verification are stable.
+1. RX-008 — Funding settlement verifier design and fake replay coverage.
+2. Real venue adapters only after contracts, fake observation, paper paths, and settlement verification are stable.

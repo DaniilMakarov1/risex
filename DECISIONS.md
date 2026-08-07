@@ -97,3 +97,19 @@
 - Reason: Focused Refresh must consume only Broad Scan handoff candidates while still flowing through observation lookup, `assemble_route_snapshot()`, and `evaluate_route(route, snapshot, mode)`.
 - Affected files/modules: `core/pipeline/scan_refresh.py`, `apps/research_runner/fake_data.py`, `apps/cli/main.py`, tests, and governance docs.
 - Non-decisions: RX-006 does not implement real RiseX or Hyperliquid adapters, network calls, API clients, authentication, order placement, paper execution lifecycle, persistent ledger storage, migrations, dashboard code, live trading, live `CapturePlan` creation, canary architecture, hold-next-cycle logic, ranking, artificial filters, or production credentials.
+
+## 2026-08-07 — RX-007
+
+- Date: 2026-08-07
+- Decision: `apps/paper_runner/lifecycle.py` owns the deterministic fake paper lifecycle downstream of existing `DecisionResult` values.
+- Reason: Paper execution must not become a second route decision path, second EV path, second snapshot assembly path, or live execution path.
+- Decision: Fake paper capture execution starts only for `PAPER_ELIGIBLE` input decisions. `REJECTED`, `RESEARCH_ONLY`, and `LIVE_ELIGIBLE` decisions are recorded as paper rejections and do not create a `Capture`.
+- Reason: Route eligibility decisions must remain immutable inputs to the paper lifecycle, and live eligibility must not be treated as permission to paper-execute or live-execute.
+- Decision: A started fake paper lifecycle creates one `Capture` for one funding settlement opportunity and advances it through `core/domain/state_machine.py`.
+- Reason: Capture lifecycle behavior must remain centralized and separate from route status.
+- Decision: `core/accounting/ledger.py` owns append-only paper event contracts, event append helpers, immutable payload freezing, and deterministic replay of paper lifecycle events into final `Capture` states.
+- Reason: Ledger events are the source of fake paper history and must stay behind the accounting boundary.
+- Decision: `storage/sqlite/ledger.py` is the only persistence scaffolding introduced by RX-007.
+- Reason: RX-007 needs deterministic append-only persistence tests without broad storage design, migrations, real adapters, exchange connectivity, secrets, or live trading.
+- Affected files/modules: `apps/paper_runner/lifecycle.py`, `core/accounting/ledger.py`, `storage/sqlite/ledger.py`, tests, and governance docs.
+- Non-decisions: RX-007 does not implement real RiseX or Hyperliquid adapters, network calls, API clients, authentication, order placement, live runner behavior, live trading, live `CapturePlan` creation, canary architecture, hold-next-cycle logic, artificial filters, a second route model, a second EV path, a second route decision function, or a second snapshot assembly function.

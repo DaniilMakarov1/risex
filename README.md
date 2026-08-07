@@ -2,7 +2,7 @@
 
 RiseX Points Farmer is a modular-monolith research system for capture-centric hedged funding opportunities on RiseX with hedge venue support, initially Hyperliquid.
 
-The current baseline is a non-trading research skeleton. It uses fake data, does not connect to exchanges, does not place orders, and does not contain real API keys.
+The current baseline is a non-trading research and fake paper-lifecycle skeleton. It uses fake data, does not connect to exchanges, does not place orders, and does not contain real API keys.
 
 ## Product baseline
 
@@ -23,6 +23,12 @@ The fake runner builds multiple `RouteCandidate` values and normalized `VenueObs
 python -m apps.cli.main
 pytest
 ```
+
+## Offline paper runner
+
+The fake paper runner is downstream of route decisions. It consumes existing `DecisionResult` values, starts fake capture execution only for `PAPER_ELIGIBLE` decisions, and records non-started decisions as paper rejections. It does not recalculate profitability, assemble snapshots, place orders, import the live runner, or create `CapturePlan` objects.
+
+Paper history is written through `core/accounting/ledger.py` as append-only events. `storage/sqlite/ledger.py` is a minimal deterministic SQLite implementation of the same ledger contract for offline persistence and replay tests.
 
 ## Boundaries
 
