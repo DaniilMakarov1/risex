@@ -47,6 +47,7 @@ The accepted RX-008 implementation is the latest accepted baseline on `main`.
 - Funding settlement verifier replay compares fake expected funding/notional inputs against fake observed settlement records and fails closed on missing, unknown, unobserved, or inconsistent evidence.
 - Deterministic offline ledger reconciliation lives in `core/accounting/reconciliation.py`.
 - Ledger reconciliation replays append-only route decision, fake paper lifecycle, funding evidence, and funding settlement verification events for one Capture.
+- Ledger reconciliation recomputes recorded funding settlement verification results through `core/monitoring/funding_settlement.py` and fails closed when raw checkpoint or settlement evidence contradicts the recorded verification event.
 - Ledger reconciliation records results through `core/accounting/ledger.py` as `ledger_reconciliation_recorded`.
 - Ledger reconciliation results record checked `event_count` and `last_sequence`.
 - Ledger reconciliation validates supplied sequence order exactly; duplicate, missing, non-contiguous, or out-of-order sequences fail closed.
@@ -61,7 +62,7 @@ The accepted RX-008 implementation is the latest accepted baseline on `main`.
 - Live `CapturePlan` creation blocked.
 - No real adapters, orders, paper exchange simulation, live runner behavior, or live trading.
 
-## Tests last reported for RX-009 candidate
+## Tests last reported for RX-009 FIX 2 candidate
 
 - `python3 -m apps.cli.main`:
   - `Broad Scan`
@@ -70,7 +71,7 @@ The accepted RX-008 implementation is the latest accepted baseline on `main`.
   - `Focused Refresh`
   - `fake-risex-hl-btc: PAPER_ELIGIBLE net_profit_usd=1.50000000000000000000000000`
   - `fake-risex-hl-eth: REJECTED net_profit_usd=-0.2499625093726568357910522369`
-- `python3 -m pytest`: `181 passed in 0.18s`
+- `python3 -m pytest`: `184 passed in 0.18s`
 - `python3 -m compileall apps core storage tests`: exit 0
 - `git diff --check`: exit 0
 - `git diff --cached --check`: exit 0
@@ -89,4 +90,4 @@ The accepted RX-008 implementation is the latest accepted baseline on `main`.
 
 ## Next recommended task
 
-RX-010 — Fresh CapturePlan Gate Design and Fake Replay Coverage.
+RX-010 — Fresh CapturePlan Gate Design and Fake Replay Coverage, only after RX-009 is accepted.

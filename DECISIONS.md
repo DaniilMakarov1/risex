@@ -167,3 +167,13 @@
 - Reason: Ledger replay must not silently skip unrecognized or malformed append-only evidence.
 - Affected files/modules: `core/accounting/ledger.py`, `core/accounting/reconciliation.py`, `core/accounting/__init__.py`, `core/risk/gates.py`, `core/pipeline/evaluate.py`, replay tests, and governance docs.
 - Non-decisions: RX-009 FIX does not implement real adapters, network calls, orders, live runner behavior, live trading, `CapturePlan` creation, canary architecture, hold-next-cycle logic, artificial filters, route profitability recalculation, route eligibility mutation, a second route model, a second EV path, a second route decision function, or a second snapshot assembly function.
+
+## 2026-08-07 — RX-009 FIX 2
+
+- Date: 2026-08-07
+- Decision: Ledger reconciliation recomputes every recorded funding settlement verification result with `core/monitoring/funding_settlement.py`.
+- Reason: A forged or accidentally inconsistent `funding_settlement_verification_recorded` event must not make ledger reconciliation pass when raw checkpoint or settlement evidence contradicts the recorded result.
+- Decision: The recorded funding verification event must match canonical replay on capture id, route id, settlement time, verified flag, reasons, checkpoint event sequences, settlement event sequence, and canonical required checkpoint labels.
+- Reason: Future live gating must be based on append-only evidence coverage, not on manually supplied or stale success claims.
+- Affected files/modules: `core/accounting/reconciliation.py`, replay tests, `ARCHITECTURE.md`, `PRODUCT_INVARIANTS.md`, `DECISIONS.md`, and `STATUS.md`.
+- Non-decisions: RX-009 FIX 2 does not implement real adapters, network calls, orders, live runner behavior, live trading, `CapturePlan` creation, canary architecture, hold-next-cycle logic, artificial filters, route profitability recalculation, route eligibility mutation, a second route model, a second EV path, a second route decision function, or a second snapshot assembly function.

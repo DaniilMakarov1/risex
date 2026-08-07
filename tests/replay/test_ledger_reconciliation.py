@@ -41,6 +41,10 @@ def _observed(value: Decimal | str) -> EstimatedValue:
     return EstimatedValue(value=Decimal(str(value)), source=ValueSource.OBSERVED)
 
 
+def _sourced(value: Decimal | str, source: ValueSource) -> EstimatedValue:
+    return EstimatedValue(value=Decimal(str(value)), source=source)
+
+
 def _started_paper_capture(ledger: Ledger) -> tuple[RouteCandidate, VenueSnapshot]:
     route, snapshot = build_fake_route_and_snapshot()
     decision = replace(evaluate_route(route, snapshot, EvaluationMode.ENTRY), decided_at=snapshot.captured_at)
@@ -79,6 +83,10 @@ def _append_settlement_evidence(
     route: RouteCandidate,
     snapshot: VenueSnapshot,
     route_id: str | None = None,
+    actual_risex_funding_usd: EstimatedValue | None = None,
+    actual_hedge_funding_usd: EstimatedValue | None = None,
+    actual_risex_notional_usd: EstimatedValue | None = None,
+    actual_hedge_notional_usd: EstimatedValue | None = None,
 ) -> None:
     append_funding_settlement_evidence_event(
         ledger,
@@ -86,10 +94,10 @@ def _append_settlement_evidence(
         route_id=route_id or route.route_id,
         settlement_time=snapshot.risex_funding_settlement_at,
         observed_at=snapshot.risex_funding_settlement_at,
-        actual_risex_funding_usd=snapshot.funding.risex_funding_usd,
-        actual_hedge_funding_usd=snapshot.funding.hedge_funding_usd,
-        actual_risex_notional_usd=_observed(route.target_notional_usd),
-        actual_hedge_notional_usd=_observed(route.target_notional_usd),
+        actual_risex_funding_usd=actual_risex_funding_usd or snapshot.funding.risex_funding_usd,
+        actual_hedge_funding_usd=actual_hedge_funding_usd or snapshot.funding.hedge_funding_usd,
+        actual_risex_notional_usd=actual_risex_notional_usd or _observed(route.target_notional_usd),
+        actual_hedge_notional_usd=actual_hedge_notional_usd or _observed(route.target_notional_usd),
     )
 
 
@@ -169,6 +177,46 @@ def _replace_ledger_event(
         event_type=event.event_type if event_type is None else event_type,
         payload=event.payload if payload is None else payload,
         recorded_at=event.recorded_at,
+    )
+
+
+def _funding_checkpoint_sequences(ledger: Ledger) -> tuple[int, ...]:
+    return tuple(
+        event.sequence
+        for event in ledger.records()
+        if event.event_type == LedgerEventType.FUNDING_CHECKPOINT_OBSERVED.value
+    )
+
+
+def _funding_settlement_evidence_sequence(ledger: Ledger) -> int:
+    settlement_events = tuple(
+        event
+        for event in ledger.records()
+        if event.event_type == LedgerEventType.FUNDING_SETTLEMENT_EVIDENCE_RECORDED.value
+    )
+    assert len(settlement_events) == 1
+    return settlement_events[0].sequence
+
+
+def _append_forged_successful_funding_verification(
+    ledger: Ledger,
+    *,
+    route: RouteCandidate,
+    snapshot: VenueSnapshot,
+    required_checkpoints: tuple[str, ...] | None = None,
+) -> None:
+    append_funding_settlement_verification_event(
+        ledger,
+        capture_id=route.capture_id,
+        route_id=route.route_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        verified=True,
+        reasons=(),
+        required_checkpoints=required_checkpoints
+        or tuple(requirement.checkpoint.value for requirement in REQUIRED_FUNDING_CHECKPOINTS),
+        checkpoint_event_sequences=_funding_checkpoint_sequences(ledger),
+        settlement_event_sequence=_funding_settlement_evidence_sequence(ledger),
+        recorded_at=snapshot.risex_funding_settlement_at,
     )
 
 
@@ -298,6 +346,92 @@ def test_reconciled_replay_from_sqlite_ledger_events_is_deterministic(tmp_path: 
     assert records[-1].event_type == LedgerEventType.LEDGER_RECONCILIATION_RECORDED.value
     assert records[-1].payload["reconciled"] is True
     reopened.close()
+
+
+def test_forged_verified_funding_result_fails_when_raw_funding_evidence_contradicts_checkpoints() -> None:
+    ledger = InMemoryLedger()
+    route, snapshot = _started_paper_capture(ledger)
+    _append_required_checkpoints(ledger, route=route, snapshot=snapshot)
+    _append_settlement_evidence(
+        ledger,
+        route=route,
+        snapshot=snapshot,
+        actual_risex_funding_usd=_observed("4"),
+    )
+    _append_forged_successful_funding_verification(
+        ledger,
+        route=route,
+        snapshot=snapshot,
+    )
+
+    result = reconcile_ledger(
+        ledger,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+
+    assert result.reconciled is False
+    assert LedgerReconciliationReason.CONTRADICTORY_FUNDING_SETTLEMENT_VERIFICATION in result.reasons
+    assert is_ledger_explicitly_reconciled(ledger.records()) is False
+
+
+def test_forged_verified_funding_result_fails_when_actual_settlement_source_is_not_observed() -> None:
+    ledger = InMemoryLedger()
+    route, snapshot = _started_paper_capture(ledger)
+    _append_required_checkpoints(ledger, route=route, snapshot=snapshot)
+    _append_settlement_evidence(
+        ledger,
+        route=route,
+        snapshot=snapshot,
+        actual_risex_funding_usd=_sourced(
+            snapshot.funding.risex_funding_usd.require_value(),
+            ValueSource.USER_CONFIGURED,
+        ),
+    )
+    _append_forged_successful_funding_verification(
+        ledger,
+        route=route,
+        snapshot=snapshot,
+    )
+
+    result = reconcile_ledger(
+        ledger,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+
+    assert result.reconciled is False
+    assert LedgerReconciliationReason.CONTRADICTORY_FUNDING_SETTLEMENT_VERIFICATION in result.reasons
+    assert is_ledger_explicitly_reconciled(ledger.records()) is False
+
+
+def test_forged_verified_funding_result_fails_when_required_checkpoints_are_not_canonical() -> None:
+    ledger = InMemoryLedger()
+    route, snapshot = _started_paper_capture(ledger)
+    _append_complete_funding_evidence(ledger, route=route, snapshot=snapshot)
+    forged_required_checkpoints = (
+        "NOT_CANONICAL",
+        *tuple(requirement.checkpoint.value for requirement in REQUIRED_FUNDING_CHECKPOINTS[1:]),
+    )
+    _append_forged_successful_funding_verification(
+        ledger,
+        route=route,
+        snapshot=snapshot,
+        required_checkpoints=forged_required_checkpoints,
+    )
+
+    result = reconcile_ledger(
+        ledger,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+
+    assert result.reconciled is False
+    assert LedgerReconciliationReason.CONTRADICTORY_FUNDING_SETTLEMENT_VERIFICATION in result.reasons
+    assert is_ledger_explicitly_reconciled(ledger.records()) is False
 
 
 def test_unreconciled_replay_from_missing_funding_verification_is_deterministic(

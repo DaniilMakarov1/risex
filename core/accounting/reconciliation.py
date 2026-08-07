@@ -18,6 +18,10 @@ from core.accounting.ledger import (
 )
 from core.domain.contracts import validate_timezone_aware_datetime
 from core.domain.enums import CaptureState, EvaluationMode, RouteStatus, ValueSource
+from core.monitoring.funding_settlement import (
+    REQUIRED_FUNDING_CHECKPOINTS,
+    replay_funding_settlement_verification,
+)
 
 
 class LedgerReconciliationReason(StrEnum):
@@ -39,6 +43,7 @@ class LedgerReconciliationReason(StrEnum):
     NON_CONTIGUOUS_LEDGER_SEQUENCE = "NON_CONTIGUOUS_LEDGER_SEQUENCE"
     UNKNOWN_LEDGER_EVENT_TYPE = "UNKNOWN_LEDGER_EVENT_TYPE"
     MALFORMED_LEDGER_EVENT_PAYLOAD = "MALFORMED_LEDGER_EVENT_PAYLOAD"
+    CONTRADICTORY_FUNDING_SETTLEMENT_VERIFICATION = "CONTRADICTORY_FUNDING_SETTLEMENT_VERIFICATION"
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,6 +74,9 @@ _FUNDING_VERIFICATION_EVENT_TYPE = (
 )
 _LEDGER_RECONCILIATION_EVENT_TYPE = LedgerEventType.LEDGER_RECONCILIATION_RECORDED.value
 _KNOWN_EVENT_TYPES = frozenset(event_type.value for event_type in LedgerEventType)
+_CANONICAL_REQUIRED_FUNDING_CHECKPOINTS = tuple(
+    requirement.checkpoint.value for requirement in REQUIRED_FUNDING_CHECKPOINTS
+)
 
 _PAPER_LIFECYCLE_EVENT_ORDER = (
     _PAPER_OPENED_EVENT_TYPE,
@@ -594,8 +602,54 @@ def _validate_referenced_funding_evidence(
         _add_reason(reasons, LedgerReconciliationReason.OUT_OF_ORDER_LEDGER_EVIDENCE)
 
 
+def _recorded_funding_reasons(payload: Mapping[str, Any]) -> tuple[str, ...]:
+    reasons = _payload_str_sequence(payload, "reasons")
+    return reasons if reasons is not None else ()
+
+
+def _funding_verification_matches_canonical_replay(
+    *,
+    verification_event: LedgerEvent,
+    events: Sequence[LedgerEvent],
+    capture_id: str,
+    settlement_time: datetime,
+) -> bool:
+    replayed_result = replay_funding_settlement_verification(
+        events,
+        capture_id=capture_id,
+        settlement_time=settlement_time,
+    )
+    recorded_required_checkpoints = _payload_str_sequence(
+        verification_event.payload,
+        "required_checkpoints",
+    )
+    recorded_checkpoint_sequences = _payload_int_sequence(
+        verification_event.payload,
+        "checkpoint_event_sequences",
+    )
+    recorded_settlement_sequence = _payload_optional_int(
+        verification_event.payload,
+        "settlement_event_sequence",
+    )
+    recorded_settlement_sequence = None if recorded_settlement_sequence == 0 else recorded_settlement_sequence
+
+    return (
+        recorded_required_checkpoints == _CANONICAL_REQUIRED_FUNDING_CHECKPOINTS
+        and verification_event.payload.get("capture_id") == replayed_result.capture_id
+        and verification_event.payload.get("route_id") == replayed_result.route_id
+        and _payload_datetime(verification_event.payload, "settlement_time")
+        == replayed_result.settlement_time
+        and verification_event.payload.get("verified") == replayed_result.verified
+        and _recorded_funding_reasons(verification_event.payload)
+        == tuple(reason.value for reason in replayed_result.reasons)
+        and recorded_checkpoint_sequences == replayed_result.checkpoint_event_sequences
+        and recorded_settlement_sequence == replayed_result.settlement_event_sequence
+    )
+
+
 def _validate_funding_verification(
     *,
+    events: Sequence[LedgerEvent],
     capture_events: Sequence[LedgerEvent],
     event_by_sequence: Mapping[int, LedgerEvent],
     paper_event_sequences: Sequence[int],
@@ -646,6 +700,16 @@ def _validate_funding_verification(
         settlement_time=settlement_time,
         reasons=reasons,
     )
+    if not _funding_verification_matches_canonical_replay(
+        verification_event=verification_event,
+        events=events,
+        capture_id=capture_id,
+        settlement_time=settlement_time,
+    ):
+        _add_reason(
+            reasons,
+            LedgerReconciliationReason.CONTRADICTORY_FUNDING_SETTLEMENT_VERIFICATION,
+        )
     return verification_event
 
 
@@ -680,6 +744,7 @@ def replay_ledger_reconciliation(
         reasons,
     )
     funding_verification = _validate_funding_verification(
+        events=supplied_events,
         capture_events=capture_events,
         event_by_sequence=event_by_sequence,
         paper_event_sequences=paper_event_sequences,

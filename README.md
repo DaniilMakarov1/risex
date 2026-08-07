@@ -39,9 +39,9 @@ The verifier records evidence and verification results only through `core/accoun
 
 ## Offline ledger reconciliation
 
-The deterministic fake ledger reconciliation layer is downstream of route decisions, fake paper lifecycle history, and funding settlement verification. It replays append-only ledger evidence for one Capture and records an explicit reconciliation result through `core/accounting/ledger.py`.
+The deterministic fake ledger reconciliation layer is downstream of route decisions, fake paper lifecycle history, and funding settlement verification. It replays append-only ledger evidence for one Capture, recomputes recorded funding settlement verification results from raw evidence through the canonical funding verifier replay, and records an explicit reconciliation result through `core/accounting/ledger.py`.
 
-Missing, duplicated, non-contiguous, out-of-order, unknown, malformed, stale, or contradictory ledger evidence fails closed as unreconciled. A reconciliation result records the checked `event_count` and `last_sequence`, and `is_ledger_explicitly_reconciled()` returns true only when the latest ledger event reconciles the exact current history. Reconciliation does not evaluate profitability, assemble snapshots, calculate EV, place orders, create `CapturePlan` objects, mutate route decisions, or enable live trading.
+Missing, duplicated, non-contiguous, out-of-order, unknown, malformed, stale, forged, or contradictory ledger evidence fails closed as unreconciled. A reconciliation result records the checked `event_count` and `last_sequence`, and `is_ledger_explicitly_reconciled()` returns true only when the latest ledger event reconciles the exact current history. Reconciliation does not evaluate profitability, assemble snapshots, calculate EV, place orders, create `CapturePlan` objects, mutate route decisions, or enable live trading.
 
 ## Boundaries
 

@@ -65,7 +65,7 @@ Do not add arbitrary max spread, arbitrary max price impact, arbitrary max level
 
 Unknown values must not silently become zero. If a fee is unknown, use only a user-configured default fee with source `USER_CONFIGURED`. If exact funding is unknown, a future task may use last observed funding before settlement with source `ESTIMATED_FROM_LAST_VALUE`. If there is no funding estimate, the route cannot be `LIVE_ELIGIBLE`.
 
-Actual settlement funding and actual settlement notional evidence are proof inputs for funding settlement verification. They must be `OBSERVED`; documented, estimated, user-configured, unknown, missing, malformed, or non-positive notional actuals are not proof.
+Actual settlement funding and actual settlement notional evidence are proof inputs for funding settlement verification. They must be `OBSERVED`; documented, estimated, user-configured, unknown, missing, malformed, or non-positive notional actuals are not proof. Ledger reconciliation must verify any recorded funding settlement result against the canonical funding verifier replay from raw checkpoint and settlement evidence.
 
 Ledger reconciliation is a replay contract for append-only history consistency. It must not calculate profitability, mutate route decisions, create live plans, place orders, or silently treat missing, duplicated, non-contiguous, out-of-order, unknown, malformed, stale, or contradictory evidence as reconciled.
 
