@@ -1,13 +1,13 @@
 # Status
 
-- Last accepted task: RX-008 — Funding Settlement Verifier Design and Fake Replay Coverage
-- Accepted RX-008 implementation HEAD: `c4c38424d420312a64730f44ffebb5de38b2af62`
+- Last accepted task: RX-009 — Ledger Reconciliation Gate Design and Fake Replay Coverage
+- Accepted RX-009 implementation HEAD: `8bd176b76bc0835b2cd46db897428be944603ca8`
 - Accepted baseline branch: `main`
-- Current RX task: RX-009 — Ledger Reconciliation Gate Design and Fake Replay Coverage
-- Current RX task branch: `task/rx-009-ledger-reconciliation-gate`
-- Current RX task status: candidate fix pending review
+- Current RX task: none active
+- Current RX task branch: none
+- Current RX task status: none active
 
-The accepted RX-008 implementation is the latest accepted baseline on `main`.
+The accepted RX-009 implementation is the latest accepted baseline on `main`.
 
 ## Completed accepted tasks
 
@@ -21,6 +21,7 @@ The accepted RX-008 implementation is the latest accepted baseline on `main`.
 - RX-006
 - RX-007
 - RX-008 — Funding Settlement Verifier Design and Fake Replay Coverage
+- RX-009 — Ledger Reconciliation Gate Design and Fake Replay Coverage
 
 ## Current architecture status
 
@@ -63,15 +64,9 @@ The accepted RX-008 implementation is the latest accepted baseline on `main`.
 - Live `CapturePlan` creation blocked.
 - No real adapters, orders, paper exchange simulation, live runner behavior, or live trading.
 
-## Tests last reported for RX-009 FIX 3 candidate
+## Tests last reported for accepted RX-009
 
-- `python3 -m apps.cli.main`:
-  - `Broad Scan`
-  - `fake-risex-hl-btc: PAPER_ELIGIBLE net_profit_usd=1.50000000000000000000000000`
-  - `fake-risex-hl-eth: REJECTED net_profit_usd=-0.2499625093726568357910522369`
-  - `Focused Refresh`
-  - `fake-risex-hl-btc: PAPER_ELIGIBLE net_profit_usd=1.50000000000000000000000000`
-  - `fake-risex-hl-eth: REJECTED net_profit_usd=-0.2499625093726568357910522369`
+- `python3 -m apps.cli.main`: exit 0
 - `python3 -m pytest`: `185 passed in 0.27s`
 - `python3 -m compileall apps core storage tests`: exit 0
 - `python3 -c "import core.monitoring.funding_settlement; import core.accounting.reconciliation"`: exit 0
@@ -81,16 +76,15 @@ The accepted RX-008 implementation is the latest accepted baseline on `main`.
 
 ## Known limitations
 
-- Verifier remains deterministic fake offline replay scaffolding.
+- Funding settlement verifier and ledger reconciliation remain deterministic fake offline replay scaffolding only.
 - No real RiseX/Hyperliquid adapters.
 - No network calls.
 - No orders.
 - No live runner behavior.
 - No live trading.
 - No `CapturePlan` creation.
-- Ledger reconciliation remains deterministic fake offline replay scaffolding.
 - Ledger reconciliation is not permission to trade live by itself.
 
 ## Next recommended task
 
-RX-010 — Fresh CapturePlan Gate Design and Fake Replay Coverage, only after RX-009 is accepted.
+RX-010 — Fresh CapturePlan Gate Design and Fake Replay Coverage.
