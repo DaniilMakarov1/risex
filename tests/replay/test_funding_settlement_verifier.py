@@ -34,6 +34,10 @@ def _observed(value: Decimal | str) -> EstimatedValue:
     return EstimatedValue(value=Decimal(str(value)), source=ValueSource.OBSERVED)
 
 
+def _sourced(value: Decimal | str, source: ValueSource) -> EstimatedValue:
+    return EstimatedValue(value=Decimal(str(value)), source=source)
+
+
 def _unknown() -> EstimatedValue:
     return EstimatedValue(value=None, source=ValueSource.UNKNOWN)
 
@@ -150,6 +154,10 @@ def test_verifier_records_successful_fake_settlement_from_required_checkpoints()
     assert settlement_event.payload["actual_hedge_funding_usd"]["value"] == str(
         snapshot.funding.hedge_funding_usd.value
     )
+    assert settlement_event.payload["actual_risex_funding_usd"]["source"] == ValueSource.OBSERVED.value
+    assert settlement_event.payload["actual_hedge_funding_usd"]["source"] == ValueSource.OBSERVED.value
+    assert settlement_event.payload["actual_risex_notional_usd"]["source"] == ValueSource.OBSERVED.value
+    assert settlement_event.payload["actual_hedge_notional_usd"]["source"] == ValueSource.OBSERVED.value
     assert result_event.payload["verified"] is True
     assert result_event.payload["reasons"] == ()
     assert result_event.payload["required_checkpoints"] == tuple(
@@ -187,6 +195,157 @@ def test_verifier_result_replays_deterministically_from_sqlite_ledger_events(tmp
     assert replayed_twice == result
     assert records[-1].event_type == LedgerEventType.FUNDING_SETTLEMENT_VERIFICATION_RECORDED.value
     assert records[-1].payload["verified"] is True
+    reopened.close()
+
+
+def test_user_configured_actual_risex_funding_fails_closed_and_records_reason() -> None:
+    ledger = InMemoryLedger()
+    route, snapshot = _started_paper_capture(ledger)
+    _append_required_checkpoints(ledger, route=route, snapshot=snapshot)
+    _append_settlement_evidence(
+        ledger,
+        route=route,
+        snapshot=snapshot,
+        actual_risex_funding_usd=_sourced(
+            snapshot.funding.risex_funding_usd.require_value(),
+            ValueSource.USER_CONFIGURED,
+        ),
+    )
+
+    result = verify_funding_settlement(
+        ledger,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+
+    assert result.verified is False
+    assert FundingSettlementVerificationReason.UNOBSERVED_SETTLEMENT_EVIDENCE in result.reasons
+    assert ledger.records()[-1].payload["verified"] is False
+    assert FundingSettlementVerificationReason.UNOBSERVED_SETTLEMENT_EVIDENCE.value in ledger.records()[-1].payload[
+        "reasons"
+    ]
+
+
+def test_documented_actual_hedge_funding_fails_closed() -> None:
+    ledger = InMemoryLedger()
+    route, snapshot = _started_paper_capture(ledger)
+    _append_required_checkpoints(ledger, route=route, snapshot=snapshot)
+    _append_settlement_evidence(
+        ledger,
+        route=route,
+        snapshot=snapshot,
+        actual_hedge_funding_usd=_sourced(
+            snapshot.funding.hedge_funding_usd.require_value(),
+            ValueSource.DOCUMENTED,
+        ),
+    )
+
+    result = verify_funding_settlement(
+        ledger,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+
+    assert result.verified is False
+    assert FundingSettlementVerificationReason.UNOBSERVED_SETTLEMENT_EVIDENCE in result.reasons
+
+
+def test_last_value_estimated_actual_risex_notional_fails_closed() -> None:
+    ledger = InMemoryLedger()
+    route, snapshot = _started_paper_capture(ledger)
+    _append_required_checkpoints(ledger, route=route, snapshot=snapshot)
+    _append_settlement_evidence(
+        ledger,
+        route=route,
+        snapshot=snapshot,
+        actual_risex_notional_usd=_sourced(
+            route.target_notional_usd,
+            ValueSource.ESTIMATED_FROM_LAST_VALUE,
+        ),
+    )
+
+    result = verify_funding_settlement(
+        ledger,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+
+    assert result.verified is False
+    assert FundingSettlementVerificationReason.UNOBSERVED_SETTLEMENT_EVIDENCE in result.reasons
+
+
+def test_orderbook_estimated_actual_hedge_notional_fails_closed() -> None:
+    ledger = InMemoryLedger()
+    route, snapshot = _started_paper_capture(ledger)
+    _append_required_checkpoints(ledger, route=route, snapshot=snapshot)
+    _append_settlement_evidence(
+        ledger,
+        route=route,
+        snapshot=snapshot,
+        actual_hedge_notional_usd=_sourced(
+            route.target_notional_usd,
+            ValueSource.ESTIMATED_FROM_ORDERBOOK,
+        ),
+    )
+
+    result = verify_funding_settlement(
+        ledger,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+
+    assert result.verified is False
+    assert FundingSettlementVerificationReason.UNOBSERVED_SETTLEMENT_EVIDENCE in result.reasons
+
+
+def test_sqlite_replay_remains_deterministic_for_unobserved_actual_settlement_source(
+    tmp_path: Path,
+) -> None:
+    db_path = tmp_path / "funding-settlement-unobserved.sqlite"
+    ledger = SQLiteLedger(db_path)
+    route, snapshot = _started_paper_capture(ledger)
+    _append_required_checkpoints(ledger, route=route, snapshot=snapshot)
+    _append_settlement_evidence(
+        ledger,
+        route=route,
+        snapshot=snapshot,
+        actual_risex_funding_usd=_sourced(
+            snapshot.funding.risex_funding_usd.require_value(),
+            ValueSource.USER_CONFIGURED,
+        ),
+    )
+    result = verify_funding_settlement(
+        ledger,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+    ledger.close()
+
+    reopened = SQLiteLedger(db_path)
+    records = reopened.records()
+    replayed_once = replay_funding_settlement_verification(
+        records,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+    )
+    replayed_twice = replay_funding_settlement_verification(
+        records,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+    )
+
+    assert result.verified is False
+    assert replayed_once == result
+    assert replayed_twice == result
+    assert records[-1].payload["verified"] is False
+    assert FundingSettlementVerificationReason.UNOBSERVED_SETTLEMENT_EVIDENCE.value in records[-1].payload[
+        "reasons"
+    ]
     reopened.close()
 
 
@@ -323,6 +482,7 @@ def test_unknown_settlement_funding_or_notional_fails_closed() -> None:
     assert result.verified is False
     assert FundingSettlementVerificationReason.UNKNOWN_FUNDING_EVIDENCE in result.reasons
     assert FundingSettlementVerificationReason.UNKNOWN_NOTIONAL_EVIDENCE in result.reasons
+    assert FundingSettlementVerificationReason.UNOBSERVED_SETTLEMENT_EVIDENCE in result.reasons
 
 
 def test_live_eligibility_remains_blocked_without_verified_settlement_mechanism() -> None:

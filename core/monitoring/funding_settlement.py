@@ -56,6 +56,7 @@ class FundingSettlementVerificationReason(StrEnum):
     INCONSISTENT_SETTLEMENT_EVIDENCE = "INCONSISTENT_SETTLEMENT_EVIDENCE"
     INCONSISTENT_FUNDING_EVIDENCE = "INCONSISTENT_FUNDING_EVIDENCE"
     INCONSISTENT_NOTIONAL_EVIDENCE = "INCONSISTENT_NOTIONAL_EVIDENCE"
+    UNOBSERVED_SETTLEMENT_EVIDENCE = "UNOBSERVED_SETTLEMENT_EVIDENCE"
     UNKNOWN_FUNDING_EVIDENCE = "UNKNOWN_FUNDING_EVIDENCE"
     UNKNOWN_NOTIONAL_EVIDENCE = "UNKNOWN_NOTIONAL_EVIDENCE"
 
@@ -96,6 +97,7 @@ class _SettlementEvidence:
     actual_hedge_notional_usd: Decimal | None
     has_unknown_funding: bool
     has_unknown_notional: bool
+    has_unobserved_evidence: bool
 
 
 _CHECKPOINT_EVENT_TYPE = LedgerEventType.FUNDING_CHECKPOINT_OBSERVED.value
@@ -142,14 +144,18 @@ def _payload_datetime(payload: Mapping[str, Any], field_name: str) -> datetime |
     return parsed
 
 
-def _payload_decimal(payload: Mapping[str, Any], field_name: str) -> Decimal | None:
-    value = payload.get(field_name)
+def _finite_decimal(value: Any) -> Decimal | None:
     if value is None:
         return None
     try:
-        return Decimal(str(value))
+        parsed = Decimal(str(value))
     except (InvalidOperation, ValueError):
         return None
+    return parsed if parsed.is_finite() else None
+
+
+def _payload_decimal(payload: Mapping[str, Any], field_name: str) -> Decimal | None:
+    return _finite_decimal(payload.get(field_name))
 
 
 def _estimated_decimal(payload: Mapping[str, Any], field_name: str) -> tuple[Decimal | None, bool]:
@@ -164,17 +170,43 @@ def _estimated_decimal(payload: Mapping[str, Any], field_name: str) -> tuple[Dec
         return None, True
     if parsed_source is ValueSource.UNKNOWN or value is None:
         return None, True
+    parsed_value = _finite_decimal(value)
+    if parsed_value is None:
+        return None, True
+    return parsed_value, False
+
+
+def _observed_estimated_decimal(
+    payload: Mapping[str, Any],
+    field_name: str,
+) -> tuple[Decimal | None, bool, bool]:
+    raw_value = payload.get(field_name)
+    if not isinstance(raw_value, Mapping):
+        return None, True, True
+    source = raw_value.get("source")
+    value = raw_value.get("value")
     try:
-        return Decimal(str(value)), False
-    except (InvalidOperation, ValueError):
-        return None, True
+        parsed_source = ValueSource(str(source))
+    except ValueError:
+        return None, True, True
+
+    source_is_unobserved = parsed_source is not ValueSource.OBSERVED
+    if parsed_source is ValueSource.UNKNOWN or value is None:
+        return None, True, source_is_unobserved
+    parsed_value = _finite_decimal(value)
+    if parsed_value is None:
+        return None, True, source_is_unobserved
+    return parsed_value, False, source_is_unobserved
 
 
-def _positive_estimated_decimal(payload: Mapping[str, Any], field_name: str) -> tuple[Decimal | None, bool]:
-    value, unknown = _estimated_decimal(payload, field_name)
+def _positive_observed_estimated_decimal(
+    payload: Mapping[str, Any],
+    field_name: str,
+) -> tuple[Decimal | None, bool, bool]:
+    value, unknown, source_is_unobserved = _observed_estimated_decimal(payload, field_name)
     if unknown or value is None or value <= Decimal("0"):
-        return None, True
-    return value, False
+        return None, True, source_is_unobserved
+    return value, False, source_is_unobserved
 
 
 def _checkpoint_label(event: LedgerEvent) -> FundingCheckpointLabel | None:
@@ -214,19 +246,19 @@ def _parse_checkpoint(event: LedgerEvent) -> _CheckpointEvidence | None:
 
 
 def _parse_settlement(event: LedgerEvent) -> _SettlementEvidence:
-    risex_funding, unknown_risex_funding = _estimated_decimal(
+    risex_funding, unknown_risex_funding, unobserved_risex_funding = _observed_estimated_decimal(
         event.payload,
         "actual_risex_funding_usd",
     )
-    hedge_funding, unknown_hedge_funding = _estimated_decimal(
+    hedge_funding, unknown_hedge_funding, unobserved_hedge_funding = _observed_estimated_decimal(
         event.payload,
         "actual_hedge_funding_usd",
     )
-    risex_notional, unknown_risex_notional = _positive_estimated_decimal(
+    risex_notional, unknown_risex_notional, unobserved_risex_notional = _positive_observed_estimated_decimal(
         event.payload,
         "actual_risex_notional_usd",
     )
-    hedge_notional, unknown_hedge_notional = _positive_estimated_decimal(
+    hedge_notional, unknown_hedge_notional, unobserved_hedge_notional = _positive_observed_estimated_decimal(
         event.payload,
         "actual_hedge_notional_usd",
     )
@@ -240,6 +272,12 @@ def _parse_settlement(event: LedgerEvent) -> _SettlementEvidence:
         actual_hedge_notional_usd=hedge_notional,
         has_unknown_funding=unknown_risex_funding or unknown_hedge_funding,
         has_unknown_notional=unknown_risex_notional or unknown_hedge_notional,
+        has_unobserved_evidence=(
+            unobserved_risex_funding
+            or unobserved_hedge_funding
+            or unobserved_risex_notional
+            or unobserved_hedge_notional
+        ),
     )
 
 
@@ -335,6 +373,8 @@ def replay_funding_settlement_verification(
             _add_reason(reasons, FundingSettlementVerificationReason.UNKNOWN_FUNDING_EVIDENCE)
         if settlement_evidence.has_unknown_notional:
             _add_reason(reasons, FundingSettlementVerificationReason.UNKNOWN_NOTIONAL_EVIDENCE)
+        if settlement_evidence.has_unobserved_evidence:
+            _add_reason(reasons, FundingSettlementVerificationReason.UNOBSERVED_SETTLEMENT_EVIDENCE)
 
     if settlement_evidence is not None:
         for checkpoint_evidence in required_checkpoint_evidence:

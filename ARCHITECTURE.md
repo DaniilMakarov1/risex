@@ -183,9 +183,11 @@ RX-008 adds deterministic offline funding settlement verifier contracts and fake
 2. The verifier models required pre-settlement checkpoints at T-20 minutes, T-60 seconds, T-10 seconds, and T-5 seconds.
 3. Checkpoint evidence, observed settlement evidence, and verification results are written only through append-only helper functions in `core/accounting/ledger.py`.
 4. Replay compares source-aware fake expected RiseX and hedge funding inputs plus target notional from required checkpoints with fake observed settlement funding and actual leg notionals.
-5. Missing required checkpoints, missing observed settlement evidence, unknown funding/notional values, inconsistent capture identity, inconsistent settlement time, inconsistent checkpoint timing, inconsistent funding evidence, or inconsistent notional evidence fail closed as not verified.
-6. The verifier stays downstream of existing route decisions, snapshots, Capture lifecycle, and ledger events. It does not decide route profitability, call route evaluation, call route snapshot assembly, calculate EV, place orders, create `CapturePlan` objects, mutate route eligibility decisions, or enable live trading.
-7. Future live eligibility remains blocked until live gates, ledger reconciliation, fresh plan handling, execution capability, and proven funding settlement verification are implemented together in a future task.
+5. Actual settlement funding and actual settlement notional evidence are proof inputs and must use `ValueSource.OBSERVED`; user-configured, documented, estimated, unknown, missing, malformed, or non-positive notional actuals fail closed as not verified.
+6. Pre-settlement expected funding checkpoints remain source-aware expected inputs and are not required to be `ValueSource.OBSERVED` only.
+7. Missing required checkpoints, missing observed settlement evidence, unknown funding/notional values, unobserved actual settlement evidence, inconsistent capture identity, inconsistent settlement time, inconsistent checkpoint timing, inconsistent funding evidence, or inconsistent notional evidence fail closed as not verified.
+8. The verifier stays downstream of existing route decisions, snapshots, Capture lifecycle, and ledger events. It does not decide route profitability, call route evaluation, call route snapshot assembly, calculate EV, place orders, create `CapturePlan` objects, mutate route eligibility decisions, or enable live trading.
+9. Future live eligibility remains blocked until live gates, ledger reconciliation, fresh plan handling, execution capability, and proven funding settlement verification are implemented together in a future task.
 
 ## Route/snapshot alignment
 

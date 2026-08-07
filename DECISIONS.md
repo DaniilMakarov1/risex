@@ -129,3 +129,13 @@
 - Reason: Live trading still requires future live gates, ledger reconciliation, fresh plan handling, execution capability, and explicit safe live path implementation.
 - Affected files/modules: `core/accounting/ledger.py`, `core/monitoring/funding_settlement.py`, tests, and governance docs.
 - Non-decisions: RX-008 does not implement real RiseX or Hyperliquid adapters, network calls, API clients, authentication, order placement, live runner behavior, live trading, live `CapturePlan` creation, canary architecture, hold-next-cycle logic, artificial filters, a second route model, a second EV path, a second route decision function, or a second snapshot assembly function.
+
+## 2026-08-07 — RX-008 FIX
+
+- Date: 2026-08-07
+- Decision: Actual settlement funding and actual settlement notional evidence must use `ValueSource.OBSERVED` before funding settlement verification can succeed.
+- Reason: Actual settlement evidence is a proof input. User-configured, documented, estimated, unknown, missing, malformed, or non-positive notional actuals are not proof that the settlement mechanism behaved as expected.
+- Decision: Pre-settlement expected funding checkpoints remain source-aware expected inputs and are not restricted to `ValueSource.OBSERVED`.
+- Reason: Checkpoints are expected/estimated pre-settlement inputs, while actual settlement evidence is the settlement-time proof input.
+- Affected files/modules: `core/monitoring/funding_settlement.py`, replay tests, and governance docs.
+- Non-decisions: RX-008 FIX does not implement real adapters, network calls, orders, live runner behavior, live trading, `CapturePlan` creation, canary architecture, hold-next-cycle logic, artificial filters, route eligibility mutation, a second route model, a second EV path, a second route decision function, or a second snapshot assembly function.
