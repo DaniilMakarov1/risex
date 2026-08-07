@@ -3,7 +3,9 @@
 - Last accepted task: RX-008 — Funding Settlement Verifier Design and Fake Replay Coverage
 - Accepted RX-008 implementation HEAD: `c4c38424d420312a64730f44ffebb5de38b2af62`
 - Accepted baseline branch: `main`
-- Current RX task: none active
+- Current RX task: RX-009 — Ledger Reconciliation Gate Design and Fake Replay Coverage
+- Current RX task branch: `task/rx-009-ledger-reconciliation-gate`
+- Current RX task status: candidate complete, pending review
 
 The accepted RX-008 implementation is the latest accepted baseline on `main`.
 
@@ -43,6 +45,11 @@ The accepted RX-008 implementation is the latest accepted baseline on `main`.
 - Actual settlement funding and actual settlement notional evidence must use `ValueSource.OBSERVED`; user-configured, documented, estimated, unknown, missing, malformed, or non-positive notional actuals cannot verify settlement.
 - Pre-settlement expected funding checkpoints remain source-aware expected inputs and are not restricted to `ValueSource.OBSERVED`.
 - Funding settlement verifier replay compares fake expected funding/notional inputs against fake observed settlement records and fails closed on missing, unknown, unobserved, or inconsistent evidence.
+- Deterministic offline ledger reconciliation lives in `core/accounting/reconciliation.py`.
+- Ledger reconciliation replays append-only route decision, fake paper lifecycle, funding evidence, and funding settlement verification events for one Capture.
+- Ledger reconciliation records results through `core/accounting/ledger.py` as `ledger_reconciliation_recorded`.
+- Missing, duplicated, out-of-order, or contradictory ledger evidence fails closed as unreconciled with explicit reconciliation reasons.
+- Future live gating now requires explicit `ledger_reconciled=True`; otherwise `RejectReason.LEDGER_NOT_RECONCILED` blocks the path before later live gates.
 - In-memory Broad Scan to Focused Refresh handoff using existing `RouteCandidate` contracts.
 - Per-venue `VenueObservation` input contract.
 - Source-aware fees and funding.
@@ -52,7 +59,7 @@ The accepted RX-008 implementation is the latest accepted baseline on `main`.
 - Live `CapturePlan` creation blocked.
 - No real adapters, orders, paper exchange simulation, live runner behavior, or live trading.
 
-## Tests last reported for accepted RX-008
+## Tests last reported for RX-009 candidate
 
 - `python3 -m apps.cli.main`:
   - `Broad Scan`
@@ -61,7 +68,7 @@ The accepted RX-008 implementation is the latest accepted baseline on `main`.
   - `Focused Refresh`
   - `fake-risex-hl-btc: PAPER_ELIGIBLE net_profit_usd=1.50000000000000000000000000`
   - `fake-risex-hl-eth: REJECTED net_profit_usd=-0.2499625093726568357910522369`
-- `python3 -m pytest`: `159 passed in 0.16s`
+- `python3 -m pytest`: `172 passed in 0.17s`
 - `python3 -m compileall apps core storage tests`: exit 0
 - `git diff --check`: exit 0
 - `git diff --cached --check`: exit 0
@@ -75,8 +82,9 @@ The accepted RX-008 implementation is the latest accepted baseline on `main`.
 - No live runner behavior.
 - No live trading.
 - No `CapturePlan` creation.
-- No ledger reconciliation.
+- Ledger reconciliation remains deterministic fake offline replay scaffolding.
+- Ledger reconciliation is not permission to trade live by itself.
 
 ## Next recommended task
 
-RX-009 — Ledger Reconciliation Gate Design and Fake Replay Coverage.
+RX-010 — Fresh CapturePlan Gate Design and Fake Replay Coverage.

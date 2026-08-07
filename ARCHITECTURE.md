@@ -51,6 +51,7 @@ tests/
 - `RejectReason`: the centralized route rejection and live-gate reason enum.
 - `FundingCheckpointRequirement`: one required pre-settlement observation offset for future settlement proof.
 - `FundingSettlementVerificationResult`: deterministic replay result proving whether fake checkpoint evidence and fake observed settlement evidence agree for one Capture settlement.
+- `LedgerReconciliationResult`: deterministic replay result proving whether one Capture ledger history is internally consistent and explicitly reconciled.
 
 ## Capture lifecycle state machine
 
@@ -102,6 +103,7 @@ Any non-terminal Capture may transition to `FAILED`. Capture states with possibl
 - Broad Scan and Focused Refresh orchestration happens only in `core/pipeline/scan_refresh.py`.
 - Orders can be sent only through `core/execution/`.
 - Ledger writes happen only through `core/accounting/ledger.py`.
+- Ledger reconciliation happens only in `core/accounting/reconciliation.py`.
 - Funding settlement verification happens only in `core/monitoring/funding_settlement.py`.
 - Fake paper lifecycle orchestration happens only in `apps/paper_runner/lifecycle.py`.
 
@@ -135,6 +137,12 @@ RX-003 behavior:
 8. Never create a live `CapturePlan` in RX-003, even if `ProductRules(live_trading_enabled=True)` is passed manually.
 9. Never place orders.
 10. Optionally append the decision event to the ledger through `core/accounting/ledger.py`.
+
+RX-009 tightens future live gating without enabling live trading:
+
+1. `core/risk/gates.py` requires explicit `ledger_reconciled=True` before a future live path can pass the ledger reconciliation gate.
+2. Missing or false reconciliation fails closed through centralized `RejectReason.LEDGER_NOT_RECONCILED`.
+3. Even with `ProductRules(live_trading_enabled=True)` and `ledger_reconciled=True`, current route decisions remain `PAPER_ELIGIBLE` with `RejectReason.LIVE_GATES_NOT_IMPLEMENTED`; no live `CapturePlan` is created.
 
 RX-004 adds a deterministic offline snapshot assembly layer before evaluation:
 
@@ -188,6 +196,16 @@ RX-008 adds deterministic offline funding settlement verifier contracts and fake
 7. Missing required checkpoints, missing observed settlement evidence, unknown funding/notional values, unobserved actual settlement evidence, inconsistent capture identity, inconsistent settlement time, inconsistent checkpoint timing, inconsistent funding evidence, or inconsistent notional evidence fail closed as not verified.
 8. The verifier stays downstream of existing route decisions, snapshots, Capture lifecycle, and ledger events. It does not decide route profitability, call route evaluation, call route snapshot assembly, calculate EV, place orders, create `CapturePlan` objects, mutate route eligibility decisions, or enable live trading.
 9. Future live eligibility remains blocked until live gates, ledger reconciliation, fresh plan handling, execution capability, and proven funding settlement verification are implemented together in a future task.
+
+RX-009 adds deterministic offline ledger reconciliation contracts and fake replay coverage:
+
+1. `core/accounting/reconciliation.py` owns reconciliation for one Capture ledger history.
+2. Reconciliation replays append-only ledger evidence downstream of route decision events, fake paper lifecycle events, funding evidence, and funding settlement verification results.
+3. Reconciliation requires one ENTRY `PAPER_ELIGIBLE` route decision with no live plan, one ordered fake paper lifecycle (`paper_capture_opened`, `paper_settlement_observed`, `paper_capture_closed`), one verified funding settlement verification result, and referenced funding evidence that exists before the verification result.
+4. Reconciliation records its result only through `core/accounting/ledger.py` as `ledger_reconciliation_recorded`.
+5. Missing route decisions, missing paper lifecycle evidence, missing funding verification, duplicated decisions, duplicated paper or funding evidence, out-of-order verification evidence, contradictory identity, or contradictory settlement time fail closed as unreconciled.
+6. Reconciliation replay ignores prior reconciliation result events and remains deterministic from append-only evidence.
+7. Reconciliation does not decide route profitability, call route evaluation, call route snapshot assembly, calculate EV, place orders, create `CapturePlan` objects, mutate route eligibility decisions, or enable live trading.
 
 ## Route/snapshot alignment
 

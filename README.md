@@ -2,7 +2,7 @@
 
 RiseX Points Farmer is a modular-monolith research system for capture-centric hedged funding opportunities on RiseX with hedge venue support, initially Hyperliquid.
 
-The current baseline is a non-trading research and fake paper-lifecycle skeleton. It uses fake data, does not connect to exchanges, does not place orders, and does not contain real API keys.
+The current baseline is a non-trading research, fake paper-lifecycle, funding-verification, and ledger-reconciliation skeleton. It uses fake data, does not connect to exchanges, does not place orders, and does not contain real API keys.
 
 ## Product baseline
 
@@ -12,6 +12,7 @@ The current baseline is a non-trading research and fake paper-lifecycle skeleton
 - `MIN_LEG_NOTIONAL_USD = 500`.
 - `MIN_NET_PROFIT_USD = 1`.
 - Live trading is disabled by default.
+- Future live eligibility requires an explicitly reconciled ledger result; missing or false reconciliation fails closed.
 - Route statuses are `RESEARCH_ONLY`, `PAPER_ELIGIBLE`, `LIVE_ELIGIBLE`, and `REJECTED`.
 - `CANARY_ELIGIBLE` and a separate canary runner are forbidden.
 
@@ -36,6 +37,12 @@ The deterministic fake funding settlement verifier is downstream of paper lifecy
 
 The verifier records evidence and verification results only through `core/accounting/ledger.py`. Missing, unknown, or inconsistent settlement evidence fails closed as not verified. It does not evaluate route profitability, assemble snapshots, calculate EV, place orders, create `CapturePlan` objects, or enable live trading.
 
+## Offline ledger reconciliation
+
+The deterministic fake ledger reconciliation layer is downstream of route decisions, fake paper lifecycle history, and funding settlement verification. It replays append-only ledger evidence for one Capture and records an explicit reconciliation result through `core/accounting/ledger.py`.
+
+Missing, duplicated, out-of-order, or contradictory ledger evidence fails closed as unreconciled. Reconciliation does not evaluate profitability, assemble snapshots, calculate EV, place orders, create `CapturePlan` objects, mutate route decisions, or enable live trading.
+
 ## Boundaries
 
 Business logic has single-owner modules:
@@ -49,6 +56,7 @@ Business logic has single-owner modules:
 - route decision: `core/pipeline/evaluate.py`
 - orders: `core/execution/`
 - ledger writes: `core/accounting/ledger.py`
+- ledger reconciliation: `core/accounting/reconciliation.py`
 - funding settlement verification: `core/monitoring/funding_settlement.py`
 
 Venue adapters may fetch and normalize data only. They must not calculate EV, make route decisions, send orders, or write ledger events.

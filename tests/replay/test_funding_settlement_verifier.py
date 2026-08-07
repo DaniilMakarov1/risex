@@ -508,7 +508,7 @@ def test_live_eligibility_remains_blocked_without_verified_settlement_mechanism(
     assert decision.status is RouteStatus.PAPER_ELIGIBLE
     assert decision.status is not RouteStatus.LIVE_ELIGIBLE
     assert decision.capture_plan is None
-    assert RejectReason.LIVE_GATES_NOT_IMPLEMENTED in decision.reasons
+    assert RejectReason.LEDGER_NOT_RECONCILED in decision.reasons
 
 
 def test_funding_settlement_verifier_stays_offline_and_downstream() -> None:

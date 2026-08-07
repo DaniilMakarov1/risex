@@ -139,3 +139,17 @@
 - Reason: Checkpoints are expected/estimated pre-settlement inputs, while actual settlement evidence is the settlement-time proof input.
 - Affected files/modules: `core/monitoring/funding_settlement.py`, replay tests, and governance docs.
 - Non-decisions: RX-008 FIX does not implement real adapters, network calls, orders, live runner behavior, live trading, `CapturePlan` creation, canary architecture, hold-next-cycle logic, artificial filters, route eligibility mutation, a second route model, a second EV path, a second route decision function, or a second snapshot assembly function.
+
+## 2026-08-07 — RX-009
+
+- Date: 2026-08-07
+- Decision: `core/accounting/reconciliation.py` owns deterministic offline ledger reconciliation for one Capture ledger history.
+- Reason: Future live Capture paths need an explicit, replayable proof that append-only route decision, fake paper lifecycle, funding evidence, and funding settlement verification history are internally consistent before live gates can proceed.
+- Decision: `core/accounting/ledger.py` owns the `ledger_reconciliation_recorded` event type and append helper for reconciliation results.
+- Reason: Reconciliation results are ledger history and must be recorded through the accounting boundary without update/delete APIs.
+- Decision: Missing, duplicated, out-of-order, or contradictory ledger evidence fails closed as unreconciled with explicit `LedgerReconciliationReason` values.
+- Reason: A missing or ambiguous ledger fact must never become implicit success for a future live gate.
+- Decision: `core/risk/gates.py` now has an explicit ledger reconciliation gate. If live trading is manually enabled but reconciliation is not exactly `True`, the route decision remains `PAPER_ELIGIBLE` with `RejectReason.LEDGER_NOT_RECONCILED`; if reconciliation is `True`, live still remains blocked with `RejectReason.LIVE_GATES_NOT_IMPLEMENTED`.
+- Reason: RX-009 can define the future gate contract without enabling live trading or creating live plans.
+- Affected files/modules: `core/accounting/ledger.py`, `core/accounting/reconciliation.py`, `core/risk/gates.py`, `core/pipeline/evaluate.py`, tests, and governance docs.
+- Non-decisions: RX-009 does not implement real RiseX or Hyperliquid adapters, network calls, API clients, authentication, order placement, live runner behavior, live trading, live `CapturePlan` creation, canary architecture, hold-next-cycle logic, artificial filters, route profitability recalculation, route eligibility mutation, a second route model, a second EV path, a second route decision function, or a second snapshot assembly function.

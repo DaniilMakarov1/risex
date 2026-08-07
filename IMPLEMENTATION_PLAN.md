@@ -49,6 +49,10 @@ Add deterministic fake paper lifecycle downstream of existing `DecisionResult` v
 
 Add deterministic offline funding settlement verifier contracts and fake replay coverage. Model required pre-settlement checkpoints at T-20 minutes, T-60 seconds, T-10 seconds, and T-5 seconds. Write checkpoint evidence, observed settlement evidence, and verification results through append-only ledger helpers. Replay ledger events to compare fake expected funding/notional inputs against fake observed settlement records, failing closed on missing, unknown, or inconsistent evidence. Keep the verifier downstream of existing route decisions, snapshots, Capture lifecycle, and ledger boundaries without real adapters, order placement, live `CapturePlan` creation, route eligibility mutation, or live trading.
 
+## RX-009 — Ledger Reconciliation Gate Design and Fake Replay Coverage
+
+Add deterministic offline ledger reconciliation contracts and fake replay coverage. Reconcile one Capture ledger history from append-only route decision, fake paper lifecycle, funding evidence, and funding settlement verification events. Record reconciliation results through ledger helpers, fail closed on missing, duplicated, out-of-order, or contradictory evidence, and require explicit reconciliation before any future live path can pass the ledger reconciliation gate. Keep live trading disabled and do not create live `CapturePlan` objects.
+
 ## Next Sequence
 
-1. RX-009 — Ledger Reconciliation Gate Design and Fake Replay Coverage.
+1. RX-010 — Fresh CapturePlan Gate Design and Fake Replay Coverage.

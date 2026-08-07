@@ -26,6 +26,7 @@ class LedgerEventType(StrEnum):
     FUNDING_CHECKPOINT_OBSERVED = "funding_checkpoint_observed"
     FUNDING_SETTLEMENT_EVIDENCE_RECORDED = "funding_settlement_evidence_recorded"
     FUNDING_SETTLEMENT_VERIFICATION_RECORDED = "funding_settlement_verification_recorded"
+    LEDGER_RECONCILIATION_RECORDED = "ledger_reconciliation_recorded"
 
 
 def _event_type_value(event_type: str | LedgerEventType) -> str:
@@ -357,6 +358,45 @@ def append_funding_settlement_verification_event(
             ),
             "checkpoint_event_sequences": tuple(checkpoint_event_sequences),
             "settlement_event_sequence": settlement_event_sequence,
+        },
+        recorded_at=recorded_at,
+    )
+
+
+def append_ledger_reconciliation_event(
+    ledger: Ledger,
+    *,
+    capture_id: str,
+    route_id: str | None,
+    settlement_time: datetime,
+    reconciled: bool,
+    reasons: Sequence[str | Enum],
+    route_decision_event_sequence: int | None,
+    paper_event_sequences: Sequence[int],
+    funding_verification_event_sequence: int | None,
+    checked_event_sequences: Sequence[int],
+    recorded_at: datetime,
+) -> LedgerEvent:
+    """Record one deterministic ledger reconciliation result."""
+
+    _validate_non_empty(capture_id, "capture_id")
+    if route_id is not None:
+        _validate_non_empty(route_id, "route_id")
+    validate_timezone_aware_datetime(settlement_time, "settlement_time")
+    validate_timezone_aware_datetime(recorded_at, "recorded_at")
+
+    return ledger.append(
+        event_type=LedgerEventType.LEDGER_RECONCILIATION_RECORDED,
+        payload={
+            "capture_id": capture_id,
+            "route_id": route_id,
+            "settlement_time": settlement_time.isoformat(),
+            "reconciled": reconciled,
+            "reasons": tuple(reason.value if isinstance(reason, Enum) else str(reason) for reason in reasons),
+            "route_decision_event_sequence": route_decision_event_sequence,
+            "paper_event_sequences": tuple(paper_event_sequences),
+            "funding_verification_event_sequence": funding_verification_event_sequence,
+            "checked_event_sequences": tuple(checked_event_sequences),
         },
         recorded_at=recorded_at,
     )

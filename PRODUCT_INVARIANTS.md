@@ -25,6 +25,8 @@ The single authoritative code contract for these constants is `ProductRules`.
 - RX-000 must not place live orders.
 - Future live eligibility requires explicit live gates, fresh executable data, reconciled ledger state, and funding settlement verification.
 - Offline funding settlement verification evidence is not permission to trade live by itself.
+- Offline ledger reconciliation evidence is not permission to trade live by itself.
+- A future live path must fail closed with `LEDGER_NOT_RECONCILED` unless ledger reconciliation is explicitly true.
 
 ## Route statuses
 
@@ -64,6 +66,8 @@ Do not add arbitrary max spread, arbitrary max price impact, arbitrary max level
 Unknown values must not silently become zero. If a fee is unknown, use only a user-configured default fee with source `USER_CONFIGURED`. If exact funding is unknown, a future task may use last observed funding before settlement with source `ESTIMATED_FROM_LAST_VALUE`. If there is no funding estimate, the route cannot be `LIVE_ELIGIBLE`.
 
 Actual settlement funding and actual settlement notional evidence are proof inputs for funding settlement verification. They must be `OBSERVED`; documented, estimated, user-configured, unknown, missing, malformed, or non-positive notional actuals are not proof.
+
+Ledger reconciliation is a replay contract for append-only history consistency. It must not calculate profitability, mutate route decisions, create live plans, place orders, or silently treat missing, duplicated, out-of-order, or contradictory evidence as reconciled.
 
 Allowed value sources are exactly:
 
