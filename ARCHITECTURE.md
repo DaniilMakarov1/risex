@@ -97,6 +97,7 @@ Any non-terminal Capture may transition to `FAILED`. Capture states with possibl
 - Route snapshot assembly happens only in `core/pipeline/snapshot.py`.
 - Route decisions happen only in `core/pipeline/evaluate.py`.
 - Offline route-candidate orchestration happens only in `core/pipeline/offline_scan.py`.
+- Broad Scan and Focused Refresh orchestration happens only in `core/pipeline/scan_refresh.py`.
 - Orders can be sent only through `core/execution/`.
 - Ledger writes happen only through `core/accounting/ledger.py`.
 
@@ -148,6 +149,16 @@ RX-005 adds deterministic offline orchestration over multiple fake route candida
 4. If snapshot assembly fails because required normalized observations are missing or contradictory, the candidate fails closed as a deterministic `DecisionResult` with `RejectReason.REQUIRED_LIVE_DATA_MISSING`; `evaluate_route()` is not called for that candidate.
 5. The orchestration layer does not calculate VWAP, fees, funding, EV, risk gates, ranking, acceptance, or route eligibility for successfully assembled snapshots outside the existing owner modules.
 6. It does not create `CapturePlan` objects, write ledger events, connect to venues, import execution modules, start paper execution, or place orders.
+
+RX-006 adds deterministic two-stage fake scan orchestration over the RX-005 path:
+
+1. `core/pipeline/scan_refresh.py` owns the fake Broad Scan and Focused Refresh orchestration layer.
+2. Broad Scan calls `evaluate_offline_candidates()` with `EvaluationMode.DISCOVERY`.
+3. Broad Scan returns deterministic decisions plus the same `RouteCandidate` contracts as refresh candidates; it does not rank, accept, reject, filter, or mutate candidates outside the shared decision path.
+4. Focused Refresh accepts only a `BroadScanResult`, uses refreshed normalized observations, and calls `evaluate_offline_candidates()` with `EvaluationMode.ENTRY`.
+5. Every successfully refreshed candidate still flows through `assemble_route_snapshot()` and then `evaluate_route(route, snapshot, mode)`.
+6. Snapshot assembly failures continue to fail closed as `RejectReason.REQUIRED_LIVE_DATA_MISSING` before `evaluate_route()` is called.
+7. RX-006 remains fake-data-only, deterministic, offline, read-only, and non-trading. It does not create `CapturePlan` objects, write ledger events, import execution or runner modules, connect to venues, start paper execution, or place orders.
 
 ## Route/snapshot alignment
 

@@ -1,27 +1,28 @@
 ## Task ID
 
-RX-006 — Broad Scan and Focused Refresh Orchestration
+RX-007 — Paper Runner Lifecycle and Append-only Ledger Persistence
 
 ## Objective
 
-Add explicit Broad Scan and Focused Refresh orchestration over the existing offline `VenueObservation`, `assemble_route_snapshot()`, and `evaluate_route(route, snapshot, mode)` path without introducing a second route decision function.
+Add a deterministic fake paper-runner lifecycle over existing route decisions and introduce append-only persistent ledger scaffolding without enabling live trading, real adapters, or order placement.
 
 ## Allowed scope
 
-- Define deterministic fake Broad Scan and Focused Refresh orchestration inputs.
-- Reuse the RX-005 offline candidate orchestration path.
-- Reuse `assemble_route_snapshot()` for every route snapshot.
-- Reuse `evaluate_route()` for every route decision.
-- Keep behavior offline, fake-data-only, read-only, and non-trading.
-- Add focused tests for scan mode boundaries, focused refresh boundaries, and single-path reuse.
+- Consume `DecisionResult` values produced by the existing `evaluate_route(route, snapshot, mode)` path.
+- Model a fake paper lifecycle for one Capture per funding settlement opportunity.
+- Persist append-only fake ledger records through the existing accounting boundary.
+- Keep all behavior deterministic, offline, and non-trading.
+- Add tests for lifecycle transitions, ledger append-only behavior, replayability, and live safety gates.
 
 ## Forbidden scope
 
-- Do not implement real RiseX, Hyperliquid, network, API, authentication, or production adapters.
-- Do not implement order placement, paper execution lifecycle, persistent ledger storage, migrations, dashboard code, or live trading.
-- Do not create live `CapturePlan` objects.
-- Do not add a second route model, second EV path, second route decision function, canary architecture, hold-next-cycle logic, artificial filters, secrets, or production credentials.
-- Do not let Focused Refresh create a live `CapturePlan` until future tasks implement fresh plan checks, reconciled ledger state, live gates, funding settlement verification, and execution capability.
+- Do not implement real RiseX, Hyperliquid, network calls, API clients, authentication, or production adapters.
+- Do not place live orders or enable live trading.
+- Do not add canary architecture, `CANARY_ELIGIBLE`, or `canary_runner`.
+- Do not add hold-next-cycle logic.
+- Do not add artificial filters or hidden buffers.
+- Do not create live `CapturePlan` objects until fresh plan checks, reconciled ledger state, live gates, funding settlement verification, and execution capability are implemented.
+- Do not add a second route model, EV path, route decision function, or snapshot assembly function.
 
 ## Required report format
 

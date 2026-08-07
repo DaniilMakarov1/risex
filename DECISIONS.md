@@ -85,3 +85,15 @@
 - Reason: Missing required observations must fail closed without creating trades, orders, ledger records, or `CapturePlan` objects.
 - Affected files/modules: `core/pipeline/offline_scan.py`, `apps/research_runner/fake_data.py`, `apps/cli/main.py`, tests, and governance docs.
 - Non-decisions: RX-005 does not implement Broad Scan, Focused Refresh, Watchlist, real adapters, network/API/authentication, paper execution lifecycle, persistent ledger storage, dashboard code, order placement, live trading, canary architecture, hold-next-cycle logic, ranking, artificial filters, or `CapturePlan` creation.
+
+## 2026-08-07 — RX-006
+
+- Date: 2026-08-07
+- Decision: `core/pipeline/scan_refresh.py` owns deterministic fake Broad Scan and Focused Refresh orchestration over the RX-005 offline candidate path.
+- Reason: RX-006 needs to model the two-stage workflow without introducing a second route decision function, second snapshot assembly function, second EV path, real adapters, paper execution, or live trading.
+- Decision: Broad Scan calls `evaluate_offline_candidates()` with `EvaluationMode.DISCOVERY` and returns a `BroadScanResult` containing decisions plus the original `RouteCandidate` contracts as refresh candidates.
+- Reason: The handoff should be in-memory, deterministic, and route-contract preserving, with no orchestration-side ranking, acceptance, eligibility, economics, or risk rules.
+- Decision: Focused Refresh accepts only a `BroadScanResult`, refreshed normalized observations, and a refreshed timestamp, then calls `evaluate_offline_candidates()` with `EvaluationMode.ENTRY`.
+- Reason: Focused Refresh must consume only Broad Scan handoff candidates while still flowing through observation lookup, `assemble_route_snapshot()`, and `evaluate_route(route, snapshot, mode)`.
+- Affected files/modules: `core/pipeline/scan_refresh.py`, `apps/research_runner/fake_data.py`, `apps/cli/main.py`, tests, and governance docs.
+- Non-decisions: RX-006 does not implement real RiseX or Hyperliquid adapters, network calls, API clients, authentication, order placement, paper execution lifecycle, persistent ledger storage, migrations, dashboard code, live trading, live `CapturePlan` creation, canary architecture, hold-next-cycle logic, ranking, artificial filters, or production credentials.

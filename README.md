@@ -17,7 +17,7 @@ The current baseline is a non-trading research skeleton. It uses fake data, does
 
 ## Offline research runner
 
-The fake runner builds multiple `RouteCandidate` values and normalized `VenueObservation` inputs. Offline orchestration assembles each route snapshot through the single `assemble_route_snapshot()` path and evaluates every route through the single `evaluate_route()` decision pipeline.
+The fake runner builds multiple `RouteCandidate` values and normalized `VenueObservation` inputs. It runs deterministic Broad Scan followed by Focused Refresh. Both stages reuse the RX-005 offline orchestration path: each successful candidate assembles a route snapshot through the single `assemble_route_snapshot()` path and evaluates through the single `evaluate_route()` decision pipeline.
 
 ```bash
 python -m apps.cli.main

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, datetime
 from decimal import Decimal
 
@@ -217,6 +218,27 @@ def build_fake_route_candidates_and_observations() -> tuple[
     )
 
     return (btc_route, eth_route), observations, assembled_at
+
+
+def build_fake_focused_refresh_observations() -> tuple[ObservationMap, datetime]:
+    """Create refreshed fake observations for the second offline scan stage."""
+
+    _, observations, _ = build_fake_route_candidates_and_observations()
+    refreshed_at = datetime(2026, 1, 1, 12, 1, 5, tzinfo=UTC)
+    risex_refreshed_at = datetime(2026, 1, 1, 12, 1, tzinfo=UTC)
+    hedge_refreshed_at = datetime(2026, 1, 1, 12, 1, 1, tzinfo=UTC)
+
+    refreshed_observations = {
+        key: replace(
+            observation,
+            observed_at=risex_refreshed_at
+            if observation.venue == "RiseX"
+            else hedge_refreshed_at,
+        )
+        for key, observation in observations.items()
+    }
+
+    return refreshed_observations, refreshed_at
 
 
 def build_fake_route_and_snapshot() -> tuple[RouteCandidate, VenueSnapshot]:

@@ -87,20 +87,36 @@ def test_business_logic_modules_stay_in_expected_files() -> None:
         Path("__init__.py"),
         Path("evaluate.py"),
         Path("offline_scan.py"),
+        Path("scan_refresh.py"),
         Path("snapshot.py"),
     }
 
 
-def test_offline_scan_orchestration_does_not_import_business_logic_or_execution() -> None:
-    offline_scan_source = Path("core/pipeline/offline_scan.py").read_text()
+def test_offline_orchestration_does_not_import_business_logic_or_execution() -> None:
+    orchestration_sources = (
+        Path("core/pipeline/offline_scan.py").read_text(),
+        Path("core/pipeline/scan_refresh.py").read_text(),
+    )
 
-    assert "core.economics" not in offline_scan_source
-    assert "core.risk" not in offline_scan_source
-    assert "core.execution" not in offline_scan_source
-    assert "apps.paper_runner" not in offline_scan_source
-    assert "apps.live_runner" not in offline_scan_source
-    assert "def evaluate_route(" not in offline_scan_source
-    assert "def assemble_route_snapshot(" not in offline_scan_source
+    for source in orchestration_sources:
+        assert "core.economics" not in source
+        assert "core.risk" not in source
+        assert "core.execution" not in source
+        assert "core.accounting" not in source
+        assert "apps.paper_runner" not in source
+        assert "apps.live_runner" not in source
+        assert "def evaluate_route(" not in source
+        assert "def assemble_route_snapshot(" not in source
+
+
+def test_scan_refresh_reuses_offline_candidate_orchestration() -> None:
+    scan_refresh_source = Path("core/pipeline/scan_refresh.py").read_text()
+
+    assert "evaluate_offline_candidates" in scan_refresh_source
+    assert "assemble_route_snapshot" not in scan_refresh_source
+    assert "evaluate_route" not in scan_refresh_source
+    assert "calculate_entry_ev" not in scan_refresh_source
+    assert "calculate_executable_quote" not in scan_refresh_source
 
 
 def test_venue_adapter_contract_is_per_venue_observation_only() -> None:
@@ -130,13 +146,8 @@ def test_no_real_adapters_secrets_persistence_or_dashboard_code_are_introduced()
     assert "private_key" not in production_text
 
 
-def test_no_scan_watchlist_or_stale_rx004_archive_code_is_introduced() -> None:
+def test_no_stale_rx004_archive_code_is_introduced() -> None:
     production_paths = tuple(path.as_posix().lower() for path in _production_python_files())
-    production_text = "\n".join(path.read_text().lower() for path in _production_python_files())
 
     assert not Path("archive").exists()
     assert not any("rx-004-scan-refresh" in path for path in production_paths)
-    assert not any("watchlist" in path for path in production_paths)
-    assert "broad_scan" not in production_text
-    assert "focused_refresh" not in production_text
-    assert "watchlist" not in production_text
