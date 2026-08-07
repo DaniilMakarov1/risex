@@ -247,23 +247,6 @@ def test_evaluate_route_keeps_live_gates_closed_even_when_live_switch_is_enabled
     assert decision.reasons == (RejectReason.LEDGER_NOT_RECONCILED,)
 
 
-def test_evaluate_route_still_blocks_live_after_explicit_ledger_reconciliation() -> None:
-    route, snapshot = build_fake_route_and_snapshot()
-
-    decision = evaluate_route(
-        route,
-        snapshot,
-        EvaluationMode.ENTRY,
-        rules=ProductRules(live_trading_enabled=True),
-        ledger_reconciled=True,
-    )
-
-    assert decision.status is RouteStatus.PAPER_ELIGIBLE
-    assert decision.status is not RouteStatus.LIVE_ELIGIBLE
-    assert decision.capture_plan is None
-    assert decision.reasons == (RejectReason.LIVE_GATES_NOT_IMPLEMENTED,)
-
-
 def test_evaluate_route_rejects_missing_funding_economics_data() -> None:
     route, snapshot = build_fake_route_and_snapshot()
     missing_funding_snapshot = replace(

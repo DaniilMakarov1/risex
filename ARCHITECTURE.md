@@ -140,9 +140,10 @@ RX-003 behavior:
 
 RX-009 tightens future live gating without enabling live trading:
 
-1. `core/risk/gates.py` requires explicit `ledger_reconciled=True` before a future live path can pass the ledger reconciliation gate.
+1. `core/risk/gates.py` requires explicit `ledger_explicitly_reconciled=True` before a future live path can pass the ledger reconciliation gate.
 2. Missing or false reconciliation fails closed through centralized `RejectReason.LEDGER_NOT_RECONCILED`.
-3. Even with `ProductRules(live_trading_enabled=True)` and `ledger_reconciled=True`, current route decisions remain `PAPER_ELIGIBLE` with `RejectReason.LIVE_GATES_NOT_IMPLEMENTED`; no live `CapturePlan` is created.
+3. Tests derive that true value from `is_ledger_explicitly_reconciled(ledger.records())`, not from a manually supplied success flag.
+4. Even with `ProductRules(live_trading_enabled=True)` and `ledger_explicitly_reconciled=True`, current route decisions remain `PAPER_ELIGIBLE` with `RejectReason.LIVE_GATES_NOT_IMPLEMENTED`; no live `CapturePlan` is created.
 
 RX-004 adds a deterministic offline snapshot assembly layer before evaluation:
 
@@ -203,9 +204,14 @@ RX-009 adds deterministic offline ledger reconciliation contracts and fake repla
 2. Reconciliation replays append-only ledger evidence downstream of route decision events, fake paper lifecycle events, funding evidence, and funding settlement verification results.
 3. Reconciliation requires one ENTRY `PAPER_ELIGIBLE` route decision with no live plan, one ordered fake paper lifecycle (`paper_capture_opened`, `paper_settlement_observed`, `paper_capture_closed`), one verified funding settlement verification result, and referenced funding evidence that exists before the verification result.
 4. Reconciliation records its result only through `core/accounting/ledger.py` as `ledger_reconciliation_recorded`.
-5. Missing route decisions, missing paper lifecycle evidence, missing funding verification, duplicated decisions, duplicated paper or funding evidence, out-of-order verification evidence, contradictory identity, or contradictory settlement time fail closed as unreconciled.
-6. Reconciliation replay ignores prior reconciliation result events and remains deterministic from append-only evidence.
-7. Reconciliation does not decide route profitability, call route evaluation, call route snapshot assembly, calculate EV, place orders, create `CapturePlan` objects, mutate route eligibility decisions, or enable live trading.
+5. Reconciliation result payloads include `event_count` and `last_sequence` describing the ledger history checked before the result was appended.
+6. Replay validates the supplied ledger order exactly as given. The first sequence must be 1, every next sequence must increment by exactly 1, and duplicate, missing, non-contiguous, or out-of-order sequence evidence fails closed.
+7. Unknown ledger event types and malformed known event payloads fail closed.
+8. `is_ledger_explicitly_reconciled(events)` returns true only when the latest event is a successful reconciliation result whose `event_count` and `last_sequence` match the exact prior history and whose prior history replays as reconciled.
+9. Any later append after a successful reconciliation makes the full ledger history stale until a new successful reconciliation result is appended.
+10. Missing route decisions, missing paper lifecycle evidence, missing funding verification, duplicated decisions, duplicated paper or funding evidence, out-of-order verification evidence, contradictory identity, or contradictory settlement time fail closed as unreconciled.
+11. Reconciliation replay ignores prior reconciliation result events after validating their payload shape and remains deterministic from append-only evidence.
+12. Reconciliation does not decide route profitability, call route evaluation, call route snapshot assembly, calculate EV, place orders, create `CapturePlan` objects, mutate route eligibility decisions, or enable live trading.
 
 ## Route/snapshot alignment
 

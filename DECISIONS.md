@@ -153,3 +153,17 @@
 - Reason: RX-009 can define the future gate contract without enabling live trading or creating live plans.
 - Affected files/modules: `core/accounting/ledger.py`, `core/accounting/reconciliation.py`, `core/risk/gates.py`, `core/pipeline/evaluate.py`, tests, and governance docs.
 - Non-decisions: RX-009 does not implement real RiseX or Hyperliquid adapters, network calls, API clients, authentication, order placement, live runner behavior, live trading, live `CapturePlan` creation, canary architecture, hold-next-cycle logic, artificial filters, route profitability recalculation, route eligibility mutation, a second route model, a second EV path, a second route decision function, or a second snapshot assembly function.
+
+## 2026-08-07 — RX-009 FIX
+
+- Date: 2026-08-07
+- Decision: `ledger_reconciliation_recorded` payloads include `event_count` and `last_sequence` for the checked ledger history before the reconciliation event is appended.
+- Reason: A future live gate must know whether the latest reconciliation result covers the exact current append-only history, not just a historical prefix.
+- Decision: `core/accounting/reconciliation.py` validates ledger sequence order exactly as supplied before replaying business evidence.
+- Reason: Sorting input events before validation can hide out-of-order, duplicated, or missing sequence evidence.
+- Decision: `is_ledger_explicitly_reconciled(events)` is the source of the future live gate boolean. It returns true only when the latest event is a successful reconciliation result that covers the exact prior history and that prior history replays as reconciled.
+- Reason: Raw hand-written booleans are not sufficient safety evidence for live gating.
+- Decision: Unknown ledger event types and malformed known event payloads fail closed.
+- Reason: Ledger replay must not silently skip unrecognized or malformed append-only evidence.
+- Affected files/modules: `core/accounting/ledger.py`, `core/accounting/reconciliation.py`, `core/accounting/__init__.py`, `core/risk/gates.py`, `core/pipeline/evaluate.py`, replay tests, and governance docs.
+- Non-decisions: RX-009 FIX does not implement real adapters, network calls, orders, live runner behavior, live trading, `CapturePlan` creation, canary architecture, hold-next-cycle logic, artificial filters, route profitability recalculation, route eligibility mutation, a second route model, a second EV path, a second route decision function, or a second snapshot assembly function.

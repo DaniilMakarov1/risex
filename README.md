@@ -12,7 +12,7 @@ The current baseline is a non-trading research, fake paper-lifecycle, funding-ve
 - `MIN_LEG_NOTIONAL_USD = 500`.
 - `MIN_NET_PROFIT_USD = 1`.
 - Live trading is disabled by default.
-- Future live eligibility requires an explicitly reconciled ledger result; missing or false reconciliation fails closed.
+- Future live eligibility requires an explicitly reconciled ledger result derived from current append-only ledger history; missing, stale, or false reconciliation fails closed.
 - Route statuses are `RESEARCH_ONLY`, `PAPER_ELIGIBLE`, `LIVE_ELIGIBLE`, and `REJECTED`.
 - `CANARY_ELIGIBLE` and a separate canary runner are forbidden.
 
@@ -41,7 +41,7 @@ The verifier records evidence and verification results only through `core/accoun
 
 The deterministic fake ledger reconciliation layer is downstream of route decisions, fake paper lifecycle history, and funding settlement verification. It replays append-only ledger evidence for one Capture and records an explicit reconciliation result through `core/accounting/ledger.py`.
 
-Missing, duplicated, out-of-order, or contradictory ledger evidence fails closed as unreconciled. Reconciliation does not evaluate profitability, assemble snapshots, calculate EV, place orders, create `CapturePlan` objects, mutate route decisions, or enable live trading.
+Missing, duplicated, non-contiguous, out-of-order, unknown, malformed, stale, or contradictory ledger evidence fails closed as unreconciled. A reconciliation result records the checked `event_count` and `last_sequence`, and `is_ledger_explicitly_reconciled()` returns true only when the latest ledger event reconciles the exact current history. Reconciliation does not evaluate profitability, assemble snapshots, calculate EV, place orders, create `CapturePlan` objects, mutate route decisions, or enable live trading.
 
 ## Boundaries
 

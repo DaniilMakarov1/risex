@@ -26,7 +26,7 @@ The single authoritative code contract for these constants is `ProductRules`.
 - Future live eligibility requires explicit live gates, fresh executable data, reconciled ledger state, and funding settlement verification.
 - Offline funding settlement verification evidence is not permission to trade live by itself.
 - Offline ledger reconciliation evidence is not permission to trade live by itself.
-- A future live path must fail closed with `LEDGER_NOT_RECONCILED` unless ledger reconciliation is explicitly true.
+- A future live path must fail closed with `LEDGER_NOT_RECONCILED` unless ledger reconciliation is explicitly true for the current append-only ledger history.
 
 ## Route statuses
 
@@ -67,7 +67,7 @@ Unknown values must not silently become zero. If a fee is unknown, use only a us
 
 Actual settlement funding and actual settlement notional evidence are proof inputs for funding settlement verification. They must be `OBSERVED`; documented, estimated, user-configured, unknown, missing, malformed, or non-positive notional actuals are not proof.
 
-Ledger reconciliation is a replay contract for append-only history consistency. It must not calculate profitability, mutate route decisions, create live plans, place orders, or silently treat missing, duplicated, out-of-order, or contradictory evidence as reconciled.
+Ledger reconciliation is a replay contract for append-only history consistency. It must not calculate profitability, mutate route decisions, create live plans, place orders, or silently treat missing, duplicated, non-contiguous, out-of-order, unknown, malformed, stale, or contradictory evidence as reconciled.
 
 Allowed value sources are exactly:
 

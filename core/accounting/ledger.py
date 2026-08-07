@@ -375,6 +375,8 @@ def append_ledger_reconciliation_event(
     paper_event_sequences: Sequence[int],
     funding_verification_event_sequence: int | None,
     checked_event_sequences: Sequence[int],
+    event_count: int,
+    last_sequence: int | None,
     recorded_at: datetime,
 ) -> LedgerEvent:
     """Record one deterministic ledger reconciliation result."""
@@ -384,6 +386,12 @@ def append_ledger_reconciliation_event(
         _validate_non_empty(route_id, "route_id")
     validate_timezone_aware_datetime(settlement_time, "settlement_time")
     validate_timezone_aware_datetime(recorded_at, "recorded_at")
+    if event_count < 0:
+        raise ValueError("event_count cannot be negative")
+    if event_count == 0 and last_sequence is not None:
+        raise ValueError("last_sequence must be None when event_count is zero")
+    if event_count > 0 and (last_sequence is None or last_sequence <= 0):
+        raise ValueError("last_sequence must be positive when event_count is positive")
 
     return ledger.append(
         event_type=LedgerEventType.LEDGER_RECONCILIATION_RECORDED,
@@ -397,6 +405,8 @@ def append_ledger_reconciliation_event(
             "paper_event_sequences": tuple(paper_event_sequences),
             "funding_verification_event_sequence": funding_verification_event_sequence,
             "checked_event_sequences": tuple(checked_event_sequences),
+            "event_count": event_count,
+            "last_sequence": last_sequence,
         },
         recorded_at=recorded_at,
     )

@@ -12,6 +12,7 @@ from apps.research_runner.fake_data import build_fake_route_and_snapshot
 from core.accounting.ledger import (
     InMemoryLedger,
     Ledger,
+    LedgerEvent,
     LedgerEventType,
     append_decision_event,
     append_funding_checkpoint_observed_event,
@@ -23,6 +24,7 @@ from core.accounting.ledger import (
 )
 from core.accounting.reconciliation import (
     LedgerReconciliationReason,
+    is_ledger_explicitly_reconciled,
     reconcile_ledger,
     replay_ledger_reconciliation,
 )
@@ -155,6 +157,21 @@ def _append_paper_lifecycle_without_route_decision(
     )
 
 
+def _replace_ledger_event(
+    event: LedgerEvent,
+    *,
+    sequence: int | None = None,
+    event_type: str | None = None,
+    payload: dict | None = None,
+) -> LedgerEvent:
+    return LedgerEvent(
+        sequence=event.sequence if sequence is None else sequence,
+        event_type=event.event_type if event_type is None else event_type,
+        payload=event.payload if payload is None else payload,
+        recorded_at=event.recorded_at,
+    )
+
+
 def test_reconciliation_records_successful_fake_history() -> None:
     ledger = InMemoryLedger()
     route, snapshot = _append_verified_history(ledger)
@@ -176,8 +193,79 @@ def test_reconciliation_records_successful_fake_history() -> None:
     assert ledger.records()[-1].event_type == LedgerEventType.LEDGER_RECONCILIATION_RECORDED.value
     assert ledger.records()[-1].payload["reconciled"] is True
     assert ledger.records()[-1].payload["reasons"] == ()
+    assert ledger.records()[-1].payload["event_count"] == 10
+    assert ledger.records()[-1].payload["last_sequence"] == 10
     assert not hasattr(ledger, "update")
     assert not hasattr(ledger, "delete")
+
+
+def test_is_ledger_explicitly_reconciled_returns_true_immediately_after_successful_reconciliation() -> None:
+    ledger = InMemoryLedger()
+    route, snapshot = _append_verified_history(ledger)
+    reconcile_ledger(
+        ledger,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+
+    assert is_ledger_explicitly_reconciled(ledger.records()) is True
+
+
+def test_is_ledger_explicitly_reconciled_returns_false_after_later_append() -> None:
+    ledger = InMemoryLedger()
+    route, snapshot = _append_verified_history(ledger)
+    reconcile_ledger(
+        ledger,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+
+    ledger.append(
+        event_type=LedgerEventType.PAPER_REJECTION_RECORDED,
+        payload={
+            "route_id": "later-route",
+            "mode": EvaluationMode.ENTRY.value,
+            "status": RouteStatus.REJECTED.value,
+            "reasons": (RejectReason.USER_RULE_VIOLATED.value,),
+            "capture_started": False,
+        },
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+
+    assert is_ledger_explicitly_reconciled(ledger.records()) is False
+
+
+def test_is_ledger_explicitly_reconciled_returns_false_for_empty_ledger() -> None:
+    assert is_ledger_explicitly_reconciled(()) is False
+
+
+def test_is_ledger_explicitly_reconciled_returns_false_when_latest_is_not_reconciliation() -> None:
+    ledger = InMemoryLedger()
+    _append_verified_history(ledger)
+
+    assert ledger.records()[-1].event_type == LedgerEventType.FUNDING_SETTLEMENT_VERIFICATION_RECORDED.value
+    assert is_ledger_explicitly_reconciled(ledger.records()) is False
+
+
+def test_is_ledger_explicitly_reconciled_returns_false_for_malformed_reconciliation_payload() -> None:
+    ledger = InMemoryLedger()
+    route, snapshot = _append_verified_history(ledger)
+    reconcile_ledger(
+        ledger,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+    records = ledger.records()
+    malformed_payload = dict(records[-1].payload)
+    malformed_payload.pop("event_count")
+    malformed_records = records[:-1] + (
+        _replace_ledger_event(records[-1], payload=malformed_payload),
+    )
+
+    assert is_ledger_explicitly_reconciled(malformed_records) is False
 
 
 def test_reconciled_replay_from_sqlite_ledger_events_is_deterministic(tmp_path: Path) -> None:
@@ -246,6 +334,116 @@ def test_unreconciled_replay_from_missing_funding_verification_is_deterministic(
     assert LedgerReconciliationReason.MISSING_FUNDING_SETTLEMENT_VERIFICATION in result.reasons
     assert records[-1].payload["reconciled"] is False
     reopened.close()
+
+
+def test_replay_fails_closed_on_out_of_order_input_without_sorting() -> None:
+    ledger = InMemoryLedger()
+    route, snapshot = _append_verified_history(ledger)
+    reconcile_ledger(
+        ledger,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+    records = ledger.records()
+    out_of_order_records = (records[1], records[0], *records[2:])
+
+    result = replay_ledger_reconciliation(
+        out_of_order_records,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+    )
+
+    assert result.reconciled is False
+    assert LedgerReconciliationReason.NON_CONTIGUOUS_LEDGER_SEQUENCE in result.reasons
+    assert is_ledger_explicitly_reconciled(out_of_order_records) is False
+
+
+def test_reconciliation_fails_closed_on_duplicate_sequence() -> None:
+    ledger = InMemoryLedger()
+    route, snapshot = _append_verified_history(ledger)
+    records = ledger.records()
+    duplicate_sequence_records = records[:1] + (
+        _replace_ledger_event(records[1], sequence=1),
+        *records[2:],
+    )
+
+    result = replay_ledger_reconciliation(
+        duplicate_sequence_records,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+    )
+
+    assert result.reconciled is False
+    assert LedgerReconciliationReason.NON_CONTIGUOUS_LEDGER_SEQUENCE in result.reasons
+    assert is_ledger_explicitly_reconciled(duplicate_sequence_records) is False
+
+
+def test_reconciliation_fails_closed_on_non_contiguous_sequence() -> None:
+    ledger = InMemoryLedger()
+    route, snapshot = _append_verified_history(ledger)
+    records = ledger.records()
+    non_contiguous_records = records[:1] + (
+        _replace_ledger_event(records[1], sequence=3),
+        *records[2:],
+    )
+
+    result = replay_ledger_reconciliation(
+        non_contiguous_records,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+    )
+
+    assert result.reconciled is False
+    assert LedgerReconciliationReason.NON_CONTIGUOUS_LEDGER_SEQUENCE in result.reasons
+    assert is_ledger_explicitly_reconciled(non_contiguous_records) is False
+
+
+def test_reconciliation_fails_closed_on_unknown_event_type() -> None:
+    ledger = InMemoryLedger()
+    route, snapshot = _append_verified_history(ledger)
+    records = ledger.records()
+    unknown_type_records = records[:1] + (
+        _replace_ledger_event(records[1], event_type="unknown_ledger_event"),
+        *records[2:],
+    )
+
+    result = replay_ledger_reconciliation(
+        unknown_type_records,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+    )
+
+    assert result.reconciled is False
+    assert LedgerReconciliationReason.UNKNOWN_LEDGER_EVENT_TYPE in result.reasons
+    assert is_ledger_explicitly_reconciled(unknown_type_records) is False
+
+
+def test_reconciliation_fails_closed_on_malformed_known_event_payloads() -> None:
+    ledger = InMemoryLedger()
+    route, snapshot = _append_verified_history(ledger)
+    reconcile_ledger(
+        ledger,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+    records = ledger.records()
+
+    for event_index in (0, 1, 4, 8, 9, 10):
+        malformed_records = records[:event_index] + (
+            _replace_ledger_event(records[event_index], payload={}),
+            *records[event_index + 1 :],
+        )
+        result = replay_ledger_reconciliation(
+            malformed_records,
+            capture_id=route.capture_id,
+            settlement_time=snapshot.risex_funding_settlement_at,
+        )
+
+        assert result.reconciled is False
+        assert LedgerReconciliationReason.MALFORMED_LEDGER_EVENT_PAYLOAD in result.reasons
+        assert is_ledger_explicitly_reconciled(malformed_records) is False
 
 
 def test_missing_route_decision_fails_closed() -> None:
@@ -444,13 +642,22 @@ def test_contradictory_capture_identity_fails_closed() -> None:
     assert LedgerReconciliationReason.CONTRADICTORY_LEDGER_EVIDENCE in result.reasons
 
 
-def test_future_live_gate_requires_explicit_reconciliation_true() -> None:
-    route, snapshot = build_fake_route_and_snapshot()
+def test_future_live_gate_requires_helper_derived_explicit_reconciliation() -> None:
+    ledger = InMemoryLedger()
+    route, snapshot = _append_verified_history(ledger)
+    reconcile_ledger(
+        ledger,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+    helper_derived_reconciliation = is_ledger_explicitly_reconciled(ledger.records())
 
     ok, reason = check_ledger_reconciliation_gate(False)
     assert ok is False
     assert reason is RejectReason.LEDGER_NOT_RECONCILED
-    assert check_ledger_reconciliation_gate(True) == (True, None)
+    assert helper_derived_reconciliation is True
+    assert check_ledger_reconciliation_gate(helper_derived_reconciliation) == (True, None)
 
     unreconciled_decision = evaluate_route(
         route,
@@ -463,7 +670,7 @@ def test_future_live_gate_requires_explicit_reconciliation_true() -> None:
         snapshot,
         EvaluationMode.ENTRY,
         rules=ProductRules(live_trading_enabled=True),
-        ledger_reconciled=True,
+        ledger_explicitly_reconciled=helper_derived_reconciliation,
     )
 
     assert unreconciled_decision.status is RouteStatus.PAPER_ELIGIBLE
@@ -474,6 +681,29 @@ def test_future_live_gate_requires_explicit_reconciliation_true() -> None:
     assert reconciled_decision.status is not RouteStatus.LIVE_ELIGIBLE
     assert reconciled_decision.capture_plan is None
     assert reconciled_decision.reasons == (RejectReason.LIVE_GATES_NOT_IMPLEMENTED,)
+
+    ledger.append(
+        event_type=LedgerEventType.PAPER_REJECTION_RECORDED,
+        payload={
+            "route_id": "later-route",
+            "mode": EvaluationMode.ENTRY.value,
+            "status": RouteStatus.REJECTED.value,
+            "reasons": (RejectReason.USER_RULE_VIOLATED.value,),
+            "capture_started": False,
+        },
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+    stale_reconciliation = is_ledger_explicitly_reconciled(ledger.records())
+    stale_decision = evaluate_route(
+        route,
+        snapshot,
+        EvaluationMode.ENTRY,
+        rules=ProductRules(live_trading_enabled=True),
+        ledger_explicitly_reconciled=stale_reconciliation,
+    )
+
+    assert stale_reconciliation is False
+    assert stale_decision.reasons == (RejectReason.LEDGER_NOT_RECONCILED,)
 
 
 def test_ledger_reconciliation_stays_offline_and_downstream() -> None:

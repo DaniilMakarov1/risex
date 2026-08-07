@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
+from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from typing import Any
 
@@ -16,7 +17,7 @@ from core.accounting.ledger import (
     replay_paper_captures,
 )
 from core.domain.contracts import validate_timezone_aware_datetime
-from core.domain.enums import EvaluationMode, RouteStatus
+from core.domain.enums import CaptureState, EvaluationMode, RouteStatus, ValueSource
 
 
 class LedgerReconciliationReason(StrEnum):
@@ -35,6 +36,9 @@ class LedgerReconciliationReason(StrEnum):
     DUPLICATED_FUNDING_SETTLEMENT_EVIDENCE = "DUPLICATED_FUNDING_SETTLEMENT_EVIDENCE"
     OUT_OF_ORDER_LEDGER_EVIDENCE = "OUT_OF_ORDER_LEDGER_EVIDENCE"
     CONTRADICTORY_LEDGER_EVIDENCE = "CONTRADICTORY_LEDGER_EVIDENCE"
+    NON_CONTIGUOUS_LEDGER_SEQUENCE = "NON_CONTIGUOUS_LEDGER_SEQUENCE"
+    UNKNOWN_LEDGER_EVENT_TYPE = "UNKNOWN_LEDGER_EVENT_TYPE"
+    MALFORMED_LEDGER_EVENT_PAYLOAD = "MALFORMED_LEDGER_EVENT_PAYLOAD"
 
 
 @dataclass(frozen=True, slots=True)
@@ -63,6 +67,8 @@ _FUNDING_SETTLEMENT_EVIDENCE_EVENT_TYPE = (
 _FUNDING_VERIFICATION_EVENT_TYPE = (
     LedgerEventType.FUNDING_SETTLEMENT_VERIFICATION_RECORDED.value
 )
+_LEDGER_RECONCILIATION_EVENT_TYPE = LedgerEventType.LEDGER_RECONCILIATION_RECORDED.value
+_KNOWN_EVENT_TYPES = frozenset(event_type.value for event_type in LedgerEventType)
 
 _PAPER_LIFECYCLE_EVENT_ORDER = (
     _PAPER_OPENED_EVENT_TYPE,
@@ -96,6 +102,13 @@ def _payload_str(payload: Mapping[str, Any], field_name: str) -> str | None:
     return None
 
 
+def _payload_optional_str(payload: Mapping[str, Any], field_name: str) -> str | None:
+    value = payload.get(field_name)
+    if value is None:
+        return None
+    return value if isinstance(value, str) and value.strip() else ""
+
+
 def _payload_datetime(payload: Mapping[str, Any], field_name: str) -> datetime | None:
     value = payload.get(field_name)
     if not isinstance(value, str):
@@ -111,6 +124,22 @@ def _payload_datetime(payload: Mapping[str, Any], field_name: str) -> datetime |
 def _payload_int(payload: Mapping[str, Any], field_name: str) -> int | None:
     value = payload.get(field_name)
     if type(value) is int and value > 0:
+        return value
+    return None
+
+
+def _payload_optional_int(payload: Mapping[str, Any], field_name: str) -> int | None:
+    value = payload.get(field_name)
+    if value is None:
+        return None
+    if type(value) is int and value > 0:
+        return value
+    return 0
+
+
+def _payload_non_negative_int(payload: Mapping[str, Any], field_name: str) -> int | None:
+    value = payload.get(field_name)
+    if type(value) is int and value >= 0:
         return value
     return None
 
@@ -141,8 +170,187 @@ def _payload_str_sequence(payload: Mapping[str, Any], field_name: str) -> tuple[
     return tuple(parsed)
 
 
-def _sorted_events(events: Sequence[LedgerEvent]) -> tuple[LedgerEvent, ...]:
-    return tuple(sorted(events, key=lambda event: event.sequence))
+def _finite_decimal(value: Any) -> Decimal | None:
+    if value is None:
+        return None
+    try:
+        parsed = Decimal(str(value))
+    except (InvalidOperation, ValueError):
+        return None
+    return parsed if parsed.is_finite() else None
+
+
+def _positive_decimal_payload(payload: Mapping[str, Any], field_name: str) -> bool:
+    value = _finite_decimal(payload.get(field_name))
+    return value is not None and value > Decimal("0")
+
+
+def _optional_decimal_payload(payload: Mapping[str, Any], field_name: str) -> bool:
+    value = payload.get(field_name)
+    return value is None or _finite_decimal(value) is not None
+
+
+def _estimated_value_payload_is_well_formed(payload: Mapping[str, Any], field_name: str) -> bool:
+    raw_value = payload.get(field_name)
+    if not isinstance(raw_value, Mapping):
+        return False
+    try:
+        source = ValueSource(str(raw_value.get("source")))
+    except ValueError:
+        return False
+    value = raw_value.get("value")
+    if source is ValueSource.UNKNOWN:
+        return value is None
+    return value is not None and _finite_decimal(value) is not None
+
+
+def _state_path_is_well_formed(payload: Mapping[str, Any]) -> bool:
+    state = payload.get("state")
+    state_path = payload.get("state_path")
+    if not isinstance(state_path, tuple | list) or not state_path:
+        return False
+    try:
+        CaptureState(str(state))
+        for item in state_path:
+            CaptureState(str(item))
+    except ValueError:
+        return False
+    return True
+
+
+def _route_decision_payload_is_well_formed(payload: Mapping[str, Any]) -> bool:
+    if _payload_str(payload, "route_id") is None:
+        return False
+    try:
+        EvaluationMode(str(payload.get("mode")))
+        RouteStatus(str(payload.get("status")))
+    except ValueError:
+        return False
+    return (
+        _payload_str_sequence(payload, "reasons") is not None
+        and _optional_decimal_payload(payload, "net_profit_usd")
+        and type(payload.get("has_capture_plan")) is bool
+    )
+
+
+def _paper_lifecycle_payload_is_well_formed(payload: Mapping[str, Any]) -> bool:
+    return (
+        _payload_str(payload, "capture_id") is not None
+        and _payload_str(payload, "route_id") is not None
+        and _payload_datetime(payload, "settlement_time") is not None
+        and _state_path_is_well_formed(payload)
+    )
+
+
+def _paper_rejection_payload_is_well_formed(payload: Mapping[str, Any]) -> bool:
+    try:
+        EvaluationMode(str(payload.get("mode")))
+        RouteStatus(str(payload.get("status")))
+    except ValueError:
+        return False
+    return (
+        _payload_str(payload, "route_id") is not None
+        and _payload_str_sequence(payload, "reasons") is not None
+        and payload.get("capture_started") is False
+    )
+
+
+def _funding_checkpoint_payload_is_well_formed(payload: Mapping[str, Any]) -> bool:
+    return (
+        _payload_str(payload, "capture_id") is not None
+        and _payload_str(payload, "route_id") is not None
+        and _payload_str(payload, "checkpoint") is not None
+        and _payload_datetime(payload, "settlement_time") is not None
+        and _payload_datetime(payload, "observed_at") is not None
+        and _positive_decimal_payload(payload, "target_notional_usd")
+        and _estimated_value_payload_is_well_formed(payload, "risex_expected_funding_usd")
+        and _estimated_value_payload_is_well_formed(payload, "hedge_expected_funding_usd")
+    )
+
+
+def _funding_settlement_evidence_payload_is_well_formed(payload: Mapping[str, Any]) -> bool:
+    return (
+        _payload_str(payload, "capture_id") is not None
+        and _payload_str(payload, "route_id") is not None
+        and _payload_datetime(payload, "settlement_time") is not None
+        and _payload_datetime(payload, "observed_at") is not None
+        and _estimated_value_payload_is_well_formed(payload, "actual_risex_funding_usd")
+        and _estimated_value_payload_is_well_formed(payload, "actual_hedge_funding_usd")
+        and _estimated_value_payload_is_well_formed(payload, "actual_risex_notional_usd")
+        and _estimated_value_payload_is_well_formed(payload, "actual_hedge_notional_usd")
+    )
+
+
+def _funding_verification_payload_is_well_formed(payload: Mapping[str, Any]) -> bool:
+    route_id = _payload_optional_str(payload, "route_id")
+    return (
+        _payload_str(payload, "capture_id") is not None
+        and route_id != ""
+        and _payload_datetime(payload, "settlement_time") is not None
+        and type(payload.get("verified")) is bool
+        and _payload_str_sequence(payload, "reasons") is not None
+        and _payload_str_sequence(payload, "required_checkpoints") is not None
+        and _payload_int_sequence(payload, "checkpoint_event_sequences") is not None
+        and _payload_optional_int(payload, "settlement_event_sequence") != 0
+    )
+
+
+def _ledger_reconciliation_payload_is_well_formed(payload: Mapping[str, Any]) -> bool:
+    route_id = _payload_optional_str(payload, "route_id")
+    event_count = _payload_non_negative_int(payload, "event_count")
+    last_sequence = _payload_optional_int(payload, "last_sequence")
+    if event_count is None or last_sequence == 0:
+        return False
+    if event_count == 0 and last_sequence is not None:
+        return False
+    if event_count > 0 and last_sequence is None:
+        return False
+    return (
+        _payload_str(payload, "capture_id") is not None
+        and route_id != ""
+        and _payload_datetime(payload, "settlement_time") is not None
+        and type(payload.get("reconciled")) is bool
+        and _payload_str_sequence(payload, "reasons") is not None
+        and _payload_optional_int(payload, "route_decision_event_sequence") != 0
+        and _payload_int_sequence(payload, "paper_event_sequences") is not None
+        and _payload_optional_int(payload, "funding_verification_event_sequence") != 0
+        and _payload_int_sequence(payload, "checked_event_sequences") is not None
+    )
+
+
+def _event_payload_is_well_formed(event: LedgerEvent) -> bool:
+    payload = event.payload
+    if event.event_type == _ROUTE_DECISION_EVENT_TYPE:
+        return _route_decision_payload_is_well_formed(payload)
+    if event.event_type in _PAPER_LIFECYCLE_EVENT_ORDER:
+        return _paper_lifecycle_payload_is_well_formed(payload)
+    if event.event_type == LedgerEventType.PAPER_REJECTION_RECORDED.value:
+        return _paper_rejection_payload_is_well_formed(payload)
+    if event.event_type == _FUNDING_CHECKPOINT_EVENT_TYPE:
+        return _funding_checkpoint_payload_is_well_formed(payload)
+    if event.event_type == _FUNDING_SETTLEMENT_EVIDENCE_EVENT_TYPE:
+        return _funding_settlement_evidence_payload_is_well_formed(payload)
+    if event.event_type == _FUNDING_VERIFICATION_EVENT_TYPE:
+        return _funding_verification_payload_is_well_formed(payload)
+    if event.event_type == _LEDGER_RECONCILIATION_EVENT_TYPE:
+        return _ledger_reconciliation_payload_is_well_formed(payload)
+    return False
+
+
+def _validate_supplied_ledger_history(
+    events: Sequence[LedgerEvent],
+    reasons: list[LedgerReconciliationReason],
+) -> tuple[LedgerEvent, ...]:
+    supplied_events = tuple(events)
+    for expected_sequence, event in enumerate(supplied_events, start=1):
+        if event.sequence != expected_sequence:
+            _add_reason(reasons, LedgerReconciliationReason.NON_CONTIGUOUS_LEDGER_SEQUENCE)
+        if event.event_type not in _KNOWN_EVENT_TYPES:
+            _add_reason(reasons, LedgerReconciliationReason.UNKNOWN_LEDGER_EVENT_TYPE)
+            continue
+        if not _event_payload_is_well_formed(event):
+            _add_reason(reasons, LedgerReconciliationReason.MALFORMED_LEDGER_EVENT_PAYLOAD)
+    return supplied_events
 
 
 def _event_by_sequence(
@@ -240,7 +448,6 @@ def _validate_paper_lifecycle(
     if duplicated_lifecycle_evidence:
         _add_reason(reasons, LedgerReconciliationReason.DUPLICATED_PAPER_LIFECYCLE_EVIDENCE)
 
-    paper_events = list(_sorted_events(paper_events))
     paper_event_sequences = tuple(event.sequence for event in paper_events)
     if len(paper_events) == len(_PAPER_LIFECYCLE_EVENT_ORDER):
         event_sequence_by_type = {event.event_type: event.sequence for event in paper_events}
@@ -455,16 +662,16 @@ def replay_ledger_reconciliation(
     validate_timezone_aware_datetime(settlement_time, "settlement_time")
 
     reasons: list[LedgerReconciliationReason] = []
-    sorted_events = _sorted_events(events)
-    event_by_sequence = _event_by_sequence(sorted_events, reasons)
-    capture_events = _capture_events(sorted_events, capture_id)
+    supplied_events = _validate_supplied_ledger_history(events, reasons)
+    event_by_sequence = _event_by_sequence(supplied_events, reasons)
+    capture_events = _capture_events(supplied_events, capture_id)
     route_id, _ = _validate_capture_identity_and_settlement_time(
         capture_events,
         settlement_time,
         reasons,
     )
 
-    route_decision = _validate_route_decision(sorted_events, route_id, reasons)
+    route_decision = _validate_route_decision(supplied_events, route_id, reasons)
     paper_event_sequences = _validate_paper_lifecycle(
         capture_events,
         route_decision,
@@ -522,6 +729,58 @@ def replay_ledger_reconciliation(
     )
 
 
+def is_ledger_explicitly_reconciled(events: Sequence[LedgerEvent]) -> bool:
+    """Return True only when the latest event reconciles the exact prior history."""
+
+    reasons: list[LedgerReconciliationReason] = []
+    supplied_events = _validate_supplied_ledger_history(events, reasons)
+    if reasons or not supplied_events:
+        return False
+
+    reconciliation_event = supplied_events[-1]
+    if reconciliation_event.event_type != _LEDGER_RECONCILIATION_EVENT_TYPE:
+        return False
+    if reconciliation_event.payload.get("reconciled") is not True:
+        return False
+
+    event_count = _payload_non_negative_int(reconciliation_event.payload, "event_count")
+    last_sequence = _payload_optional_int(reconciliation_event.payload, "last_sequence")
+    if event_count is None or last_sequence == 0:
+        return False
+
+    checked_history = supplied_events[:-1]
+    expected_event_count = len(checked_history)
+    expected_last_sequence = checked_history[-1].sequence if checked_history else None
+    if event_count != expected_event_count or last_sequence != expected_last_sequence:
+        return False
+
+    capture_id = _payload_str(reconciliation_event.payload, "capture_id")
+    settlement_time = _payload_datetime(reconciliation_event.payload, "settlement_time")
+    if capture_id is None or settlement_time is None:
+        return False
+
+    replayed_result = replay_ledger_reconciliation(
+        checked_history,
+        capture_id=capture_id,
+        settlement_time=settlement_time,
+    )
+    return (
+        replayed_result.reconciled is True
+        and reconciliation_event.payload.get("route_id") == replayed_result.route_id
+        and reconciliation_event.payload.get("reasons") == tuple(
+            reason.value for reason in replayed_result.reasons
+        )
+        and reconciliation_event.payload.get("route_decision_event_sequence")
+        == replayed_result.route_decision_event_sequence
+        and reconciliation_event.payload.get("paper_event_sequences")
+        == replayed_result.paper_event_sequences
+        and reconciliation_event.payload.get("funding_verification_event_sequence")
+        == replayed_result.funding_verification_event_sequence
+        and reconciliation_event.payload.get("checked_event_sequences")
+        == replayed_result.checked_event_sequences
+    )
+
+
 def reconcile_ledger(
     ledger: Ledger,
     *,
@@ -531,11 +790,13 @@ def reconcile_ledger(
 ) -> LedgerReconciliationResult:
     """Replay ledger history and append the reconciliation result."""
 
+    checked_events = ledger.records()
     result = replay_ledger_reconciliation(
-        ledger.records(),
+        checked_events,
         capture_id=capture_id,
         settlement_time=settlement_time,
     )
+    last_sequence = checked_events[-1].sequence if checked_events else None
     append_ledger_reconciliation_event(
         ledger,
         capture_id=result.capture_id,
@@ -547,6 +808,8 @@ def reconcile_ledger(
         paper_event_sequences=result.paper_event_sequences,
         funding_verification_event_sequence=result.funding_verification_event_sequence,
         checked_event_sequences=result.checked_event_sequences,
+        event_count=len(checked_events),
+        last_sequence=last_sequence,
         recorded_at=recorded_at or settlement_time,
     )
     return result

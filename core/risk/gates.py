@@ -114,10 +114,12 @@ def check_min_net_profit(net_profit_usd: Decimal, rules: ProductRules) -> tuple[
     return True, None
 
 
-def check_ledger_reconciliation_gate(ledger_reconciled: bool) -> tuple[bool, RejectReason | None]:
-    """Future live paths require explicit successful ledger reconciliation."""
+def check_ledger_reconciliation_gate(
+    ledger_explicitly_reconciled: bool,
+) -> tuple[bool, RejectReason | None]:
+    """Future live paths require is_ledger_explicitly_reconciled(...) output."""
 
-    if ledger_reconciled is not True:
+    if ledger_explicitly_reconciled is not True:
         return False, RejectReason.LEDGER_NOT_RECONCILED
     return True, None
 
@@ -125,13 +127,13 @@ def check_ledger_reconciliation_gate(ledger_reconciled: bool) -> tuple[bool, Rej
 def check_live_capture_allowed(
     rules: ProductRules,
     *,
-    ledger_reconciled: bool = False,
+    ledger_explicitly_reconciled: bool = False,
 ) -> tuple[bool, RejectReason | None]:
     """Live capture plans remain blocked until future live gates are implemented."""
 
     if not rules.live_trading_enabled:
         return False, RejectReason.LIVE_TRADING_DISABLED
-    ok, reason = check_ledger_reconciliation_gate(ledger_reconciled)
+    ok, reason = check_ledger_reconciliation_gate(ledger_explicitly_reconciled)
     if not ok:
         return False, reason
     return False, RejectReason.LIVE_GATES_NOT_IMPLEMENTED

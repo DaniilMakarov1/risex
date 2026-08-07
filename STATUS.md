@@ -5,7 +5,7 @@
 - Accepted baseline branch: `main`
 - Current RX task: RX-009 — Ledger Reconciliation Gate Design and Fake Replay Coverage
 - Current RX task branch: `task/rx-009-ledger-reconciliation-gate`
-- Current RX task status: candidate complete, pending review
+- Current RX task status: candidate fix pending review
 
 The accepted RX-008 implementation is the latest accepted baseline on `main`.
 
@@ -48,8 +48,10 @@ The accepted RX-008 implementation is the latest accepted baseline on `main`.
 - Deterministic offline ledger reconciliation lives in `core/accounting/reconciliation.py`.
 - Ledger reconciliation replays append-only route decision, fake paper lifecycle, funding evidence, and funding settlement verification events for one Capture.
 - Ledger reconciliation records results through `core/accounting/ledger.py` as `ledger_reconciliation_recorded`.
-- Missing, duplicated, out-of-order, or contradictory ledger evidence fails closed as unreconciled with explicit reconciliation reasons.
-- Future live gating now requires explicit `ledger_reconciled=True`; otherwise `RejectReason.LEDGER_NOT_RECONCILED` blocks the path before later live gates.
+- Ledger reconciliation results record checked `event_count` and `last_sequence`.
+- Ledger reconciliation validates supplied sequence order exactly; duplicate, missing, non-contiguous, or out-of-order sequences fail closed.
+- Unknown event types, malformed known event payloads, stale reconciliation, or contradictory ledger evidence fail closed as unreconciled with explicit reconciliation reasons.
+- Future live gating now requires `ledger_explicitly_reconciled=True` derived from `is_ledger_explicitly_reconciled(ledger.records())`; otherwise `RejectReason.LEDGER_NOT_RECONCILED` blocks the path before later live gates.
 - In-memory Broad Scan to Focused Refresh handoff using existing `RouteCandidate` contracts.
 - Per-venue `VenueObservation` input contract.
 - Source-aware fees and funding.
@@ -68,7 +70,7 @@ The accepted RX-008 implementation is the latest accepted baseline on `main`.
   - `Focused Refresh`
   - `fake-risex-hl-btc: PAPER_ELIGIBLE net_profit_usd=1.50000000000000000000000000`
   - `fake-risex-hl-eth: REJECTED net_profit_usd=-0.2499625093726568357910522369`
-- `python3 -m pytest`: `172 passed in 0.17s`
+- `python3 -m pytest`: `181 passed in 0.18s`
 - `python3 -m compileall apps core storage tests`: exit 0
 - `git diff --check`: exit 0
 - `git diff --cached --check`: exit 0

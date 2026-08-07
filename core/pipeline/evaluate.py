@@ -42,7 +42,7 @@ def evaluate_route(
     *,
     rules: ProductRules | None = None,
     ledger: InMemoryLedger | None = None,
-    ledger_reconciled: bool = False,
+    ledger_explicitly_reconciled: bool = False,
 ) -> DecisionResult:
     """Evaluate one fake route snapshot without exchange APIs or order placement."""
 
@@ -100,7 +100,7 @@ def evaluate_route(
 
     _, live_reason = check_live_capture_allowed(
         active_rules,
-        ledger_reconciled=ledger_reconciled,
+        ledger_explicitly_reconciled=ledger_explicitly_reconciled,
     )
     reasons = (live_reason,) if mode is EvaluationMode.ENTRY and live_reason else ()
     decision = DecisionResult(

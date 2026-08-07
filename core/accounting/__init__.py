@@ -17,6 +17,7 @@ from core.accounting.ledger import (
 from core.accounting.reconciliation import (
     LedgerReconciliationReason,
     LedgerReconciliationResult,
+    is_ledger_explicitly_reconciled,
     reconcile_ledger,
     replay_ledger_reconciliation,
 )
@@ -35,6 +36,7 @@ __all__ = [
     "append_paper_capture_opened_event",
     "append_paper_rejection_event",
     "append_paper_settlement_observed_event",
+    "is_ledger_explicitly_reconciled",
     "reconcile_ledger",
     "replay_ledger_reconciliation",
     "replay_paper_captures",
