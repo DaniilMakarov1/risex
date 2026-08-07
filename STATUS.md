@@ -1,14 +1,11 @@
 # Status
 
-- Last accepted task: RX-006 — Broad Scan and Focused Refresh Orchestration
-- Accepted RX-006 implementation HEAD: `6a9ff56b458ffe1fce8d40b2aa1d3a303fdab40a`
+- Last accepted task: RX-007 — Paper Runner Lifecycle and Append-only Ledger Persistence
+- Accepted RX-007 implementation HEAD: `27b4251cf2f0c7c5b831d325b16a621d322ecc70`
 - Accepted baseline branch: `main`
-- Current RX task: RX-007 — Paper Runner Lifecycle and Append-only Ledger Persistence
-- Current RX branch: `task/rx-007-paper-ledger`
-- Current RX starting HEAD: `6a9ff56b458ffe1fce8d40b2aa1d3a303fdab40a`
-- Current RX status: implemented, pending review
+- Current RX task: none active
 
-The accepted RX-006 implementation is the latest accepted baseline on `main`. RX-007 is a task-branch candidate and is not merged to `main`.
+The accepted RX-007 implementation is the latest accepted baseline on `main`.
 
 ## Completed accepted tasks
 
@@ -20,6 +17,7 @@ The accepted RX-006 implementation is the latest accepted baseline on `main`. RX
 - RX-004
 - RX-005
 - RX-006
+- RX-007
 
 ## Current architecture status
 
@@ -47,7 +45,7 @@ The accepted RX-006 implementation is the latest accepted baseline on `main`. RX
 - Live `CapturePlan` creation blocked.
 - No real adapters, orders, paper exchange simulation, live runner behavior, or live trading.
 
-## Tests last reported for RX-007 candidate
+## Tests last reported for accepted RX-007
 
 - `python3 -m apps.cli.main`:
   - `Broad Scan`
