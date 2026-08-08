@@ -46,6 +46,7 @@ tests/
 - `FundingSnapshot`: source-aware expected funding cash flows for one capture opportunity.
 - `DecisionResult`: result of the shared decision pipeline.
 - `CapturePlanFreshnessEvidence`: fake non-executable evidence that one plan id/version is fresh for exactly one `capture_id`, one `route_id`, and one funding settlement timestamp.
+- `ExecutionCapabilityEvidence`: fake non-executable order-book quote evidence that the current route can still execute its full selected target notional on all required entry and unwind sides.
 - `RouteStatus`: `RESEARCH_ONLY`, `PAPER_ELIGIBLE`, `LIVE_ELIGIBLE`, `REJECTED`.
 - `EvaluationMode`: `DISCOVERY` or `ENTRY`.
 - `ValueSource`: `DOCUMENTED`, `OBSERVED`, `ESTIMATED_FROM_ORDERBOOK`, `ESTIMATED_FROM_LAST_VALUE`, `USER_CONFIGURED`, `UNKNOWN`.
@@ -107,6 +108,7 @@ Any non-terminal Capture may transition to `FAILED`. Capture states with possibl
 - Ledger reconciliation happens only in `core/accounting/reconciliation.py`.
 - Funding settlement verification happens only in `core/monitoring/funding_settlement.py`.
 - Fake paper lifecycle orchestration happens only in `apps/paper_runner/lifecycle.py`.
+- Execution capability live gating happens only in `core/risk/gates.py` and reuses existing `ExecutableQuote` contracts.
 
 ## Product rules
 
@@ -154,6 +156,15 @@ RX-010 adds deterministic offline fresh CapturePlan gate contracts and fake repl
 4. `check_live_capture_allowed()` evaluates live gates in this order: live trading switch, explicit ledger reconciliation, fresh CapturePlan evidence, then `RejectReason.LIVE_GATES_NOT_IMPLEMENTED`.
 5. `evaluate_route()` may receive fake plan evidence for future live gating, but it does not read ledger/storage, mutate profitability decisions, create live `CapturePlan` objects, import execution/live runner modules, or return `LIVE_ELIGIBLE`.
 6. Even with live trading manually enabled, helper-derived ledger reconciliation, and exact fresh plan evidence, current route decisions remain `PAPER_ELIGIBLE` with `RejectReason.LIVE_GATES_NOT_IMPLEMENTED`.
+
+RX-011 adds deterministic offline execution-capability gate contracts and fake replay coverage:
+
+1. `ExecutionCapabilityEvidence` is fake, non-executable evidence only. It records one `capture_id`, one `route_id`, one funding settlement timestamp, a freshness window, an order-book source, and the four current `ExecutableQuote` values already used by route/snapshot contracts.
+2. `core/risk/gates.py` owns `check_execution_capability_gate()`. Missing, stale, future-dated, cross-capture, cross-route, cross-settlement, malformed, non-orderbook-source, missing-side, wrong-side, wrong-target-notional, partial-fill, or contradictory evidence fails closed.
+3. Execution capability does not recalculate VWAP, profitability, fees, funding, EV, or basis. It reuses `quote_is_executable_for_notional()` and the existing quote identity/source/side/target-notional contracts.
+4. `check_live_capture_allowed()` evaluates live gates in this order: live trading switch, explicit ledger reconciliation, fresh CapturePlan evidence, fresh execution-capability evidence, then `RejectReason.LIVE_GATES_NOT_IMPLEMENTED`.
+5. `evaluate_route()` may receive fake execution-capability evidence for future live gating, but it does not read ledger/storage, call adapters, calculate VWAP, import execution/live runner modules, place orders, create live `CapturePlan` objects, or return `LIVE_ELIGIBLE`.
+6. Even with live trading manually enabled, helper-derived ledger reconciliation, exact fresh plan evidence, and exact fresh execution-capability evidence, current route decisions remain `PAPER_ELIGIBLE` with `RejectReason.LIVE_GATES_NOT_IMPLEMENTED`.
 
 RX-004 adds a deterministic offline snapshot assembly layer before evaluation:
 

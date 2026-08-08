@@ -9,6 +9,7 @@ from decimal import Decimal
 from core.config.product_rules import ProductRules
 from core.domain.contracts import (
     CapturePlanFreshnessEvidence,
+    ExecutionCapabilityEvidence,
     ExecutableQuote,
     OrderSide,
     RouteCandidate,
@@ -171,6 +172,89 @@ def check_capture_plan_freshness_gate(
     return True, None
 
 
+def check_execution_capability_gate(
+    *,
+    route: RouteCandidate,
+    settlement_time: datetime,
+    evaluated_at: datetime,
+    execution_evidence: Sequence[ExecutionCapabilityEvidence] | None,
+) -> tuple[bool, RejectReason | None]:
+    """Future live paths require fresh full-target order-book quote evidence."""
+
+    if not _datetime_is_timezone_aware(settlement_time) or not _datetime_is_timezone_aware(
+        evaluated_at
+    ):
+        return False, RejectReason.REQUIRED_LIVE_DATA_MISSING
+    if execution_evidence is None or len(execution_evidence) != 1:
+        return False, RejectReason.REQUIRED_LIVE_DATA_MISSING
+
+    evidence = execution_evidence[0]
+    if not isinstance(evidence, ExecutionCapabilityEvidence):
+        return False, RejectReason.REQUIRED_LIVE_DATA_MISSING
+    if (
+        not _datetime_is_timezone_aware(evidence.settlement_time)
+        or not _datetime_is_timezone_aware(evidence.checked_at)
+        or not _datetime_is_timezone_aware(evidence.valid_until)
+    ):
+        return False, RejectReason.REQUIRED_LIVE_DATA_MISSING
+    if evidence.source is not REQUIRED_ORDERBOOK_QUOTE_SOURCE:
+        return False, RejectReason.REQUIRED_LIVE_DATA_MISSING
+    if evidence.capture_id != route.capture_id:
+        return False, RejectReason.REQUIRED_LIVE_DATA_MISSING
+    if evidence.route_id != route.route_id:
+        return False, RejectReason.REQUIRED_LIVE_DATA_MISSING
+    if evidence.settlement_time != settlement_time:
+        return False, RejectReason.REQUIRED_LIVE_DATA_MISSING
+    if evidence.checked_at > evaluated_at:
+        return False, RejectReason.REQUIRED_LIVE_DATA_MISSING
+    if evaluated_at >= evidence.valid_until:
+        return False, RejectReason.REQUIRED_LIVE_DATA_MISSING
+
+    quote_requirements = (
+        (
+            evidence.risex_entry_quote,
+            route.risex_venue,
+            route.risex_symbol,
+            route.risex_entry_side,
+        ),
+        (
+            evidence.hedge_entry_quote,
+            route.hedge_venue,
+            route.hedge_symbol,
+            route.hedge_entry_side,
+        ),
+        (
+            evidence.risex_estimated_exit_quote,
+            route.risex_venue,
+            route.risex_symbol,
+            _opposite_side(route.risex_entry_side),
+        ),
+        (
+            evidence.hedge_estimated_exit_quote,
+            route.hedge_venue,
+            route.hedge_symbol,
+            _opposite_side(route.hedge_entry_side),
+        ),
+    )
+    for quote, venue, symbol, side in quote_requirements:
+        if not isinstance(quote, ExecutableQuote):
+            return False, RejectReason.REQUIRED_LIVE_DATA_MISSING
+        if quote.source is not REQUIRED_ORDERBOOK_QUOTE_SOURCE:
+            return False, RejectReason.REQUIRED_LIVE_DATA_MISSING
+        if side is None or quote.side != side:
+            return False, RejectReason.TECHNICALLY_NOT_EXECUTABLE
+        if not _quote_matches_leg(quote, venue=venue, symbol=symbol):
+            return False, RejectReason.TECHNICALLY_NOT_EXECUTABLE
+        if quote.target_notional_usd != route.target_notional_usd:
+            return False, RejectReason.TECHNICALLY_NOT_EXECUTABLE
+        if not quote_is_executable_for_notional(
+            quote,
+            min_leg_notional_usd=route.target_notional_usd,
+        ):
+            return False, RejectReason.TECHNICALLY_NOT_EXECUTABLE
+    return True, None
+
+
 def check_live_capture_allowed(
     rules: ProductRules,
     *,
@@ -179,6 +263,7 @@ def check_live_capture_allowed(
     evaluated_at: datetime,
     ledger_explicitly_reconciled: bool = False,
     capture_plan_evidence: Sequence[CapturePlanFreshnessEvidence] | None = None,
+    execution_capability_evidence: Sequence[ExecutionCapabilityEvidence] | None = None,
 ) -> tuple[bool, RejectReason | None]:
     """Live capture plans remain blocked until future live gates are implemented."""
 
@@ -192,6 +277,14 @@ def check_live_capture_allowed(
         settlement_time=settlement_time,
         evaluated_at=evaluated_at,
         plan_evidence=capture_plan_evidence,
+    )
+    if not ok:
+        return False, reason
+    ok, reason = check_execution_capability_gate(
+        route=route,
+        settlement_time=settlement_time,
+        evaluated_at=evaluated_at,
+        execution_evidence=execution_capability_evidence,
     )
     if not ok:
         return False, reason

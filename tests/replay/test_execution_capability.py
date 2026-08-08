@@ -102,7 +102,7 @@ def _reconciled_fake_history() -> tuple[InMemoryLedger, RouteCandidate, VenueSna
     return ledger, route, snapshot
 
 
-def _fresh_evidence(
+def _fresh_plan_evidence(
     *,
     ledger: InMemoryLedger,
     route: RouteCandidate,
@@ -140,9 +140,10 @@ def _execution_evidence(
     )
 
 
-def test_missing_plan_evidence_blocks_after_helper_derived_reconciliation() -> None:
+def test_missing_execution_capability_blocks_after_plan_freshness() -> None:
     ledger, route, snapshot = _reconciled_fake_history()
     helper_derived_reconciliation = is_ledger_explicitly_reconciled(ledger.records())
+    plan_evidence = _fresh_plan_evidence(ledger=ledger, route=route, snapshot=snapshot)
 
     decision = evaluate_route(
         route,
@@ -150,6 +151,80 @@ def test_missing_plan_evidence_blocks_after_helper_derived_reconciliation() -> N
         EvaluationMode.ENTRY,
         rules=ProductRules(live_trading_enabled=True),
         ledger_explicitly_reconciled=helper_derived_reconciliation,
+        capture_plan_evidence=(plan_evidence,),
+    )
+
+    assert helper_derived_reconciliation is True
+    assert decision.status is RouteStatus.PAPER_ELIGIBLE
+    assert decision.status is not RouteStatus.LIVE_ELIGIBLE
+    assert decision.capture_plan is None
+    assert decision.reasons == (RejectReason.REQUIRED_LIVE_DATA_MISSING,)
+
+
+def test_fresh_execution_capability_does_not_bypass_live_disabled() -> None:
+    ledger, route, snapshot = _reconciled_fake_history()
+    plan_evidence = _fresh_plan_evidence(ledger=ledger, route=route, snapshot=snapshot)
+    execution_evidence = _execution_evidence(route=route, snapshot=snapshot)
+
+    decision = evaluate_route(
+        route,
+        snapshot,
+        EvaluationMode.ENTRY,
+        rules=ProductRules(live_trading_enabled=False),
+        ledger_explicitly_reconciled=True,
+        capture_plan_evidence=(plan_evidence,),
+        execution_capability_evidence=(execution_evidence,),
+    )
+
+    assert decision.status is RouteStatus.PAPER_ELIGIBLE
+    assert decision.status is not RouteStatus.LIVE_ELIGIBLE
+    assert decision.capture_plan is None
+    assert decision.reasons == (RejectReason.LIVE_TRADING_DISABLED,)
+
+
+def test_fresh_execution_capability_does_not_bypass_unreconciled_ledger() -> None:
+    ledger = InMemoryLedger()
+    route, snapshot = build_fake_route_and_snapshot()
+    plan_evidence = CapturePlanFreshnessEvidence(
+        plan_id="fake-plan-001",
+        plan_version="fake-v1",
+        capture_id=route.capture_id,
+        route_id=route.route_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        planned_at=snapshot.captured_at,
+        valid_until=snapshot.captured_at + timedelta(minutes=5),
+        source=ValueSource.OBSERVED,
+    )
+    execution_evidence = _execution_evidence(route=route, snapshot=snapshot)
+
+    decision = evaluate_route(
+        route,
+        snapshot,
+        EvaluationMode.ENTRY,
+        rules=ProductRules(live_trading_enabled=True),
+        ledger_explicitly_reconciled=is_ledger_explicitly_reconciled(ledger.records()),
+        capture_plan_evidence=(plan_evidence,),
+        execution_capability_evidence=(execution_evidence,),
+    )
+
+    assert decision.status is RouteStatus.PAPER_ELIGIBLE
+    assert decision.status is not RouteStatus.LIVE_ELIGIBLE
+    assert decision.capture_plan is None
+    assert decision.reasons == (RejectReason.LEDGER_NOT_RECONCILED,)
+
+
+def test_fresh_execution_capability_does_not_bypass_missing_plan_freshness() -> None:
+    ledger, route, snapshot = _reconciled_fake_history()
+    helper_derived_reconciliation = is_ledger_explicitly_reconciled(ledger.records())
+    execution_evidence = _execution_evidence(route=route, snapshot=snapshot)
+
+    decision = evaluate_route(
+        route,
+        snapshot,
+        EvaluationMode.ENTRY,
+        rules=ProductRules(live_trading_enabled=True),
+        ledger_explicitly_reconciled=helper_derived_reconciliation,
+        execution_capability_evidence=(execution_evidence,),
     )
 
     assert helper_derived_reconciliation is True
@@ -159,29 +234,20 @@ def test_missing_plan_evidence_blocks_after_helper_derived_reconciliation() -> N
     assert decision.reasons == (RejectReason.CAPTURE_PLAN_NOT_FRESH,)
 
 
-def test_fresh_plan_does_not_bypass_live_disabled() -> None:
-    ledger, route, snapshot = _reconciled_fake_history()
-    evidence = _fresh_evidence(ledger=ledger, route=route, snapshot=snapshot)
-
-    decision = evaluate_route(
-        route,
-        snapshot,
-        EvaluationMode.ENTRY,
-        rules=ProductRules(live_trading_enabled=False),
-        ledger_explicitly_reconciled=True,
-        capture_plan_evidence=(evidence,),
-    )
-
-    assert decision.status is RouteStatus.PAPER_ELIGIBLE
-    assert decision.status is not RouteStatus.LIVE_ELIGIBLE
-    assert decision.capture_plan is None
-    assert decision.reasons == (RejectReason.LIVE_TRADING_DISABLED,)
-
-
-def test_fresh_plan_plus_helper_reconciliation_still_stops_at_unimplemented_live_gates() -> None:
+def test_fresh_execution_capability_does_not_bypass_stale_plan_freshness() -> None:
     ledger, route, snapshot = _reconciled_fake_history()
     helper_derived_reconciliation = is_ledger_explicitly_reconciled(ledger.records())
-    evidence = _fresh_evidence(ledger=ledger, route=route, snapshot=snapshot)
+    stale_plan = CapturePlanFreshnessEvidence(
+        plan_id="fake-plan-001",
+        plan_version="fake-v1",
+        capture_id=route.capture_id,
+        route_id=route.route_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        planned_at=snapshot.captured_at - timedelta(seconds=2),
+        valid_until=snapshot.captured_at - timedelta(seconds=1),
+        source=ValueSource.OBSERVED,
+        ledger_reconciliation_event_sequence=ledger.records()[-1].sequence,
+    )
     execution_evidence = _execution_evidence(route=route, snapshot=snapshot)
 
     decision = evaluate_route(
@@ -190,7 +256,30 @@ def test_fresh_plan_plus_helper_reconciliation_still_stops_at_unimplemented_live
         EvaluationMode.ENTRY,
         rules=ProductRules(live_trading_enabled=True),
         ledger_explicitly_reconciled=helper_derived_reconciliation,
-        capture_plan_evidence=(evidence,),
+        capture_plan_evidence=(stale_plan,),
+        execution_capability_evidence=(execution_evidence,),
+    )
+
+    assert helper_derived_reconciliation is True
+    assert decision.status is RouteStatus.PAPER_ELIGIBLE
+    assert decision.status is not RouteStatus.LIVE_ELIGIBLE
+    assert decision.capture_plan is None
+    assert decision.reasons == (RejectReason.CAPTURE_PLAN_NOT_FRESH,)
+
+
+def test_fresh_execution_capability_still_stops_at_unimplemented_live_gates() -> None:
+    ledger, route, snapshot = _reconciled_fake_history()
+    helper_derived_reconciliation = is_ledger_explicitly_reconciled(ledger.records())
+    plan_evidence = _fresh_plan_evidence(ledger=ledger, route=route, snapshot=snapshot)
+    execution_evidence = _execution_evidence(route=route, snapshot=snapshot)
+
+    decision = evaluate_route(
+        route,
+        snapshot,
+        EvaluationMode.ENTRY,
+        rules=ProductRules(live_trading_enabled=True),
+        ledger_explicitly_reconciled=helper_derived_reconciliation,
+        capture_plan_evidence=(plan_evidence,),
         execution_capability_evidence=(execution_evidence,),
     )
 
@@ -201,35 +290,7 @@ def test_fresh_plan_plus_helper_reconciliation_still_stops_at_unimplemented_live
     assert decision.reasons == (RejectReason.LIVE_GATES_NOT_IMPLEMENTED,)
 
 
-def test_fresh_plan_does_not_bypass_unreconciled_ledger() -> None:
-    ledger = InMemoryLedger()
-    route, snapshot = build_fake_route_and_snapshot()
-    evidence = CapturePlanFreshnessEvidence(
-        plan_id="fake-plan-001",
-        plan_version="fake-v1",
-        capture_id=route.capture_id,
-        route_id=route.route_id,
-        settlement_time=snapshot.risex_funding_settlement_at,
-        planned_at=snapshot.captured_at,
-        valid_until=snapshot.captured_at + timedelta(minutes=5),
-        source=ValueSource.OBSERVED,
-    )
-
-    decision = evaluate_route(
-        route,
-        snapshot,
-        EvaluationMode.ENTRY,
-        rules=ProductRules(live_trading_enabled=True),
-        ledger_explicitly_reconciled=is_ledger_explicitly_reconciled(ledger.records()),
-        capture_plan_evidence=(evidence,),
-    )
-
-    assert decision.status is RouteStatus.PAPER_ELIGIBLE
-    assert decision.capture_plan is None
-    assert decision.reasons == (RejectReason.LEDGER_NOT_RECONCILED,)
-
-
-def test_capture_plan_freshness_path_stays_offline_and_non_executable() -> None:
+def test_execution_capability_path_stays_offline_and_non_executable() -> None:
     for module_name in list(sys.modules):
         if (
             module_name == "core.execution"

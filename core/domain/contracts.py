@@ -320,6 +320,45 @@ class CapturePlanFreshnessEvidence:
 
 
 @dataclass(frozen=True, slots=True)
+class ExecutionCapabilityEvidence:
+    """Fake evidence that current order-book quotes can execute one route."""
+
+    capture_id: str
+    route_id: str
+    settlement_time: datetime
+    checked_at: datetime
+    valid_until: datetime
+    source: ValueSource
+    risex_entry_quote: ExecutableQuote
+    hedge_entry_quote: ExecutableQuote
+    risex_estimated_exit_quote: ExecutableQuote
+    hedge_estimated_exit_quote: ExecutableQuote
+
+    def __post_init__(self) -> None:
+        for field_name in ("capture_id", "route_id"):
+            value = getattr(self, field_name)
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"{field_name} must be non-empty")
+        validate_timezone_aware_datetime(self.settlement_time, "settlement_time")
+        validate_timezone_aware_datetime(self.checked_at, "checked_at")
+        validate_timezone_aware_datetime(self.valid_until, "valid_until")
+        if self.valid_until <= self.checked_at:
+            raise ValueError("valid_until must be after checked_at")
+        if not isinstance(self.source, ValueSource):
+            raise ValueError("ExecutionCapability evidence source must be a ValueSource")
+        if self.source is ValueSource.UNKNOWN:
+            raise ValueError("ExecutionCapability evidence source cannot be UNKNOWN")
+        for field_name in (
+            "risex_entry_quote",
+            "hedge_entry_quote",
+            "risex_estimated_exit_quote",
+            "hedge_estimated_exit_quote",
+        ):
+            if not isinstance(getattr(self, field_name), ExecutableQuote):
+                raise ValueError(f"{field_name} must be an ExecutableQuote")
+
+
+@dataclass(frozen=True, slots=True)
 class DecisionResult:
     """Result returned by the single route decision pipeline."""
 

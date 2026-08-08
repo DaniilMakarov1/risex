@@ -50,6 +50,12 @@ The deterministic fake CapturePlan freshness gate is downstream of route decisio
 
 Missing, stale, duplicated, cross-capture, cross-route, or cross-settlement plan evidence fails closed through `RejectReason.CAPTURE_PLAN_NOT_FRESH`. Fresh evidence alone is not permission to trade live: live trading remains disabled by default, and even with helper-derived reconciliation plus fresh evidence, `evaluate_route()` still returns `PAPER_ELIGIBLE` with `LIVE_GATES_NOT_IMPLEMENTED` and no live `CapturePlan`.
 
+## Offline execution capability gate
+
+The deterministic fake execution capability gate is downstream of route decisions, funding settlement verification, ledger reconciliation, and CapturePlan freshness. It consumes fake `ExecutionCapabilityEvidence` values that reference the existing four current `ExecutableQuote` contracts only.
+
+Missing, stale, cross-route, wrong-side, wrong-target, partial-fill, contradictory, unknown-source, or non-orderbook-source execution evidence fails closed through existing centralized reject reasons. Fresh execution evidence alone is not permission to trade live: live trading remains disabled by default, and even with helper-derived reconciliation plus fresh CapturePlan and execution-capability evidence, `evaluate_route()` still returns `PAPER_ELIGIBLE` with `LIVE_GATES_NOT_IMPLEMENTED` and no live `CapturePlan`.
+
 ## Boundaries
 
 Business logic has single-owner modules:
@@ -65,5 +71,6 @@ Business logic has single-owner modules:
 - ledger writes: `core/accounting/ledger.py`
 - ledger reconciliation: `core/accounting/reconciliation.py`
 - funding settlement verification: `core/monitoring/funding_settlement.py`
+- execution capability gating: `core/risk/gates.py`
 
 Venue adapters may fetch and normalize data only. They must not calculate EV, make route decisions, send orders, or write ledger events.

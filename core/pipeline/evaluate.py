@@ -9,6 +9,7 @@ from core.config.product_rules import ProductRules
 from core.domain.contracts import (
     CapturePlanFreshnessEvidence,
     DecisionResult,
+    ExecutionCapabilityEvidence,
     RouteCandidate,
     VenueSnapshot,
 )
@@ -51,6 +52,7 @@ def evaluate_route(
     ledger: InMemoryLedger | None = None,
     ledger_explicitly_reconciled: bool = False,
     capture_plan_evidence: Sequence[CapturePlanFreshnessEvidence] | None = None,
+    execution_capability_evidence: Sequence[ExecutionCapabilityEvidence] | None = None,
 ) -> DecisionResult:
     """Evaluate one fake route snapshot without exchange APIs or order placement."""
 
@@ -113,6 +115,7 @@ def evaluate_route(
         evaluated_at=snapshot.captured_at,
         ledger_explicitly_reconciled=ledger_explicitly_reconciled,
         capture_plan_evidence=capture_plan_evidence,
+        execution_capability_evidence=execution_capability_evidence,
     )
     reasons = (live_reason,) if mode is EvaluationMode.ENTRY and live_reason else ()
     decision = DecisionResult(

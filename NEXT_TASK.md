@@ -1,17 +1,17 @@
 ## Task ID
 
-RX-011 — Offline Execution Capability Gate Design and Fake Replay Coverage
+RX-012 — Offline Live Gate Evidence Bundle Design and Fake Replay Coverage
 
 ## Objective
 
-Add deterministic fake execution-capability gate contracts that can later block any live Capture path unless the current route can still execute its full selected target notional on every required entry and unwind side.
+Add a deterministic fake offline contract that bundles the already-implemented future live-gate inputs for one Capture route evaluation so callers cannot accidentally mix ledger reconciliation, CapturePlan freshness, and execution-capability evidence from different captures, routes, or funding settlement opportunities.
 
 ## Allowed scope
 
 - Use fake deterministic inputs only.
-- Keep the gate downstream of route decisions, ledger reconciliation, funding settlement verification, and CapturePlan freshness evidence.
-- Reuse the single `RouteCandidate`, `VenueSnapshot`, `assemble_route_snapshot()`, and `evaluate_route()` contracts.
-- Prove missing, stale, cross-route, partial-fill, or contradictory execution-capability evidence fails closed.
+- Keep the bundle downstream of route decisions, funding settlement verification, ledger reconciliation, CapturePlan freshness, and execution-capability evidence.
+- Reuse existing `RouteCandidate`, `VenueSnapshot`, `CapturePlanFreshnessEvidence`, `ExecutionCapabilityEvidence`, and `evaluate_route()` contracts.
+- Prove cross-capture, cross-route, cross-settlement, missing-component, and stale-component bundles fail closed before any future live path can proceed.
 - Keep live trading disabled.
 
 ## Forbidden scope
@@ -23,4 +23,4 @@ Add deterministic fake execution-capability gate contracts that can later block 
 - Do not add canary architecture, `CANARY_ELIGIBLE`, or `canary_runner`.
 - Do not add hold-next-cycle logic.
 - Do not add artificial filters or hidden buffers.
-- Do not add a second route model, EV path, route decision function, or snapshot assembly function.
+- Do not add a second route model, EV path, route decision function, snapshot assembly function, or VWAP/liquidity path.

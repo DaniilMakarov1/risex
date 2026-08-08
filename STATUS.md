@@ -1,11 +1,11 @@
 # Status
 
 - Last accepted task: RX-010 — Fresh CapturePlan Gate Design and Fake Replay Coverage
-- Accepted RX-010 implementation HEAD: `a4f71927bb550658cc747739ef70e844c8de7210`
+- Accepted RX-010 implementation HEAD: `d8bf1337c33403d1d8f1c1ccd4cec9cd7399eb64`
 - Accepted baseline branch: `main`
-- Current RX task: none active
-- Current RX task branch: none
-- Current RX task status: none active
+- Current RX task: RX-011 — Offline Execution Capability Gate Design and Fake Replay Coverage
+- Current RX task branch: `task/rx-011-execution-capability-gate`
+- Current RX task status: candidate pending review
 
 The accepted RX-010 implementation is the latest accepted baseline on `main`.
 
@@ -40,10 +40,13 @@ The accepted RX-010 implementation is the latest accepted baseline on `main`.
 - Deterministic offline ledger reconciliation lives in `core/accounting/reconciliation.py`.
 - Ledger reconciliation records checked `event_count` and `last_sequence`, and `is_ledger_explicitly_reconciled(ledger.records())` returns true only for the exact current append-only history.
 - Deterministic fake CapturePlan freshness evidence lives in `core/domain/contracts.py` as `CapturePlanFreshnessEvidence`.
+- Deterministic fake execution capability evidence lives in `core/domain/contracts.py` as `ExecutionCapabilityEvidence`.
 - CapturePlan freshness gating lives in `core/risk/gates.py`.
 - Missing, stale, duplicated, future-dated, cross-capture, cross-route, cross-settlement, malformed, or unknown-source fake plan evidence fails closed with `RejectReason.CAPTURE_PLAN_NOT_FRESH`.
-- Future live gating now checks live trading switch, explicit ledger reconciliation, CapturePlan freshness evidence, and then the still-unimplemented live gates.
-- `evaluate_route()` may receive fake freshness evidence but still does not read ledger/storage directly, create live `CapturePlan` objects, import execution/live runner modules, place orders, or return `LIVE_ELIGIBLE`.
+- Execution capability gating lives in `core/risk/gates.py`.
+- Missing, stale, future-dated, cross-capture, cross-route, cross-settlement, malformed, non-orderbook-source, missing-side, wrong-side, wrong-target-notional, partial-fill, or contradictory fake execution capability evidence fails closed through existing centralized reject reasons.
+- Future live gating now checks live trading switch, explicit ledger reconciliation, CapturePlan freshness evidence, execution capability evidence, and then the still-unimplemented live gates.
+- `evaluate_route()` may receive fake freshness and execution-capability evidence but still does not read ledger/storage directly, create live `CapturePlan` objects, import execution/live runner modules, place orders, or return `LIVE_ELIGIBLE`.
 - In-memory Broad Scan to Focused Refresh handoff using existing `RouteCandidate` contracts.
 - Per-venue `VenueObservation` input contract.
 - Source-aware fees and funding.
@@ -64,10 +67,23 @@ The accepted RX-010 implementation is the latest accepted baseline on `main`.
 - `git diff --check`: exit 0
 - `git diff --cached --check`: exit 0
 
+## Tests run for RX-011 candidate
+
+- `python3 -m apps.cli.main`: exit 0
+- `python3 -m pytest`: `220 passed in 0.35s`
+- `python3 -m compileall apps core storage tests`: exit 0
+- `python3 -c "import core.monitoring.funding_settlement; import core.accounting.reconciliation"`: exit 0
+- `python3 -c "from core.monitoring.funding_settlement import replay_funding_settlement_verification; from core.accounting.reconciliation import replay_ledger_reconciliation"`: exit 0
+- targeted pytest: `35 passed in 0.07s`
+- `git diff --check`: exit 0
+- `git diff --cached --check`: exit 0
+
 ## Known limitations
 
 - Funding settlement verifier, ledger reconciliation, and CapturePlan freshness remain deterministic fake offline replay scaffolding only.
+- Execution capability remains deterministic fake offline gate scaffolding only.
 - CapturePlan freshness evidence is not executable live order planning.
+- Execution capability evidence is not executable live order planning.
 - No real RiseX/Hyperliquid adapters.
 - No network calls.
 - No orders.
@@ -75,7 +91,8 @@ The accepted RX-010 implementation is the latest accepted baseline on `main`.
 - No live trading.
 - No live `CapturePlan` creation.
 - Fresh CapturePlan evidence is not permission to trade live by itself.
+- Fresh execution capability evidence is not permission to trade live by itself.
 
 ## Next recommended task
 
-RX-011 — Offline Execution Capability Gate Design and Fake Replay Coverage.
+RX-012 — Offline Live Gate Evidence Bundle Design and Fake Replay Coverage.
