@@ -16,6 +16,21 @@ Start from reviewer-accepted `main` after RX-Q001 is accepted and merged.
 
 Create and work on `task/rx-012-offline-live-gate-evidence-bundle`.
 
+## Before changing files
+
+Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, remote is wrong, branch is wrong, or HEAD does not match the stated baseline.
+
+Read:
+
+- AGENTS.md
+- README.md
+- ARCHITECTURE.md
+- PRODUCT_INVARIANTS.md
+- IMPLEMENTATION_PLAN.md
+- STATUS.md
+- DECISIONS.md
+- NEXT_TASK.md
+
 ## Allowed scope
 
 - `core/domain/contracts.py`

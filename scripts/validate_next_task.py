@@ -13,6 +13,7 @@ REQUIRED_SECTIONS = (
     "Objective",
     "Starting baseline",
     "Branch",
+    "Before changing files",
     "Allowed scope",
     "Forbidden scope",
     "Implementation requirements",

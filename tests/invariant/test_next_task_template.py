@@ -1,4 +1,5 @@
 import importlib.util
+import re
 from pathlib import Path
 
 
@@ -33,6 +34,10 @@ Start from `main @ <reviewer_accepted_head>`.
 ## Branch
 
 Create and work on `task/rx-012-live-gate-evidence-bundle`.
+
+## Before changing files
+
+Run repository preflight and read the required project docs.
 
 ## Allowed scope
 
@@ -107,11 +112,11 @@ def test_validator_rejects_empty_task_id_section() -> None:
     assert "Task ID section must contain exactly one non-empty task definition line." in errors
 
 
-def test_task_template_contains_required_sections() -> None:
+def test_task_template_required_sections_match_validator() -> None:
     template = Path("docs/templates/RX_TASK_TEMPLATE.md").read_text()
+    template_sections = tuple(re.findall(r"^##\s+(.+?)\s*$", template, flags=re.MULTILINE))
 
-    for section in validate_next_task.REQUIRED_SECTIONS:
-        assert f"## {section}" in template
+    assert validate_next_task.REQUIRED_SECTIONS == template_sections
 
 
 def test_report_and_worker_templates_preserve_role_boundaries() -> None:
