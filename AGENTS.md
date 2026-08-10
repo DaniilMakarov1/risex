@@ -9,8 +9,24 @@ This repository is the source of truth for RiseX Points Farmer implementation wo
 - Before changing files, check repository, branch, HEAD, and git status.
 - Do not overwrite uncommitted user changes.
 - Read this file plus `README.md`, `ARCHITECTURE.md`, `PRODUCT_INVARIANTS.md`, `IMPLEMENTATION_PLAN.md`, `STATUS.md`, `DECISIONS.md`, and `NEXT_TASK.md` before implementing.
-- Update `STATUS.md` and `NEXT_TASK.md` at the end of each task.
-- Update `DECISIONS.md` when the task makes or changes an architectural decision.
+- Update `STATUS.md` and `NEXT_TASK.md` at the end of each task. `NEXT_TASK.md` must contain exactly one next task and pass `python scripts/validate_next_task.py`.
+- Update `DECISIONS.md` when the task makes or changes an architectural or repository-governance decision.
+- Use `docs/WORKFLOW.md` and the templates in `docs/templates/` when preparing task prompts, worker checkpoints, reports, and review checklists.
+
+## Parent, worker, and reviewer boundaries
+
+- Parent Codex owns task scope, branch discipline, architecture checks, final diff review, validation, commit, push, and final report.
+- Workers may be used only for non-trivial implementation support. They must not commit, push, merge, or approve their own work.
+- Workers must stop at DESIGN CHECKPOINT, CODE CHECKPOINT, TEST CHECKPOINT, and VALIDATION CHECKPOINT before continuing.
+- Reviewers accept or reject task branches. A task is not accepted until reviewer acceptance is explicit.
+- `STATUS.md` must keep the last accepted baseline separate from the current task branch and current task review state.
+
+## No unnecessary abstractions
+
+- Do not add new functions, classes, dataclasses, enums, statuses, modules, wrappers, config values, trace fields, future hooks, or contracts unless the current RX task explicitly requires them or they are strictly necessary to complete it.
+- Any new abstraction must belong to the authoritative owner module, be used immediately, and be covered by focused tests.
+- Never create a second route model, EV path, decision path, snapshot assembly path, VWAP path, ledger-write path, or live execution path.
+- Final reports must state every new function, class, or contract added and why each was necessary. If none were added, state `No new abstractions added.`
 
 ## Hard prohibitions
 
@@ -45,13 +61,17 @@ The report must have no extra prose outside the code block.
 End every RX task with:
 
 - Task ID
+- Repository path
 - Branch
 - Starting HEAD
 - Final HEAD
 - Changed files
 - What was implemented
+- New functions/classes/contracts added and why each was necessary
 - Tests run
-- Test results
+- Exact test results
+- Working-tree status
 - Known limitations
 - Risk impact
+- Orchestration log, if workers were used
 - Next suggested task

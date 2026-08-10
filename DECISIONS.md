@@ -213,3 +213,15 @@
 - Affected files/modules: `core/domain/contracts.py`, `core/domain/__init__.py`, `core/risk/gates.py`, `core/pipeline/evaluate.py`, tests, and governance docs.
 - Superseded decisions: RX-010's final live-gate stopping point after successful ledger reconciliation plus fresh CapturePlan evidence is narrowed. Successful reconciliation plus fresh CapturePlan evidence but without fresh execution-capability evidence now stops at `REQUIRED_LIVE_DATA_MISSING`; successful reconciliation plus exact fresh CapturePlan and execution-capability evidence still stops at `LIVE_GATES_NOT_IMPLEMENTED`.
 - Non-decisions: RX-011 does not implement real RiseX or Hyperliquid adapters, network calls, API clients, authentication, order placement, live runner behavior, live trading, executable live order plans, live `CapturePlan` creation, canary architecture, hold-next-cycle logic, artificial filters, route profitability recalculation, route eligibility mutation, a second route model, a second EV path, a second route decision function, a second snapshot assembly function, or a second VWAP/liquidity path.
+
+## 2026-08-10 - RX-Q001
+
+- Date: 2026-08-10
+- Decision: Repository governance now requires `NEXT_TASK.md` to contain exactly one complete next task and pass `python scripts/validate_next_task.py`.
+- Reason: Future Codex sessions need a fail-closed handoff contract instead of relying on chat memory or duplicate task definitions.
+- Decision: Added explicit Parent/Worker/Reviewer workflow docs and templates for task prompts, worker checkpoints, final reports, PRs, and review checklists.
+- Reason: Non-trivial tasks need supervised worker checkpoints, Parent-owned final diff review, and reviewer-only acceptance without mixing implementation completion with accepted baseline state.
+- Decision: CI runs the `NEXT_TASK.md` validator before pytest and includes `scripts` in compileall.
+- Reason: Governance scripts must stay importable and next-task drift must fail in repository-level validation.
+- Affected files/modules: `AGENTS.md`, `docs/WORKFLOW.md`, `docs/templates/`, `scripts/validate_next_task.py`, invariant tests, `.github/`, `STATUS.md`, `DECISIONS.md`, and `NEXT_TASK.md`.
+- Non-decisions: RX-Q001 does not change product architecture, route evaluation, economics, risk gates, domain trading contracts, ledger behavior, adapters, order flow, live runner behavior, route statuses, reject reasons, canary architecture, or live trading.

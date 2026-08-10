@@ -26,8 +26,11 @@ jobs:
       - name: Install package
         run: python -m pip install ".[dev]"
 
+      - name: Validate next task handoff
+        run: python scripts/validate_next_task.py
+
       - name: Run tests
         run: python -m pytest
 
       - name: Run compile check
-        run: python -m compileall apps core storage tests
+        run: python -m compileall apps core storage tests scripts
