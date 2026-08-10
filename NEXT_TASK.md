@@ -1,59 +1,70 @@
 ## Task ID
 
-RX-012 — Offline Live Gate Evidence Bundle Design and Fake Replay Coverage
+RX-Q001 — Repository Workflow and Quality Guardrails
 
 ## Objective
 
-Add a deterministic fake offline contract that bundles the already-implemented future live-gate inputs for one Capture route evaluation so callers cannot accidentally mix ledger reconciliation, CapturePlan freshness, and execution-capability evidence from different captures, routes, or funding settlement opportunities.
+Add repository-level workflow and quality guardrails so future Codex sessions follow supervised-worker protocol, avoid unnecessary abstractions, complete NEXT_TASK.md consistently, and preserve RiseX architecture boundaries.
 
 ## Allowed scope
 
-- Use fake deterministic inputs only.
-- Keep the bundle downstream of route decisions, funding settlement verification, ledger reconciliation, CapturePlan freshness, and execution-capability evidence.
-- Reuse existing `RouteCandidate`, `VenueSnapshot`, `CapturePlanFreshnessEvidence`, `ExecutionCapabilityEvidence`, and `evaluate_route()` contracts.
-- Prove cross-capture, cross-route, cross-settlement, missing-component, and stale-component bundles fail closed before any future live path can proceed.
-- Keep live trading disabled.
+- AGENTS.md
+- docs/WORKFLOW.md
+- docs/templates/RX_TASK_TEMPLATE.md
+- docs/templates/RX_REPORT_TEMPLATE.md
+- docs/templates/WORKER_CHECKPOINT_TEMPLATE.md
+- docs/templates/REVIEW_CHECKLIST.md
+- scripts/validate_next_task.py
+- tests/invariant/test_next_task_template.py
+- tests/invariant/test_no_forbidden_imports.py
+- .github/PULL_REQUEST_TEMPLATE.md
+- .github/workflows/ci.yml only if needed to run the new validator
+- STATUS.md
+- DECISIONS.md
+- NEXT_TASK.md
 
 ## Forbidden scope
 
-- Do not implement real RiseX, Hyperliquid, network calls, API clients, authentication, or production adapters.
-- Do not place orders or enable live trading.
-- Do not implement live runner behavior.
-- Do not create executable live order plans.
-- Do not add canary architecture, `CANARY_ELIGIBLE`, or `canary_runner`.
-- Do not add hold-next-cycle logic.
-- Do not add artificial filters or hidden buffers.
-- Do not add a second route model, EV path, route decision function, snapshot assembly function, or VWAP/liquidity path.
+- No product behavior changes.
+- No route evaluation changes.
+- No economics changes.
+- No risk gate changes.
+- No domain contract changes unless strictly needed for docs/tests, which should not be needed.
+- No live runner behavior.
+- No adapters, orders, network calls, API clients, credentials, secrets, or trading logic.
+- No new route statuses.
+- No new RejectReason values.
+- No canary architecture.
+- No broad refactors.
+- No speculative helpers or future hooks.
 
 ## Required files
 
 - AGENTS.md
-- README.md
-- ARCHITECTURE.md
-- PRODUCT_INVARIANTS.md
-- IMPLEMENTATION_PLAN.md
+- docs/WORKFLOW.md
+- docs/templates/RX_TASK_TEMPLATE.md
+- docs/templates/RX_REPORT_TEMPLATE.md
+- docs/templates/WORKER_CHECKPOINT_TEMPLATE.md
+- docs/templates/REVIEW_CHECKLIST.md
+- scripts/validate_next_task.py
+- tests/invariant/test_next_task_template.py
+- tests/invariant/test_no_forbidden_imports.py
+- .github/PULL_REQUEST_TEMPLATE.md
+- .github/workflows/ci.yml
 - STATUS.md
 - DECISIONS.md
 - NEXT_TASK.md
-- core/domain/contracts.py
-- core/risk/gates.py
-- core/pipeline/evaluate.py
-- tests/unit/test_risk_gates.py
-- tests/replay/test_capture_plan_freshness.py
-- tests/replay/test_execution_capability.py
 
 ## Required tests
 
-- Missing live-gate evidence bundle fails closed.
-- Cross-capture bundle components fail closed.
-- Cross-route bundle components fail closed.
-- Cross-settlement bundle components fail closed.
-- Stale CapturePlan freshness evidence inside the bundle fails closed.
-- Stale execution-capability evidence inside the bundle fails closed.
-- Fresh bundle does not bypass live disabled.
-- Fresh bundle does not bypass unreconciled ledger.
-- Fresh bundle still stops at `LIVE_GATES_NOT_IMPLEMENTED` and does not create a live `CapturePlan`.
-- Existing RX-009, RX-010, and RX-011 tests still pass.
+- python scripts/validate_next_task.py
+- python3 -m pytest tests/invariant
+- python3 -m pytest
+- python3 -m compileall apps core storage tests scripts
+- python3 -m apps.cli.main
+- git diff --check
+- git diff --cached --check
+- git status --short
 
 ## Required report format
 
@@ -74,4 +85,5 @@ Include:
 - Working-tree status
 - Known limitations
 - Risk impact
+- Orchestration log, if workers were used
 - Next suggested task

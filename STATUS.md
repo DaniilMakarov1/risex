@@ -85,4 +85,4 @@ The accepted RX-011 implementation is the latest accepted baseline on `main`.
 
 ## Next recommended task
 
-RX-012 — Offline Live Gate Evidence Bundle Design and Fake Replay Coverage.
+RX-Q001 — Repository Workflow and Quality Guardrails.
