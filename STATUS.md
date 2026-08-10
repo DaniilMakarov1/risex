@@ -70,11 +70,11 @@ The accepted RX-010 implementation is the latest accepted baseline on `main`.
 ## Tests run for RX-011 candidate
 
 - `python3 -m apps.cli.main`: exit 0
-- `python3 -m pytest`: `220 passed in 0.35s`
+- `python3 -m pytest`: `222 passed in 0.37s`
 - `python3 -m compileall apps core storage tests`: exit 0
 - `python3 -c "import core.monitoring.funding_settlement; import core.accounting.reconciliation"`: exit 0
 - `python3 -c "from core.monitoring.funding_settlement import replay_funding_settlement_verification; from core.accounting.reconciliation import replay_ledger_reconciliation"`: exit 0
-- targeted pytest: `35 passed in 0.07s`
+- targeted pytest: `37 passed in 0.08s`
 - `git diff --check`: exit 0
 - `git diff --cached --check`: exit 0
 

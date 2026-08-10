@@ -313,6 +313,43 @@ def test_contradictory_execution_capability_quote_fails_closed() -> None:
     assert reason is RejectReason.TECHNICALLY_NOT_EXECUTABLE
 
 
+def test_wrong_risex_entry_side_execution_capability_evidence_fails_closed() -> None:
+    route, snapshot = build_fake_route_and_snapshot()
+    evidence = _execution_evidence(
+        risex_entry_quote=replace(snapshot.risex_entry_quote, side="sell"),
+    )
+
+    ok, reason = check_execution_capability_gate(
+        route=route,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        evaluated_at=snapshot.captured_at,
+        execution_evidence=(evidence,),
+    )
+
+    assert ok is False
+    assert reason is RejectReason.TECHNICALLY_NOT_EXECUTABLE
+
+
+def test_wrong_risex_unwind_side_execution_capability_evidence_fails_closed() -> None:
+    route, snapshot = build_fake_route_and_snapshot()
+    evidence = _execution_evidence(
+        risex_estimated_exit_quote=replace(
+            snapshot.risex_estimated_exit_quote,
+            side="buy",
+        ),
+    )
+
+    ok, reason = check_execution_capability_gate(
+        route=route,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        evaluated_at=snapshot.captured_at,
+        execution_evidence=(evidence,),
+    )
+
+    assert ok is False
+    assert reason is RejectReason.TECHNICALLY_NOT_EXECUTABLE
+
+
 def test_execution_capability_evidence_missing_required_side_fails_closed() -> None:
     route, snapshot = build_fake_route_and_snapshot()
     evidence = _forge_execution_evidence(
