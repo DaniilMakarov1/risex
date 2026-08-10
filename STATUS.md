@@ -1,13 +1,13 @@
 # Status
 
-- Last accepted task: RX-010 — Fresh CapturePlan Gate Design and Fake Replay Coverage
-- Accepted RX-010 implementation HEAD: `d8bf1337c33403d1d8f1c1ccd4cec9cd7399eb64`
+- Last accepted task: RX-011 — Offline Execution Capability Gate Design and Fake Replay Coverage
+- Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
-- Current RX task: RX-011 — Offline Execution Capability Gate Design and Fake Replay Coverage
-- Current RX task branch: `task/rx-011-execution-capability-gate`
-- Current RX task status: candidate pending review
+- Current RX task: none active
+- Current RX task branch: none
+- Current RX task status: none active
 
-The accepted RX-010 implementation is the latest accepted baseline on `main`.
+The accepted RX-011 implementation is the latest accepted baseline on `main`.
 
 ## Completed accepted tasks
 
@@ -23,6 +23,7 @@ The accepted RX-010 implementation is the latest accepted baseline on `main`.
 - RX-008 — Funding Settlement Verifier Design and Fake Replay Coverage
 - RX-009 — Ledger Reconciliation Gate Design and Fake Replay Coverage
 - RX-010 — Fresh CapturePlan Gate Design and Fake Replay Coverage
+- RX-011 — Offline Execution Capability Gate Design and Fake Replay Coverage
 
 ## Current architecture status
 
@@ -56,18 +57,7 @@ The accepted RX-010 implementation is the latest accepted baseline on `main`.
 - Live `CapturePlan` creation blocked.
 - No real adapters, orders, paper exchange simulation, live runner behavior, or live trading.
 
-## Tests last reported for accepted RX-010
-
-- `python3 -m apps.cli.main`: exit 0
-- `python3 -m pytest`: `198 passed in 0.28s`
-- `python3 -m compileall apps core storage tests`: exit 0
-- `python3 -c "import core.monitoring.funding_settlement; import core.accounting.reconciliation"`: exit 0
-- `python3 -c "from core.monitoring.funding_settlement import replay_funding_settlement_verification; from core.accounting.reconciliation import replay_ledger_reconciliation"`: exit 0
-- targeted pytest: `59 passed in 0.21s`
-- `git diff --check`: exit 0
-- `git diff --cached --check`: exit 0
-
-## Tests run for RX-011 candidate
+## Tests last reported for accepted RX-011
 
 - `python3 -m apps.cli.main`: exit 0
 - `python3 -m pytest`: `222 passed in 0.37s`
