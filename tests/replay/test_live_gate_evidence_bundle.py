@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import importlib
 import sys
-from dataclasses import replace
 from datetime import timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -26,6 +25,7 @@ from core.accounting.reconciliation import (
 from core.config.product_rules import ProductRules
 from core.domain.contracts import (
     CapturePlanFreshnessEvidence,
+    DecisionResult,
     EstimatedValue,
     ExecutableQuote,
     ExecutionCapabilityEvidence,
@@ -41,6 +41,7 @@ from core.monitoring.funding_settlement import (
 )
 from core.pipeline.evaluate import evaluate_route
 from core.risk.gates import check_live_gate_evidence_bundle
+from storage.sqlite.ledger import SQLiteLedger
 
 
 def _observed(value: Decimal | str) -> EstimatedValue:
@@ -86,16 +87,22 @@ def _append_settlement_evidence(
     )
 
 
-def _verified_reconciled_fake_history() -> tuple[
-    InMemoryLedger,
+def _verified_reconciled_fake_history(
+    ledger: Ledger | None = None,
+) -> tuple[
+    Ledger,
     RouteCandidate,
     VenueSnapshot,
     FundingSettlementVerificationResult,
 ]:
-    ledger = InMemoryLedger()
+    ledger = ledger or InMemoryLedger()
     route, snapshot = build_fake_route_and_snapshot()
-    decision = replace(
-        evaluate_route(route, snapshot, EvaluationMode.ENTRY),
+    decision = DecisionResult(
+        route_id=route.route_id,
+        mode=EvaluationMode.ENTRY,
+        status=RouteStatus.PAPER_ELIGIBLE,
+        reasons=(),
+        net_profit_usd=Decimal("2"),
         decided_at=snapshot.captured_at,
     )
     run_paper_lifecycle(
@@ -123,7 +130,7 @@ def _verified_reconciled_fake_history() -> tuple[
 
 def _fresh_plan_evidence(
     *,
-    ledger: InMemoryLedger,
+    ledger: Ledger,
     route: RouteCandidate,
     snapshot: VenueSnapshot,
 ) -> CapturePlanFreshnessEvidence:
@@ -162,7 +169,7 @@ def _execution_evidence(
 
 def _live_gate_evidence_bundle(
     *,
-    ledger: InMemoryLedger,
+    ledger: Ledger,
     route: RouteCandidate,
     snapshot: VenueSnapshot,
     funding_result: FundingSettlementVerificationResult,
@@ -199,7 +206,7 @@ def _live_gate_evidence_bundle(
 
 
 def _event_sequence(
-    ledger: InMemoryLedger,
+    ledger: Ledger,
     event_type: LedgerEventType,
     *,
     route_id: str | None = None,
@@ -218,7 +225,7 @@ _USE_CHECKED_BUNDLE_RESULT = object()
 
 
 def _append_live_gate_bundle_record(
-    ledger: InMemoryLedger,
+    ledger: Ledger,
     *,
     route: RouteCandidate,
     snapshot: VenueSnapshot,
@@ -339,6 +346,62 @@ def test_successful_live_gate_evidence_bundle_record_replays_without_enabling_li
     assert decision.reasons == (RejectReason.LIVE_GATES_NOT_IMPLEMENTED,)
 
 
+def test_successful_live_gate_evidence_bundle_record_replays_after_sqlite_round_trip(
+    tmp_path: Path,
+) -> None:
+    db_path = tmp_path / "live-gate-bundle.sqlite"
+    sqlite_ledger = SQLiteLedger(db_path)
+    ledger, route, snapshot, funding_result = _verified_reconciled_fake_history(
+        sqlite_ledger
+    )
+    helper_derived_reconciliation = is_ledger_explicitly_reconciled(ledger.records())
+    bundle = _live_gate_evidence_bundle(
+        ledger=ledger,
+        route=route,
+        snapshot=snapshot,
+        funding_result=funding_result,
+        ledger_explicitly_reconciled=helper_derived_reconciliation,
+    )
+    _append_live_gate_bundle_record(
+        ledger,
+        route=route,
+        snapshot=snapshot,
+        bundle=bundle,
+    )
+    pre_close_replayed = replay_live_gate_evidence_bundle_recording(
+        ledger.records(),
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+    )
+    sqlite_ledger.close()
+
+    reopened = SQLiteLedger(db_path)
+    records = reopened.records()
+    replayed_once = replay_live_gate_evidence_bundle_recording(
+        records,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+    )
+    replayed_twice = replay_live_gate_evidence_bundle_recording(
+        records,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+    )
+
+    assert replayed_once == pre_close_replayed
+    assert replayed_twice == pre_close_replayed
+    assert replayed_once.replayed is True
+    assert replayed_once.bundle_check_passed is True
+    assert replayed_once.bundle_check_reason is None
+    assert replayed_once.live_gate_evidence_bundle_event_sequence == 12
+    assert replayed_once.route_decision_event_sequence == 1
+    assert replayed_once.funding_verification_event_sequence == 10
+    assert replayed_once.ledger_reconciliation_event_sequence == 11
+    assert records[-1].event_type == LedgerEventType.LIVE_GATE_EVIDENCE_BUNDLE_RECORDED.value
+    assert is_ledger_explicitly_reconciled(records) is False
+    reopened.close()
+
+
 def test_failed_live_gate_evidence_bundle_record_replays_fail_closed_reason() -> None:
     ledger, route, snapshot, funding_result = _verified_reconciled_fake_history()
     stale_plan = CapturePlanFreshnessEvidence(
@@ -376,6 +439,85 @@ def test_failed_live_gate_evidence_bundle_record_replays_fail_closed_reason() ->
     assert replayed.bundle_check_passed is False
     assert replayed.bundle_check_reason is RejectReason.CAPTURE_PLAN_NOT_FRESH
     assert replayed.reasons == ()
+
+
+def test_contradictory_live_gate_evidence_bundle_record_fails_after_sqlite_round_trip(
+    tmp_path: Path,
+) -> None:
+    db_path = tmp_path / "live-gate-bundle-contradictory.sqlite"
+    sqlite_ledger = SQLiteLedger(db_path)
+    ledger, route, snapshot, funding_result = _verified_reconciled_fake_history(
+        sqlite_ledger
+    )
+    stale_plan = CapturePlanFreshnessEvidence(
+        plan_id="fake-plan-001",
+        plan_version="fake-v1",
+        capture_id=route.capture_id,
+        route_id=route.route_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        planned_at=snapshot.captured_at - timedelta(seconds=2),
+        valid_until=snapshot.captured_at - timedelta(seconds=1),
+        source=ValueSource.OBSERVED,
+        ledger_reconciliation_event_sequence=ledger.records()[-1].sequence,
+    )
+    bundle = _live_gate_evidence_bundle(
+        ledger=ledger,
+        route=route,
+        snapshot=snapshot,
+        funding_result=funding_result,
+        capture_plan_evidence=(stale_plan,),
+    )
+    _append_live_gate_bundle_record(
+        ledger,
+        route=route,
+        snapshot=snapshot,
+        bundle=bundle,
+        bundle_check_passed=True,
+        bundle_check_reason=None,
+    )
+    sqlite_ledger.close()
+
+    reopened = SQLiteLedger(db_path)
+    replayed = replay_live_gate_evidence_bundle_recording(
+        reopened.records(),
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+    )
+
+    assert replayed.replayed is False
+    assert (
+        LedgerReconciliationReason.CONTRADICTORY_LIVE_GATE_EVIDENCE_BUNDLE
+        in replayed.reasons
+    )
+    reopened.close()
+
+
+def test_malformed_live_gate_evidence_bundle_record_fails_after_sqlite_round_trip(
+    tmp_path: Path,
+) -> None:
+    db_path = tmp_path / "live-gate-bundle-malformed.sqlite"
+    sqlite_ledger = SQLiteLedger(db_path)
+    ledger, route, snapshot, _funding_result = _verified_reconciled_fake_history(
+        sqlite_ledger
+    )
+    ledger.append(
+        event_type=LedgerEventType.LIVE_GATE_EVIDENCE_BUNDLE_RECORDED,
+        payload={"capture_id": route.capture_id},
+        recorded_at=snapshot.captured_at,
+    )
+    sqlite_ledger.close()
+
+    reopened = SQLiteLedger(db_path)
+    replayed = replay_live_gate_evidence_bundle_recording(
+        reopened.records(),
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+    )
+
+    assert replayed.replayed is False
+    assert LedgerReconciliationReason.MALFORMED_LEDGER_EVENT_PAYLOAD in replayed.reasons
+    assert replayed.live_gate_evidence_bundle_event_sequence == 12
+    reopened.close()
 
 
 def test_live_gate_evidence_bundle_recording_replay_fails_closed_when_missing() -> None:

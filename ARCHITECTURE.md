@@ -188,6 +188,13 @@ RX-013 adds deterministic offline live-gate evidence bundle ledger recording and
 5. Bundle ledger replay does not recalculate EV, fees, funding, VWAP, basis, or profitability; it does not call adapters, call execution modules, place orders, create live plans, mutate route decisions, or return `LIVE_ELIGIBLE`.
 6. Even with a replayed successful fake bundle check, current route decisions remain `PAPER_ELIGIBLE` with `RejectReason.LIVE_GATES_NOT_IMPLEMENTED`.
 
+RX-014 adds deterministic SQLite persistence replay coverage for the RX-013 bundle record:
+
+1. `storage/sqlite/ledger.py` remains the existing append-only persistence contract; no migration or second storage layer is introduced.
+2. Persisted `live_gate_evidence_bundle_recorded` payloads replay with the same bundle result and referenced route-decision, funding-verification, and ledger-reconciliation event sequences as in-memory ledger records.
+3. Persisted malformed or contradictory bundle records still fail closed after SQLite round-trip.
+4. SQLite replay coverage does not recalculate EV, fees, funding, VWAP, basis, or profitability, and does not call adapters, execution modules, or live runner code.
+
 RX-004 adds a deterministic offline snapshot assembly layer before evaluation:
 
 1. Venue adapters return per-venue `VenueObservation` objects, never cross-venue snapshots.

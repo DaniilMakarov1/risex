@@ -34,6 +34,7 @@ from core.config.product_rules import ProductRules
 from core.domain.contracts import (
     Capture,
     CapturePlanFreshnessEvidence,
+    DecisionResult,
     EstimatedValue,
     ExecutionCapabilityEvidence,
     LiveGateEvidenceBundle,
@@ -57,7 +58,14 @@ def _sourced(value: Decimal | str, source: ValueSource) -> EstimatedValue:
 
 def _started_paper_capture(ledger: Ledger) -> tuple[RouteCandidate, VenueSnapshot]:
     route, snapshot = build_fake_route_and_snapshot()
-    decision = replace(evaluate_route(route, snapshot, EvaluationMode.ENTRY), decided_at=snapshot.captured_at)
+    decision = DecisionResult(
+        route_id=route.route_id,
+        mode=EvaluationMode.ENTRY,
+        status=RouteStatus.PAPER_ELIGIBLE,
+        reasons=(),
+        net_profit_usd=Decimal("2"),
+        decided_at=snapshot.captured_at,
+    )
     run_paper_lifecycle(
         route=route,
         decision=decision,
@@ -494,6 +502,65 @@ def test_reconciliation_accepts_well_formed_live_gate_bundle_record_after_new_re
     assert ledger.records()[-1].payload["event_count"] == 12
     assert ledger.records()[-1].payload["last_sequence"] == 12
     assert is_ledger_explicitly_reconciled(ledger.records()) is True
+
+
+def test_reconciliation_replays_sqlite_live_gate_bundle_record_after_new_reconciliation(
+    tmp_path: Path,
+) -> None:
+    db_path = tmp_path / "ledger-live-gate-bundle-reconciled.sqlite"
+    ledger = SQLiteLedger(db_path)
+    route, snapshot = _append_verified_history(ledger)
+    reconcile_ledger(
+        ledger,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+    _append_live_gate_bundle_record(ledger, route=route, snapshot=snapshot)
+    result = reconcile_ledger(
+        ledger,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+    ledger.close()
+
+    reopened = SQLiteLedger(db_path)
+    records = reopened.records()
+    replayed_once = replay_ledger_reconciliation(
+        records,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+    )
+    replayed_twice = replay_ledger_reconciliation(
+        records,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+    )
+
+    assert replayed_once == result
+    assert replayed_twice == result
+    assert replayed_once.reconciled is True
+    assert replayed_once.reasons == ()
+    assert replayed_once.checked_event_sequences == (
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        12,
+    )
+    assert records[11].event_type == LedgerEventType.LIVE_GATE_EVIDENCE_BUNDLE_RECORDED.value
+    assert records[-1].event_type == LedgerEventType.LEDGER_RECONCILIATION_RECORDED.value
+    assert records[-1].payload["event_count"] == 12
+    assert records[-1].payload["last_sequence"] == 12
+    assert is_ledger_explicitly_reconciled(records) is True
+    reopened.close()
 
 
 def test_reconciliation_fails_closed_on_contradictory_live_gate_bundle_record() -> None:

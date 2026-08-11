@@ -69,6 +69,10 @@ Add deterministic offline live-gate evidence bundle contracts and fake replay co
 
 Add deterministic append-only ledger recording and replay coverage for fake live gate evidence bundle check results. Keep recording in `core/accounting/ledger.py`, replay validation in `core/accounting/reconciliation.py`, bundle checking in `core/risk/gates.py`, and live eligibility still blocked by `LIVE_GATES_NOT_IMPLEMENTED`.
 
+## RX-014 — Offline Live Gate Evidence Bundle SQLite Persistence Replay Coverage
+
+Add deterministic SQLite persistence replay coverage for fake live gate evidence bundle ledger records. Prove that valid, malformed, and contradictory `live_gate_evidence_bundle_recorded` payloads round-trip through `storage/sqlite/ledger.py` and replay with the same outcomes as in-memory ledger records, without changing storage architecture, route decisions, economics, risk gates, adapters, orders, or live trading.
+
 ## Next Sequence
 
-1. RX-014 — Offline Live Gate Evidence Bundle SQLite Persistence Replay Coverage.
+1. RX-015 — Offline SQLite Ledger Reopen Append Continuity Replay Coverage.

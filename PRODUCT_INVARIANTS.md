@@ -81,7 +81,7 @@ Execution capability is a fake live-gate evidence contract over existing order-b
 
 Live gate evidence bundles are fake aggregate evidence only. They must not replay ledger history, replay funding settlement verification, recalculate VWAP/EV/profitability, replace the existing plan freshness or execution-capability gates, create live plans, or place orders.
 
-Live gate evidence bundle ledger records are fake accounting evidence only. They must not recalculate VWAP/EV/profitability, replace ledger reconciliation, replace funding settlement verification, create live plans, place orders, or turn a recorded successful fake bundle check into live eligibility. Ledger reconciliation must fail closed over any malformed, stale, duplicated, missing-reference, or contradictory live gate bundle record.
+Live gate evidence bundle ledger records are fake accounting evidence only. They must not recalculate VWAP/EV/profitability, replace ledger reconciliation, replace funding settlement verification, create live plans, place orders, or turn a recorded successful fake bundle check into live eligibility. Ledger reconciliation must fail closed over any malformed, stale, duplicated, missing-reference, or contradictory live gate bundle record. SQLite-persisted live gate bundle records must replay with the same deterministic outcomes as in-memory ledger records.
 
 Allowed value sources are exactly:
 
