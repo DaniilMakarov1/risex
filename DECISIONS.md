@@ -250,3 +250,18 @@
 - Reason: Governance failures should fail closed before they can enter product or repository history.
 - Affected files/modules: `AGENTS.md`, `docs/WORKFLOW.md`, `docs/templates/WORKER_CHECKPOINT_TEMPLATE.md`, `docs/templates/RX_TASK_TEMPLATE.md`, `docs/templates/REVIEW_CHECKLIST.md`, `STATUS.md`, `DECISIONS.md`, and `NEXT_TASK.md`.
 - Non-decisions: RX-Q002 does not change product architecture, route evaluation, economics, risk gates, domain trading contracts, ledger behavior, adapters, order flow, live runner behavior, route statuses, reject reasons, canary architecture, or live trading.
+
+## 2026-08-11 - RX-013
+
+- Date: 2026-08-11
+- Decision: Added `live_gate_evidence_bundle_recorded` as an append-only accounting event for fake live-gate evidence bundle check outcomes.
+- Reason: Future live-gate work needs deterministic ledger evidence that a fake RX-012 bundle check was recorded against explicit route-decision, funding-verification, and ledger-reconciliation history without relying on a hand-written success flag.
+- Decision: `core/accounting/ledger.py` owns `append_live_gate_evidence_bundle_event()`, including deterministic serialization of the existing `RouteCandidate`, `LiveGateEvidenceBundle`, CapturePlan freshness evidence, execution-capability evidence, executable quotes, referenced ledger sequences, and the already-computed bundle gate result.
+- Reason: Ledger writes must stay behind the accounting boundary and must not recalculate risk, economics, funding, VWAP, basis, or profitability.
+- Decision: `core/accounting/reconciliation.py` owns `replay_live_gate_evidence_bundle_recording()`, which validates exactly one current bundle record, prior reconciliation freshness, referenced route/funding/reconciliation events, plan reconciliation references, and recorded result consistency by rerunning `check_live_gate_evidence_bundle()`.
+- Reason: Bundle recording replay must fail closed on missing, duplicated, stale, malformed, or contradictory evidence while reusing the existing RX-012 gate instead of creating a second live-gate decision path.
+- Decision: Appending a live-gate evidence bundle record after successful ledger reconciliation makes `is_ledger_explicitly_reconciled(ledger.records())` false until a later reconciliation event covers the new append.
+- Reason: The append-only ledger must prove the exact current history; successful prior reconciliation cannot silently cover later bundle evidence.
+- Affected files/modules: `core/accounting/ledger.py`, `core/accounting/reconciliation.py`, `core/accounting/__init__.py`, replay tests, invariant tests, and governance docs.
+- Superseded decisions: no previous decision is superseded; RX-013 records and replays the RX-012 fake bundle gate result without changing the gate itself.
+- Non-decisions: RX-013 does not implement real RiseX or Hyperliquid adapters, network calls, API clients, authentication, order placement, live runner behavior, live trading, executable live order plans, live `CapturePlan` creation, canary architecture, hold-next-cycle logic, artificial filters, route profitability recalculation, route eligibility mutation, a second route model, a second EV path, a second route decision function, a second snapshot assembly function, a second VWAP/liquidity path, or live execution.

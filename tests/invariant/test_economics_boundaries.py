@@ -59,6 +59,10 @@ def test_business_logic_function_definitions_stay_in_single_owner_modules() -> N
         "evaluate_route": Path("core/pipeline/evaluate.py"),
         "assemble_route_snapshot": Path("core/pipeline/snapshot.py"),
         "check_live_gate_evidence_bundle": Path("core/risk/gates.py"),
+        "append_live_gate_evidence_bundle_event": Path("core/accounting/ledger.py"),
+        "replay_live_gate_evidence_bundle_recording": Path(
+            "core/accounting/reconciliation.py"
+        ),
     }
 
     for function_name, expected_path in expected_owners.items():

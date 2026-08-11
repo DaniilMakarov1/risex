@@ -65,6 +65,14 @@ The bundle records the current `capture_id`, `route_id`, funding settlement time
 
 Missing, cross-capture, cross-route, cross-settlement, unverified funding, unreconciled ledger, stale/missing plan evidence, or stale/missing/non-executable execution evidence fails closed through existing centralized reject reasons. Even with live trading manually enabled and exact fake bundle evidence, `evaluate_route()` still returns `PAPER_ELIGIBLE` with `LIVE_GATES_NOT_IMPLEMENTED` and no live `CapturePlan`.
 
+## Offline live gate evidence bundle ledger recording
+
+The fake bundle-check result can be recorded as append-only offline ledger evidence through `core/accounting/ledger.py` and replayed through `core/accounting/reconciliation.py`.
+
+The recorded event stores the current route, fake `LiveGateEvidenceBundle`, evaluated timestamp, referenced route-decision, funding-verification, and ledger-reconciliation event sequences, plus the already-computed RX-012 bundle gate result. Replay reconstructs the same fake evidence and reruns the existing bundle gate without recalculating EV, fees, funding, VWAP, basis, or profitability. Missing, duplicated, stale, malformed, or contradictory bundle ledger evidence fails closed.
+
+A recorded successful fake bundle check still does not permit `LIVE_ELIGIBLE`: live trading remains disabled by default, and current route decisions stop at `PAPER_ELIGIBLE` with `LIVE_GATES_NOT_IMPLEMENTED`.
+
 ## Boundaries
 
 Business logic has single-owner modules:

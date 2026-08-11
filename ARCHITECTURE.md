@@ -55,6 +55,7 @@ tests/
 - `FundingCheckpointRequirement`: one required pre-settlement observation offset for future settlement proof.
 - `FundingSettlementVerificationResult`: deterministic replay result proving whether fake checkpoint evidence and fake observed settlement evidence agree for one Capture settlement.
 - `LedgerReconciliationResult`: deterministic replay result proving whether one Capture ledger history is internally consistent and explicitly reconciled.
+- `LiveGateEvidenceBundleReplayResult`: deterministic accounting replay result proving whether one recorded fake live-gate evidence bundle check is well-formed, current, and consistent with the existing bundle gate result.
 
 ## Capture lifecycle state machine
 
@@ -111,6 +112,7 @@ Any non-terminal Capture may transition to `FAILED`. Capture states with possibl
 - Fake paper lifecycle orchestration happens only in `apps/paper_runner/lifecycle.py`.
 - Execution capability live gating happens only in `core/risk/gates.py` and reuses existing `ExecutableQuote` contracts.
 - Live gate evidence bundle checking happens only in `core/risk/gates.py` and reuses existing funding verification, ledger reconciliation, CapturePlan freshness, and execution capability evidence outputs.
+- Live gate evidence bundle ledger recording happens only in `core/accounting/ledger.py`; replay validation happens only in `core/accounting/reconciliation.py` and reuses the existing risk gate result.
 
 ## Product rules
 
@@ -176,6 +178,15 @@ RX-012 adds deterministic offline live-gate evidence bundle contracts and fake r
 4. Bundle checking does not replay ledger history, replay funding settlement verification, recalculate VWAP, recalculate EV, decide profitability, call adapters, write ledger events, create order plans, or place orders.
 5. `evaluate_route()` may receive a fake live-gate evidence bundle for future live gating, but it still does not read ledger/storage, import execution/live runner modules, place orders, create live `CapturePlan` objects, or return `LIVE_ELIGIBLE`.
 6. Even with live trading manually enabled and exact fake bundle evidence, current route decisions remain `PAPER_ELIGIBLE` with `RejectReason.LIVE_GATES_NOT_IMPLEMENTED`.
+
+RX-013 adds deterministic offline live-gate evidence bundle ledger recording and replay coverage:
+
+1. `core/accounting/ledger.py` owns the `live_gate_evidence_bundle_recorded` append-only event type and append helper.
+2. The event records one current `RouteCandidate`, one fake `LiveGateEvidenceBundle`, the evaluated timestamp, the referenced route-decision, funding-verification, and ledger-reconciliation event sequences, and the already-computed RX-012 bundle gate result.
+3. `core/accounting/reconciliation.py` owns `replay_live_gate_evidence_bundle_recording()`. Replay validates exactly one current bundle record, referenced prior history, payload shape, stale reconciliation references, plan reconciliation references, and recorded result consistency by rerunning `check_live_gate_evidence_bundle()`.
+4. Core ledger reconciliation treats `live_gate_evidence_bundle_recorded` as a known accounting event and validates its payload shape. Appending this event after a successful reconciliation makes the full ledger history unreconciled until a later reconciliation result covers the new append.
+5. Bundle ledger replay does not recalculate EV, fees, funding, VWAP, basis, or profitability; it does not call adapters, call execution modules, place orders, create live plans, mutate route decisions, or return `LIVE_ELIGIBLE`.
+6. Even with a replayed successful fake bundle check, current route decisions remain `PAPER_ELIGIBLE` with `RejectReason.LIVE_GATES_NOT_IMPLEMENTED`.
 
 RX-004 adds a deterministic offline snapshot assembly layer before evaluation:
 

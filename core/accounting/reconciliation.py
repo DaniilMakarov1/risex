@@ -16,8 +16,15 @@ from core.accounting.ledger import (
     append_ledger_reconciliation_event,
     replay_paper_captures,
 )
-from core.domain.contracts import validate_timezone_aware_datetime
-from core.domain.enums import CaptureState, EvaluationMode, RouteStatus, ValueSource
+from core.domain.contracts import (
+    CapturePlanFreshnessEvidence,
+    ExecutableQuote,
+    ExecutionCapabilityEvidence,
+    LiveGateEvidenceBundle,
+    RouteCandidate,
+    validate_timezone_aware_datetime,
+)
+from core.domain.enums import CaptureState, EvaluationMode, RejectReason, RouteStatus, ValueSource
 
 
 class LedgerReconciliationReason(StrEnum):
@@ -40,6 +47,9 @@ class LedgerReconciliationReason(StrEnum):
     UNKNOWN_LEDGER_EVENT_TYPE = "UNKNOWN_LEDGER_EVENT_TYPE"
     MALFORMED_LEDGER_EVENT_PAYLOAD = "MALFORMED_LEDGER_EVENT_PAYLOAD"
     CONTRADICTORY_FUNDING_SETTLEMENT_VERIFICATION = "CONTRADICTORY_FUNDING_SETTLEMENT_VERIFICATION"
+    MISSING_LIVE_GATE_EVIDENCE_BUNDLE = "MISSING_LIVE_GATE_EVIDENCE_BUNDLE"
+    DUPLICATED_LIVE_GATE_EVIDENCE_BUNDLE = "DUPLICATED_LIVE_GATE_EVIDENCE_BUNDLE"
+    CONTRADICTORY_LIVE_GATE_EVIDENCE_BUNDLE = "CONTRADICTORY_LIVE_GATE_EVIDENCE_BUNDLE"
 
 
 @dataclass(frozen=True, slots=True)
@@ -57,6 +67,24 @@ class LedgerReconciliationResult:
     checked_event_sequences: tuple[int, ...]
 
 
+@dataclass(frozen=True, slots=True)
+class LiveGateEvidenceBundleReplayResult:
+    """Pure replay result for one recorded fake live-gate evidence bundle check."""
+
+    capture_id: str
+    route_id: str | None
+    settlement_time: datetime
+    evaluated_at: datetime | None
+    replayed: bool
+    bundle_check_passed: bool
+    bundle_check_reason: RejectReason | None
+    reasons: tuple[LedgerReconciliationReason, ...]
+    live_gate_evidence_bundle_event_sequence: int | None
+    route_decision_event_sequence: int | None
+    funding_verification_event_sequence: int | None
+    ledger_reconciliation_event_sequence: int | None
+
+
 _ROUTE_DECISION_EVENT_TYPE = LedgerEventType.ROUTE_DECISION_RECORDED.value
 _PAPER_OPENED_EVENT_TYPE = LedgerEventType.PAPER_CAPTURE_OPENED.value
 _PAPER_SETTLEMENT_EVENT_TYPE = LedgerEventType.PAPER_SETTLEMENT_OBSERVED.value
@@ -69,6 +97,9 @@ _FUNDING_VERIFICATION_EVENT_TYPE = (
     LedgerEventType.FUNDING_SETTLEMENT_VERIFICATION_RECORDED.value
 )
 _LEDGER_RECONCILIATION_EVENT_TYPE = LedgerEventType.LEDGER_RECONCILIATION_RECORDED.value
+_LIVE_GATE_EVIDENCE_BUNDLE_EVENT_TYPE = (
+    LedgerEventType.LIVE_GATE_EVIDENCE_BUNDLE_RECORDED.value
+)
 _KNOWN_EVENT_TYPES = frozenset(event_type.value for event_type in LedgerEventType)
 
 _PAPER_LIFECYCLE_EVENT_ORDER = (
@@ -84,6 +115,7 @@ _CAPTURE_SCOPED_EVENT_TYPES = frozenset(
         _FUNDING_CHECKPOINT_EVENT_TYPE,
         _FUNDING_SETTLEMENT_EVIDENCE_EVENT_TYPE,
         _FUNDING_VERIFICATION_EVENT_TYPE,
+        _LIVE_GATE_EVIDENCE_BUNDLE_EVENT_TYPE,
     }
 )
 
@@ -319,6 +351,230 @@ def _ledger_reconciliation_payload_is_well_formed(payload: Mapping[str, Any]) ->
     )
 
 
+def _payload_mapping(payload: Mapping[str, Any], field_name: str) -> Mapping[str, Any] | None:
+    value = payload.get(field_name)
+    return value if isinstance(value, Mapping) else None
+
+
+def _decimal_from_required_payload(payload: Mapping[str, Any], field_name: str) -> Decimal:
+    value = _finite_decimal(payload.get(field_name))
+    if value is None:
+        raise ValueError(f"{field_name} must be a finite decimal")
+    return value
+
+
+def _decimal_from_optional_payload(payload: Mapping[str, Any], field_name: str) -> Decimal | None:
+    raw_value = payload.get(field_name)
+    if raw_value is None:
+        return None
+    value = _finite_decimal(raw_value)
+    if value is None:
+        raise ValueError(f"{field_name} must be a finite decimal or None")
+    return value
+
+
+def _datetime_from_required_payload(payload: Mapping[str, Any], field_name: str) -> datetime:
+    value = _payload_datetime(payload, field_name)
+    if value is None:
+        raise ValueError(f"{field_name} must be a timezone-aware datetime")
+    return value
+
+
+def _str_from_required_payload(payload: Mapping[str, Any], field_name: str) -> str:
+    value = _payload_str(payload, field_name)
+    if value is None:
+        raise ValueError(f"{field_name} must be a non-empty string")
+    return value
+
+
+def _sequence_from_required_payload(
+    payload: Mapping[str, Any],
+    field_name: str,
+) -> tuple[Mapping[str, Any], ...]:
+    raw_value = payload.get(field_name)
+    if not isinstance(raw_value, tuple | list):
+        raise ValueError(f"{field_name} must be a sequence")
+    parsed: list[Mapping[str, Any]] = []
+    for item in raw_value:
+        if not isinstance(item, Mapping):
+            raise ValueError(f"{field_name} must contain mappings")
+        parsed.append(item)
+    return tuple(parsed)
+
+
+def _route_from_payload(payload: Mapping[str, Any]) -> RouteCandidate:
+    target_notional_usd = _decimal_from_required_payload(payload, "target_notional_usd")
+    if target_notional_usd <= Decimal("0"):
+        raise ValueError("target_notional_usd must be positive")
+    return RouteCandidate(
+        route_id=_str_from_required_payload(payload, "route_id"),
+        capture_id=_str_from_required_payload(payload, "capture_id"),
+        risex_venue=_str_from_required_payload(payload, "risex_venue"),
+        risex_symbol=_str_from_required_payload(payload, "risex_symbol"),
+        risex_entry_side=_str_from_required_payload(payload, "risex_entry_side"),
+        hedge_venue=_str_from_required_payload(payload, "hedge_venue"),
+        hedge_symbol=_str_from_required_payload(payload, "hedge_symbol"),
+        hedge_entry_side=_str_from_required_payload(payload, "hedge_entry_side"),
+        target_notional_usd=target_notional_usd,
+    )
+
+
+def _quote_from_payload(payload: Mapping[str, Any]) -> ExecutableQuote:
+    consumed_levels = payload.get("consumed_levels")
+    if type(consumed_levels) is not int or consumed_levels < 0:
+        raise ValueError("consumed_levels must be a non-negative integer")
+    executable = payload.get("executable")
+    if type(executable) is not bool:
+        raise ValueError("executable must be a bool")
+
+    return ExecutableQuote(
+        venue=_str_from_required_payload(payload, "venue"),
+        symbol=_str_from_required_payload(payload, "symbol"),
+        side=_str_from_required_payload(payload, "side"),
+        target_notional_usd=_decimal_from_required_payload(payload, "target_notional_usd"),
+        vwap_price=_decimal_from_optional_payload(payload, "vwap_price"),
+        executable=executable,
+        source=ValueSource(str(payload.get("source"))),
+        consumed_base_quantity=_decimal_from_optional_payload(
+            payload,
+            "consumed_base_quantity",
+        ),
+        consumed_levels=consumed_levels,
+        notional_filled_usd=_decimal_from_optional_payload(
+            payload,
+            "notional_filled_usd",
+        ),
+        best_price=_decimal_from_optional_payload(payload, "best_price"),
+        worst_price=_decimal_from_optional_payload(payload, "worst_price"),
+        price_impact_bps=_decimal_from_optional_payload(payload, "price_impact_bps"),
+    )
+
+
+def _capture_plan_evidence_from_payload(
+    payload: Mapping[str, Any],
+) -> CapturePlanFreshnessEvidence:
+    ledger_reconciliation_event_sequence = _payload_optional_int(
+        payload,
+        "ledger_reconciliation_event_sequence",
+    )
+    if ledger_reconciliation_event_sequence == 0:
+        raise ValueError("ledger_reconciliation_event_sequence must be positive or None")
+    return CapturePlanFreshnessEvidence(
+        plan_id=_str_from_required_payload(payload, "plan_id"),
+        plan_version=_str_from_required_payload(payload, "plan_version"),
+        capture_id=_str_from_required_payload(payload, "capture_id"),
+        route_id=_str_from_required_payload(payload, "route_id"),
+        settlement_time=_datetime_from_required_payload(payload, "settlement_time"),
+        planned_at=_datetime_from_required_payload(payload, "planned_at"),
+        valid_until=_datetime_from_required_payload(payload, "valid_until"),
+        source=ValueSource(str(payload.get("source"))),
+        ledger_reconciliation_event_sequence=ledger_reconciliation_event_sequence,
+    )
+
+
+def _execution_capability_evidence_from_payload(
+    payload: Mapping[str, Any],
+) -> ExecutionCapabilityEvidence:
+    quote_payloads = {
+        field_name: _payload_mapping(payload, field_name)
+        for field_name in (
+            "risex_entry_quote",
+            "hedge_entry_quote",
+            "risex_estimated_exit_quote",
+            "hedge_estimated_exit_quote",
+        )
+    }
+    if any(value is None for value in quote_payloads.values()):
+        raise ValueError("execution capability evidence requires all quote payloads")
+
+    return ExecutionCapabilityEvidence(
+        capture_id=_str_from_required_payload(payload, "capture_id"),
+        route_id=_str_from_required_payload(payload, "route_id"),
+        settlement_time=_datetime_from_required_payload(payload, "settlement_time"),
+        checked_at=_datetime_from_required_payload(payload, "checked_at"),
+        valid_until=_datetime_from_required_payload(payload, "valid_until"),
+        source=ValueSource(str(payload.get("source"))),
+        risex_entry_quote=_quote_from_payload(quote_payloads["risex_entry_quote"]),
+        hedge_entry_quote=_quote_from_payload(quote_payloads["hedge_entry_quote"]),
+        risex_estimated_exit_quote=_quote_from_payload(
+            quote_payloads["risex_estimated_exit_quote"]
+        ),
+        hedge_estimated_exit_quote=_quote_from_payload(
+            quote_payloads["hedge_estimated_exit_quote"]
+        ),
+    )
+
+
+def _live_gate_evidence_bundle_from_payload(
+    payload: Mapping[str, Any],
+) -> LiveGateEvidenceBundle:
+    funding_settlement_verified = payload.get("funding_settlement_verified")
+    ledger_explicitly_reconciled = payload.get("ledger_explicitly_reconciled")
+    if type(funding_settlement_verified) is not bool:
+        raise ValueError("funding_settlement_verified must be a bool")
+    if type(ledger_explicitly_reconciled) is not bool:
+        raise ValueError("ledger_explicitly_reconciled must be a bool")
+
+    return LiveGateEvidenceBundle(
+        capture_id=_str_from_required_payload(payload, "capture_id"),
+        route_id=_str_from_required_payload(payload, "route_id"),
+        settlement_time=_datetime_from_required_payload(payload, "settlement_time"),
+        funding_settlement_verified=funding_settlement_verified,
+        ledger_explicitly_reconciled=ledger_explicitly_reconciled,
+        capture_plan_evidence=tuple(
+            _capture_plan_evidence_from_payload(item)
+            for item in _sequence_from_required_payload(payload, "capture_plan_evidence")
+        ),
+        execution_capability_evidence=tuple(
+            _execution_capability_evidence_from_payload(item)
+            for item in _sequence_from_required_payload(
+                payload,
+                "execution_capability_evidence",
+            )
+        ),
+    )
+
+
+def _bundle_check_reason_from_payload(
+    payload: Mapping[str, Any],
+) -> RejectReason | None:
+    raw_reason = payload.get("bundle_check_reason")
+    if raw_reason is None:
+        return None
+    if not isinstance(raw_reason, str):
+        raise ValueError("bundle_check_reason must be a reject reason string or None")
+    return RejectReason(raw_reason)
+
+
+def _live_gate_bundle_payload_is_well_formed(payload: Mapping[str, Any]) -> bool:
+    route_payload = _payload_mapping(payload, "route")
+    bundle_payload = _payload_mapping(payload, "live_gate_evidence_bundle")
+    if route_payload is None or bundle_payload is None:
+        return False
+    try:
+        route = _route_from_payload(route_payload)
+        _live_gate_evidence_bundle_from_payload(bundle_payload)
+        _datetime_from_required_payload(payload, "settlement_time")
+        _datetime_from_required_payload(payload, "evaluated_at")
+        bundle_check_reason = _bundle_check_reason_from_payload(payload)
+    except (ValueError, TypeError):
+        return False
+
+    bundle_check_passed = payload.get("bundle_check_passed")
+    return (
+        payload.get("capture_id") == route.capture_id
+        and payload.get("route_id") == route.route_id
+        and type(bundle_check_passed) is bool
+        and (
+            (bundle_check_passed and bundle_check_reason is None)
+            or (not bundle_check_passed and bundle_check_reason is not None)
+        )
+        and _payload_int(payload, "route_decision_event_sequence") is not None
+        and _payload_int(payload, "funding_verification_event_sequence") is not None
+        and _payload_int(payload, "ledger_reconciliation_event_sequence") is not None
+    )
+
+
 def _event_payload_is_well_formed(event: LedgerEvent) -> bool:
     payload = event.payload
     if event.event_type == _ROUTE_DECISION_EVENT_TYPE:
@@ -335,6 +591,8 @@ def _event_payload_is_well_formed(event: LedgerEvent) -> bool:
         return _funding_verification_payload_is_well_formed(payload)
     if event.event_type == _LEDGER_RECONCILIATION_EVENT_TYPE:
         return _ledger_reconciliation_payload_is_well_formed(payload)
+    if event.event_type == _LIVE_GATE_EVIDENCE_BUNDLE_EVENT_TYPE:
+        return _live_gate_bundle_payload_is_well_formed(payload)
     return False
 
 
@@ -712,6 +970,303 @@ def _validate_funding_verification(
             LedgerReconciliationReason.CONTRADICTORY_FUNDING_SETTLEMENT_VERIFICATION,
         )
     return verification_event
+
+
+def _live_gate_bundle_events_for_capture(
+    events: Sequence[LedgerEvent],
+    capture_id: str,
+) -> tuple[LedgerEvent, ...]:
+    return tuple(
+        event
+        for event in events
+        if event.event_type == _LIVE_GATE_EVIDENCE_BUNDLE_EVENT_TYPE
+        and event.payload.get("capture_id") == capture_id
+    )
+
+
+def _live_gate_bundle_replay_result(
+    *,
+    capture_id: str,
+    route_id: str | None,
+    settlement_time: datetime,
+    evaluated_at: datetime | None = None,
+    replayed: bool = False,
+    bundle_check_passed: bool = False,
+    bundle_check_reason: RejectReason | None = None,
+    reasons: Sequence[LedgerReconciliationReason],
+    live_gate_evidence_bundle_event_sequence: int | None = None,
+    route_decision_event_sequence: int | None = None,
+    funding_verification_event_sequence: int | None = None,
+    ledger_reconciliation_event_sequence: int | None = None,
+) -> LiveGateEvidenceBundleReplayResult:
+    return LiveGateEvidenceBundleReplayResult(
+        capture_id=capture_id,
+        route_id=route_id,
+        settlement_time=settlement_time,
+        evaluated_at=evaluated_at,
+        replayed=replayed,
+        bundle_check_passed=bundle_check_passed,
+        bundle_check_reason=bundle_check_reason,
+        reasons=tuple(reasons),
+        live_gate_evidence_bundle_event_sequence=live_gate_evidence_bundle_event_sequence,
+        route_decision_event_sequence=route_decision_event_sequence,
+        funding_verification_event_sequence=funding_verification_event_sequence,
+        ledger_reconciliation_event_sequence=ledger_reconciliation_event_sequence,
+    )
+
+
+def _validate_referenced_live_gate_bundle_history(
+    *,
+    bundle_event: LedgerEvent,
+    event_by_sequence: Mapping[int, LedgerEvent],
+    route: RouteCandidate,
+    settlement_time: datetime,
+    route_decision_event_sequence: int,
+    funding_verification_event_sequence: int,
+    ledger_reconciliation_event_sequence: int,
+    reasons: list[LedgerReconciliationReason],
+) -> None:
+    route_decision_event = event_by_sequence.get(route_decision_event_sequence)
+    funding_verification_event = event_by_sequence.get(funding_verification_event_sequence)
+    ledger_reconciliation_event = event_by_sequence.get(ledger_reconciliation_event_sequence)
+
+    if (
+        route_decision_event is None
+        or route_decision_event.event_type != _ROUTE_DECISION_EVENT_TYPE
+        or route_decision_event.payload.get("route_id") != route.route_id
+        or route_decision_event.payload.get("mode") != EvaluationMode.ENTRY.value
+        or route_decision_event.payload.get("status") != RouteStatus.PAPER_ELIGIBLE.value
+        or route_decision_event.payload.get("has_capture_plan") is not False
+    ):
+        _add_reason(reasons, LedgerReconciliationReason.MISSING_ROUTE_DECISION)
+    elif route_decision_event.sequence >= bundle_event.sequence:
+        _add_reason(reasons, LedgerReconciliationReason.OUT_OF_ORDER_LEDGER_EVIDENCE)
+
+    if (
+        funding_verification_event is None
+        or funding_verification_event.event_type != _FUNDING_VERIFICATION_EVENT_TYPE
+        or funding_verification_event.payload.get("capture_id") != route.capture_id
+        or funding_verification_event.payload.get("route_id") != route.route_id
+        or _payload_datetime(funding_verification_event.payload, "settlement_time")
+        != settlement_time
+        or funding_verification_event.payload.get("verified") is not True
+    ):
+        _add_reason(
+            reasons,
+            LedgerReconciliationReason.MISSING_FUNDING_SETTLEMENT_VERIFICATION,
+        )
+    elif funding_verification_event.sequence >= bundle_event.sequence:
+        _add_reason(reasons, LedgerReconciliationReason.OUT_OF_ORDER_LEDGER_EVIDENCE)
+
+    if (
+        ledger_reconciliation_event is None
+        or ledger_reconciliation_event.event_type != _LEDGER_RECONCILIATION_EVENT_TYPE
+        or ledger_reconciliation_event.payload.get("capture_id") != route.capture_id
+        or ledger_reconciliation_event.payload.get("route_id") != route.route_id
+        or _payload_datetime(ledger_reconciliation_event.payload, "settlement_time")
+        != settlement_time
+        or ledger_reconciliation_event.payload.get("reconciled") is not True
+        or ledger_reconciliation_event.payload.get("route_decision_event_sequence")
+        != route_decision_event_sequence
+        or ledger_reconciliation_event.payload.get("funding_verification_event_sequence")
+        != funding_verification_event_sequence
+    ):
+        _add_reason(
+            reasons,
+            LedgerReconciliationReason.CONTRADICTORY_LIVE_GATE_EVIDENCE_BUNDLE,
+        )
+    else:
+        if ledger_reconciliation_event.sequence >= bundle_event.sequence:
+            _add_reason(reasons, LedgerReconciliationReason.OUT_OF_ORDER_LEDGER_EVIDENCE)
+        if ledger_reconciliation_event.sequence != bundle_event.sequence - 1:
+            _add_reason(
+                reasons,
+                LedgerReconciliationReason.CONTRADICTORY_LIVE_GATE_EVIDENCE_BUNDLE,
+            )
+        referenced_reconciliation_prefix = tuple(
+            event
+            for event in event_by_sequence.values()
+            if event.sequence <= ledger_reconciliation_event.sequence
+        )
+        referenced_reconciliation_prefix = tuple(
+            sorted(referenced_reconciliation_prefix, key=lambda event: event.sequence)
+        )
+        if not is_ledger_explicitly_reconciled(referenced_reconciliation_prefix):
+            _add_reason(
+                reasons,
+                LedgerReconciliationReason.CONTRADICTORY_LIVE_GATE_EVIDENCE_BUNDLE,
+            )
+
+
+def _validate_live_gate_bundle_plan_references(
+    *,
+    bundle: LiveGateEvidenceBundle,
+    ledger_reconciliation_event_sequence: int,
+    reasons: list[LedgerReconciliationReason],
+) -> None:
+    if len(bundle.capture_plan_evidence) != 1:
+        return
+    plan_evidence = bundle.capture_plan_evidence[0]
+    if plan_evidence.ledger_reconciliation_event_sequence != ledger_reconciliation_event_sequence:
+        _add_reason(
+            reasons,
+            LedgerReconciliationReason.CONTRADICTORY_LIVE_GATE_EVIDENCE_BUNDLE,
+        )
+
+
+def replay_live_gate_evidence_bundle_recording(
+    events: Sequence[LedgerEvent],
+    *,
+    capture_id: str,
+    settlement_time: datetime,
+) -> LiveGateEvidenceBundleReplayResult:
+    """Replay one recorded fake live-gate evidence bundle check result."""
+
+    if not capture_id.strip():
+        raise ValueError("capture_id must be non-empty")
+    validate_timezone_aware_datetime(settlement_time, "settlement_time")
+
+    reasons: list[LedgerReconciliationReason] = []
+    supplied_events = _validate_supplied_ledger_history(events, reasons)
+    event_by_sequence = _event_by_sequence(supplied_events, reasons)
+    bundle_events = _live_gate_bundle_events_for_capture(supplied_events, capture_id)
+    if not bundle_events:
+        _add_reason(reasons, LedgerReconciliationReason.MISSING_LIVE_GATE_EVIDENCE_BUNDLE)
+        return _live_gate_bundle_replay_result(
+            capture_id=capture_id,
+            route_id=None,
+            settlement_time=settlement_time,
+            reasons=reasons,
+        )
+    if len(bundle_events) != 1:
+        _add_reason(
+            reasons,
+            LedgerReconciliationReason.DUPLICATED_LIVE_GATE_EVIDENCE_BUNDLE,
+        )
+        return _live_gate_bundle_replay_result(
+            capture_id=capture_id,
+            route_id=None,
+            settlement_time=settlement_time,
+            reasons=reasons,
+        )
+
+    bundle_event = bundle_events[0]
+    route_payload = _payload_mapping(bundle_event.payload, "route")
+    bundle_payload = _payload_mapping(bundle_event.payload, "live_gate_evidence_bundle")
+    if route_payload is None or bundle_payload is None:
+        _add_reason(reasons, LedgerReconciliationReason.MALFORMED_LEDGER_EVENT_PAYLOAD)
+        return _live_gate_bundle_replay_result(
+            capture_id=capture_id,
+            route_id=None,
+            settlement_time=settlement_time,
+            reasons=reasons,
+            live_gate_evidence_bundle_event_sequence=bundle_event.sequence,
+        )
+
+    try:
+        route = _route_from_payload(route_payload)
+        bundle = _live_gate_evidence_bundle_from_payload(bundle_payload)
+        event_settlement_time = _datetime_from_required_payload(
+            bundle_event.payload,
+            "settlement_time",
+        )
+        evaluated_at = _datetime_from_required_payload(bundle_event.payload, "evaluated_at")
+        recorded_reason = _bundle_check_reason_from_payload(bundle_event.payload)
+    except (ValueError, TypeError):
+        _add_reason(reasons, LedgerReconciliationReason.MALFORMED_LEDGER_EVENT_PAYLOAD)
+        return _live_gate_bundle_replay_result(
+            capture_id=capture_id,
+            route_id=None,
+            settlement_time=settlement_time,
+            reasons=reasons,
+            live_gate_evidence_bundle_event_sequence=bundle_event.sequence,
+        )
+
+    recorded_passed = bundle_event.payload.get("bundle_check_passed")
+    route_decision_event_sequence = _payload_int(
+        bundle_event.payload,
+        "route_decision_event_sequence",
+    )
+    funding_verification_event_sequence = _payload_int(
+        bundle_event.payload,
+        "funding_verification_event_sequence",
+    )
+    ledger_reconciliation_event_sequence = _payload_int(
+        bundle_event.payload,
+        "ledger_reconciliation_event_sequence",
+    )
+
+    if (
+        event_settlement_time != settlement_time
+        or bundle_event.payload.get("capture_id") != capture_id
+        or bundle_event.payload.get("route_id") != route.route_id
+        or route.capture_id != capture_id
+    ):
+        _add_reason(
+            reasons,
+            LedgerReconciliationReason.CONTRADICTORY_LIVE_GATE_EVIDENCE_BUNDLE,
+        )
+    if type(recorded_passed) is not bool:
+        _add_reason(reasons, LedgerReconciliationReason.MALFORMED_LEDGER_EVENT_PAYLOAD)
+        recorded_passed = False
+    if (recorded_passed and recorded_reason is not None) or (
+        not recorded_passed and recorded_reason is None
+    ):
+        _add_reason(reasons, LedgerReconciliationReason.MALFORMED_LEDGER_EVENT_PAYLOAD)
+    if (
+        route_decision_event_sequence is None
+        or funding_verification_event_sequence is None
+        or ledger_reconciliation_event_sequence is None
+    ):
+        _add_reason(
+            reasons,
+            LedgerReconciliationReason.CONTRADICTORY_LIVE_GATE_EVIDENCE_BUNDLE,
+        )
+    else:
+        _validate_referenced_live_gate_bundle_history(
+            bundle_event=bundle_event,
+            event_by_sequence=event_by_sequence,
+            route=route,
+            settlement_time=event_settlement_time,
+            route_decision_event_sequence=route_decision_event_sequence,
+            funding_verification_event_sequence=funding_verification_event_sequence,
+            ledger_reconciliation_event_sequence=ledger_reconciliation_event_sequence,
+            reasons=reasons,
+        )
+        _validate_live_gate_bundle_plan_references(
+            bundle=bundle,
+            ledger_reconciliation_event_sequence=ledger_reconciliation_event_sequence,
+            reasons=reasons,
+        )
+
+    from core.risk.gates import check_live_gate_evidence_bundle
+
+    replayed_passed, replayed_reason = check_live_gate_evidence_bundle(
+        route=route,
+        settlement_time=event_settlement_time,
+        evaluated_at=evaluated_at,
+        live_gate_evidence_bundle=bundle,
+    )
+    if replayed_passed != recorded_passed or replayed_reason != recorded_reason:
+        _add_reason(
+            reasons,
+            LedgerReconciliationReason.CONTRADICTORY_LIVE_GATE_EVIDENCE_BUNDLE,
+        )
+
+    return _live_gate_bundle_replay_result(
+        capture_id=capture_id,
+        route_id=route.route_id,
+        settlement_time=settlement_time,
+        evaluated_at=evaluated_at,
+        replayed=not reasons,
+        bundle_check_passed=bool(recorded_passed),
+        bundle_check_reason=recorded_reason,
+        reasons=reasons,
+        live_gate_evidence_bundle_event_sequence=bundle_event.sequence,
+        route_decision_event_sequence=route_decision_event_sequence,
+        funding_verification_event_sequence=funding_verification_event_sequence,
+        ledger_reconciliation_event_sequence=ledger_reconciliation_event_sequence,
+    )
 
 
 def replay_ledger_reconciliation(

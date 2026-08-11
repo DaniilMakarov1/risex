@@ -19,6 +19,7 @@ from core.accounting.ledger import (
     append_funding_checkpoint_observed_event,
     append_funding_settlement_evidence_event,
     append_funding_settlement_verification_event,
+    append_live_gate_evidence_bundle_event,
     append_paper_capture_closed_event,
     append_paper_capture_opened_event,
     append_paper_settlement_observed_event,
@@ -30,11 +31,19 @@ from core.accounting.reconciliation import (
     replay_ledger_reconciliation,
 )
 from core.config.product_rules import ProductRules
-from core.domain.contracts import Capture, EstimatedValue, RouteCandidate, VenueSnapshot
+from core.domain.contracts import (
+    Capture,
+    CapturePlanFreshnessEvidence,
+    EstimatedValue,
+    ExecutionCapabilityEvidence,
+    LiveGateEvidenceBundle,
+    RouteCandidate,
+    VenueSnapshot,
+)
 from core.domain.enums import CaptureState, EvaluationMode, RejectReason, RouteStatus, ValueSource
 from core.monitoring.funding_settlement import REQUIRED_FUNDING_CHECKPOINTS, verify_funding_settlement
 from core.pipeline.evaluate import evaluate_route
-from core.risk.gates import check_ledger_reconciliation_gate
+from core.risk.gates import check_ledger_reconciliation_gate, check_live_gate_evidence_bundle
 from storage.sqlite.ledger import SQLiteLedger
 
 
@@ -122,6 +131,104 @@ def _append_verified_history(ledger: Ledger) -> tuple[RouteCandidate, VenueSnaps
         recorded_at=snapshot.risex_funding_settlement_at,
     )
     return route, snapshot
+
+
+def _event_sequence(
+    ledger: Ledger,
+    event_type: LedgerEventType,
+    *,
+    route_id: str | None = None,
+) -> int:
+    events = tuple(
+        event
+        for event in ledger.records()
+        if event.event_type == event_type.value
+        and (route_id is None or event.payload.get("route_id") == route_id)
+    )
+    assert len(events) == 1
+    return events[0].sequence
+
+
+def _live_gate_evidence_bundle(
+    *,
+    ledger: Ledger,
+    route: RouteCandidate,
+    snapshot: VenueSnapshot,
+) -> LiveGateEvidenceBundle:
+    return LiveGateEvidenceBundle(
+        capture_id=route.capture_id,
+        route_id=route.route_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        funding_settlement_verified=True,
+        ledger_explicitly_reconciled=is_ledger_explicitly_reconciled(ledger.records()),
+        capture_plan_evidence=(
+            CapturePlanFreshnessEvidence(
+                plan_id="fake-plan-001",
+                plan_version="fake-v1",
+                capture_id=route.capture_id,
+                route_id=route.route_id,
+                settlement_time=snapshot.risex_funding_settlement_at,
+                planned_at=snapshot.captured_at,
+                valid_until=snapshot.captured_at + timedelta(minutes=5),
+                source=ValueSource.OBSERVED,
+                ledger_reconciliation_event_sequence=ledger.records()[-1].sequence,
+            ),
+        ),
+        execution_capability_evidence=(
+            ExecutionCapabilityEvidence(
+                capture_id=route.capture_id,
+                route_id=route.route_id,
+                settlement_time=snapshot.risex_funding_settlement_at,
+                checked_at=snapshot.captured_at,
+                valid_until=snapshot.captured_at + timedelta(minutes=1),
+                source=ValueSource.ESTIMATED_FROM_ORDERBOOK,
+                risex_entry_quote=snapshot.risex_entry_quote,
+                hedge_entry_quote=snapshot.hedge_entry_quote,
+                risex_estimated_exit_quote=snapshot.risex_estimated_exit_quote,
+                hedge_estimated_exit_quote=snapshot.hedge_estimated_exit_quote,
+            ),
+        ),
+    )
+
+
+def _append_live_gate_bundle_record(
+    ledger: Ledger,
+    *,
+    route: RouteCandidate,
+    snapshot: VenueSnapshot,
+) -> None:
+    bundle = _live_gate_evidence_bundle(ledger=ledger, route=route, snapshot=snapshot)
+    bundle_check_passed, bundle_check_reason = check_live_gate_evidence_bundle(
+        route=route,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        evaluated_at=snapshot.captured_at,
+        live_gate_evidence_bundle=bundle,
+    )
+    append_live_gate_evidence_bundle_event(
+        ledger,
+        route=route,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        evaluated_at=snapshot.captured_at,
+        live_gate_evidence_bundle=bundle,
+        bundle_check_passed=bundle_check_passed,
+        bundle_check_reason=bundle_check_reason,
+        route_decision_event_sequence=_event_sequence(
+            ledger,
+            LedgerEventType.ROUTE_DECISION_RECORDED,
+            route_id=route.route_id,
+        ),
+        funding_verification_event_sequence=_event_sequence(
+            ledger,
+            LedgerEventType.FUNDING_SETTLEMENT_VERIFICATION_RECORDED,
+            route_id=route.route_id,
+        ),
+        ledger_reconciliation_event_sequence=_event_sequence(
+            ledger,
+            LedgerEventType.LEDGER_RECONCILIATION_RECORDED,
+            route_id=route.route_id,
+        ),
+        recorded_at=snapshot.captured_at,
+    )
 
 
 def _append_paper_lifecycle_without_route_decision(
@@ -349,12 +456,68 @@ def test_reconciled_replay_from_sqlite_ledger_events_is_deterministic(tmp_path: 
     reopened.close()
 
 
+def test_reconciliation_accepts_well_formed_live_gate_bundle_record_after_new_reconciliation() -> None:
+    ledger = InMemoryLedger()
+    route, snapshot = _append_verified_history(ledger)
+    reconcile_ledger(
+        ledger,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+    _append_live_gate_bundle_record(ledger, route=route, snapshot=snapshot)
+
+    assert ledger.records()[-1].event_type == LedgerEventType.LIVE_GATE_EVIDENCE_BUNDLE_RECORDED.value
+    assert is_ledger_explicitly_reconciled(ledger.records()) is False
+
+    result = reconcile_ledger(
+        ledger,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+
+    assert result.reconciled is True
+    assert result.reasons == ()
+    assert ledger.records()[-1].event_type == LedgerEventType.LEDGER_RECONCILIATION_RECORDED.value
+    assert ledger.records()[-1].payload["event_count"] == 12
+    assert ledger.records()[-1].payload["last_sequence"] == 12
+    assert is_ledger_explicitly_reconciled(ledger.records()) is True
+
+
+def test_reconciliation_fails_closed_on_malformed_live_gate_bundle_record_payload() -> None:
+    ledger = InMemoryLedger()
+    route, snapshot = _append_verified_history(ledger)
+    reconcile_ledger(
+        ledger,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+    _append_live_gate_bundle_record(ledger, route=route, snapshot=snapshot)
+    records = ledger.records()
+    malformed_records = records[:-1] + (
+        _replace_ledger_event(records[-1], payload={}),
+    )
+
+    result = replay_ledger_reconciliation(
+        malformed_records,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+    )
+
+    assert result.reconciled is False
+    assert LedgerReconciliationReason.MALFORMED_LEDGER_EVENT_PAYLOAD in result.reasons
+    assert is_ledger_explicitly_reconciled(malformed_records) is False
+
+
 def test_accounting_and_monitoring_direct_imports_work_from_fresh_process() -> None:
     repo_root = Path(__file__).resolve().parents[2]
     commands = (
         "import core.monitoring.funding_settlement; import core.accounting.reconciliation",
         "from core.monitoring.funding_settlement import replay_funding_settlement_verification; "
-        "from core.accounting.reconciliation import replay_ledger_reconciliation",
+        "from core.accounting.reconciliation import replay_ledger_reconciliation, "
+        "replay_live_gate_evidence_bundle_recording",
     )
 
     for command in commands:

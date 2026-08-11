@@ -65,6 +65,10 @@ Add deterministic offline execution-capability gate contracts and fake replay co
 
 Add deterministic offline live-gate evidence bundle contracts and fake replay coverage. Require one fake non-executable aggregate bundle for the current Capture, route, and funding settlement opportunity before any future live path can consider the full live gate sequence. Keep the bundle downstream of route decisions, funding settlement verification, ledger reconciliation, CapturePlan freshness, and execution capability without replaying ledger/funding evidence, recalculating VWAP/EV, creating order plans, adapters, orders, or live trading.
 
+## RX-013 — Offline Live Gate Evidence Bundle Ledger Recording and Replay Coverage
+
+Add deterministic append-only ledger recording and replay coverage for fake live gate evidence bundle check results. Keep recording in `core/accounting/ledger.py`, replay validation in `core/accounting/reconciliation.py`, bundle checking in `core/risk/gates.py`, and live eligibility still blocked by `LIVE_GATES_NOT_IMPLEMENTED`.
+
 ## Next Sequence
 
-1. RX-013 — Offline Live Gate Evidence Bundle Ledger Recording and Replay Coverage.
+1. RX-014 — Offline Live Gate Evidence Bundle SQLite Persistence Replay Coverage.

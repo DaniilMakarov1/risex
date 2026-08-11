@@ -10,8 +10,18 @@ from enum import Enum, StrEnum
 from types import MappingProxyType
 from typing import Any, Mapping, Protocol
 
-from core.domain.contracts import Capture, DecisionResult, EstimatedValue, validate_timezone_aware_datetime
-from core.domain.enums import CaptureState
+from core.domain.contracts import (
+    Capture,
+    CapturePlanFreshnessEvidence,
+    DecisionResult,
+    EstimatedValue,
+    ExecutableQuote,
+    ExecutionCapabilityEvidence,
+    LiveGateEvidenceBundle,
+    RouteCandidate,
+    validate_timezone_aware_datetime,
+)
+from core.domain.enums import CaptureState, RejectReason
 from core.domain.state_machine import transition_capture
 
 
@@ -27,6 +37,7 @@ class LedgerEventType(StrEnum):
     FUNDING_SETTLEMENT_EVIDENCE_RECORDED = "funding_settlement_evidence_recorded"
     FUNDING_SETTLEMENT_VERIFICATION_RECORDED = "funding_settlement_verification_recorded"
     LEDGER_RECONCILIATION_RECORDED = "ledger_reconciliation_recorded"
+    LIVE_GATE_EVIDENCE_BUNDLE_RECORDED = "live_gate_evidence_bundle_recorded"
 
 
 def _event_type_value(event_type: str | LedgerEventType) -> str:
@@ -407,6 +418,172 @@ def append_ledger_reconciliation_event(
             "checked_event_sequences": tuple(checked_event_sequences),
             "event_count": event_count,
             "last_sequence": last_sequence,
+        },
+        recorded_at=recorded_at,
+    )
+
+
+def _decimal_payload(value: Decimal | None) -> str | None:
+    return str(value) if value is not None else None
+
+
+def _executable_quote_payload(quote: ExecutableQuote) -> Mapping[str, Any]:
+    if not isinstance(quote, ExecutableQuote):
+        raise ValueError("live gate evidence bundle requires ExecutableQuote inputs")
+    return {
+        "venue": quote.venue,
+        "symbol": quote.symbol,
+        "side": quote.side,
+        "target_notional_usd": str(quote.target_notional_usd),
+        "vwap_price": _decimal_payload(quote.vwap_price),
+        "executable": quote.executable,
+        "source": quote.source.value,
+        "consumed_base_quantity": _decimal_payload(quote.consumed_base_quantity),
+        "consumed_levels": quote.consumed_levels,
+        "notional_filled_usd": _decimal_payload(quote.notional_filled_usd),
+        "best_price": _decimal_payload(quote.best_price),
+        "worst_price": _decimal_payload(quote.worst_price),
+        "price_impact_bps": _decimal_payload(quote.price_impact_bps),
+    }
+
+
+def _capture_plan_evidence_payload(evidence: CapturePlanFreshnessEvidence) -> Mapping[str, Any]:
+    if not isinstance(evidence, CapturePlanFreshnessEvidence):
+        raise ValueError("live gate evidence bundle requires CapturePlanFreshnessEvidence inputs")
+    return {
+        "plan_id": evidence.plan_id,
+        "plan_version": evidence.plan_version,
+        "capture_id": evidence.capture_id,
+        "route_id": evidence.route_id,
+        "settlement_time": evidence.settlement_time.isoformat(),
+        "planned_at": evidence.planned_at.isoformat(),
+        "valid_until": evidence.valid_until.isoformat(),
+        "source": evidence.source.value,
+        "ledger_reconciliation_event_sequence": evidence.ledger_reconciliation_event_sequence,
+    }
+
+
+def _execution_capability_evidence_payload(
+    evidence: ExecutionCapabilityEvidence,
+) -> Mapping[str, Any]:
+    if not isinstance(evidence, ExecutionCapabilityEvidence):
+        raise ValueError("live gate evidence bundle requires ExecutionCapabilityEvidence inputs")
+    return {
+        "capture_id": evidence.capture_id,
+        "route_id": evidence.route_id,
+        "settlement_time": evidence.settlement_time.isoformat(),
+        "checked_at": evidence.checked_at.isoformat(),
+        "valid_until": evidence.valid_until.isoformat(),
+        "source": evidence.source.value,
+        "risex_entry_quote": _executable_quote_payload(evidence.risex_entry_quote),
+        "hedge_entry_quote": _executable_quote_payload(evidence.hedge_entry_quote),
+        "risex_estimated_exit_quote": _executable_quote_payload(
+            evidence.risex_estimated_exit_quote
+        ),
+        "hedge_estimated_exit_quote": _executable_quote_payload(
+            evidence.hedge_estimated_exit_quote
+        ),
+    }
+
+
+def _live_gate_evidence_bundle_payload(bundle: LiveGateEvidenceBundle) -> Mapping[str, Any]:
+    if not isinstance(bundle, LiveGateEvidenceBundle):
+        raise ValueError("live_gate_evidence_bundle must be a LiveGateEvidenceBundle")
+    return {
+        "capture_id": bundle.capture_id,
+        "route_id": bundle.route_id,
+        "settlement_time": bundle.settlement_time.isoformat(),
+        "funding_settlement_verified": bundle.funding_settlement_verified,
+        "ledger_explicitly_reconciled": bundle.ledger_explicitly_reconciled,
+        "capture_plan_evidence": tuple(
+            _capture_plan_evidence_payload(evidence)
+            for evidence in bundle.capture_plan_evidence
+        ),
+        "execution_capability_evidence": tuple(
+            _execution_capability_evidence_payload(evidence)
+            for evidence in bundle.execution_capability_evidence
+        ),
+    }
+
+
+def _route_payload(route: RouteCandidate) -> Mapping[str, Any]:
+    if not isinstance(route, RouteCandidate):
+        raise ValueError("route must be a RouteCandidate")
+    if route.target_notional_usd <= Decimal("0"):
+        raise ValueError("route.target_notional_usd must be positive")
+    return {
+        "route_id": route.route_id,
+        "capture_id": route.capture_id,
+        "risex_venue": route.risex_venue,
+        "risex_symbol": route.risex_symbol,
+        "risex_entry_side": route.risex_entry_side,
+        "hedge_venue": route.hedge_venue,
+        "hedge_symbol": route.hedge_symbol,
+        "hedge_entry_side": route.hedge_entry_side,
+        "target_notional_usd": str(route.target_notional_usd),
+    }
+
+
+def _validate_positive_sequence(value: int, field_name: str) -> None:
+    if type(value) is not int or value <= 0:
+        raise ValueError(f"{field_name} must be a positive integer")
+
+
+def append_live_gate_evidence_bundle_event(
+    ledger: Ledger,
+    *,
+    route: RouteCandidate,
+    settlement_time: datetime,
+    evaluated_at: datetime,
+    live_gate_evidence_bundle: LiveGateEvidenceBundle,
+    bundle_check_passed: bool,
+    bundle_check_reason: RejectReason | None,
+    route_decision_event_sequence: int,
+    funding_verification_event_sequence: int,
+    ledger_reconciliation_event_sequence: int,
+    recorded_at: datetime,
+) -> LedgerEvent:
+    """Record one deterministic fake live-gate evidence bundle check result."""
+
+    validate_timezone_aware_datetime(settlement_time, "settlement_time")
+    validate_timezone_aware_datetime(evaluated_at, "evaluated_at")
+    validate_timezone_aware_datetime(recorded_at, "recorded_at")
+    if type(bundle_check_passed) is not bool:
+        raise ValueError("bundle_check_passed must be a bool")
+    if bundle_check_passed and bundle_check_reason is not None:
+        raise ValueError("bundle_check_reason must be None when bundle_check_passed is true")
+    if not bundle_check_passed and bundle_check_reason is None:
+        raise ValueError("bundle_check_reason is required when bundle_check_passed is false")
+    if bundle_check_reason is not None and not isinstance(bundle_check_reason, RejectReason):
+        raise ValueError("bundle_check_reason must be a RejectReason or None")
+    _validate_positive_sequence(route_decision_event_sequence, "route_decision_event_sequence")
+    _validate_positive_sequence(
+        funding_verification_event_sequence,
+        "funding_verification_event_sequence",
+    )
+    _validate_positive_sequence(
+        ledger_reconciliation_event_sequence,
+        "ledger_reconciliation_event_sequence",
+    )
+
+    return ledger.append(
+        event_type=LedgerEventType.LIVE_GATE_EVIDENCE_BUNDLE_RECORDED,
+        payload={
+            "capture_id": route.capture_id,
+            "route_id": route.route_id,
+            "settlement_time": settlement_time.isoformat(),
+            "evaluated_at": evaluated_at.isoformat(),
+            "route": _route_payload(route),
+            "live_gate_evidence_bundle": _live_gate_evidence_bundle_payload(
+                live_gate_evidence_bundle
+            ),
+            "bundle_check_passed": bundle_check_passed,
+            "bundle_check_reason": (
+                bundle_check_reason.value if bundle_check_reason is not None else None
+            ),
+            "route_decision_event_sequence": route_decision_event_sequence,
+            "funding_verification_event_sequence": funding_verification_event_sequence,
+            "ledger_reconciliation_event_sequence": ledger_reconciliation_event_sequence,
         },
         recorded_at=recorded_at,
     )
