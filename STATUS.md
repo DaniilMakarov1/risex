@@ -1,16 +1,16 @@
 # Status
 
-- Current branch: `task/rx-020-routecandidate-identity-notional-contract-hardening`.
-- Current implementation task: RX-020 — RouteCandidate Identity And Notional Contract Hardening.
-- RX-020 starting baseline: `a3f6338a39c071129e2dbe02610ebf869b904584`.
-- RX-020 implementation is complete on the task branch and pending reviewer acceptance.
+- Current branch: `main`.
+- Latest accepted product task: RX-020 — RouteCandidate Identity And Notional Contract Hardening.
+- Accepted RX-020 implementation HEAD: `832bcf54019a7314581d02749673e40ae4d36d2a`
+- RX-020 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
 - Latest completed governance/docs task: RX-Q004 — Roadmap And Rulebook Consolidation.
 - RX-Q004 is accepted governance/docs-only consolidation work from `task/rx-q004-roadmap-rulebook-consolidation`; it does not change product behavior and is not a product baseline.
 - RX-Q004 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
 - Previous completed task: RX-019 — Reviewer-Directed Follow-up After RX-018
 - RX-019 completion is recorded without a final HEAD in this file to avoid self-referential handoff metadata; use git history for the exact commit sequence.
 - RX-019 changed only repository handoff metadata and did not change product behavior.
-- Latest accepted product task: RX-018 — Settlement Timestamp Alignment Contract
+- Previous accepted product task before RX-020: RX-018 — Settlement Timestamp Alignment Contract
 - Accepted RX-018 implementation HEAD: `f5420c8526fa9b7c5b3dd5780eea9e0d7fb764aa`
 - Previous accepted product task before RX-018: RX-016 — Offline SQLite Ledger Reopen Fail-Closed Replay Coverage
 - Accepted RX-016 implementation HEAD: `299c619db9e025ae1dca7b1a44eaa62cf7554f38`
@@ -32,11 +32,12 @@
 - Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
 - Current accepted `main` governance task: RX-Q004.
-- Current RX task state on this branch: RX-020 implementation is complete and pending reviewer acceptance; it is not accepted until review.
+- Current RX task state on `main`: RX-020 is reviewer-accepted and finalized; RX-021 remains the immediate next implementation task.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
-RX-018 is the latest accepted product baseline on `main`.
+RX-020 is the latest accepted product baseline on `main`.
+RX-018 remains the previous accepted product baseline before RX-020.
 RX-016 remains the previous accepted product baseline before RX-018.
 RX-015 remains the previous accepted product baseline before RX-016.
 RX-014 remains the previous accepted product baseline before RX-015.
@@ -72,6 +73,7 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - RX-018 — Settlement Timestamp Alignment Contract
 - RX-019 — Reviewer-Directed Follow-up After RX-018
 - RX-Q004 — Roadmap And Rulebook Consolidation
+- RX-020 — RouteCandidate Identity And Notional Contract Hardening
 
 ## Current architecture status
 
@@ -286,4 +288,4 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 
 ## Next recommended task
 
-RX-020 — RouteCandidate Identity And Notional Contract Hardening.
+RX-021 — Paper Result Attribution And PnL Explanation.
