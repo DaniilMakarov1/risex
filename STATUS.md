@@ -1,17 +1,19 @@
 # Status
 
-- Last accepted task: RX-Q001 — Repository Workflow and Quality Guardrails
+- Last accepted task: RX-012 — Offline Live Gate Evidence Bundle Design and Fake Replay Coverage
+- Accepted RX-012 implementation HEAD: `1c1c878372be2cbfab7216ef9411b2e4ed3ec94b`
+- Previous accepted governance task: RX-Q001 — Repository Workflow and Quality Guardrails
 - Accepted RX-Q001 implementation HEAD: `74ded8e38e324fcf550c1e6946376067dbe08e55`
-- Previous accepted product task: RX-011 — Offline Execution Capability Gate Design and Fake Replay Coverage
+- Previous accepted product task before RX-012: RX-011 — Offline Execution Capability Gate Design and Fake Replay Coverage
 - Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
-- Current RX task: RX-012 — Offline Live Gate Evidence Bundle Design and Fake Replay Coverage
-- Current RX task branch: `task/rx-012-offline-live-gate-evidence-bundle`
-- Current RX task status: implemented on task branch; pending reviewer acceptance and merge
+- Current RX task: none
+- Current RX task branch: none
+- Current RX task status: no active RX task; RX-012 accepted and finalized on `main`
 
-The accepted RX-Q001 implementation is the latest accepted baseline on `main`.
-RX-011 remains the previous accepted product implementation baseline.
-RX-012 is not accepted until reviewer acceptance is explicit.
+The accepted RX-012 implementation is the latest accepted baseline on `main`.
+RX-Q001 remains the previous accepted governance baseline.
+RX-011 remains the previous accepted product implementation baseline before RX-012.
 
 ## Completed accepted tasks
 
@@ -29,6 +31,7 @@ RX-012 is not accepted until reviewer acceptance is explicit.
 - RX-010 — Fresh CapturePlan Gate Design and Fake Replay Coverage
 - RX-011 — Offline Execution Capability Gate Design and Fake Replay Coverage
 - RX-Q001 — Repository Workflow and Quality Guardrails
+- RX-012 — Offline Live Gate Evidence Bundle Design and Fake Replay Coverage
 
 ## Current architecture status
 
@@ -87,7 +90,7 @@ RX-012 is not accepted until reviewer acceptance is explicit.
 - `git diff --check`: exit 0
 - `git diff --cached --check`: exit 0
 
-## Tests last reported for RX-012 branch
+## Tests last reported for accepted RX-012 on main
 
 - `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
 - `python3 -m pytest tests/invariant`: `33 passed in 0.14s`
