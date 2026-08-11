@@ -1,6 +1,8 @@
 # Status
 
-- Last accepted task: RX-016 — Offline SQLite Ledger Reopen Fail-Closed Replay Coverage
+- Last accepted task: RX-018 — Settlement Timestamp Alignment Contract
+- Accepted RX-018 implementation HEAD: `f5420c8526fa9b7c5b3dd5780eea9e0d7fb764aa`
+- Previous accepted product task before RX-018: RX-016 — Offline SQLite Ledger Reopen Fail-Closed Replay Coverage
 - Accepted RX-016 implementation HEAD: `299c619db9e025ae1dca7b1a44eaa62cf7554f38`
 - Accepted RX-016 finalized main HEAD: `b15aeed9a0006ea08742e194adef043379656536`
 - Previous accepted product task before RX-016: RX-015 — Offline SQLite Ledger Reopen Append Continuity Replay Coverage
@@ -19,11 +21,10 @@
 - Previous accepted product task before RX-012: RX-011 — Offline Execution Capability Gate Design and Fake Replay Coverage
 - Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
-- Current RX task: RX-018 — Settlement Timestamp Alignment Contract
-- Current RX task branch: `task/rx-018-settlement-timestamp-alignment-contract`
-- Current RX task status: implemented on task branch; pending reviewer acceptance
+- Current RX task: none; RX-019 is the next handoff task.
 
-RX-016 is the latest accepted product baseline on `main`.
+RX-018 is the latest accepted product baseline on `main`.
+RX-016 remains the previous accepted product baseline before RX-018.
 RX-015 remains the previous accepted product baseline before RX-016.
 RX-014 remains the previous accepted product baseline before RX-015.
 RX-Q002 remains the previous accepted governance baseline on `main`.
@@ -31,7 +32,6 @@ RX-013 remains the previous accepted product baseline before RX-014.
 RX-012 remains the previous accepted product baseline before RX-013.
 RX-Q001 remains the previous accepted governance baseline before RX-Q002.
 RX-011 remains the previous accepted product implementation baseline before RX-012.
-RX-018 is implemented on its task branch and pending reviewer acceptance.
 `NEXT_TASK.md` is prepared for RX-019.
 
 ## Completed accepted tasks
@@ -56,6 +56,7 @@ RX-018 is implemented on its task branch and pending reviewer acceptance.
 - RX-014 — Offline Live Gate Evidence Bundle SQLite Persistence Replay Coverage
 - RX-015 — Offline SQLite Ledger Reopen Append Continuity Replay Coverage
 - RX-016 — Offline SQLite Ledger Reopen Fail-Closed Replay Coverage
+- RX-018 — Settlement Timestamp Alignment Contract
 
 ## Current architecture status
 
