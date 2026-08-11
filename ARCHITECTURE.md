@@ -301,6 +301,7 @@ RX-009 adds deterministic offline ledger reconciliation contracts and fake repla
 - All four quotes use `route.target_notional_usd`.
 - All four quotes are sourced from `ValueSource.ESTIMATED_FROM_ORDERBOOK`.
 - Entry and estimated-exit quotes paired for roundtrip math use the same venue and symbol.
+- `snapshot.risex_funding_settlement_at == snapshot.hedge_funding_settlement_at`, so one eligible route snapshot represents exactly one funding settlement opportunity.
 
 Alignment failures fail closed through centralized `RejectReason.TECHNICALLY_NOT_EXECUTABLE`. They are not spread, price-impact, levels-consumed, safety-margin, or conservative-buffer filters.
 
