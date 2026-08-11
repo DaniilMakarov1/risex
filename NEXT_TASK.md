@@ -2,19 +2,19 @@
 
 ## Task ID
 
-RX-020 — RouteCandidate Identity And Notional Contract Hardening
+RX-021 — Paper Result Attribution And PnL Explanation
 
 ## Objective
 
-Harden the existing `RouteCandidate` identity and target-notional contracts so malformed route identity or notional inputs fail closed before they can enter snapshot assembly, route evaluation, paper lifecycle, ledger evidence, or future live-gate evidence. Keep the work inside the existing modular-monolith owner boundaries and preserve RX-018 as the latest accepted product baseline.
+Add the next missing deterministic paper-result attribution and PnL explanation layer downstream of existing route decisions and fake paper lifecycle events. The output should explain why a fake paper run started or did not start, preserve the route decision economics already produced by `evaluate_route()`, and make paper outcomes easier to inspect without recalculating route profitability or changing eligibility.
 
 ## Starting baseline
 
-Start from the reviewer-accepted `main` baseline after the governance/docs consolidation branch is accepted. Preserve RX-018 as the latest accepted product baseline unless git history and repository docs show a later reviewer-accepted product task. Before edits, verify the exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
+Start from reviewer-accepted `main` after RX-020 is reviewed and accepted. Before edits, verify the exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
 
 ## Branch
 
-Create and work on `task/rx-020-routecandidate-identity-notional-contract-hardening`. Do not implement on `main`.
+Create and work on `task/rx-021-paper-result-attribution-pnl-explanation`. Do not implement on `main`.
 
 ## Before changing files
 
@@ -33,41 +33,43 @@ Read:
 
 ## Allowed scope
 
-- Existing `RouteCandidate` construction and validation contracts.
-- Existing route identity fields: capture id, route id, venues, symbols, entry sides, and target notional.
-- Existing route/snapshot alignment and route evaluation tests that prove malformed identity or notional inputs fail closed through current owner modules.
-- Repository metadata updates required by `AGENTS.md` after implementation.
+- Existing fake paper lifecycle result and rejection reporting.
+- Existing `DecisionResult` economics already produced by the single `evaluate_route()` path.
+- Existing append-only ledger events only if needed to persist or replay paper-result explanation evidence through the current accounting owner module.
+- Focused paper lifecycle, ledger, and invariant tests proving explanations are deterministic and downstream-only.
+- Required repository metadata updates after implementation.
 
 ## Forbidden scope
 
 - No product strategy changes.
 - No new route statuses.
 - No new `RejectReason` values.
+- No route profitability recalculation outside `evaluate_route()`.
+- No second EV, fee, funding, VWAP/liquidity, basis, route decision, snapshot assembly, ledger-write, replay, or live execution path.
 - No standalone spread, price-impact, basis, slippage, max-level, hidden-buffer, or safety-margin filters.
-- No EV, fee, funding, VWAP/liquidity, basis, ledger-write, replay, or snapshot second path.
 - No adapters, network calls, API clients, credentials, secrets, orders, live runner behavior, live trading, executable `CapturePlan`, or executable order plan.
 - No canary architecture.
 - No hold-next-cycle logic.
 - No speculative helpers, wrappers, unused abstractions, or future hooks.
-- Do not implement any task beyond this contract-hardening scope.
+- Do not implement read-only adapters, real market-data snapshot assembly, real-data research runner, funding settlement approval, execution planning, live runner behavior, order placement, monitoring, or dashboards.
 
 ## Implementation requirements
 
-- Preserve `RouteCandidate` as the authoritative route identity and notional contract.
-- Preserve `assemble_route_snapshot()` as the single route snapshot assembly path.
+- Keep paper-result explanation downstream of existing `DecisionResult` values and `run_paper_lifecycle()`.
 - Preserve `evaluate_route(route, snapshot, mode)` as the single route decision path.
-- Keep identity and notional validation deterministic and fail-closed.
-- Unknown or malformed values must not silently become empty strings, zero, or default notional.
-- Use existing owner modules and existing centralized rejection behavior wherever possible.
-- Add or adjust only focused tests that prove valid route candidates still pass and malformed identity/notional candidates fail closed.
-- Do not pull later roadmap stages into this task. Real adapters, real market-data snapshot assembly, paper-result attribution, execution planning, live runner behavior, order placement, and monitoring/dashboard work remain gated future tasks.
-- Worker policy: this is broad contract hardening, so one supervised worker/subagent is required before implementation edits. If worker tooling is unavailable, stop before edits and report the blocker. The worker must stop at DESIGN CHECKPOINT before edits and at CODE, TEST, and VALIDATION checkpoints if it continues.
+- Preserve `assemble_route_snapshot()` as the single route snapshot assembly path.
+- Preserve append-only ledger behavior; if ledger evidence changes are needed, keep them in `core/accounting/ledger.py` and deterministic replay in the existing accounting/reconciliation owner boundary.
+- Do not recalculate EV, fees, funding, VWAP, basis, or profitability in the paper runner.
+- Do not start paper captures for discovery decisions, rejected decisions, research-only decisions, or live-eligible decisions.
+- Keep outputs deterministic, fake-data-only, offline, and non-trading.
+- Worker policy: this task touches paper lifecycle/accounting-facing result contracts, so one supervised worker/subagent is required before implementation edits. If worker tooling is unavailable, stop before edits and report the blocker. The worker must stop at DESIGN CHECKPOINT before edits and at CODE, TEST, and VALIDATION checkpoints if it continues.
 - Parent owns steering, final diff review, validation, commit, push, and final report.
 
 ## Required files
 
-- Likely `core/domain/contracts.py`
-- Likely focused unit or invariant tests under `tests/`
+- Likely `apps/paper_runner/lifecycle.py`
+- Likely focused tests under `tests/unit/`
+- Possibly `core/accounting/ledger.py` and replay tests only if paper-result explanation must be recorded as append-only evidence
 - Repository metadata files required by `AGENTS.md`
 - Do not touch product code outside the owner modules required by the final design checkpoint.
 
@@ -75,7 +77,7 @@ Read:
 
 - `python3 scripts/validate_next_task.py`
 - `python3 -m pytest tests/invariant`
-- Focused tests for route candidate identity and notional contract behavior
+- Focused tests for fake paper-result attribution and PnL explanation behavior
 - `python3 -m pytest`
 - `python3 -m compileall apps core storage tests scripts`
 - `python3 -m apps.cli.main`

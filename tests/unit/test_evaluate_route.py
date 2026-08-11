@@ -272,7 +272,10 @@ def test_evaluate_route_rejects_entry_quote_side_that_does_not_match_route() -> 
 
 def test_evaluate_route_rejects_non_opposing_route_entry_sides() -> None:
     route, snapshot = build_fake_route_and_snapshot()
-    bad_route = replace(route, hedge_entry_side=route.risex_entry_side)
+    bad_route = object.__new__(route.__class__)
+    for field in fields(route):
+        object.__setattr__(bad_route, field.name, getattr(route, field.name))
+    object.__setattr__(bad_route, "hedge_entry_side", route.risex_entry_side)
 
     decision = evaluate_route(bad_route, snapshot, EvaluationMode.ENTRY)
 

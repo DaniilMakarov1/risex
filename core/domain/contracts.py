@@ -87,8 +87,28 @@ class RouteCandidate:
     target_notional_usd: Decimal
 
     def __post_init__(self) -> None:
+        for field_name in (
+            "route_id",
+            "capture_id",
+            "risex_venue",
+            "risex_symbol",
+            "hedge_venue",
+            "hedge_symbol",
+        ):
+            value = getattr(self, field_name)
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"{field_name} must be non-empty")
         validate_order_side(self.risex_entry_side)
         validate_order_side(self.hedge_entry_side)
+        if self.risex_entry_side == self.hedge_entry_side:
+            raise ValueError("route entry sides must be opposing")
+        if not isinstance(self.target_notional_usd, Decimal):
+            raise ValueError("target_notional_usd must be a Decimal")
+        if (
+            not self.target_notional_usd.is_finite()
+            or self.target_notional_usd <= Decimal("0")
+        ):
+            raise ValueError("target_notional_usd must be a positive finite Decimal")
 
 
 @dataclass(frozen=True, slots=True)

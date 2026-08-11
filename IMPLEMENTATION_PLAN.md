@@ -27,24 +27,27 @@ RX-008 through RX-016 are accepted as fail-closed safety hardening only. They do
 
 The detour's purpose is to keep future live-adjacent work honest: funding settlement evidence, ledger history, fake plan freshness, fake execution capability, fake bundle checks, and SQLite replay must fail closed when evidence is missing, stale, duplicated, malformed, contradictory, or not current for the exact Capture, route, and funding settlement opportunity.
 
+## Current Implementation Task
+
+RX-020 — RouteCandidate Identity And Notional Contract Hardening is implemented on its task branch and pending reviewer acceptance. It hardens the existing `RouteCandidate` identity and target-notional construction contract without implementing real adapters, real market data, paper-result attribution, execution planning, live runner behavior, orders, or later roadmap stages.
+
 ## Immediate Next Product Task
 
-The immediate next implementation task after RX-Q004 is RX-020 — RouteCandidate Identity And Notional Contract Hardening. It must remain the only next task in `NEXT_TASK.md` until completed and reviewed. RX-020 must not implement real adapters, real market data, paper-result attribution, execution planning, live runner behavior, orders, or later roadmap stages.
+The immediate next implementation task after RX-020 review is RX-021 — Paper Result Attribution And PnL Explanation. It must remain the only next task in `NEXT_TASK.md` until completed and reviewed.
 
-## Remaining Gated Roadmap After RX-020
+## Remaining Gated Roadmap After RX-021
 
 Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts:
 
-1. Add missing PnL attribution and paper result explanation if they are still absent after RX-020.
-2. Add a read-only RiseX adapter that fetches and normalizes per-venue observations only.
-3. Add a read-only Hyperliquid adapter that fetches and normalizes per-venue observations only.
-4. Assemble real market-data route snapshots through the existing `assemble_route_snapshot()` path.
-5. Add a real-data research runner that still uses the existing scan/refresh and `evaluate_route()` paths.
-6. Verify funding settlement on real or explicitly approved observed evidence, with approval gates documented in the task prompt.
-7. Add execution planning without orders; plans must remain non-sending until a later explicit task.
-8. Add a guarded live runner only after explicit acceptance gates prove data, ledger, settlement verification, plan freshness, execution capability, and live switch behavior.
-9. Add order placement only in a future explicitly approved task.
-10. Add read-only monitoring/dashboard work later, without turning it into a decision, execution, or ledger-write path.
+1. Add a read-only RiseX adapter that fetches and normalizes per-venue observations only.
+2. Add a read-only Hyperliquid adapter that fetches and normalizes per-venue observations only.
+3. Assemble real market-data route snapshots through the existing `assemble_route_snapshot()` path.
+4. Add a real-data research runner that still uses the existing scan/refresh and `evaluate_route()` paths.
+5. Verify funding settlement on real or explicitly approved observed evidence, with approval gates documented in the task prompt.
+6. Add execution planning without orders; plans must remain non-sending until a later explicit task.
+7. Add a guarded live runner only after explicit acceptance gates prove data, ledger, settlement verification, plan freshness, execution capability, and live switch behavior.
+8. Add order placement only in a future explicitly approved task.
+9. Add read-only monitoring/dashboard work later, without turning it into a decision, execution, or ledger-write path.
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
 
@@ -135,8 +138,16 @@ Tighten route/snapshot alignment so RiseX and hedge funding settlement timestamp
 
 Apply reviewer-directed repository handoff metadata fixes after RX-018 acceptance. Keep RX-018 as the latest accepted product baseline, record RX-019 as metadata-only follow-up, and prepare the next task prompt without changing product behavior.
 
+## RX-020 — RouteCandidate Identity And Notional Contract Hardening
+
+Harden the existing `RouteCandidate` construction contract so malformed capture id, route id, venues, symbols, entry sides, or target notional fail before snapshot assembly, route evaluation, paper lifecycle, ledger evidence, or future live-gate evidence can consume the route. Preserve `assemble_route_snapshot()` and `evaluate_route(route, snapshot, mode)` as the single snapshot and decision paths, keep positive below-minimum notionals in the existing minimum-notional risk gate, and avoid real adapters, market-data assembly, paper-result attribution, execution planning, live behavior, orders, route statuses, reject reasons, or later roadmap stages.
+
+## RX-021 — Paper Result Attribution And PnL Explanation
+
+Add the next missing paper-result attribution and PnL explanation layer downstream of existing route decisions and fake paper lifecycle events, if still absent at task start. Keep the work deterministic, fake-data-only, and non-trading.
+
 ## Next Sequence
 
-1. RX-020 — RouteCandidate Identity And Notional Contract Hardening.
+1. RX-021 — Paper Result Attribution And PnL Explanation.
 
-Do not promote any later roadmap stage into the current handoff until RX-020 is completed, reviewed, and accepted.
+Do not promote any later roadmap stage into the current handoff until RX-021 is completed, reviewed, and accepted.

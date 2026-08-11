@@ -302,3 +302,14 @@
 - Affected files/modules: `AGENTS.md`, `README.md`, `ARCHITECTURE.md`, `PRODUCT_INVARIANTS.md`, `IMPLEMENTATION_PLAN.md`, `STATUS.md`, `DECISIONS.md`, and `NEXT_TASK.md`.
 - Superseded decisions: no architecture or product decisions are superseded; RX-Q004 clarifies repository-governance and roadmap policy.
 - Non-decisions: RX-Q004 does not change product behavior, code contracts, route statuses, reject reasons, economics, risk gates, route evaluation, snapshot assembly, ledger behavior, adapters, network calls, orders, live runner behavior, live trading, executable `CapturePlan`, canary architecture, hold-next-cycle logic, artificial filters, second decision paths, second snapshot paths, second VWAP paths, second ledger-write paths, or second live execution paths.
+
+## 2026-08-11 - RX-020
+
+- Date: 2026-08-11
+- Decision: `RouteCandidate` construction now rejects empty or non-string capture id, route id, venues, and symbols; invalid or non-opposing entry sides; and target notionals that are missing, non-`Decimal`, non-finite, zero, or negative.
+- Reason: Malformed route identity or selected-notional values must fail before they can enter the single snapshot assembly path, route evaluation path, fake paper lifecycle, ledger evidence, or future live-gate evidence.
+- Decision: Positive `Decimal` target notionals below `ProductRules.min_leg_notional_usd` remain constructible route candidates and continue to fail through the existing minimum-notional route evaluation gate.
+- Reason: Below-minimum notional is a product rule violation already owned by the centralized risk gate, not malformed domain identity.
+- Affected files/modules: `core/domain/contracts.py`, focused unit tests, `README.md`, `ARCHITECTURE.md`, `PRODUCT_INVARIANTS.md`, `IMPLEMENTATION_PLAN.md`, `STATUS.md`, `DECISIONS.md`, and `NEXT_TASK.md`.
+- Superseded decisions: no previous decision is superseded; RX-020 tightens the existing authoritative `RouteCandidate` contract.
+- Non-decisions: RX-020 does not add route statuses, reject reasons, artificial filters, EV/fee/funding/VWAP/basis changes, snapshot or decision paths, ledger-write or replay paths, adapters, network calls, orders, live runner behavior, live trading, executable `CapturePlan`, canary architecture, hold-next-cycle logic, paper-result attribution, execution planning, or later roadmap stages.

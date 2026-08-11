@@ -17,12 +17,13 @@ The current baseline is a non-trading research, fake paper-lifecycle, funding-ve
 - Missing, stale, duplicated, cross-capture, cross-route, cross-settlement, unverified funding, false reconciliation, or non-executable execution evidence fails closed. Exact fake evidence still does not permit `LIVE_ELIGIBLE`; live trading remains disabled by default and current route decisions stop at `PAPER_ELIGIBLE` with `LIVE_GATES_NOT_IMPLEMENTED`.
 - Route statuses are `RESEARCH_ONLY`, `PAPER_ELIGIBLE`, `LIVE_ELIGIBLE`, and `REJECTED`.
 - `CANARY_ELIGIBLE` and a separate canary runner are forbidden.
+- `RouteCandidate` is the authoritative route identity and selected-notional contract. Empty or malformed capture/route identity, venues, symbols, entry sides, or target notional fail at construction; positive notionals below the product minimum still fail through the existing route-evaluation minimum-notional gate.
 
 ## Roadmap posture
 
 RX-008 through RX-016 are accepted fail-closed offline safety hardening. They prove funding verification, ledger reconciliation, fake CapturePlan freshness, fake execution capability, fake live-gate bundle checks, and SQLite replay behavior from deterministic evidence. They are not a product strategy change, not executable live architecture, and not permission to keep adding offline scaffolding ahead of the current task.
 
-After the governance consolidation task, the immediate implementation task remains RX-020: harden `RouteCandidate` identity and target-notional contracts. Later roadmap stages must be promoted through `NEXT_TASK.md` one at a time and remain gated: PnL attribution or paper result explanation if still absent, read-only RiseX and Hyperliquid adapters, real market-data snapshot assembly, a real-data research runner, funding settlement verification with explicit approval, execution planning without orders, guarded live runner work only after accepted gates, future order placement only after explicit approval, and read-only monitoring/dashboard work later.
+After RX-020 implementation review, the next gated task is PnL attribution and paper result explanation. Later roadmap stages must be promoted through `NEXT_TASK.md` one at a time and remain gated: read-only RiseX and Hyperliquid adapters, real market-data snapshot assembly, a real-data research runner, funding settlement verification with explicit approval, execution planning without orders, guarded live runner work only after accepted gates, future order placement only after explicit approval, and read-only monitoring/dashboard work later.
 
 ## Offline research runner
 

@@ -35,7 +35,7 @@ tests/
 
 - `Capture`: one funding settlement opportunity.
 - `CaptureState`: lifecycle state for a `Capture`, separate from route eligibility.
-- `RouteCandidate`: a potential RiseX + hedge route with authoritative venues, symbols, target notional, and intended opposing entry sides.
+- `RouteCandidate`: a potential RiseX + hedge route with authoritative capture id, route id, venues, symbols, target notional, and intended opposing entry sides.
 - `VenueObservation`: normalized read-only data for one venue and one symbol: timezone-aware observation timestamp, order book, expected funding cash flow, funding settlement timestamp, and per-venue fee model.
 - `VenueSnapshot`: one route-aligned normalized snapshot assembled from a RiseX observation and a hedge observation for the shared decision pipeline.
 - `OrderBookLevel`: one normalized price level where size is base asset quantity.
@@ -301,11 +301,14 @@ RX-009 adds deterministic offline ledger reconciliation contracts and fake repla
 
 `RouteCandidate` is the authoritative route contract for one RiseX leg and one hedge leg. It owns:
 
+- Capture id and route id.
 - RiseX venue and symbol.
 - RiseX intended entry side.
 - Hedge venue and symbol.
 - Hedge intended entry side.
 - Target notional in USD.
+
+`RouteCandidate` construction rejects empty or non-string identity fields, invalid or non-opposing entry sides, and non-`Decimal`, non-finite, or non-positive target notionals. A positive target notional below `ProductRules.min_leg_notional_usd` is still a valid candidate input, but it fails closed through the existing minimum-notional route evaluation gate before any economics calculation.
 
 `core/risk/gates.py` owns the centralized route/snapshot alignment gate. Before Entry EV, it verifies:
 

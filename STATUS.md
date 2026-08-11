@@ -1,6 +1,9 @@
 # Status
 
-- Current branch: `main`.
+- Current branch: `task/rx-020-routecandidate-identity-notional-contract-hardening`.
+- Current implementation task: RX-020 — RouteCandidate Identity And Notional Contract Hardening.
+- RX-020 starting baseline: `a3f6338a39c071129e2dbe02610ebf869b904584`.
+- RX-020 implementation is complete on the task branch and pending reviewer acceptance.
 - Latest completed governance/docs task: RX-Q004 — Roadmap And Rulebook Consolidation.
 - RX-Q004 is accepted governance/docs-only consolidation work from `task/rx-q004-roadmap-rulebook-consolidation`; it does not change product behavior and is not a product baseline.
 - RX-Q004 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
@@ -28,10 +31,10 @@
 - Previous accepted product task before RX-012: RX-011 — Offline Execution Capability Gate Design and Fake Replay Coverage
 - Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
-- Current accepted `main` governance task: RX-Q004; RX-020 is the next task prompt.
-- Current RX task state on `main`: RX-Q004 docs/governance consolidation is reviewer-accepted and finalized; RX-020 remains the immediate next implementation task.
+- Current accepted `main` governance task: RX-Q004.
+- Current RX task state on this branch: RX-020 implementation is complete and pending reviewer acceptance; it is not accepted until review.
 
-RX-Q004 consolidates the roadmap and rulebook only. It preserves RX-018 as the latest accepted product baseline, classifies RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and preserves RX-020 as the immediate next implementation task.
+RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
 RX-018 is the latest accepted product baseline on `main`.
 RX-016 remains the previous accepted product baseline before RX-018.
@@ -42,7 +45,7 @@ RX-013 remains the previous accepted product baseline before RX-014.
 RX-012 remains the previous accepted product baseline before RX-013.
 RX-Q001 remains the previous accepted governance baseline before RX-Q002.
 RX-011 remains the previous accepted product implementation baseline before RX-012.
-`NEXT_TASK.md` is prepared for RX-020.
+`NEXT_TASK.md` is prepared for RX-021.
 
 ## Completed accepted tasks
 
@@ -124,13 +127,14 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - If a required worker is unavailable, skips checkpoints, continues after being stopped, or drifts into forbidden scope, Parent Codex must stop or steer before accepting worker output.
 - Accepted offline safety-hardening work is guardrail evidence, not permission to keep adding speculative scaffolding.
 - Future roadmap stages are gated and must be promoted through `NEXT_TASK.md` one task at a time before implementation.
+- RX-020 keeps `RouteCandidate` as the authoritative route identity and selected-notional construction contract. Empty or non-string identity fields, invalid or non-opposing entry sides, and non-`Decimal`, non-finite, zero, or negative target notionals fail closed at construction. Positive target notionals below `MIN_LEG_NOTIONAL_USD` continue to fail through the existing minimum-notional route evaluation gate.
 
 ## Current roadmap status
 
 - RX-008 through RX-016 are accepted fail-closed offline safety-hardening detour tasks.
 - The project now returns toward the intended product implementation path after RX-020.
-- RX-020 remains the immediate next product task.
-- Later gated stages are PnL attribution or paper result explanation if still absent, read-only RiseX adapter, read-only Hyperliquid adapter, real market-data snapshot assembly, real-data research runner, funding settlement verification with explicit approval, execution planning without orders, guarded live runner after explicit acceptance gates, order placement only in a future explicitly approved task, and read-only monitoring/dashboard later.
+- RX-021 is the immediate next product task.
+- Later gated stages are read-only RiseX adapter, read-only Hyperliquid adapter, real market-data snapshot assembly, real-data research runner, funding settlement verification with explicit approval, execution planning without orders, guarded live runner after explicit acceptance gates, order placement only in a future explicitly approved task, and read-only monitoring/dashboard later.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized.
 
 ## Tests last reported for accepted RX-011
@@ -241,6 +245,17 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
 - `python3 -m pytest tests/invariant`: `33 passed`
 - `python3 -m pytest`: `278 passed`
+- `python3 -m compileall apps core storage tests scripts`: exit 0
+- `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
+- `git diff --check`: exit 0
+- `git diff --cached --check`: exit 0
+
+## Tests last reported for RX-020 branch
+
+- `python3 -m pytest tests/unit/test_route_candidate_contract.py tests/unit/test_evaluate_route.py tests/unit/test_snapshot_assembly.py tests/unit/test_risk_gates.py`: `117 passed in 0.09s`
+- `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
+- `python3 -m pytest tests/invariant`: `33 passed in 0.18s`
+- `python3 -m pytest`: `317 passed in 0.60s`
 - `python3 -m compileall apps core storage tests scripts`: exit 0
 - `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
 - `git diff --check`: exit 0
