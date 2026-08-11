@@ -1,7 +1,7 @@
 # Status
 
 - Last accepted task: RX-013 — Offline Live Gate Evidence Bundle Ledger Recording and Replay Coverage
-- Accepted RX-013 implementation HEAD: `3fa88191e63a463419582c699d87545069d2ce0a`
+- Accepted RX-013 implementation HEAD: `dfa06a8a52553b3dfb4687efba0e420abb3e7bf3`
 - Previous accepted governance task: RX-Q002 — Worker Checkpoint Requirement for Architecture-Sensitive Tasks
 - Accepted RX-Q002 implementation HEAD: `f5a709d290c0d919058cad1e7304fb52c1d12e20`
 - Previous accepted product task before RX-013: RX-012 — Offline Live Gate Evidence Bundle Design and Fake Replay Coverage
