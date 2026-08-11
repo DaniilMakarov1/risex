@@ -1,6 +1,8 @@
 # Status
 
-- Last accepted task: RX-013 — Offline Live Gate Evidence Bundle Ledger Recording and Replay Coverage
+- Last accepted task: RX-014 — Offline Live Gate Evidence Bundle SQLite Persistence Replay Coverage
+- Accepted RX-014 implementation HEAD: `780918d59f3edbff0ea59196b911f4f20d429bc8`
+- Previous accepted product task before RX-014: RX-013 — Offline Live Gate Evidence Bundle Ledger Recording and Replay Coverage
 - Accepted RX-013 implementation HEAD: `dfa06a8a52553b3dfb4687efba0e420abb3e7bf3`
 - Previous accepted governance task: RX-Q002 — Worker Checkpoint Requirement for Architecture-Sensitive Tasks
 - Accepted RX-Q002 implementation HEAD: `f5a709d290c0d919058cad1e7304fb52c1d12e20`
@@ -11,16 +13,17 @@
 - Previous accepted product task before RX-012: RX-011 — Offline Execution Capability Gate Design and Fake Replay Coverage
 - Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
-- Current RX task: RX-014 — Offline Live Gate Evidence Bundle SQLite Persistence Replay Coverage
-- Current RX task branch: `task/rx-014-live-gate-bundle-sqlite-replay`
-- Current RX task status: implemented; ready for review
+- Current RX task: none
+- Current RX task branch: none
+- Current RX task status: none
 
-RX-013 is the latest accepted product baseline on `main`.
+RX-014 is the latest accepted product baseline on `main`.
 RX-Q002 remains the previous accepted governance baseline on `main`.
+RX-013 remains the previous accepted product baseline before RX-014.
 RX-012 remains the previous accepted product baseline before RX-013.
 RX-Q001 remains the previous accepted governance baseline before RX-Q002.
 RX-011 remains the previous accepted product implementation baseline before RX-012.
-RX-014 is active on its task branch and is not accepted until reviewer approval.
+No current RX task is active.
 `NEXT_TASK.md` is prepared for RX-015.
 
 ## Completed accepted tasks
@@ -42,6 +45,7 @@ RX-014 is active on its task branch and is not accepted until reviewer approval.
 - RX-012 — Offline Live Gate Evidence Bundle Design and Fake Replay Coverage
 - RX-Q002 — Worker Checkpoint Requirement for Architecture-Sensitive Tasks
 - RX-013 — Offline Live Gate Evidence Bundle Ledger Recording and Replay Coverage
+- RX-014 — Offline Live Gate Evidence Bundle SQLite Persistence Replay Coverage
 
 ## Current architecture status
 
@@ -144,7 +148,7 @@ RX-014 is active on its task branch and is not accepted until reviewer approval.
 - `git diff --check`: exit 0
 - `git diff --cached --check`: exit 0
 
-## Tests last reported for current RX-014 branch
+## Tests last reported for accepted RX-014 on main
 
 - `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
 - `python3 -m pytest tests/invariant`: `33 passed`
