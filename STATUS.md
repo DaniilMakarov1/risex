@@ -1,8 +1,10 @@
 # Status
 
-- Current task branch: RX-Q004 — Roadmap And Rulebook Consolidation.
-- RX-Q004 is a governance/docs-only consolidation task on `task/rx-q004-roadmap-rulebook-consolidation`; it does not change product behavior and is not a product baseline.
-- Last completed task: RX-019 — Reviewer-Directed Follow-up After RX-018
+- Current branch: `main`.
+- Latest completed governance/docs task: RX-Q004 — Roadmap And Rulebook Consolidation.
+- RX-Q004 is accepted governance/docs-only consolidation work from `task/rx-q004-roadmap-rulebook-consolidation`; it does not change product behavior and is not a product baseline.
+- RX-Q004 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
+- Previous completed task: RX-019 — Reviewer-Directed Follow-up After RX-018
 - RX-019 completion is recorded without a final HEAD in this file to avoid self-referential handoff metadata; use git history for the exact commit sequence.
 - RX-019 changed only repository handoff metadata and did not change product behavior.
 - Latest accepted product task: RX-018 — Settlement Timestamp Alignment Contract
@@ -26,8 +28,8 @@
 - Previous accepted product task before RX-012: RX-011 — Offline Execution Capability Gate Design and Fake Replay Coverage
 - Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
-- Current accepted `main` task: none; RX-020 is the next task prompt.
-- Current RX task state on this branch: RX-Q004 docs/governance consolidation implemented and locally validated on the task branch; pending reviewer acceptance.
+- Current accepted `main` governance task: RX-Q004; RX-020 is the next task prompt.
+- Current RX task state on `main`: RX-Q004 docs/governance consolidation is reviewer-accepted and finalized; RX-020 remains the immediate next implementation task.
 
 RX-Q004 consolidates the roadmap and rulebook only. It preserves RX-018 as the latest accepted product baseline, classifies RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and preserves RX-020 as the immediate next implementation task.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
@@ -66,6 +68,7 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - RX-016 — Offline SQLite Ledger Reopen Fail-Closed Replay Coverage
 - RX-018 — Settlement Timestamp Alignment Contract
 - RX-019 — Reviewer-Directed Follow-up After RX-018
+- RX-Q004 — Roadmap And Rulebook Consolidation
 
 ## Current architecture status
 
