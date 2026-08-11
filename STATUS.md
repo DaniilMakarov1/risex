@@ -1,7 +1,7 @@
 # Status
 
 - Last completed task: RX-019 — Reviewer-Directed Follow-up After RX-018
-- Completed RX-019 metadata follow-up HEAD: `51a6ee246b1459e6bd29a0abc7b45da1d2a45a8c`
+- RX-019 completion is recorded without a final HEAD in this file to avoid self-referential handoff metadata; use git history for the exact commit sequence.
 - RX-019 changed only repository handoff metadata and did not change product behavior.
 - Latest accepted product task: RX-018 — Settlement Timestamp Alignment Contract
 - Accepted RX-018 implementation HEAD: `f5420c8526fa9b7c5b3dd5780eea9e0d7fb764aa`
