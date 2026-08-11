@@ -12,6 +12,7 @@ This repository is the source of truth for RiseX Points Farmer implementation wo
 - Update `STATUS.md` and `NEXT_TASK.md` at the end of each task. `NEXT_TASK.md` must contain exactly one next task and pass `python scripts/validate_next_task.py`.
 - Update `DECISIONS.md` when the task makes or changes an architectural or repository-governance decision.
 - Use `docs/WORKFLOW.md` and the templates in `docs/templates/` when preparing task prompts, worker checkpoints, reports, and review checklists.
+- Treat accepted offline safety-hardening work as guardrail evidence, not as a product strategy change or permission to keep adding speculative scaffolding. Future tasks must follow the single task in `NEXT_TASK.md`, return to the intended product roadmap after the current handoff, and avoid "while here" abstractions.
 
 ## Parent, worker, and reviewer boundaries
 
@@ -31,6 +32,7 @@ This repository is the source of truth for RiseX Points Farmer implementation wo
 - Do not add new functions, classes, dataclasses, enums, statuses, modules, wrappers, config values, trace fields, future hooks, or contracts unless the current RX task explicitly requires them or they are strictly necessary to complete it.
 - Any new abstraction must belong to the authoritative owner module, be used immediately, and be covered by focused tests.
 - Never create a second route model, EV path, decision path, snapshot assembly path, VWAP path, ledger-write path, or live execution path.
+- Roadmap stages are gated handoffs, not standing permission to implement later live trading, adapters, execution planning, dashboards, monitoring, or additional offline scaffolding ahead of the exact current task.
 - Final reports must state every new function, class, or contract added and why each was necessary. If none were added, state `No new abstractions added.`
 
 ## Hard prohibitions

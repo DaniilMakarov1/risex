@@ -7,6 +7,13 @@
 - One shared decision pipeline evaluates routes.
 - One append-only ledger records decisions and future execution/accounting events.
 
+## Roadmap gates
+
+- RX-008 through RX-016 are accepted fail-closed offline safety hardening, not a product strategy change.
+- Offline safety scaffolding must not become an open-ended detour. Future work must return to the intended product path one `NEXT_TASK.md` handoff at a time.
+- Future roadmap stages are gated and scoped. A roadmap mention is not permission to implement real adapters, network calls, execution planning, live runner behavior, monitoring/dashboard behavior, or order placement before an explicit task authorizes that exact stage.
+- Do not add speculative helpers, wrappers, future hooks, duplicate owner modules, second decision paths, second snapshot paths, second VWAP paths, second ledger-write paths, or second live execution paths.
+
 ## PnL constants
 
 The single authoritative code contract for these constants is `ProductRules`.
@@ -35,6 +42,8 @@ The single authoritative code contract for these constants is `ProductRules`.
 - A future live path that uses a fake evidence bundle must fail closed unless the bundle matches the current `capture_id`, `route_id`, and funding settlement timestamp, carries verified funding-settlement and helper-derived ledger reconciliation outputs, and reuses fresh CapturePlan and execution-capability evidence.
 - Recorded fake live gate evidence bundle checks are not permission to trade live by themselves.
 - A future live path that uses recorded fake bundle-check evidence must fail closed unless one current append-only ledger event replays against the current Capture, route, funding settlement timestamp, referenced route-decision, funding-verification, and ledger-reconciliation history, and its recorded bundle gate result matches `core/risk/gates.py`.
+- Read-only venue adapters, real market-data snapshot assembly, and real-data research runners are data-ingestion and research stages only. They are not permission to place orders, enable live trading, or create executable order plans.
+- Execution planning without orders, a guarded live runner, and order placement must remain separate future tasks with explicit acceptance gates.
 
 ## Route statuses
 

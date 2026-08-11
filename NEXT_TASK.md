@@ -10,7 +10,7 @@ Harden the existing `RouteCandidate` identity and target-notional contracts so m
 
 ## Starting baseline
 
-Start from the reviewer-accepted `main` baseline after RX-019 metadata follow-up. Before edits, verify the exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
+Start from the reviewer-accepted `main` baseline after the governance/docs consolidation branch is accepted. Preserve RX-018 as the latest accepted product baseline unless git history and repository docs show a later reviewer-accepted product task. Before edits, verify the exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
 
 ## Branch
 
@@ -60,6 +60,7 @@ Read:
 - Unknown or malformed values must not silently become empty strings, zero, or default notional.
 - Use existing owner modules and existing centralized rejection behavior wherever possible.
 - Add or adjust only focused tests that prove valid route candidates still pass and malformed identity/notional candidates fail closed.
+- Do not pull later roadmap stages into this task. Real adapters, real market-data snapshot assembly, paper-result attribution, execution planning, live runner behavior, order placement, and monitoring/dashboard work remain gated future tasks.
 - Worker policy: this is broad contract hardening, so one supervised worker/subagent is required before implementation edits. If worker tooling is unavailable, stop before edits and report the blocker. The worker must stop at DESIGN CHECKPOINT before edits and at CODE, TEST, and VALIDATION checkpoints if it continues.
 - Parent owns steering, final diff review, validation, commit, push, and final report.
 

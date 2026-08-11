@@ -1,5 +1,51 @@
 # Implementation Plan
 
+## Roadmap Source Of Truth
+
+This file records the consolidated implementation roadmap. `NEXT_TASK.md` remains the only handoff contract for the next Codex session and must contain exactly one task. Later roadmap stages listed here are gated future work, not permission to implement them early or combine them with the current task.
+
+The original product direction remains hedged funding capture on RiseX with hedge venue support inside a modular monolith:
+
+- one `Capture` equals one funding settlement opportunity;
+- one `evaluate_route(route, snapshot, mode)` route decision path;
+- one `assemble_route_snapshot()` route snapshot assembly path;
+- one append-only ledger;
+- one owner module per business logic area;
+- no canary architecture, hold-next-cycle logic, artificial filters, hidden buffers, or speculative live architecture.
+
+## Completed Accepted Work
+
+- RX-000 through RX-007 established the project constitution, domain contracts, product rules, economics, per-venue observations, offline scan/refresh orchestration, fake paper lifecycle, and append-only ledger persistence scaffolding.
+- RX-008 through RX-016 are an accepted offline safety-hardening detour. They added deterministic fail-closed replay coverage for funding settlement verification, ledger reconciliation, fake CapturePlan freshness, fake execution capability, fake live-gate evidence bundles, bundle ledger recording, SQLite bundle replay, SQLite reopen append continuity, and SQLite reopen fail-closed behavior.
+- RX-018 tightened settlement timestamp alignment so one eligible route snapshot represents exactly one funding settlement opportunity.
+- RX-019 updated repository handoff metadata after RX-018 review without changing product behavior.
+- RX-Q001 and RX-Q002 added repository workflow, handoff validation, and supervised-worker governance.
+
+## Accepted Offline Safety-Hardening Detour
+
+RX-008 through RX-016 are accepted as fail-closed safety hardening only. They do not change the product strategy, do not make fake evidence executable, do not create a live runner, do not create live `CapturePlan` objects, do not connect to venues, do not place orders, and do not authorize more offline scaffolding unless a future task explicitly requires it.
+
+The detour's purpose is to keep future live-adjacent work honest: funding settlement evidence, ledger history, fake plan freshness, fake execution capability, fake bundle checks, and SQLite replay must fail closed when evidence is missing, stale, duplicated, malformed, contradictory, or not current for the exact Capture, route, and funding settlement opportunity.
+
+## Immediate Next Product Task
+
+The immediate next implementation task after RX-Q004 is RX-020 — RouteCandidate Identity And Notional Contract Hardening. It must remain the only next task in `NEXT_TASK.md` until completed and reviewed. RX-020 must not implement real adapters, real market data, paper-result attribution, execution planning, live runner behavior, orders, or later roadmap stages.
+
+## Remaining Gated Roadmap After RX-020
+
+Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts:
+
+1. Add missing PnL attribution and paper result explanation if they are still absent after RX-020.
+2. Add a read-only RiseX adapter that fetches and normalizes per-venue observations only.
+3. Add a read-only Hyperliquid adapter that fetches and normalizes per-venue observations only.
+4. Assemble real market-data route snapshots through the existing `assemble_route_snapshot()` path.
+5. Add a real-data research runner that still uses the existing scan/refresh and `evaluate_route()` paths.
+6. Verify funding settlement on real or explicitly approved observed evidence, with approval gates documented in the task prompt.
+7. Add execution planning without orders; plans must remain non-sending until a later explicit task.
+8. Add a guarded live runner only after explicit acceptance gates prove data, ledger, settlement verification, plan freshness, execution capability, and live switch behavior.
+9. Add order placement only in a future explicitly approved task.
+10. Add read-only monitoring/dashboard work later, without turning it into a decision, execution, or ledger-write path.
+
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
 
 Create repository docs, structure, Python test setup, minimal domain contracts, fake route evaluation, and append-only ledger tests. No real adapters, no live orders, and no external exchange connectivity.
@@ -92,3 +138,5 @@ Apply reviewer-directed repository handoff metadata fixes after RX-018 acceptanc
 ## Next Sequence
 
 1. RX-020 — RouteCandidate Identity And Notional Contract Hardening.
+
+Do not promote any later roadmap stage into the current handoff until RX-020 is completed, reviewed, and accepted.

@@ -18,6 +18,12 @@ The current baseline is a non-trading research, fake paper-lifecycle, funding-ve
 - Route statuses are `RESEARCH_ONLY`, `PAPER_ELIGIBLE`, `LIVE_ELIGIBLE`, and `REJECTED`.
 - `CANARY_ELIGIBLE` and a separate canary runner are forbidden.
 
+## Roadmap posture
+
+RX-008 through RX-016 are accepted fail-closed offline safety hardening. They prove funding verification, ledger reconciliation, fake CapturePlan freshness, fake execution capability, fake live-gate bundle checks, and SQLite replay behavior from deterministic evidence. They are not a product strategy change, not executable live architecture, and not permission to keep adding offline scaffolding ahead of the current task.
+
+After the governance consolidation task, the immediate implementation task remains RX-020: harden `RouteCandidate` identity and target-notional contracts. Later roadmap stages must be promoted through `NEXT_TASK.md` one at a time and remain gated: PnL attribution or paper result explanation if still absent, read-only RiseX and Hyperliquid adapters, real market-data snapshot assembly, a real-data research runner, funding settlement verification with explicit approval, execution planning without orders, guarded live runner work only after accepted gates, future order placement only after explicit approval, and read-only monitoring/dashboard work later.
+
 ## Offline research runner
 
 The fake runner builds multiple `RouteCandidate` values and normalized `VenueObservation` inputs. It runs deterministic Broad Scan followed by Focused Refresh. Both stages reuse the RX-005 offline orchestration path: each successful candidate assembles a route snapshot through the single `assemble_route_snapshot()` path and evaluates through the single `evaluate_route()` decision pipeline.

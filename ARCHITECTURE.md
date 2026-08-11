@@ -114,6 +114,22 @@ Any non-terminal Capture may transition to `FAILED`. Capture states with possibl
 - Live gate evidence bundle checking happens only in `core/risk/gates.py` and reuses existing funding verification, ledger reconciliation, CapturePlan freshness, and execution capability evidence outputs.
 - Live gate evidence bundle ledger recording happens only in `core/accounting/ledger.py`; replay validation happens only in `core/accounting/reconciliation.py` and reuses the existing risk gate result.
 
+## Roadmap anti-drift
+
+The original architecture remains unchanged after the accepted offline safety-hardening work:
+
+- The system is still a modular monolith.
+- The domain is still capture-centric and contract-centric.
+- One `Capture` still represents one funding settlement opportunity.
+- `evaluate_route(route, snapshot, mode)` is still the only route decision path.
+- `assemble_route_snapshot()` is still the only route snapshot assembly path.
+- The append-only ledger remains the only accounting history.
+- Each business logic area still has exactly one owner module.
+
+RX-008 through RX-016 added deterministic fail-closed offline safety scaffolding around funding settlement verification, ledger reconciliation, fake CapturePlan freshness, fake execution capability, fake live-gate evidence bundles, bundle ledger recording, and SQLite replay behavior. These modules are accepted safety hardening only. They are not executable live trading architecture, do not create order plans, do not place orders, do not connect to venues, do not replace real read-only adapters, and do not permit future tasks to add speculative second paths.
+
+Future roadmap stages are gates. A later roadmap item is not permission to implement live trading, adapters, dashboards, monitoring, execution planning, or order placement before that exact task is written into `NEXT_TASK.md`, reviewed in scope, implemented on its own branch, and accepted.
+
 ## Product rules
 
 `core/config/product_rules.py` owns the single authoritative `ProductRules` object for product-level constants:

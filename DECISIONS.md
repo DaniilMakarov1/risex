@@ -289,3 +289,16 @@
 - Affected files/modules: `core/risk/gates.py`, focused unit tests, `STATUS.md`, `DECISIONS.md`, and `NEXT_TASK.md`.
 - Superseded decisions: no previous decision is superseded; RX-018 tightens the existing route/snapshot alignment contract.
 - Non-decisions: RX-018 does not recalculate EV, fees, funding, VWAP, basis, or profitability; it does not add spread, impact, slippage, max-level, buffer, or safety-margin filters; it does not add adapters, network calls, orders, live runner behavior, live trading, executable `CapturePlan`, route statuses, reject reasons, second decision paths, or second snapshot assembly paths.
+
+## 2026-08-11 - RX-Q004
+
+- Date: 2026-08-11
+- Decision: Consolidated repository roadmap and rulebook language so `IMPLEMENTATION_PLAN.md`, `PRODUCT_INVARIANTS.md`, `ARCHITECTURE.md`, `STATUS.md`, `AGENTS.md`, `README.md`, and `NEXT_TASK.md` agree on the post-safety-hardening path.
+- Reason: The accepted RX-008 through RX-016 offline safety work needed to be classified explicitly as fail-closed safety hardening, not as a product strategy change or a standing reason to keep adding offline scaffolding.
+- Decision: Future roadmap stages are gated handoffs. A later stage can be implemented only when it is the exact current task in `NEXT_TASK.md` and remains inside that task's allowed scope.
+- Reason: The repository needs to return toward the intended product path after RX-020 without drifting into unnecessary abstractions, speculative live architecture, artificial filters, second owner paths, or premature live trading.
+- Decision: RX-020 remains the immediate next implementation task after RX-Q004.
+- Reason: Governance consolidation must not create a second roadmap that conflicts with `NEXT_TASK.md` or implement RX-020 early.
+- Affected files/modules: `AGENTS.md`, `README.md`, `ARCHITECTURE.md`, `PRODUCT_INVARIANTS.md`, `IMPLEMENTATION_PLAN.md`, `STATUS.md`, `DECISIONS.md`, and `NEXT_TASK.md`.
+- Superseded decisions: no architecture or product decisions are superseded; RX-Q004 clarifies repository-governance and roadmap policy.
+- Non-decisions: RX-Q004 does not change product behavior, code contracts, route statuses, reject reasons, economics, risk gates, route evaluation, snapshot assembly, ledger behavior, adapters, network calls, orders, live runner behavior, live trading, executable `CapturePlan`, canary architecture, hold-next-cycle logic, artificial filters, second decision paths, second snapshot paths, second VWAP paths, second ledger-write paths, or second live execution paths.
