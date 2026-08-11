@@ -23,7 +23,7 @@ The current baseline is a non-trading research, fake paper-lifecycle, funding-ve
 
 RX-008 through RX-016 are accepted fail-closed offline safety hardening. They prove funding verification, ledger reconciliation, fake CapturePlan freshness, fake execution capability, fake live-gate bundle checks, and SQLite replay behavior from deterministic evidence. They are not a product strategy change, not executable live architecture, and not permission to keep adding offline scaffolding ahead of the current task.
 
-After RX-020 implementation review, the next gated task is PnL attribution and paper result explanation. Later roadmap stages must be promoted through `NEXT_TASK.md` one at a time and remain gated: read-only RiseX and Hyperliquid adapters, real market-data snapshot assembly, a real-data research runner, funding settlement verification with explicit approval, execution planning without orders, guarded live runner work only after accepted gates, future order placement only after explicit approval, and read-only monitoring/dashboard work later.
+After RX-021 review acceptance, the next gated task is a read-only RiseX observation adapter. Later roadmap stages must be promoted through `NEXT_TASK.md` one at a time and remain gated: read-only Hyperliquid adapter, real market-data snapshot assembly, a real-data research runner, funding settlement verification with explicit approval, execution planning without orders, guarded live runner work only after accepted gates, future order placement only after explicit approval, and read-only monitoring/dashboard work later.
 
 ## Offline research runner
 
@@ -37,6 +37,8 @@ pytest
 ## Offline paper runner
 
 The fake paper runner is downstream of route decisions. It consumes existing `DecisionResult` values, starts fake capture execution only for `PAPER_ELIGIBLE` decisions, and records non-started decisions as paper rejections. It does not recalculate profitability, assemble snapshots, place orders, import the live runner, or create `CapturePlan` objects.
+
+Paper results include deterministic start attribution and PnL explanation copied from the input `DecisionResult`. Started runs are attributed to an ENTRY `PAPER_ELIGIBLE` decision; non-started runs identify the mode/status blocker and preserve any available expected funding, total fees, simulated roundtrip cost, and net profit already produced by `evaluate_route()`. Missing economics remain missing and do not become zero.
 
 Paper history is written through `core/accounting/ledger.py` as append-only events. `storage/sqlite/ledger.py` is a minimal deterministic SQLite implementation of the same ledger contract for offline persistence and replay tests.
 

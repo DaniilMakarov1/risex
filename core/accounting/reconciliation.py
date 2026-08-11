@@ -107,6 +107,12 @@ _PAPER_LIFECYCLE_EVENT_ORDER = (
     _PAPER_SETTLEMENT_EVENT_TYPE,
     _PAPER_CLOSED_EVENT_TYPE,
 )
+_PNL_EXPLANATION_FIELDS = (
+    "expected_funding_usd",
+    "total_fees_usd",
+    "simulated_roundtrip_cost_usd",
+    "net_profit_usd",
+)
 _CAPTURE_SCOPED_EVENT_TYPES = frozenset(
     {
         _PAPER_OPENED_EVENT_TYPE,
@@ -223,6 +229,53 @@ def _optional_decimal_payload(payload: Mapping[str, Any], field_name: str) -> bo
     return value is None or _finite_decimal(value) is not None
 
 
+def _pnl_explanation_payload_is_well_formed(payload: Mapping[str, Any]) -> bool:
+    return all(
+        field_name in payload and _optional_decimal_payload(payload, field_name)
+        for field_name in _PNL_EXPLANATION_FIELDS
+    )
+
+
+def _optional_paper_result_explanation_is_well_formed(
+    payload: Mapping[str, Any],
+    *,
+    expected_paper_started: bool,
+) -> bool:
+    raw_explanation = payload.get("paper_result_explanation")
+    if raw_explanation is None:
+        return True
+    if not isinstance(raw_explanation, Mapping):
+        return False
+    route_id = _payload_str(payload, "route_id")
+    explanation_route_id = _payload_str(raw_explanation, "route_id")
+    if route_id is None or explanation_route_id != route_id:
+        return False
+    decision_reasons = _payload_str_sequence(raw_explanation, "decision_reasons")
+    if decision_reasons is None:
+        return False
+    try:
+        EvaluationMode(str(raw_explanation.get("decision_mode")))
+        RouteStatus(str(raw_explanation.get("decision_status")))
+        for reason in decision_reasons:
+            RejectReason(reason)
+    except ValueError:
+        return False
+
+    blockers = _payload_str_sequence(raw_explanation, "paper_start_blockers")
+    raw_pnl_explanation = raw_explanation.get("pnl_explanation")
+    paper_started = raw_explanation.get("paper_started")
+    return (
+        _payload_str(raw_explanation, "route_id") is not None
+        and type(paper_started) is bool
+        and paper_started is expected_paper_started
+        and _payload_str(raw_explanation, "paper_start_attribution") is not None
+        and blockers is not None
+        and ((paper_started and not blockers) or (not paper_started and bool(blockers)))
+        and isinstance(raw_pnl_explanation, Mapping)
+        and _pnl_explanation_payload_is_well_formed(raw_pnl_explanation)
+    )
+
+
 def _estimated_value_payload_is_well_formed(payload: Mapping[str, Any], field_name: str) -> bool:
     raw_value = payload.get(field_name)
     if not isinstance(raw_value, Mapping):
@@ -272,6 +325,10 @@ def _paper_lifecycle_payload_is_well_formed(payload: Mapping[str, Any]) -> bool:
         and _payload_str(payload, "route_id") is not None
         and _payload_datetime(payload, "settlement_time") is not None
         and _state_path_is_well_formed(payload)
+        and _optional_paper_result_explanation_is_well_formed(
+            payload,
+            expected_paper_started=True,
+        )
     )
 
 
@@ -285,6 +342,10 @@ def _paper_rejection_payload_is_well_formed(payload: Mapping[str, Any]) -> bool:
         _payload_str(payload, "route_id") is not None
         and _payload_str_sequence(payload, "reasons") is not None
         and payload.get("capture_started") is False
+        and _optional_paper_result_explanation_is_well_formed(
+            payload,
+            expected_paper_started=False,
+        )
     )
 
 

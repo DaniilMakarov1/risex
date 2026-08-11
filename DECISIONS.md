@@ -313,3 +313,18 @@
 - Affected files/modules: `core/domain/contracts.py`, focused unit tests, `README.md`, `ARCHITECTURE.md`, `PRODUCT_INVARIANTS.md`, `IMPLEMENTATION_PLAN.md`, `STATUS.md`, `DECISIONS.md`, and `NEXT_TASK.md`.
 - Superseded decisions: no previous decision is superseded; RX-020 tightens the existing authoritative `RouteCandidate` contract.
 - Non-decisions: RX-020 does not add route statuses, reject reasons, artificial filters, EV/fee/funding/VWAP/basis changes, snapshot or decision paths, ledger-write or replay paths, adapters, network calls, orders, live runner behavior, live trading, executable `CapturePlan`, canary architecture, hold-next-cycle logic, paper-result attribution, execution planning, or later roadmap stages.
+
+## 2026-08-11 - RX-021
+
+- Date: 2026-08-11
+- Decision: Added app-local `PaperResultExplanation` to the fake paper lifecycle result contract.
+- Reason: Paper outcomes need deterministic inspection of why fake paper started or did not start without making callers infer behavior from raw lifecycle events alone.
+- Decision: Paper start attribution reuses the existing fake paper predicate: only ENTRY `PAPER_ELIGIBLE` decisions start. Non-started paper results record deterministic mode/status blockers and preserve centralized `RejectReason` values from the input decision without adding new route statuses or reject reasons.
+- Reason: RX-021 must explain paper behavior without changing route eligibility or creating a second decision path.
+- Decision: Paper PnL explanation copies existing `DecisionResult` economics when present: expected funding, total fees, simulated roundtrip cost, and net profit. Missing economics remain `None`.
+- Reason: Paper attribution is downstream of `evaluate_route()` and must not recalculate profitability or silently turn unknown values into zero.
+- Decision: Existing `paper_capture_opened` and `paper_rejection_recorded` ledger events may carry optional `paper_result_explanation` payloads; reconciliation validates the optional payload shape when present while leaving paper lifecycle replay state-only.
+- Reason: Paper outcomes should be inspectable from append-only history and SQLite round-trip without creating a new event type, ledger-write path, or profitability replay path.
+- Affected files/modules: `apps/paper_runner/lifecycle.py`, `apps/paper_runner/__init__.py`, `core/accounting/ledger.py`, `core/accounting/reconciliation.py`, focused tests, and governance docs.
+- Superseded decisions: no previous decision is superseded; RX-021 extends fake paper result reporting downstream of RX-007.
+- Non-decisions: RX-021 does not recalculate EV, fees, funding, VWAP/liquidity, basis, spread, slippage, price impact, or profitability; does not mutate route eligibility; does not add route statuses or `RejectReason` values; does not add adapters, network calls, orders, live runner behavior, live trading, executable `CapturePlan`, execution planning, canary architecture, hold-next-cycle logic, or a second decision, snapshot, ledger-write, replay, economics, or live execution path.

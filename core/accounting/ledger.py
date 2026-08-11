@@ -182,12 +182,17 @@ def append_paper_capture_opened_event(
     capture: Capture,
     state_path: Sequence[CaptureState],
     recorded_at: datetime,
+    paper_result_explanation: Mapping[str, Any] | None = None,
 ) -> LedgerEvent:
     """Record a fake paper capture opening lifecycle event."""
 
+    payload = dict(_capture_payload(capture, state_path))
+    if paper_result_explanation is not None:
+        payload["paper_result_explanation"] = paper_result_explanation
+
     return ledger.append(
         event_type=LedgerEventType.PAPER_CAPTURE_OPENED,
-        payload=_capture_payload(capture, state_path),
+        payload=payload,
         recorded_at=recorded_at,
     )
 
@@ -229,18 +234,23 @@ def append_paper_rejection_event(
     decision: DecisionResult,
     *,
     recorded_at: datetime | None = None,
+    paper_result_explanation: Mapping[str, Any] | None = None,
 ) -> LedgerEvent:
     """Record that a route decision did not start fake paper capture execution."""
 
+    payload: dict[str, Any] = {
+        "route_id": decision.route_id,
+        "mode": decision.mode.value,
+        "status": decision.status.value,
+        "reasons": tuple(reason.value for reason in decision.reasons),
+        "capture_started": False,
+    }
+    if paper_result_explanation is not None:
+        payload["paper_result_explanation"] = paper_result_explanation
+
     return ledger.append(
         event_type=LedgerEventType.PAPER_REJECTION_RECORDED,
-        payload={
-            "route_id": decision.route_id,
-            "mode": decision.mode.value,
-            "status": decision.status.value,
-            "reasons": tuple(reason.value for reason in decision.reasons),
-            "capture_started": False,
-        },
+        payload=payload,
         recorded_at=recorded_at or decision.decided_at,
     )
 

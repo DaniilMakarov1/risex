@@ -56,6 +56,7 @@ tests/
 - `FundingSettlementVerificationResult`: deterministic replay result proving whether fake checkpoint evidence and fake observed settlement evidence agree for one Capture settlement.
 - `LedgerReconciliationResult`: deterministic replay result proving whether one Capture ledger history is internally consistent and explicitly reconciled.
 - `LiveGateEvidenceBundleReplayResult`: deterministic accounting replay result proving whether one recorded fake live-gate evidence bundle check is well-formed, current, and consistent with the existing bundle gate result.
+- `PaperResultExplanation`: app-local fake paper result attribution copied from the input `DecisionResult`, including start/non-start blockers and existing PnL components without recalculating profitability.
 
 ## Capture lifecycle state machine
 
@@ -110,6 +111,7 @@ Any non-terminal Capture may transition to `FAILED`. Capture states with possibl
 - Ledger reconciliation happens only in `core/accounting/reconciliation.py`.
 - Funding settlement verification happens only in `core/monitoring/funding_settlement.py`.
 - Fake paper lifecycle orchestration happens only in `apps/paper_runner/lifecycle.py`.
+- Fake paper result attribution and PnL explanation happen only in `apps/paper_runner/lifecycle.py`; optional explanation payload recording remains inside existing accounting ledger events.
 - Execution capability live gating happens only in `core/risk/gates.py` and reuses existing `ExecutableQuote` contracts.
 - Live gate evidence bundle checking happens only in `core/risk/gates.py` and reuses existing funding verification, ledger reconciliation, CapturePlan freshness, and execution capability evidence outputs.
 - Live gate evidence bundle ledger recording happens only in `core/accounting/ledger.py`; replay validation happens only in `core/accounting/reconciliation.py` and reuses the existing risk gate result.
@@ -267,6 +269,16 @@ RX-007 adds deterministic fake paper lifecycle and append-only ledger persistenc
 8. `core/accounting/ledger.py` owns immutable ledger event contracts, append helper functions, and deterministic paper replay into final `Capture` states.
 9. `storage/sqlite/ledger.py` is minimal SQLite append-only persistence scaffolding for deterministic offline tests; it does not introduce migrations, adapters, exchange connectivity, secrets, or live trading.
 10. RX-007 does not call `evaluate_route()`, assemble route snapshots, calculate EV, import economics/risk/execution/live runner modules, place orders, mutate route eligibility decisions, create `CapturePlan` objects, enable live trading, or hold a Capture into another funding cycle.
+
+RX-021 adds deterministic fake paper-result attribution and PnL explanation downstream of RX-007:
+
+1. `apps/paper_runner/lifecycle.py` owns `PaperResultExplanation` as the returned fake paper result explanation contract.
+2. Paper start attribution reuses the existing start predicate: only ENTRY `PAPER_ELIGIBLE` decisions start fake paper captures.
+3. Discovery decisions, rejected decisions, research-only decisions, and live-eligible decisions still record paper rejections and do not create `Capture` objects.
+4. PnL explanation copies existing `DecisionResult` economics: expected funding, total fees, simulated roundtrip cost, and net profit when `entry_ev` is present, plus top-level decision net profit.
+5. Missing `DecisionResult` economics remain `None`; paper attribution does not treat unknown values as zero.
+6. Existing paper ledger events may carry optional `paper_result_explanation` payloads. Reconciliation validates the optional payload shape when present but does not replay profitability or change paper lifecycle state replay.
+7. RX-021 does not call `evaluate_route()`, assemble route snapshots, recalculate EV, fees, funding, VWAP, liquidity, basis, spread, slippage, or profitability, create plans, place orders, import live/execution modules, or change route eligibility.
 
 RX-008 adds deterministic offline funding settlement verifier contracts and fake replay coverage:
 

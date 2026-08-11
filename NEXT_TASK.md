@@ -2,19 +2,19 @@
 
 ## Task ID
 
-RX-021 — Paper Result Attribution And PnL Explanation
+RX-022 — Read-only RiseX Observation Adapter
 
 ## Objective
 
-Add the next missing deterministic paper-result attribution and PnL explanation layer downstream of existing route decisions and fake paper lifecycle events. The output should explain why a fake paper run started or did not start, preserve the route decision economics already produced by `evaluate_route()`, and make paper outcomes easier to inspect without recalculating route profitability or changing eligibility.
+Add a read-only RiseX adapter that fetches and normalizes per-venue `VenueObservation` inputs only. Keep it downstream of venue data ingestion and upstream of the existing `assemble_route_snapshot()` path; do not evaluate routes, rank routes, start paper lifecycle, write ledger events, or perform any trading behavior inside the adapter.
 
 ## Starting baseline
 
-Start from reviewer-accepted `main` after RX-020 is reviewed and accepted. Before edits, verify the exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
+Start from reviewer-accepted `main` after RX-021 is reviewed and accepted. Before edits, verify the exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
 
 ## Branch
 
-Create and work on `task/rx-021-paper-result-attribution-pnl-explanation`. Do not implement on `main`.
+Create and work on `task/rx-022-read-only-risex-observation-adapter`. Do not implement on `main`.
 
 ## Before changing files
 
@@ -33,43 +33,40 @@ Read:
 
 ## Allowed scope
 
-- Existing fake paper lifecycle result and rejection reporting.
-- Existing `DecisionResult` economics already produced by the single `evaluate_route()` path.
-- Existing append-only ledger events only if needed to persist or replay paper-result explanation evidence through the current accounting owner module.
-- Focused paper lifecycle, ledger, and invariant tests proving explanations are deterministic and downstream-only.
+- A read-only RiseX venue adapter that returns normalized `VenueObservation` values for one RiseX venue/symbol at a time.
+- Minimal adapter tests using deterministic fixtures or injected read-only responses; tests must not depend on live external availability.
+- Existing venue adapter interfaces and normalized domain contracts only where required for the RiseX adapter.
+- Focused invariant coverage proving the adapter does not own route decisions, EV, VWAP, ledger writes, paper lifecycle, live behavior, or order placement.
 - Required repository metadata updates after implementation.
 
 ## Forbidden scope
 
-- No product strategy changes.
-- No new route statuses.
-- No new `RejectReason` values.
-- No route profitability recalculation outside `evaluate_route()`.
+- No Hyperliquid adapter; keep that as a later separate task.
+- No route profitability calculation, route ranking, route eligibility mutation, or calls to `evaluate_route()` from the adapter.
+- No route snapshot assembly inside the adapter; preserve `assemble_route_snapshot()` as the single snapshot path.
 - No second EV, fee, funding, VWAP/liquidity, basis, route decision, snapshot assembly, ledger-write, replay, or live execution path.
 - No standalone spread, price-impact, basis, slippage, max-level, hidden-buffer, or safety-margin filters.
-- No adapters, network calls, API clients, credentials, secrets, orders, live runner behavior, live trading, executable `CapturePlan`, or executable order plan.
+- No private account endpoints, credentials, secrets, orders, live runner behavior, live trading, executable `CapturePlan`, or executable order plan.
 - No canary architecture.
 - No hold-next-cycle logic.
 - No speculative helpers, wrappers, unused abstractions, or future hooks.
-- Do not implement read-only adapters, real market-data snapshot assembly, real-data research runner, funding settlement approval, execution planning, live runner behavior, order placement, monitoring, or dashboards.
+- Do not implement real market-data route snapshot assembly, real-data research runner, funding settlement approval, execution planning, live runner behavior, order placement, monitoring, or dashboards.
 
 ## Implementation requirements
 
-- Keep paper-result explanation downstream of existing `DecisionResult` values and `run_paper_lifecycle()`.
-- Preserve `evaluate_route(route, snapshot, mode)` as the single route decision path.
-- Preserve `assemble_route_snapshot()` as the single route snapshot assembly path.
-- Preserve append-only ledger behavior; if ledger evidence changes are needed, keep them in `core/accounting/ledger.py` and deterministic replay in the existing accounting/reconciliation owner boundary.
-- Do not recalculate EV, fees, funding, VWAP, basis, or profitability in the paper runner.
-- Do not start paper captures for discovery decisions, rejected decisions, research-only decisions, or live-eligible decisions.
-- Keep outputs deterministic, fake-data-only, offline, and non-trading.
-- Worker policy: this task touches paper lifecycle/accounting-facing result contracts, so one supervised worker/subagent is required before implementation edits. If worker tooling is unavailable, stop before edits and report the blocker. The worker must stop at DESIGN CHECKPOINT before edits and at CODE, TEST, and VALIDATION checkpoints if it continues.
+- Keep adapters read-only and per-venue: they may fetch/parse RiseX market data and produce one `VenueObservation`, but they must not assemble cross-venue route snapshots or evaluate route profitability.
+- Preserve `VenueAdapter.fetch_observation(symbol) -> VenueObservation` as the adapter-facing contract unless code inspection proves the current interface differs.
+- Normalize timestamps as timezone-aware values and preserve unknown economics explicitly through existing `EstimatedValue`/`ValueSource` contracts.
+- Do not silently convert missing fees, funding, order-book depth, or timestamps into zero/default success values.
+- If a live HTTP boundary is introduced, isolate it behind deterministic tests that use fixtures or injected fake responses; do not require network access for tests.
+- Worker policy: this task touches adapter and data-ingestion boundaries, so one supervised worker/subagent is required before implementation edits. If worker tooling is unavailable, stop before edits and report the blocker. The worker must stop at DESIGN CHECKPOINT before edits and at CODE, TEST, and VALIDATION checkpoints if it continues.
 - Parent owns steering, final diff review, validation, commit, push, and final report.
 
 ## Required files
 
-- Likely `apps/paper_runner/lifecycle.py`
+- Likely `core/venues/`
 - Likely focused tests under `tests/unit/`
-- Possibly `core/accounting/ledger.py` and replay tests only if paper-result explanation must be recorded as append-only evidence
+- Possibly deterministic fixture files under `tests/fixtures/` only if needed
 - Repository metadata files required by `AGENTS.md`
 - Do not touch product code outside the owner modules required by the final design checkpoint.
 
@@ -77,7 +74,7 @@ Read:
 
 - `python3 scripts/validate_next_task.py`
 - `python3 -m pytest tests/invariant`
-- Focused tests for fake paper-result attribution and PnL explanation behavior
+- Focused tests for read-only RiseX observation normalization and fail-closed missing/unknown data behavior
 - `python3 -m pytest`
 - `python3 -m compileall apps core storage tests scripts`
 - `python3 -m apps.cli.main`

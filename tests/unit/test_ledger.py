@@ -126,6 +126,11 @@ def test_replay_from_sqlite_ledger_events_is_deterministic(tmp_path) -> None:
     records = reopened.records()
     replayed_once = replay_paper_captures(records)
     replayed_twice = replay_paper_captures(records)
+    opened_event = next(
+        event
+        for event in records
+        if event.event_type == LedgerEventType.PAPER_CAPTURE_OPENED.value
+    )
 
     assert replayed_once == replayed_twice
     assert len(replayed_once) == 1
@@ -133,4 +138,8 @@ def test_replay_from_sqlite_ledger_events_is_deterministic(tmp_path) -> None:
     assert replayed_once[0].capture.route_id == route.route_id
     assert replayed_once[0].capture.settlement_time == snapshot.risex_funding_settlement_at
     assert replayed_once[0].capture.state is CaptureState.CLOSED
+    assert opened_event.payload["paper_result_explanation"]["paper_started"] is True
+    assert opened_event.payload["paper_result_explanation"]["pnl_explanation"]["net_profit_usd"] == (
+        str(decision.net_profit_usd)
+    )
     reopened.close()

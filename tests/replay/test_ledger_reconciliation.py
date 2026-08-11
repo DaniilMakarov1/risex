@@ -306,6 +306,34 @@ def _replace_ledger_event(
     )
 
 
+def test_malformed_paper_result_explanation_payload_fails_closed() -> None:
+    ledger = InMemoryLedger()
+    route, snapshot = _append_verified_history(ledger)
+    records = list(ledger.records())
+    opened_index = next(
+        index
+        for index, event in enumerate(records)
+        if event.event_type == LedgerEventType.PAPER_CAPTURE_OPENED.value
+    )
+    malformed_payload = dict(records[opened_index].payload)
+    malformed_explanation = dict(malformed_payload["paper_result_explanation"])
+    malformed_explanation["pnl_explanation"] = {"net_profit_usd": "not-a-decimal"}
+    malformed_payload["paper_result_explanation"] = malformed_explanation
+    records[opened_index] = _replace_ledger_event(
+        records[opened_index],
+        payload=malformed_payload,
+    )
+
+    result = replay_ledger_reconciliation(
+        tuple(records),
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+    )
+
+    assert result.reconciled is False
+    assert LedgerReconciliationReason.MALFORMED_LEDGER_EVENT_PAYLOAD in result.reasons
+
+
 def _funding_checkpoint_sequences(ledger: Ledger) -> tuple[int, ...]:
     return tuple(
         event.sequence

@@ -31,15 +31,19 @@ The detour's purpose is to keep future live-adjacent work honest: funding settle
 
 RX-020 — RouteCandidate Identity And Notional Contract Hardening is reviewer-accepted and finalized on `main`. It hardens the existing `RouteCandidate` identity and target-notional construction contract without implementing real adapters, real market data, paper-result attribution, execution planning, live runner behavior, orders, or later roadmap stages.
 
+## Current Implementation Branch
+
+RX-021 — Paper Result Attribution And PnL Explanation adds deterministic fake paper start/non-start attribution and PnL explanation downstream of existing `DecisionResult` values and fake paper lifecycle events. It preserves economics already produced by `evaluate_route()` and does not change route eligibility.
+
 ## Immediate Next Product Task
 
-The immediate next implementation task is RX-021 — Paper Result Attribution And PnL Explanation. It must remain the only next task in `NEXT_TASK.md` until completed and reviewed.
+After RX-021 is reviewed and accepted, the immediate next implementation task is RX-022 — Read-only RiseX Observation Adapter. It must remain the only next task in `NEXT_TASK.md` until completed and reviewed.
 
 ## Remaining Gated Roadmap After RX-021
 
 Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts:
 
-1. Add a read-only RiseX adapter that fetches and normalizes per-venue observations only.
+1. RX-022: Add a read-only RiseX adapter that fetches and normalizes per-venue observations only.
 2. Add a read-only Hyperliquid adapter that fetches and normalizes per-venue observations only.
 3. Assemble real market-data route snapshots through the existing `assemble_route_snapshot()` path.
 4. Add a real-data research runner that still uses the existing scan/refresh and `evaluate_route()` paths.
@@ -144,10 +148,16 @@ Harden the existing `RouteCandidate` construction contract so malformed capture 
 
 ## RX-021 — Paper Result Attribution And PnL Explanation
 
-Add the next missing paper-result attribution and PnL explanation layer downstream of existing route decisions and fake paper lifecycle events, if still absent at task start. Keep the work deterministic, fake-data-only, and non-trading.
+Add deterministic paper-result attribution and PnL explanation downstream of existing route decisions and fake paper lifecycle events. Preserve fake paper start eligibility exactly as ENTRY `PAPER_ELIGIBLE`, explain non-started decisions through deterministic mode/status blockers, copy existing `DecisionResult` economics into inspectable paper results and optional paper ledger payloads, and keep missing economics as missing instead of zero.
+
+RX-021 must not recalculate EV, fees, funding, VWAP, liquidity, basis, spread, slippage, or profitability; mutate route eligibility; add route statuses or reject reasons; create adapters, orders, live runner behavior, executable `CapturePlan`, or a second ledger/replay path.
+
+## RX-022 — Read-only RiseX Observation Adapter
+
+Add a read-only RiseX adapter that fetches and normalizes per-venue `VenueObservation` inputs only. Keep route snapshot assembly in `assemble_route_snapshot()`, route decisions in `evaluate_route()`, and all trading/execution behavior out of scope.
 
 ## Next Sequence
 
-1. RX-021 — Paper Result Attribution And PnL Explanation.
+1. RX-022 — Read-only RiseX Observation Adapter.
 
-Do not promote any later roadmap stage into the current handoff until RX-021 is completed, reviewed, and accepted.
+Do not promote any later roadmap stage into the current handoff until RX-022 is completed, reviewed, and accepted.

@@ -88,6 +88,8 @@ Actual settlement funding and actual settlement notional evidence are proof inpu
 
 Ledger reconciliation is a replay contract for append-only history consistency. It must not calculate profitability, mutate route decisions, create live plans, place orders, or silently treat missing, duplicated, non-contiguous, out-of-order, unknown, malformed, stale, or contradictory evidence as reconciled.
 
+Paper result attribution must remain downstream of `DecisionResult` and the fake paper lifecycle. It may explain why paper started or did not start, and may copy existing `DecisionResult` PnL components for inspection, but it must not recalculate route profitability, mutate eligibility, or turn missing economics into zero.
+
 SQLite ledger persistence must preserve append-only sequence continuity across close/reopen boundaries. A persisted append after successful reconciliation must make the prior reconciliation stale until a later reconciliation result covers the current persisted history.
 
 Malformed, stale, or contradictory evidence persisted after reopening a SQLite ledger must remain unreconciled after SQLite round-trip. The helper-derived explicit reconciliation flag must remain false for those histories, and the explicit reconciliation gate must fail closed.
