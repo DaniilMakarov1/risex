@@ -2,23 +2,23 @@
 
 ## Task ID
 
-RX-019 - Reviewer-Directed Follow-up After RX-018
+RX-020 — RouteCandidate Identity And Notional Contract Hardening
 
 ## Objective
 
-Handle only explicit reviewer direction after the RX-018 task branch is reviewed. If fixes are requested, apply the requested corrections in the existing RX-018 branch and keep them inside the original RX-018 scope. If RX-018 is accepted with no fixes, wait for the user to provide the accepted `main` baseline and the next concrete RX task prompt before changing files.
+Harden the existing `RouteCandidate` identity and target-notional contracts so malformed route identity or notional inputs fail closed before they can enter snapshot assembly, route evaluation, paper lifecycle, ledger evidence, or future live-gate evidence. Keep the work inside the existing modular-monolith owner boundaries and preserve RX-018 as the latest accepted product baseline.
 
 ## Starting baseline
 
-Start from the reviewer-designated state after RX-018 review. For same-branch fixes, use the existing RX-018 task branch. For any new product task, stop unless the user provides the accepted `main` baseline and a concrete task prompt.
+Start from the reviewer-accepted `main` baseline after RX-019 metadata follow-up. Before edits, verify the exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
 
 ## Branch
 
-For RX-018 review fixes, continue on `task/rx-018-settlement-timestamp-alignment-contract`. Do not create a new branch unless the user provides a new concrete RX task.
+Create and work on `task/rx-020-routecandidate-identity-notional-contract-hardening`. Do not implement on `main`.
 
 ## Before changing files
 
-Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, remote is wrong, branch is wrong, or HEAD does not match the reviewer-designated starting state.
+Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, remote is wrong, branch is wrong, `origin/HEAD` is not `origin/main`, `HEAD` does not match the accepted starting baseline, or unrelated branch work would be mixed into this task.
 
 Read:
 
@@ -33,55 +33,48 @@ Read:
 
 ## Allowed scope
 
-- Files explicitly named by reviewer feedback.
-- For same-branch RX-018 fixes, stay inside the original RX-018 allowed scope unless the reviewer explicitly expands it.
-- If there is no reviewer-requested fix and no new concrete task prompt, no files may be changed.
+- Existing `RouteCandidate` construction and validation contracts.
+- Existing route identity fields: capture id, route id, venues, symbols, entry sides, and target notional.
+- Existing route/snapshot alignment and route evaluation tests that prove malformed identity or notional inputs fail closed through current owner modules.
+- Repository metadata updates required by `AGENTS.md` after implementation.
 
 ## Forbidden scope
 
-- No product behavior changes beyond explicit reviewer-requested RX-018 fixes.
-- No route evaluation changes beyond reviewer-requested settlement timestamp alignment corrections.
-- No economics changes.
-- No VWAP/liquidity recalculation changes.
-- No standalone spread, price-impact, basis, slippage, max-level, hidden-buffer, or safety-margin filters.
-- No live runner behavior.
-- No adapters, orders, network calls, API clients, credentials, secrets, or trading logic.
-- No executable `CapturePlan` or executable order plan.
-- No live trading enablement.
+- No product strategy changes.
 - No new route statuses.
 - No new `RejectReason` values.
+- No standalone spread, price-impact, basis, slippage, max-level, hidden-buffer, or safety-margin filters.
+- No EV, fee, funding, VWAP/liquidity, basis, ledger-write, replay, or snapshot second path.
+- No adapters, network calls, API clients, credentials, secrets, orders, live runner behavior, live trading, executable `CapturePlan`, or executable order plan.
 - No canary architecture.
 - No hold-next-cycle logic.
-- No second route model, EV path, decision path, snapshot assembly path, VWAP path, ledger-write path, replay module, or live execution path.
-- No broad refactors.
-- No speculative helpers or future hooks.
+- No speculative helpers, wrappers, unused abstractions, or future hooks.
+- Do not implement any task beyond this contract-hardening scope.
 
 ## Implementation requirements
 
-- Treat reviewer feedback as the only source of scope for this follow-up.
-- Preserve `check_route_snapshot_alignment()` as the route/snapshot alignment owner unless reviewer feedback explicitly identifies a narrow bug in that contract.
-- Preserve `evaluate_route(route, snapshot, mode)` as the single route decision path.
+- Preserve `RouteCandidate` as the authoritative route identity and notional contract.
 - Preserve `assemble_route_snapshot()` as the single route snapshot assembly path.
-- Use existing `RejectReason` values.
-- Do not recalculate EV, fees, funding, VWAP, basis, or profitability.
-- Do not call adapters, call execution modules, place orders, create live plans, mutate route eligibility outside the existing decision path, or return `LIVE_ELIGIBLE`.
-- Worker policy: one supervised worker is required for any non-trivial architecture-sensitive fix; otherwise workers are optional for tiny reviewer-requested fixes.
-- A required worker must stop at DESIGN CHECKPOINT before implementation edits and wait for Parent approval or steering before continuing.
-- A required worker must also stop at CODE CHECKPOINT, TEST CHECKPOINT, and VALIDATION CHECKPOINT if it continues beyond design support.
+- Preserve `evaluate_route(route, snapshot, mode)` as the single route decision path.
+- Keep identity and notional validation deterministic and fail-closed.
+- Unknown or malformed values must not silently become empty strings, zero, or default notional.
+- Use existing owner modules and existing centralized rejection behavior wherever possible.
+- Add or adjust only focused tests that prove valid route candidates still pass and malformed identity/notional candidates fail closed.
+- Worker policy: this is broad contract hardening, so one supervised worker/subagent is required before implementation edits. If worker tooling is unavailable, stop before edits and report the blocker. The worker must stop at DESIGN CHECKPOINT before edits and at CODE, TEST, and VALIDATION checkpoints if it continues.
 - Parent owns steering, final diff review, validation, commit, push, and final report.
-- The worker must not commit, push, merge, approve work, or start unrelated scope.
-- Parent must stop before edits if a required worker is unavailable.
 
 ## Required files
 
-- Reviewer-requested files only.
-- If no fixes are requested, no files are required.
+- Likely `core/domain/contracts.py`
+- Likely focused unit or invariant tests under `tests/`
+- Repository metadata files required by `AGENTS.md`
+- Do not touch product code outside the owner modules required by the final design checkpoint.
 
 ## Required tests
 
 - `python3 scripts/validate_next_task.py`
 - `python3 -m pytest tests/invariant`
-- Focused tests for reviewer-requested route/snapshot/evaluate behavior, if files change.
+- Focused tests for route candidate identity and notional contract behavior
 - `python3 -m pytest`
 - `python3 -m compileall apps core storage tests scripts`
 - `python3 -m apps.cli.main`

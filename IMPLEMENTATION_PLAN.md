@@ -85,6 +85,10 @@ Add deterministic SQLite reopen coverage proving that malformed, stale, or contr
 
 Tighten route/snapshot alignment so RiseX and hedge funding settlement timestamps must match before a route can pass into executability, Entry EV, and paper eligibility. Preserve per-leg settlement timestamps in `assemble_route_snapshot()`, fail mismatches through existing `RejectReason.TECHNICALLY_NOT_EXECUTABLE`, and avoid changing economics, VWAP/liquidity, adapters, orders, live behavior, route statuses, reject reasons, or second decision paths.
 
+## RX-019 — Reviewer-Directed Follow-up After RX-018
+
+Apply reviewer-directed repository handoff metadata fixes after RX-018 acceptance. Keep RX-018 as the latest accepted product baseline, record RX-019 as metadata-only follow-up, and prepare the next task prompt without changing product behavior.
+
 ## Next Sequence
 
-1. RX-019 — Reviewer-Directed Follow-up After RX-018.
+1. RX-020 — RouteCandidate Identity And Notional Contract Hardening.
