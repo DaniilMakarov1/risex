@@ -196,9 +196,11 @@ def _append_live_gate_bundle_record(
     *,
     route: RouteCandidate,
     snapshot: VenueSnapshot,
+    recorded_bundle_check_passed: bool | None = None,
+    recorded_bundle_check_reason: RejectReason | None = None,
 ) -> None:
     bundle = _live_gate_evidence_bundle(ledger=ledger, route=route, snapshot=snapshot)
-    bundle_check_passed, bundle_check_reason = check_live_gate_evidence_bundle(
+    checked_passed, checked_reason = check_live_gate_evidence_bundle(
         route=route,
         settlement_time=snapshot.risex_funding_settlement_at,
         evaluated_at=snapshot.captured_at,
@@ -210,8 +212,16 @@ def _append_live_gate_bundle_record(
         settlement_time=snapshot.risex_funding_settlement_at,
         evaluated_at=snapshot.captured_at,
         live_gate_evidence_bundle=bundle,
-        bundle_check_passed=bundle_check_passed,
-        bundle_check_reason=bundle_check_reason,
+        bundle_check_passed=(
+            checked_passed
+            if recorded_bundle_check_passed is None
+            else recorded_bundle_check_passed
+        ),
+        bundle_check_reason=(
+            checked_reason
+            if recorded_bundle_check_reason is None
+            else recorded_bundle_check_reason
+        ),
         route_decision_event_sequence=_event_sequence(
             ledger,
             LedgerEventType.ROUTE_DECISION_RECORDED,
@@ -479,10 +489,48 @@ def test_reconciliation_accepts_well_formed_live_gate_bundle_record_after_new_re
 
     assert result.reconciled is True
     assert result.reasons == ()
+    assert result.checked_event_sequences == (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12)
     assert ledger.records()[-1].event_type == LedgerEventType.LEDGER_RECONCILIATION_RECORDED.value
     assert ledger.records()[-1].payload["event_count"] == 12
     assert ledger.records()[-1].payload["last_sequence"] == 12
     assert is_ledger_explicitly_reconciled(ledger.records()) is True
+
+
+def test_reconciliation_fails_closed_on_contradictory_live_gate_bundle_record() -> None:
+    ledger = InMemoryLedger()
+    route, snapshot = _append_verified_history(ledger)
+    reconcile_ledger(
+        ledger,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+    _append_live_gate_bundle_record(
+        ledger,
+        route=route,
+        snapshot=snapshot,
+        recorded_bundle_check_passed=False,
+        recorded_bundle_check_reason=RejectReason.REQUIRED_LIVE_DATA_MISSING,
+    )
+
+    assert ledger.records()[-1].event_type == LedgerEventType.LIVE_GATE_EVIDENCE_BUNDLE_RECORDED.value
+
+    result = reconcile_ledger(
+        ledger,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+
+    assert result.reconciled is False
+    assert (
+        LedgerReconciliationReason.CONTRADICTORY_LIVE_GATE_EVIDENCE_BUNDLE
+        in result.reasons
+    )
+    assert result.checked_event_sequences == (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12)
+    assert ledger.records()[-1].event_type == LedgerEventType.LEDGER_RECONCILIATION_RECORDED.value
+    assert ledger.records()[-1].payload["reconciled"] is False
+    assert is_ledger_explicitly_reconciled(ledger.records()) is False
 
 
 def test_reconciliation_fails_closed_on_malformed_live_gate_bundle_record_payload() -> None:

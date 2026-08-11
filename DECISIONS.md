@@ -265,3 +265,14 @@
 - Affected files/modules: `core/accounting/ledger.py`, `core/accounting/reconciliation.py`, `core/accounting/__init__.py`, replay tests, invariant tests, and governance docs.
 - Superseded decisions: no previous decision is superseded; RX-013 records and replays the RX-012 fake bundle gate result without changing the gate itself.
 - Non-decisions: RX-013 does not implement real RiseX or Hyperliquid adapters, network calls, API clients, authentication, order placement, live runner behavior, live trading, executable live order plans, live `CapturePlan` creation, canary architecture, hold-next-cycle logic, artificial filters, route profitability recalculation, route eligibility mutation, a second route model, a second EV path, a second route decision function, a second snapshot assembly function, a second VWAP/liquidity path, or live execution.
+
+## 2026-08-11 - RX-013 FIX
+
+- Date: 2026-08-11
+- Decision: Ledger reconciliation now requires any current `live_gate_evidence_bundle_recorded` event to replay successfully through `replay_live_gate_evidence_bundle_recording()` before reconciliation can pass.
+- Reason: Payload shape validation alone can allow a syntactically valid but semantically contradictory bundle record to be covered by a later successful reconciliation, weakening the append-only evidence chain.
+- Decision: Valid live-gate bundle record event sequences are included in `LedgerReconciliationResult.checked_event_sequences`.
+- Reason: A reconciliation result must identify that it covered the bundle evidence append, not only the earlier route, paper lifecycle, and funding evidence.
+- Affected files/modules: `core/accounting/reconciliation.py`, `tests/replay/test_ledger_reconciliation.py`, `README.md`, `ARCHITECTURE.md`, `PRODUCT_INVARIANTS.md`, `DECISIONS.md`, `STATUS.md`, and `NEXT_TASK.md`.
+- Superseded decisions: RX-013's bundle event shape validation is tightened; semantic bundle replay is now part of ledger reconciliation when bundle records are present.
+- Non-decisions: RX-013 FIX does not change route decisions, economics, risk gate behavior, route statuses, `RejectReason` values, adapters, orders, live runner behavior, live trading, executable live order plans, live `CapturePlan` creation, canary architecture, hold-next-cycle logic, artificial filters, or RX-014 implementation.

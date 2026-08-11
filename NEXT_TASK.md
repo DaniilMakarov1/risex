@@ -77,7 +77,7 @@ Read:
 - SQLite replay tests must not recalculate EV, fees, funding, VWAP, basis, or profitability.
 - SQLite replay tests must not call adapters, call execution modules, place orders, create live plans, mutate route eligibility decisions, or return `LIVE_ELIGIBLE`.
 - Even with a persisted and replayed successful fake bundle check, current route decisions must remain blocked by `LIVE_GATES_NOT_IMPLEMENTED` until a later accepted task implements a safe live path.
-- Use a supervised worker/subagent if repository governance requires one for this architecture-sensitive task.
+- Use exactly one supervised worker/subagent for design support before implementation, because this persistence/replay task is architecture-sensitive under RX-Q002 governance.
 
 ## Required files
 

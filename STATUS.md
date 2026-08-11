@@ -11,7 +11,7 @@
 - Accepted baseline branch: `main`
 - Current RX task: RX-013 — Offline Live Gate Evidence Bundle Ledger Recording and Replay Coverage
 - Current RX task branch: `task/rx-013-live-gate-evidence-bundle-ledger-replay`
-- Current RX task status: implemented on task branch; validation pending final report and reviewer review
+- Current RX task status: RX-013 FIX implemented on task branch; validation pending final report and reviewer review
 
 RX-Q002 is the latest accepted governance baseline on `main`.
 RX-012 remains the previous accepted product baseline.
@@ -65,6 +65,7 @@ RX-013 is not accepted until reviewer approval. `NEXT_TASK.md` is prepared for R
 - Deterministic fake live gate evidence bundle check recording lives in `core/accounting/ledger.py` as `live_gate_evidence_bundle_recorded`.
 - Deterministic fake live gate evidence bundle check replay lives in `core/accounting/reconciliation.py` as `replay_live_gate_evidence_bundle_recording()`.
 - Missing, duplicated, stale, malformed, or contradictory bundle ledger evidence fails closed, and the replayed recorded outcome must match `core/risk/gates.py`.
+- Ledger reconciliation fails closed over any current `live_gate_evidence_bundle_recorded` event that does not replay successfully through `replay_live_gate_evidence_bundle_recording()`.
 - Appending bundle-check evidence after successful reconciliation makes the full ledger history unreconciled until a new reconciliation event covers the append.
 - Future live gating now checks live trading switch, explicit ledger reconciliation, verified funding settlement, CapturePlan freshness evidence, execution capability evidence, and then the still-unimplemented live gates when a fake bundle is supplied.
 - `evaluate_route()` may receive fake freshness evidence, execution-capability evidence, or a fake live gate evidence bundle but still does not read ledger/storage directly, create live `CapturePlan` objects, import execution/live runner modules, place orders, or return `LIVE_ELIGIBLE`.
@@ -132,6 +133,16 @@ RX-013 is not accepted until reviewer approval. `NEXT_TASK.md` is prepared for R
 - `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
 - `python3 -m pytest tests/invariant`: `33 passed`
 - `python3 -m pytest`: `263 passed`
+- `python3 -m compileall apps core storage tests scripts`: exit 0
+- `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
+- `git diff --check`: exit 0
+- `git diff --cached --check`: exit 0
+
+## Tests last reported for RX-013 FIX task branch
+
+- `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
+- `python3 -m pytest tests/replay/test_live_gate_evidence_bundle.py tests/replay/test_ledger_reconciliation.py tests/invariant/test_economics_boundaries.py`: `56 passed`
+- `python3 -m pytest`: `264 passed`
 - `python3 -m compileall apps core storage tests scripts`: exit 0
 - `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
 - `git diff --check`: exit 0

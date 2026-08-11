@@ -1269,6 +1269,28 @@ def replay_live_gate_evidence_bundle_recording(
     )
 
 
+def _validate_live_gate_bundle_recording_for_reconciliation(
+    *,
+    events: Sequence[LedgerEvent],
+    capture_id: str,
+    settlement_time: datetime,
+    reasons: list[LedgerReconciliationReason],
+) -> tuple[int, ...]:
+    live_gate_bundle_events = _live_gate_bundle_events_for_capture(events, capture_id)
+    if not live_gate_bundle_events:
+        return ()
+
+    replayed = replay_live_gate_evidence_bundle_recording(
+        events,
+        capture_id=capture_id,
+        settlement_time=settlement_time,
+    )
+    if not replayed.replayed:
+        for reason in replayed.reasons:
+            _add_reason(reasons, reason)
+    return tuple(event.sequence for event in live_gate_bundle_events)
+
+
 def replay_ledger_reconciliation(
     events: Sequence[LedgerEvent],
     *,
@@ -1309,10 +1331,17 @@ def replay_ledger_reconciliation(
         settlement_time=settlement_time,
         reasons=reasons,
     )
+    live_gate_bundle_event_sequences = _validate_live_gate_bundle_recording_for_reconciliation(
+        events=supplied_events,
+        capture_id=capture_id,
+        settlement_time=settlement_time,
+        reasons=reasons,
+    )
 
     checked_event_sequences = set(paper_event_sequences)
     if route_decision is not None:
         checked_event_sequences.add(route_decision.sequence)
+    checked_event_sequences.update(live_gate_bundle_event_sequences)
     if funding_verification is not None:
         checked_event_sequences.add(funding_verification.sequence)
         checkpoint_sequences = _payload_int_sequence(
