@@ -16,9 +16,9 @@
 - Previous accepted product task before RX-012: RX-011 — Offline Execution Capability Gate Design and Fake Replay Coverage
 - Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
-- Current RX task: none
-- Current RX task branch: none
-- Current RX task status: none
+- Current RX task: RX-016 — Offline SQLite Ledger Reopen Fail-Closed Replay Coverage
+- Current RX task branch: `task/rx-016-sqlite-ledger-reopen-fail-closed-replay`
+- Current RX task status: implementation complete on task branch; pending reviewer acceptance
 
 RX-015 is the latest accepted product baseline on `main`.
 RX-014 remains the previous accepted product baseline before RX-015.
@@ -27,8 +27,8 @@ RX-013 remains the previous accepted product baseline before RX-014.
 RX-012 remains the previous accepted product baseline before RX-013.
 RX-Q001 remains the previous accepted governance baseline before RX-Q002.
 RX-011 remains the previous accepted product implementation baseline before RX-012.
-No current RX task is active.
-`NEXT_TASK.md` is prepared for RX-016.
+RX-016 is implemented on the task branch but is not accepted until reviewer acceptance is explicit.
+`NEXT_TASK.md` is prepared for reviewer-directed follow-up after RX-016.
 
 ## Completed accepted tasks
 
@@ -83,6 +83,7 @@ No current RX task is active.
 - Appending bundle-check evidence after successful reconciliation makes the full ledger history unreconciled until a new reconciliation event covers the append.
 - SQLite persistence replay coverage proves valid, malformed, and contradictory `live_gate_evidence_bundle_recorded` payloads round-trip through `storage/sqlite/ledger.py` with the same replay outcomes as in-memory ledger records.
 - SQLite reopen append-continuity coverage proves append sequences continue across close/reopen boundaries, later persisted appends make prior reconciliation stale, and later reconciliation over reopened records replays deterministically.
+- SQLite reopen fail-closed coverage proves malformed, stale, or contradictory persisted appends after reopening remain unreconciled after SQLite round-trip and keep the helper-derived explicit reconciliation gate false.
 - Future live gating now checks live trading switch, explicit ledger reconciliation, verified funding settlement, CapturePlan freshness evidence, execution capability evidence, and then the still-unimplemented live gates when a fake bundle is supplied.
 - `evaluate_route()` may receive fake freshness evidence, execution-capability evidence, or a fake live gate evidence bundle but still does not read ledger/storage directly, create live `CapturePlan` objects, import execution/live runner modules, place orders, or return `LIVE_ELIGIBLE`.
 - In-memory Broad Scan to Focused Refresh handoff using existing `RouteCandidate` contracts.
@@ -174,6 +175,17 @@ No current RX task is active.
 - `git diff --check`: exit 0
 - `git diff --cached --check`: exit 0
 
+## Tests last reported for RX-016 task branch
+
+- `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
+- `python3 -m pytest tests/invariant`: `33 passed`
+- `python3 -m pytest tests/replay/test_ledger_reconciliation.py`: `34 passed`
+- `python3 -m pytest`: `273 passed`
+- `python3 -m compileall apps core storage tests scripts`: exit 0
+- `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
+- `git diff --check`: exit 0
+- `git diff --cached --check`: exit 0
+
 ## Known limitations
 
 - Funding settlement verifier, ledger reconciliation, and CapturePlan freshness remain deterministic fake offline replay scaffolding only.
@@ -195,7 +207,8 @@ No current RX task is active.
 - Replayed successful fake live gate evidence bundle ledger recording is not permission to trade live by itself.
 - SQLite persistence replay coverage is deterministic offline test coverage only.
 - SQLite reopen append-continuity replay coverage is deterministic offline test coverage only.
+- SQLite reopen fail-closed replay coverage is deterministic offline test coverage only.
 
 ## Next recommended task
 
-RX-016 — Offline SQLite Ledger Reopen Fail-Closed Replay Coverage.
+RX-017 — Reviewer-Directed Follow-up After RX-016.

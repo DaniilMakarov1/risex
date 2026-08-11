@@ -203,6 +203,14 @@ RX-015 adds deterministic SQLite reopen append-continuity replay coverage:
 4. Reopened SQLite records replay deterministically after the later reconciliation.
 5. SQLite reopen replay coverage does not recalculate EV, fees, funding, VWAP, basis, or profitability, and does not call adapters, execution modules, place orders, create live plans, mutate route eligibility, or return `LIVE_ELIGIBLE`.
 
+RX-016 adds deterministic SQLite reopen fail-closed replay coverage:
+
+1. `SQLiteLedger` remains the existing minimal append-only persistence contract; no migration or second storage layer is introduced.
+2. Malformed, stale, or contradictory appends persisted after reopening an existing SQLite ledger remain unreconciled after SQLite round-trip.
+3. `is_ledger_explicitly_reconciled(reopened.records())` remains false for those fail-closed histories, and the explicit reconciliation gate returns `LEDGER_NOT_RECONCILED`.
+4. Reconciliation replay from reopened SQLite records remains deterministic for malformed, stale, and contradictory persisted appends.
+5. SQLite reopen fail-closed replay coverage does not recalculate EV, fees, funding, VWAP, basis, or profitability, and does not call adapters, execution modules, place orders, create live plans, mutate route eligibility, or return `LIVE_ELIGIBLE`.
+
 RX-004 adds a deterministic offline snapshot assembly layer before evaluation:
 
 1. Venue adapters return per-venue `VenueObservation` objects, never cross-venue snapshots.

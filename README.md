@@ -47,6 +47,8 @@ Missing, duplicated, non-contiguous, out-of-order, unknown, malformed, stale, fo
 
 SQLite reopen coverage proves that `SQLiteLedger` keeps append-only sequence continuity across close/reopen boundaries. A later persisted append after successful reconciliation makes the prior explicit reconciliation stale until a new reconciliation result covers the current persisted history, and replay from reopened SQLite records remains deterministic.
 
+SQLite reopen fail-closed coverage proves that malformed, stale, or contradictory appends persisted after reopening an existing `SQLiteLedger` remain unreconciled after SQLite round-trip. The helper-derived explicit reconciliation flag remains false for those histories, and replay from reopened records remains deterministic.
+
 ## Offline CapturePlan freshness gate
 
 The deterministic fake CapturePlan freshness gate is downstream of route decisions, funding settlement verification, and ledger reconciliation. It consumes fake `CapturePlanFreshnessEvidence` values only; these are not executable order plans and do not contain exchange instructions.

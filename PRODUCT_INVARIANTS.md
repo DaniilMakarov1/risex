@@ -79,6 +79,8 @@ Ledger reconciliation is a replay contract for append-only history consistency. 
 
 SQLite ledger persistence must preserve append-only sequence continuity across close/reopen boundaries. A persisted append after successful reconciliation must make the prior reconciliation stale until a later reconciliation result covers the current persisted history.
 
+Malformed, stale, or contradictory evidence persisted after reopening a SQLite ledger must remain unreconciled after SQLite round-trip. The helper-derived explicit reconciliation flag must remain false for those histories, and the explicit reconciliation gate must fail closed.
+
 Execution capability is a fake live-gate evidence contract over existing order-book quotes. It must not recalculate VWAP, decide profitability, replace ledger reconciliation, replace funding settlement verification, replace CapturePlan freshness, create live plans, or place orders.
 
 Live gate evidence bundles are fake aggregate evidence only. They must not replay ledger history, replay funding settlement verification, recalculate VWAP/EV/profitability, replace the existing plan freshness or execution-capability gates, create live plans, or place orders.

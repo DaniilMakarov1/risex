@@ -77,6 +77,10 @@ Add deterministic SQLite persistence replay coverage for fake live gate evidence
 
 Add deterministic SQLite reopen coverage for append-only sequence continuity and reconciliation freshness. Prove that appending after reopening an existing `SQLiteLedger` continues from the last persisted sequence, that a later persisted append makes prior reconciliation stale, and that a later reconciliation over reopened records replays deterministically without changing storage architecture, route decisions, economics, risk gates, adapters, orders, or live trading.
 
+## RX-016 — Offline SQLite Ledger Reopen Fail-Closed Replay Coverage
+
+Add deterministic SQLite reopen coverage proving that malformed, stale, or contradictory append-only evidence persisted after reopening an existing `SQLiteLedger` remains unreconciled after SQLite round-trip. Prove deterministic reconciliation replay from reopened SQLite records and the helper-derived explicit reconciliation gate remains false without changing storage architecture, route decisions, economics, risk gates, adapters, orders, or live trading.
+
 ## Next Sequence
 
-1. RX-016 — Offline SQLite Ledger Reopen Fail-Closed Replay Coverage.
+1. RX-017 — Reviewer-Directed Follow-up After RX-016.

@@ -2,23 +2,23 @@
 
 ## Task ID
 
-RX-016 - Offline SQLite Ledger Reopen Fail-Closed Replay Coverage
+RX-017 - Reviewer-Directed Follow-up After RX-016
 
 ## Objective
 
-Add deterministic offline coverage proving that malformed, stale, or contradictory append-only evidence persisted after reopening a SQLite ledger still fails closed through the existing reconciliation replay and explicit reconciliation gate. The task must not change live eligibility, route decisions, economics, adapters, orders, or live trading behavior.
+Handle only explicit reviewer direction after the RX-016 task branch is reviewed. If fixes are requested, apply the requested corrections in the existing RX-016 branch and keep them inside the original RX-016 scope. If RX-016 is accepted with no fixes, wait for the user to provide the accepted `main` baseline and the next concrete RX task prompt before changing files.
 
 ## Starting baseline
 
-Start from reviewer-accepted `main` after the previous task is accepted and merged.
+Start from the reviewer-designated state after RX-016 review. For same-branch fixes, use the existing RX-016 task branch. For any new product task, stop unless the user provides the accepted `main` baseline and a concrete task prompt.
 
 ## Branch
 
-Create and work on `task/rx-016-sqlite-ledger-reopen-fail-closed-replay`.
+For RX-016 review fixes, continue on `task/rx-016-sqlite-ledger-reopen-fail-closed-replay`. Do not create a new branch unless the user provides a new concrete RX task.
 
 ## Before changing files
 
-Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, remote is wrong, branch is wrong, or HEAD does not match the reviewer-accepted baseline.
+Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, remote is wrong, branch is wrong, or HEAD does not match the reviewer-designated starting state.
 
 Read:
 
@@ -33,23 +33,15 @@ Read:
 
 ## Allowed scope
 
-- `storage/sqlite/ledger.py`
-- `tests/unit/test_ledger.py`
-- `tests/replay/test_ledger_reconciliation.py`
-- `tests/invariant/test_economics_boundaries.py`
-- `README.md`
-- `ARCHITECTURE.md`
-- `PRODUCT_INVARIANTS.md`
-- `IMPLEMENTATION_PLAN.md`
-- `STATUS.md`
-- `DECISIONS.md`
-- `NEXT_TASK.md`
+- Files explicitly named by reviewer feedback.
+- For same-branch RX-016 fixes, stay inside the original RX-016 allowed scope unless the reviewer explicitly expands it.
+- If there is no reviewer-requested fix and no new concrete task prompt, no files may be changed.
 
 ## Forbidden scope
 
-- No product behavior changes beyond deterministic SQLite reopen fail-closed replay coverage.
+- No product behavior changes beyond explicit reviewer-requested RX-016 fixes.
 - No route evaluation changes.
-- No risk gate behavior changes unless a persistence bug makes existing replay impossible, and then keep the change narrowly scoped.
+- No risk gate behavior changes unless reviewer feedback identifies a persistence/replay bug that makes existing replay impossible, and then keep the change narrowly scoped.
 - No economics changes.
 - No VWAP/liquidity recalculation changes.
 - No standalone spread, price-impact, basis, slippage, max-level, hidden-buffer, or safety-margin filters.
@@ -67,33 +59,22 @@ Read:
 
 ## Implementation requirements
 
-- Preserve `SQLiteLedger` as the existing minimal append-only persistence contract.
-- Use the existing SQLite ledger contract; do not introduce migrations or a second storage layer unless an actual reopen replay bug requires the smallest possible fix.
-- Prove that malformed, stale, or contradictory persisted appends after reopening an existing SQLite ledger remain unreconciled after SQLite round-trip.
-- Prove that `is_ledger_explicitly_reconciled(reopened.records())` remains false for those fail-closed histories.
-- Prove replay outcomes are deterministic from reopened SQLite records.
-- SQLite replay tests must not recalculate EV, fees, funding, VWAP, basis, or profitability.
-- SQLite replay tests must not call adapters, call execution modules, place orders, create live plans, mutate route eligibility decisions, or return `LIVE_ELIGIBLE`.
-- Worker policy: one supervised worker required.
-- The worker must stop at DESIGN CHECKPOINT before implementation edits and wait for Parent approval or steering before continuing.
-- The worker must also stop at CODE CHECKPOINT, TEST CHECKPOINT, and VALIDATION CHECKPOINT if it continues beyond design support.
+- Treat reviewer feedback as the only source of scope for this follow-up.
+- Preserve `SQLiteLedger` as the existing minimal append-only persistence contract unless reviewer feedback identifies a narrow storage bug.
+- Do not introduce migrations or a second storage layer.
+- Do not recalculate EV, fees, funding, VWAP, basis, or profitability in SQLite replay tests.
+- Do not call adapters, call execution modules, place orders, create live plans, mutate route eligibility decisions, or return `LIVE_ELIGIBLE`.
+- Worker policy: one supervised worker is required for any non-trivial architecture-sensitive fix; otherwise workers are optional for tiny reviewer-requested fixes.
+- A required worker must stop at DESIGN CHECKPOINT before implementation edits and wait for Parent approval or steering before continuing.
+- A required worker must also stop at CODE CHECKPOINT, TEST CHECKPOINT, and VALIDATION CHECKPOINT if it continues beyond design support.
 - Parent owns steering, final diff review, validation, commit, push, and final report.
 - The worker must not commit, push, merge, approve work, or start unrelated scope.
 - Parent must stop before edits if a required worker is unavailable.
 
 ## Required files
 
-- `storage/sqlite/ledger.py`
-- `tests/unit/test_ledger.py`
-- `tests/replay/test_ledger_reconciliation.py`
-- `tests/invariant/test_economics_boundaries.py`
-- `README.md`
-- `ARCHITECTURE.md`
-- `PRODUCT_INVARIANTS.md`
-- `IMPLEMENTATION_PLAN.md`
-- `STATUS.md`
-- `DECISIONS.md`
-- `NEXT_TASK.md`
+- Reviewer-requested files only.
+- If no fixes are requested, no files are required.
 
 ## Required tests
 
