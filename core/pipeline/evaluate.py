@@ -10,6 +10,7 @@ from core.domain.contracts import (
     CapturePlanFreshnessEvidence,
     DecisionResult,
     ExecutionCapabilityEvidence,
+    LiveGateEvidenceBundle,
     RouteCandidate,
     VenueSnapshot,
 )
@@ -50,6 +51,7 @@ def evaluate_route(
     *,
     rules: ProductRules | None = None,
     ledger: InMemoryLedger | None = None,
+    live_gate_evidence_bundle: LiveGateEvidenceBundle | None = None,
     ledger_explicitly_reconciled: bool = False,
     capture_plan_evidence: Sequence[CapturePlanFreshnessEvidence] | None = None,
     execution_capability_evidence: Sequence[ExecutionCapabilityEvidence] | None = None,
@@ -113,6 +115,7 @@ def evaluate_route(
         route=route,
         settlement_time=snapshot.risex_funding_settlement_at,
         evaluated_at=snapshot.captured_at,
+        live_gate_evidence_bundle=live_gate_evidence_bundle,
         ledger_explicitly_reconciled=ledger_explicitly_reconciled,
         capture_plan_evidence=capture_plan_evidence,
         execution_capability_evidence=execution_capability_evidence,

@@ -359,6 +359,50 @@ class ExecutionCapabilityEvidence:
 
 
 @dataclass(frozen=True, slots=True)
+class LiveGateEvidenceBundle:
+    """Fake aggregate evidence for the future live-gate sequence."""
+
+    capture_id: str
+    route_id: str
+    settlement_time: datetime
+    funding_settlement_verified: bool
+    ledger_explicitly_reconciled: bool
+    capture_plan_evidence: tuple[CapturePlanFreshnessEvidence, ...] = ()
+    execution_capability_evidence: tuple[ExecutionCapabilityEvidence, ...] = ()
+
+    def __post_init__(self) -> None:
+        for field_name in ("capture_id", "route_id"):
+            value = getattr(self, field_name)
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"{field_name} must be non-empty")
+        validate_timezone_aware_datetime(self.settlement_time, "settlement_time")
+        if type(self.funding_settlement_verified) is not bool:
+            raise ValueError("funding_settlement_verified must be a bool")
+        if type(self.ledger_explicitly_reconciled) is not bool:
+            raise ValueError("ledger_explicitly_reconciled must be a bool")
+
+        if self.capture_plan_evidence is None:
+            raise ValueError("capture_plan_evidence must be a tuple")
+        if self.execution_capability_evidence is None:
+            raise ValueError("execution_capability_evidence must be a tuple")
+        capture_plan_evidence = tuple(self.capture_plan_evidence)
+        execution_capability_evidence = tuple(self.execution_capability_evidence)
+        object.__setattr__(self, "capture_plan_evidence", capture_plan_evidence)
+        object.__setattr__(
+            self,
+            "execution_capability_evidence",
+            execution_capability_evidence,
+        )
+
+        for evidence in capture_plan_evidence:
+            if not isinstance(evidence, CapturePlanFreshnessEvidence):
+                raise ValueError("capture_plan_evidence must contain CapturePlanFreshnessEvidence values")
+        for evidence in execution_capability_evidence:
+            if not isinstance(evidence, ExecutionCapabilityEvidence):
+                raise ValueError("execution_capability_evidence must contain ExecutionCapabilityEvidence values")
+
+
+@dataclass(frozen=True, slots=True)
 class DecisionResult:
     """Result returned by the single route decision pipeline."""
 

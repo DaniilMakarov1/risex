@@ -56,6 +56,14 @@ The deterministic fake execution capability gate is downstream of route decision
 
 Missing, stale, cross-route, wrong-side, wrong-target, partial-fill, contradictory, unknown-source, or non-orderbook-source execution evidence fails closed through existing centralized reject reasons. Fresh execution evidence alone is not permission to trade live: live trading remains disabled by default, and even with helper-derived reconciliation plus fresh CapturePlan and execution-capability evidence, `evaluate_route()` still returns `PAPER_ELIGIBLE` with `LIVE_GATES_NOT_IMPLEMENTED` and no live `CapturePlan`.
 
+## Offline live gate evidence bundle
+
+The deterministic fake live gate evidence bundle is downstream of route decisions, funding settlement verification, ledger reconciliation, CapturePlan freshness, and execution capability. It aggregates already-derived fake evidence into one `LiveGateEvidenceBundle` for the future live gate sequence.
+
+The bundle records the current `capture_id`, `route_id`, funding settlement timestamp, funding-settlement verified flag, helper-derived ledger reconciliation flag, fake `CapturePlanFreshnessEvidence`, and fake `ExecutionCapabilityEvidence`. Bundle checking lives in `core/risk/gates.py` and reuses the existing plan freshness and execution-capability gates. It does not replay ledger history, recalculate funding, recalculate VWAP, evaluate profitability, create order plans, or enable live trading.
+
+Missing, cross-capture, cross-route, cross-settlement, unverified funding, unreconciled ledger, stale/missing plan evidence, or stale/missing/non-executable execution evidence fails closed through existing centralized reject reasons. Even with live trading manually enabled and exact fake bundle evidence, `evaluate_route()` still returns `PAPER_ELIGIBLE` with `LIVE_GATES_NOT_IMPLEMENTED` and no live `CapturePlan`.
+
 ## Boundaries
 
 Business logic has single-owner modules:
@@ -72,5 +80,6 @@ Business logic has single-owner modules:
 - ledger reconciliation: `core/accounting/reconciliation.py`
 - funding settlement verification: `core/monitoring/funding_settlement.py`
 - execution capability gating: `core/risk/gates.py`
+- live gate evidence bundling: `core/risk/gates.py`
 
 Venue adapters may fetch and normalize data only. They must not calculate EV, make route decisions, send orders, or write ledger events.

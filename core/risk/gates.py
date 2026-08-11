@@ -11,6 +11,7 @@ from core.domain.contracts import (
     CapturePlanFreshnessEvidence,
     ExecutionCapabilityEvidence,
     ExecutableQuote,
+    LiveGateEvidenceBundle,
     OrderSide,
     RouteCandidate,
     VALID_ORDER_SIDES,
@@ -255,12 +256,59 @@ def check_execution_capability_gate(
     return True, None
 
 
+def check_live_gate_evidence_bundle(
+    *,
+    route: RouteCandidate,
+    settlement_time: datetime,
+    evaluated_at: datetime,
+    live_gate_evidence_bundle: LiveGateEvidenceBundle | None,
+) -> tuple[bool, RejectReason | None]:
+    """Check one fake bundle without replaying ledger, funding, or liquidity."""
+
+    if not _datetime_is_timezone_aware(settlement_time) or not _datetime_is_timezone_aware(
+        evaluated_at
+    ):
+        return False, RejectReason.REQUIRED_LIVE_DATA_MISSING
+    if not isinstance(live_gate_evidence_bundle, LiveGateEvidenceBundle):
+        return False, RejectReason.REQUIRED_LIVE_DATA_MISSING
+    if live_gate_evidence_bundle.capture_id != route.capture_id:
+        return False, RejectReason.REQUIRED_LIVE_DATA_MISSING
+    if live_gate_evidence_bundle.route_id != route.route_id:
+        return False, RejectReason.REQUIRED_LIVE_DATA_MISSING
+    if live_gate_evidence_bundle.settlement_time != settlement_time:
+        return False, RejectReason.REQUIRED_LIVE_DATA_MISSING
+
+    ok, reason = check_ledger_reconciliation_gate(
+        live_gate_evidence_bundle.ledger_explicitly_reconciled
+    )
+    if not ok:
+        return False, reason
+    if live_gate_evidence_bundle.funding_settlement_verified is not True:
+        return False, RejectReason.REQUIRED_LIVE_DATA_MISSING
+
+    ok, reason = check_capture_plan_freshness_gate(
+        route=route,
+        settlement_time=settlement_time,
+        evaluated_at=evaluated_at,
+        plan_evidence=live_gate_evidence_bundle.capture_plan_evidence,
+    )
+    if not ok:
+        return False, reason
+    return check_execution_capability_gate(
+        route=route,
+        settlement_time=settlement_time,
+        evaluated_at=evaluated_at,
+        execution_evidence=live_gate_evidence_bundle.execution_capability_evidence,
+    )
+
+
 def check_live_capture_allowed(
     rules: ProductRules,
     *,
     route: RouteCandidate,
     settlement_time: datetime,
     evaluated_at: datetime,
+    live_gate_evidence_bundle: LiveGateEvidenceBundle | None = None,
     ledger_explicitly_reconciled: bool = False,
     capture_plan_evidence: Sequence[CapturePlanFreshnessEvidence] | None = None,
     execution_capability_evidence: Sequence[ExecutionCapabilityEvidence] | None = None,
@@ -269,6 +317,16 @@ def check_live_capture_allowed(
 
     if not rules.live_trading_enabled:
         return False, RejectReason.LIVE_TRADING_DISABLED
+    if live_gate_evidence_bundle is not None:
+        ok, reason = check_live_gate_evidence_bundle(
+            route=route,
+            settlement_time=settlement_time,
+            evaluated_at=evaluated_at,
+            live_gate_evidence_bundle=live_gate_evidence_bundle,
+        )
+        if not ok:
+            return False, reason
+        return False, RejectReason.LIVE_GATES_NOT_IMPLEMENTED
     ok, reason = check_ledger_reconciliation_gate(ledger_explicitly_reconciled)
     if not ok:
         return False, reason

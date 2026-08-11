@@ -61,6 +61,10 @@ Add deterministic offline CapturePlan freshness gate contracts and fake replay c
 
 Add deterministic offline execution-capability gate contracts and fake replay coverage. Require exactly one fake non-executable evidence record with current order-book `ExecutableQuote` values proving that the current route can still execute its full selected target notional on RiseX entry, hedge entry, RiseX unwind, and hedge unwind sides before any future live path can pass the execution-capability gate. Keep the gate downstream of route decisions, ledger reconciliation, funding settlement verification, and CapturePlan freshness without recalculating VWAP/EV, creating order plans, adapters, orders, or live trading.
 
+## RX-012 — Offline Live Gate Evidence Bundle Design and Fake Replay Coverage
+
+Add deterministic offline live-gate evidence bundle contracts and fake replay coverage. Require one fake non-executable aggregate bundle for the current Capture, route, and funding settlement opportunity before any future live path can consider the full live gate sequence. Keep the bundle downstream of route decisions, funding settlement verification, ledger reconciliation, CapturePlan freshness, and execution capability without replaying ledger/funding evidence, recalculating VWAP/EV, creating order plans, adapters, orders, or live trading.
+
 ## Next Sequence
 
-1. RX-012 — Offline Live Gate Evidence Bundle Design and Fake Replay Coverage.
+1. RX-013 — Offline Live Gate Evidence Bundle Ledger Recording and Replay Coverage.

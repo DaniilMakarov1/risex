@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib
 import sys
 from dataclasses import fields, replace
+from datetime import timedelta
 from decimal import Decimal
 
 import pytest
@@ -10,11 +11,14 @@ import pytest
 from apps.research_runner.fake_data import build_fake_route_and_snapshot
 from core.config.product_rules import ProductRules
 from core.domain.contracts import (
+    CapturePlanFreshnessEvidence,
     EstimatedValue,
+    ExecutionCapabilityEvidence,
     ExecutableQuote,
     FeeComponent,
     FeeModel,
     FundingSnapshot,
+    LiveGateEvidenceBundle,
     OrderBook,
     OrderBookLevel,
 )
@@ -34,6 +38,45 @@ def _forge_quote(quote: ExecutableQuote, **changes) -> ExecutableQuote:
     for name, value in values.items():
         object.__setattr__(forged, name, value)
     return forged
+
+
+def _live_gate_evidence_bundle(route, snapshot, **changes) -> LiveGateEvidenceBundle:
+    values = {
+        "capture_id": route.capture_id,
+        "route_id": route.route_id,
+        "settlement_time": snapshot.risex_funding_settlement_at,
+        "funding_settlement_verified": True,
+        "ledger_explicitly_reconciled": True,
+        "capture_plan_evidence": (
+            CapturePlanFreshnessEvidence(
+                plan_id="fake-plan-001",
+                plan_version="fake-v1",
+                capture_id=route.capture_id,
+                route_id=route.route_id,
+                settlement_time=snapshot.risex_funding_settlement_at,
+                planned_at=snapshot.captured_at,
+                valid_until=snapshot.captured_at + timedelta(minutes=5),
+                source=ValueSource.OBSERVED,
+                ledger_reconciliation_event_sequence=11,
+            ),
+        ),
+        "execution_capability_evidence": (
+            ExecutionCapabilityEvidence(
+                capture_id=route.capture_id,
+                route_id=route.route_id,
+                settlement_time=snapshot.risex_funding_settlement_at,
+                checked_at=snapshot.captured_at,
+                valid_until=snapshot.captured_at + timedelta(minutes=1),
+                source=ValueSource.ESTIMATED_FROM_ORDERBOOK,
+                risex_entry_quote=snapshot.risex_entry_quote,
+                hedge_entry_quote=snapshot.hedge_entry_quote,
+                risex_estimated_exit_quote=snapshot.risex_estimated_exit_quote,
+                hedge_estimated_exit_quote=snapshot.hedge_estimated_exit_quote,
+            ),
+        ),
+    }
+    values.update(changes)
+    return LiveGateEvidenceBundle(**values)
 
 
 def test_evaluate_route_does_not_create_live_capture_plan_when_live_disabled() -> None:
@@ -245,6 +288,64 @@ def test_evaluate_route_keeps_live_gates_closed_even_when_live_switch_is_enabled
     assert decision.status is not RouteStatus.LIVE_ELIGIBLE
     assert decision.capture_plan is None
     assert decision.reasons == (RejectReason.LEDGER_NOT_RECONCILED,)
+
+
+def test_evaluate_route_uses_live_gate_evidence_bundle_without_returning_live_eligible() -> None:
+    route, snapshot = build_fake_route_and_snapshot()
+    bundle = _live_gate_evidence_bundle(route, snapshot)
+
+    decision = evaluate_route(
+        route,
+        snapshot,
+        EvaluationMode.ENTRY,
+        rules=ProductRules(live_trading_enabled=True),
+        live_gate_evidence_bundle=bundle,
+    )
+
+    assert decision.status is RouteStatus.PAPER_ELIGIBLE
+    assert decision.status is not RouteStatus.LIVE_ELIGIBLE
+    assert decision.capture_plan is None
+    assert decision.reasons == (RejectReason.LIVE_GATES_NOT_IMPLEMENTED,)
+
+
+def test_evaluate_route_live_gate_evidence_bundle_does_not_bypass_live_disabled() -> None:
+    route, snapshot = build_fake_route_and_snapshot()
+    bundle = _live_gate_evidence_bundle(route, snapshot)
+
+    decision = evaluate_route(
+        route,
+        snapshot,
+        EvaluationMode.ENTRY,
+        rules=ProductRules(live_trading_enabled=False),
+        live_gate_evidence_bundle=bundle,
+    )
+
+    assert decision.status is RouteStatus.PAPER_ELIGIBLE
+    assert decision.status is not RouteStatus.LIVE_ELIGIBLE
+    assert decision.capture_plan is None
+    assert decision.reasons == (RejectReason.LIVE_TRADING_DISABLED,)
+
+
+def test_evaluate_route_live_gate_evidence_bundle_requires_verified_funding_settlement() -> None:
+    route, snapshot = build_fake_route_and_snapshot()
+    bundle = _live_gate_evidence_bundle(
+        route,
+        snapshot,
+        funding_settlement_verified=False,
+    )
+
+    decision = evaluate_route(
+        route,
+        snapshot,
+        EvaluationMode.ENTRY,
+        rules=ProductRules(live_trading_enabled=True),
+        live_gate_evidence_bundle=bundle,
+    )
+
+    assert decision.status is RouteStatus.PAPER_ELIGIBLE
+    assert decision.status is not RouteStatus.LIVE_ELIGIBLE
+    assert decision.capture_plan is None
+    assert decision.reasons == (RejectReason.REQUIRED_LIVE_DATA_MISSING,)
 
 
 def test_evaluate_route_rejects_missing_funding_economics_data() -> None:

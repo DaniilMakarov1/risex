@@ -225,3 +225,16 @@
 - Reason: Governance scripts must stay importable and next-task drift must fail in repository-level validation.
 - Affected files/modules: `AGENTS.md`, `docs/WORKFLOW.md`, `docs/templates/`, `scripts/validate_next_task.py`, invariant tests, `.github/`, `STATUS.md`, `DECISIONS.md`, and `NEXT_TASK.md`.
 - Non-decisions: RX-Q001 does not change product architecture, route evaluation, economics, risk gates, domain trading contracts, ledger behavior, adapters, order flow, live runner behavior, route statuses, reject reasons, canary architecture, or live trading.
+
+## 2026-08-11 - RX-012
+
+- Date: 2026-08-11
+- Decision: Added `LiveGateEvidenceBundle` as deterministic fake, non-executable aggregate evidence for exactly one `capture_id`, one `route_id`, and one funding settlement timestamp.
+- Reason: Future live gate work needs one explicit bundle boundary that can carry already-derived funding verification, helper-derived ledger reconciliation, CapturePlan freshness, and execution-capability evidence without creating a second replay or decision path.
+- Decision: `core/risk/gates.py` owns `check_live_gate_evidence_bundle()`. The bundle gate validates capture/route/settlement identity, explicit ledger reconciliation, verified funding settlement, fresh CapturePlan evidence, and execution capability by reusing existing gates and reject reasons.
+- Reason: Live-gate bundle behavior is a risk boundary and must fail closed without recalculating EV, fees, funding, VWAP, basis, or profitability.
+- Decision: `evaluate_route()` accepts an optional fake `live_gate_evidence_bundle` and only passes it to `check_live_capture_allowed()` after the existing route/economics checks.
+- Reason: `evaluate_route(route, snapshot, mode)` remains the single decision path while still allowing future live-gate evidence to be checked offline.
+- Affected files/modules: `core/domain/contracts.py`, `core/domain/__init__.py`, `core/risk/gates.py`, `core/pipeline/evaluate.py`, tests, and governance docs.
+- Superseded decisions: RX-011's unbundled live-gate input path remains backward compatible for existing offline tests, but RX-012 adds the preferred aggregate bundle path for future live-gate work.
+- Non-decisions: RX-012 does not implement real RiseX or Hyperliquid adapters, network calls, API clients, authentication, order placement, live runner behavior, live trading, executable live order plans, live `CapturePlan` creation, canary architecture, hold-next-cycle logic, artificial filters, route profitability recalculation, route eligibility mutation, a second route model, a second EV path, a second route decision function, a second snapshot assembly function, a second VWAP/liquidity path, ledger writes, or live execution.

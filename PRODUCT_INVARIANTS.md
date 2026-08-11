@@ -31,6 +31,8 @@ The single authoritative code contract for these constants is `ProductRules`.
 - A future live path must fail closed with `CAPTURE_PLAN_NOT_FRESH` unless exactly one fake freshness evidence record matches the current `capture_id`, `route_id`, and funding settlement timestamp and is still inside its explicit validity window.
 - Offline execution-capability evidence is not permission to trade live by itself.
 - A future live path must fail closed unless exactly one fake execution-capability evidence record matches the current `capture_id`, `route_id`, funding settlement timestamp, and validity window, and proves all four current entry/unwind `ExecutableQuote` values fully fill `RouteCandidate.target_notional_usd` from order-book source.
+- Offline live gate evidence bundles are not permission to trade live by themselves.
+- A future live path that uses a fake evidence bundle must fail closed unless the bundle matches the current `capture_id`, `route_id`, and funding settlement timestamp, carries verified funding-settlement and helper-derived ledger reconciliation outputs, and reuses fresh CapturePlan and execution-capability evidence.
 
 ## Route statuses
 
@@ -74,6 +76,8 @@ Actual settlement funding and actual settlement notional evidence are proof inpu
 Ledger reconciliation is a replay contract for append-only history consistency. It must not calculate profitability, mutate route decisions, create live plans, place orders, or silently treat missing, duplicated, non-contiguous, out-of-order, unknown, malformed, stale, or contradictory evidence as reconciled.
 
 Execution capability is a fake live-gate evidence contract over existing order-book quotes. It must not recalculate VWAP, decide profitability, replace ledger reconciliation, replace funding settlement verification, replace CapturePlan freshness, create live plans, or place orders.
+
+Live gate evidence bundles are fake aggregate evidence only. They must not replay ledger history, replay funding settlement verification, recalculate VWAP/EV/profitability, replace the existing plan freshness or execution-capability gates, create live plans, or place orders.
 
 Allowed value sources are exactly:
 

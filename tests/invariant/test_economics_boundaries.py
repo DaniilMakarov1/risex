@@ -2,7 +2,7 @@ import re
 from pathlib import Path
 from typing import get_type_hints
 
-from core.domain.contracts import VenueObservation
+from core.domain.contracts import LiveGateEvidenceBundle, VenueObservation
 from core.venues.base import VenueAdapter
 
 
@@ -58,6 +58,7 @@ def test_business_logic_function_definitions_stay_in_single_owner_modules() -> N
         "calculate_entry_ev": Path("core/economics/ev.py"),
         "evaluate_route": Path("core/pipeline/evaluate.py"),
         "assemble_route_snapshot": Path("core/pipeline/snapshot.py"),
+        "check_live_gate_evidence_bundle": Path("core/risk/gates.py"),
     }
 
     for function_name, expected_path in expected_owners.items():
@@ -117,6 +118,18 @@ def test_scan_refresh_reuses_offline_candidate_orchestration() -> None:
     assert "evaluate_route" not in scan_refresh_source
     assert "calculate_entry_ev" not in scan_refresh_source
     assert "calculate_executable_quote" not in scan_refresh_source
+
+
+def test_live_gate_evidence_bundle_contract_is_domain_only_and_gate_logic_is_risk_only() -> None:
+    assert LiveGateEvidenceBundle.__module__ == "core.domain.contracts"
+
+    domain_source = Path("core/domain/contracts.py").read_text()
+    evaluate_source = Path("core/pipeline/evaluate.py").read_text()
+
+    assert "class LiveGateEvidenceBundle" in domain_source
+    assert "check_live_gate_evidence_bundle" not in domain_source
+    assert "check_live_gate_evidence_bundle" not in evaluate_source
+    assert "LiveGateEvidenceBundle" in evaluate_source
 
 
 def test_venue_adapter_contract_is_per_venue_observation_only() -> None:
