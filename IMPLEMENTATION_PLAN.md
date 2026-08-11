@@ -27,13 +27,13 @@ RX-008 through RX-016 are accepted as fail-closed safety hardening only. They do
 
 The detour's purpose is to keep future live-adjacent work honest: funding settlement evidence, ledger history, fake plan freshness, fake execution capability, fake bundle checks, and SQLite replay must fail closed when evidence is missing, stale, duplicated, malformed, contradictory, or not current for the exact Capture, route, and funding settlement opportunity.
 
-## Current Implementation Task
+## Latest Accepted Product Task
 
-RX-020 — RouteCandidate Identity And Notional Contract Hardening is implemented on its task branch and pending reviewer acceptance. It hardens the existing `RouteCandidate` identity and target-notional construction contract without implementing real adapters, real market data, paper-result attribution, execution planning, live runner behavior, orders, or later roadmap stages.
+RX-020 — RouteCandidate Identity And Notional Contract Hardening is reviewer-accepted and finalized on `main`. It hardens the existing `RouteCandidate` identity and target-notional construction contract without implementing real adapters, real market data, paper-result attribution, execution planning, live runner behavior, orders, or later roadmap stages.
 
 ## Immediate Next Product Task
 
-The immediate next implementation task after RX-020 review is RX-021 — Paper Result Attribution And PnL Explanation. It must remain the only next task in `NEXT_TASK.md` until completed and reviewed.
+The immediate next implementation task is RX-021 — Paper Result Attribution And PnL Explanation. It must remain the only next task in `NEXT_TASK.md` until completed and reviewed.
 
 ## Remaining Gated Roadmap After RX-021
 
