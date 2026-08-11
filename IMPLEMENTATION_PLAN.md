@@ -81,6 +81,10 @@ Add deterministic SQLite reopen coverage for append-only sequence continuity and
 
 Add deterministic SQLite reopen coverage proving that malformed, stale, or contradictory append-only evidence persisted after reopening an existing `SQLiteLedger` remains unreconciled after SQLite round-trip. Prove deterministic reconciliation replay from reopened SQLite records and the helper-derived explicit reconciliation gate remains false without changing storage architecture, route decisions, economics, risk gates, adapters, orders, or live trading.
 
+## RX-018 — Settlement Timestamp Alignment Contract
+
+Tighten route/snapshot alignment so RiseX and hedge funding settlement timestamps must match before a route can pass into executability, Entry EV, and paper eligibility. Preserve per-leg settlement timestamps in `assemble_route_snapshot()`, fail mismatches through existing `RejectReason.TECHNICALLY_NOT_EXECUTABLE`, and avoid changing economics, VWAP/liquidity, adapters, orders, live behavior, route statuses, reject reasons, or second decision paths.
+
 ## Next Sequence
 
-1. RX-017 — Reviewer-Directed Follow-up After RX-016.
+1. RX-019 — Reviewer-Directed Follow-up After RX-018.
