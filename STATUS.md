@@ -1,13 +1,16 @@
 # Status
 
-- Last accepted task: RX-011 — Offline Execution Capability Gate Design and Fake Replay Coverage
+- Last accepted task: RX-Q001 — Repository Workflow and Quality Guardrails
+- Accepted RX-Q001 implementation HEAD: `74ded8e38e324fcf550c1e6946376067dbe08e55`
+- Previous accepted product task: RX-011 — Offline Execution Capability Gate Design and Fake Replay Coverage
 - Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
-- Current RX task: RX-Q001 — Repository Workflow and Quality Guardrails
-- Current RX task branch: `task/rx-q001-workflow-quality-guardrails`
-- Current RX task status: implementation complete on task branch; not accepted; pending reviewer acceptance
+- Current RX task: none
+- Current RX task branch: none
+- Current RX task status: no active RX implementation task; RX-Q001 is accepted and finalized on `main`
 
-The accepted RX-011 implementation is the latest accepted baseline on `main`.
+The accepted RX-Q001 implementation is the latest accepted baseline on `main`.
+RX-011 remains the previous accepted product implementation baseline.
 
 ## Completed accepted tasks
 
@@ -24,6 +27,7 @@ The accepted RX-011 implementation is the latest accepted baseline on `main`.
 - RX-009 — Ledger Reconciliation Gate Design and Fake Replay Coverage
 - RX-010 — Fresh CapturePlan Gate Design and Fake Replay Coverage
 - RX-011 — Offline Execution Capability Gate Design and Fake Replay Coverage
+- RX-Q001 — Repository Workflow and Quality Guardrails
 
 ## Current architecture status
 
@@ -68,7 +72,7 @@ The accepted RX-011 implementation is the latest accepted baseline on `main`.
 - `git diff --check`: exit 0
 - `git diff --cached --check`: exit 0
 
-## Tests last reported for current RX-Q001 branch
+## Tests last reported for accepted RX-Q001
 
 - `python scripts/validate_next_task.py`: `NEXT_TASK.md: OK` under login `bash`; default `zsh` has no `python` command
 - `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
@@ -96,4 +100,4 @@ The accepted RX-011 implementation is the latest accepted baseline on `main`.
 
 ## Next recommended task
 
-RX-012 — Offline Live Gate Evidence Bundle Design and Fake Replay Coverage, after RX-Q001 reviewer acceptance.
+RX-012 — Offline Live Gate Evidence Bundle Design and Fake Replay Coverage, starting from the accepted RX-Q001 baseline.
