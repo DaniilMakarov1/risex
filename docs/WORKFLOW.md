@@ -10,17 +10,20 @@ This repository uses one RX task per Codex session and one task branch per RX ta
 - Reads `AGENTS.md`, `README.md`, `ARCHITECTURE.md`, `PRODUCT_INVARIANTS.md`, `IMPLEMENTATION_PLAN.md`, `STATUS.md`, `DECISIONS.md`, and `NEXT_TASK.md` before edits.
 - Stops before edits when the checkout is dirty, the remote is unexpected, the branch is wrong, or the starting HEAD does not match the task prompt.
 - Keeps implementation inside the task's allowed scope and refuses forbidden product, trading, adapter, network, secret, route-status, reject-reason, or architecture changes.
+- Classifies worker usage before edits and owns steering whenever a worker is required or used.
+- Reviews worker checkpoints during the task, not only in the final report.
 - Updates `STATUS.md`, `DECISIONS.md` when needed, and `NEXT_TASK.md` before final validation.
 
 ### Worker
 
-- May assist only on non-trivial tasks and only under Parent supervision.
+- May assist only under Parent supervision.
 - Must not commit, push, merge, change branch strategy, approve work, or start unrelated work.
 - Must stop at each required checkpoint:
-  - DESIGN CHECKPOINT before edits.
+  - DESIGN CHECKPOINT before any implementation edits.
   - CODE CHECKPOINT after implementation.
   - TEST CHECKPOINT after tests are added or changed.
   - VALIDATION CHECKPOINT after commands run.
+- Must wait for Parent approval or steering after each checkpoint before continuing to the next phase.
 - Must report files changed, contracts changed, tests added, validation results, limitations, and any forbidden scope avoided.
 
 ### Reviewer
@@ -29,6 +32,26 @@ This repository uses one RX task per Codex session and one task branch per RX ta
 - Accepts, rejects, or requests fixes.
 - Is the only role that can mark a task accepted.
 - Reviewer acceptance updates the accepted baseline on `main`; implementation completion on a task branch is not acceptance.
+
+## Architecture-Sensitive Worker Requirement
+
+A supervised worker/subagent is required for non-trivial architecture-sensitive tasks. Architecture-sensitive work includes live-gate, accounting, reconciliation, execution-boundary, ledger, safety-critical, broad contract, owner-boundary, or repository-governance tasks.
+
+Worker use is optional for docs-only, metadata-only, tiny fix, or mechanical validation tasks when they are not non-trivial architecture-sensitive work.
+
+When a worker is required:
+
+- Parent must start the worker before implementation edits.
+- Worker must stop at DESIGN CHECKPOINT before any implementation edits.
+- Parent must read the DESIGN CHECKPOINT and approve the direction or steer before implementation continues.
+- Worker must also stop at CODE CHECKPOINT, TEST CHECKPOINT, and VALIDATION CHECKPOINT when it continues beyond design support.
+- Parent owns steering, final diff review, validation, commit, push, and final report.
+- Worker must not commit, push, merge, approve work, or start unrelated scope.
+
+Failure rules:
+
+- If the worker is unavailable for a task where worker use is required, Parent must stop before edits and report the blocker.
+- If the worker skips required checkpoints, continues after being stopped, or drifts into forbidden scope, Parent must stop or steer before accepting any worker output.
 
 ## Branch Discipline
 

@@ -54,8 +54,14 @@ Read:
 
 - List the exact implementation constraints for this task.
 - State which owner module owns any changed business logic.
-- State whether workers are allowed or required.
-- State that workers must use the checkpoint protocol when used.
+- State the worker policy: `workers forbidden`, `workers optional`, or `one supervised worker required`.
+- Require one supervised worker/subagent for non-trivial architecture-sensitive tasks, including live-gate, accounting, reconciliation, execution-boundary, ledger, safety-critical, broad contract, owner-boundary, or repository-governance tasks.
+- For required-worker tasks, state whether the worker is required for design support only or for implementation support, and list the questions the worker must answer at DESIGN CHECKPOINT.
+- State that the worker must stop at DESIGN CHECKPOINT before implementation edits and wait for Parent approval or steering before continuing.
+- State that the worker must also stop at CODE CHECKPOINT, TEST CHECKPOINT, and VALIDATION CHECKPOINT if it continues beyond design support.
+- State that Parent owns steering, final diff review, validation, commit, push, and final report.
+- State that the worker must not commit, push, merge, approve work, or start unrelated scope.
+- State that Parent must stop before edits if a required worker is unavailable.
 
 ## Required files
 

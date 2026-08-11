@@ -7,13 +7,14 @@
 - Previous accepted product task before RX-012: RX-011 — Offline Execution Capability Gate Design and Fake Replay Coverage
 - Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
-- Current RX task: none
-- Current RX task branch: none
-- Current RX task status: no active RX task; RX-012 accepted and finalized on `main`
+- Current RX task: RX-Q002 — Worker Checkpoint Requirement for Architecture-Sensitive Tasks
+- Current RX task branch: `task/rx-q002-worker-checkpoint-requirement`
+- Current RX task status: implementation complete on task branch; pending reviewer acceptance
 
 The accepted RX-012 implementation is the latest accepted baseline on `main`.
 RX-Q001 remains the previous accepted governance baseline.
 RX-011 remains the previous accepted product implementation baseline before RX-012.
+RX-Q002 is a governance-only task branch and is not accepted until reviewer acceptance is explicit.
 
 ## Completed accepted tasks
 
@@ -68,6 +69,15 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - Live `CapturePlan` creation blocked.
 - No real adapters, orders, paper exchange simulation, live runner behavior, or live trading.
 
+## Current repository governance status
+
+- Non-trivial architecture-sensitive tasks require a supervised worker/subagent before implementation edits.
+- Architecture-sensitive work includes live-gate, accounting, reconciliation, execution-boundary, ledger, safety-critical, broad contract, owner-boundary, and repository-governance tasks.
+- Worker use remains optional for docs-only, metadata-only, tiny fix, or mechanical validation tasks when they are not non-trivial architecture-sensitive work.
+- Required workers must stop at DESIGN CHECKPOINT before implementation edits and wait for Parent approval or steering; workers must also stop at CODE CHECKPOINT, TEST CHECKPOINT, and VALIDATION CHECKPOINT when they continue beyond design support.
+- Parent Codex owns steering, final diff review, validation, commit, push, and final report. Workers must not commit, push, merge, approve work, or start unrelated scope.
+- If a required worker is unavailable, skips checkpoints, continues after being stopped, or drifts into forbidden scope, Parent Codex must stop or steer before accepting worker output.
+
 ## Tests last reported for accepted RX-011
 
 - `python3 -m apps.cli.main`: exit 0
@@ -120,4 +130,4 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 
 ## Next recommended task
 
-RX-013 — Offline Live Gate Evidence Bundle Ledger Recording and Replay Coverage, starting from the accepted RX-012 baseline after reviewer acceptance.
+RX-013 — Offline Live Gate Evidence Bundle Ledger Recording and Replay Coverage, starting from the accepted RX-Q002 baseline after reviewer acceptance.

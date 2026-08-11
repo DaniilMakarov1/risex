@@ -16,8 +16,13 @@ This repository is the source of truth for RiseX Points Farmer implementation wo
 ## Parent, worker, and reviewer boundaries
 
 - Parent Codex owns task scope, branch discipline, architecture checks, final diff review, validation, commit, push, and final report.
-- Workers may be used only for non-trivial implementation support. They must not commit, push, merge, or approve their own work.
-- Workers must stop at DESIGN CHECKPOINT, CODE CHECKPOINT, TEST CHECKPOINT, and VALIDATION CHECKPOINT before continuing.
+- Parent Codex must classify worker usage before edits. A supervised worker/subagent is required for non-trivial architecture-sensitive tasks, including live-gate, accounting, reconciliation, execution-boundary, ledger, safety-critical, broad contract, owner-boundary, or repository-governance tasks.
+- Worker use is optional for docs-only, metadata-only, tiny fix, or mechanical validation tasks when they are not non-trivial architecture-sensitive work.
+- If a worker is required but unavailable, Parent Codex must stop before edits and report the blocker.
+- Workers may be used only under Parent supervision. They must not commit, push, merge, approve work, or start unrelated scope.
+- Workers must stop at DESIGN CHECKPOINT before any implementation edits. Parent Codex must read the checkpoint and either approve the direction or steer before implementation continues.
+- Workers must also stop at CODE CHECKPOINT, TEST CHECKPOINT, and VALIDATION CHECKPOINT before continuing to the next phase. Parent Codex must review worker output during the task, not only in the final report.
+- If a worker skips required checkpoints, continues after being stopped, or drifts into forbidden scope, Parent Codex must stop or steer before accepting any worker output.
 - Reviewers accept or reject task branches. A task is not accepted until reviewer acceptance is explicit.
 - `STATUS.md` must keep the last accepted baseline separate from the current task branch and current task review state.
 

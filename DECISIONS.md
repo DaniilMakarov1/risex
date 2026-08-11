@@ -238,3 +238,15 @@
 - Affected files/modules: `core/domain/contracts.py`, `core/domain/__init__.py`, `core/risk/gates.py`, `core/pipeline/evaluate.py`, tests, and governance docs.
 - Superseded decisions: RX-011's unbundled live-gate input path remains backward compatible for existing offline tests, but RX-012 adds the preferred aggregate bundle path for future live-gate work.
 - Non-decisions: RX-012 does not implement real RiseX or Hyperliquid adapters, network calls, API clients, authentication, order placement, live runner behavior, live trading, executable live order plans, live `CapturePlan` creation, canary architecture, hold-next-cycle logic, artificial filters, route profitability recalculation, route eligibility mutation, a second route model, a second EV path, a second route decision function, a second snapshot assembly function, a second VWAP/liquidity path, ledger writes, or live execution.
+
+## 2026-08-11 - RX-Q002
+
+- Date: 2026-08-11
+- Decision: Repository governance now requires a supervised worker/subagent for non-trivial architecture-sensitive tasks, including live-gate, accounting, reconciliation, execution-boundary, ledger, safety-critical, broad contract, owner-boundary, and repository-governance tasks.
+- Reason: Architecture-sensitive work needs an explicit second-pass design checkpoint while preserving Parent Codex ownership of scope, steering, final diff review, validation, commit, push, and final reporting.
+- Decision: Required workers must stop at DESIGN CHECKPOINT before implementation edits and wait for Parent approval or steering before continuing. Workers must also stop at CODE CHECKPOINT, TEST CHECKPOINT, and VALIDATION CHECKPOINT when they continue beyond design support.
+- Reason: Checkpoints must gate the work during the task, not only appear as final-report evidence.
+- Decision: If a required worker is unavailable, Parent Codex must stop before edits. If a worker skips checkpoints, continues after being stopped, or drifts into forbidden scope, Parent Codex must stop or steer before accepting worker output.
+- Reason: Governance failures should fail closed before they can enter product or repository history.
+- Affected files/modules: `AGENTS.md`, `docs/WORKFLOW.md`, `docs/templates/WORKER_CHECKPOINT_TEMPLATE.md`, `docs/templates/RX_TASK_TEMPLATE.md`, `docs/templates/REVIEW_CHECKLIST.md`, `STATUS.md`, `DECISIONS.md`, and `NEXT_TASK.md`.
+- Non-decisions: RX-Q002 does not change product architecture, route evaluation, economics, risk gates, domain trading contracts, ledger behavior, adapters, order flow, live runner behavior, route statuses, reject reasons, canary architecture, or live trading.

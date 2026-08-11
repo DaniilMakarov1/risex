@@ -10,7 +10,7 @@ Add deterministic append-only ledger recording and replay coverage for fake live
 
 ## Starting baseline
 
-Start from reviewer-accepted `main` after RX-012 is accepted and merged.
+Start from reviewer-accepted `main` after RX-Q002 is accepted and merged.
 
 ## Branch
 
@@ -18,7 +18,7 @@ Create and work on `task/rx-013-live-gate-evidence-bundle-ledger-replay`.
 
 ## Before changing files
 
-Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, remote is wrong, branch is wrong, or HEAD does not match the stated accepted RX-012 baseline.
+Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, remote is wrong, branch is wrong, or HEAD does not match the stated accepted RX-Q002 baseline.
 
 Read:
 
@@ -78,7 +78,21 @@ Read:
 - Ledger replay must not recalculate EV, fees, funding, VWAP, basis, or profitability.
 - Ledger replay must not call adapters, call execution modules, place orders, create live plans, mutate route eligibility decisions, or return `LIVE_ELIGIBLE`.
 - Even with a recorded successful fake bundle check, current route decisions must remain blocked by `LIVE_GATES_NOT_IMPLEMENTED` until a later accepted task implements a safe live path.
-- Worker usage is optional. If used, workers must follow the checkpoint protocol in `docs/templates/WORKER_CHECKPOINT_TEMPLATE.md`.
+- Exactly one supervised worker/subagent is required for design support before implementation.
+- The worker must stop at DESIGN CHECKPOINT before any implementation edits. Parent Codex must read the checkpoint and approve the direction or steer before implementation continues.
+- If the required worker is unavailable, Parent Codex must stop before edits and report the blocker.
+- Parent Codex owns steering, final diff review, validation, commit, push, and final report.
+- The worker must not commit, push, merge, approve work, or start unrelated scope.
+- At DESIGN CHECKPOINT, the worker must answer:
+  - What minimal ledger event contract is needed?
+  - Which existing RX-012 bundle evidence and gate result can be reused?
+  - Where should append-only recording live?
+  - Where should replay validation live?
+  - What files need changes?
+  - What abstractions are unnecessary and must be avoided?
+  - What tests should prove fail-closed behavior?
+  - Confirm no live trading, no orders, no adapters, no new route status, no second decision path.
+- If the worker continues beyond design support, it must also stop at CODE CHECKPOINT, TEST CHECKPOINT, and VALIDATION CHECKPOINT.
 
 ## Required files
 

@@ -27,7 +27,12 @@
 - `STATUS.md` separates the accepted baseline from current task completion/review state.
 - `DECISIONS.md` records only decisions actually made by the task.
 - `NEXT_TASK.md` contains exactly one next task and passes `python scripts/validate_next_task.py`.
-- Worker checkpoints are present when workers were used.
+- Worker usage was classified before edits.
+- Required worker/subagent support was used for non-trivial architecture-sensitive tasks.
+- Worker checkpoints are present when workers were used, including DESIGN CHECKPOINT before implementation edits.
+- Parent approval or steering after worker checkpoints is documented in the orchestration log.
+- Worker did not commit, push, merge, approve work, or start unrelated scope.
+- Parent reviewed worker output during the task when a worker was used.
 - Parent reviewed the final diff before commit and push.
 
 ## Validation
