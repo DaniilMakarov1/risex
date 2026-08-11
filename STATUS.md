@@ -2,6 +2,7 @@
 
 - Last accepted task: RX-014 — Offline Live Gate Evidence Bundle SQLite Persistence Replay Coverage
 - Accepted RX-014 implementation HEAD: `780918d59f3edbff0ea59196b911f4f20d429bc8`
+- Accepted RX-014 finalized main HEAD: `85d122892b6dac36d44a3be7e9a261674250d1d7`
 - Previous accepted product task before RX-014: RX-013 — Offline Live Gate Evidence Bundle Ledger Recording and Replay Coverage
 - Accepted RX-013 implementation HEAD: `dfa06a8a52553b3dfb4687efba0e420abb3e7bf3`
 - Previous accepted governance task: RX-Q002 — Worker Checkpoint Requirement for Architecture-Sensitive Tasks
@@ -13,18 +14,18 @@
 - Previous accepted product task before RX-012: RX-011 — Offline Execution Capability Gate Design and Fake Replay Coverage
 - Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
-- Current RX task: none
-- Current RX task branch: none
-- Current RX task status: none
+- Current RX task: RX-015 — Offline SQLite Ledger Reopen Append Continuity Replay Coverage
+- Current RX task branch: `task/rx-015-sqlite-ledger-reopen-append-continuity`
+- Current RX task status: implementation complete on task branch; pending reviewer acceptance
 
 RX-014 is the latest accepted product baseline on `main`.
+RX-015 is implemented on its task branch and is not accepted until reviewer acceptance is explicit.
 RX-Q002 remains the previous accepted governance baseline on `main`.
 RX-013 remains the previous accepted product baseline before RX-014.
 RX-012 remains the previous accepted product baseline before RX-013.
 RX-Q001 remains the previous accepted governance baseline before RX-Q002.
 RX-011 remains the previous accepted product implementation baseline before RX-012.
-No current RX task is active.
-`NEXT_TASK.md` is prepared for RX-015.
+`NEXT_TASK.md` is prepared for RX-016.
 
 ## Completed accepted tasks
 
@@ -77,6 +78,7 @@ No current RX task is active.
 - Ledger reconciliation fails closed over any current `live_gate_evidence_bundle_recorded` event that does not replay successfully through `replay_live_gate_evidence_bundle_recording()`.
 - Appending bundle-check evidence after successful reconciliation makes the full ledger history unreconciled until a new reconciliation event covers the append.
 - SQLite persistence replay coverage proves valid, malformed, and contradictory `live_gate_evidence_bundle_recorded` payloads round-trip through `storage/sqlite/ledger.py` with the same replay outcomes as in-memory ledger records.
+- SQLite reopen append-continuity coverage proves append sequences continue across close/reopen boundaries, later persisted appends make prior reconciliation stale, and later reconciliation over reopened records replays deterministically.
 - Future live gating now checks live trading switch, explicit ledger reconciliation, verified funding settlement, CapturePlan freshness evidence, execution capability evidence, and then the still-unimplemented live gates when a fake bundle is supplied.
 - `evaluate_route()` may receive fake freshness evidence, execution-capability evidence, or a fake live gate evidence bundle but still does not read ledger/storage directly, create live `CapturePlan` objects, import execution/live runner modules, place orders, or return `LIVE_ELIGIBLE`.
 - In-memory Broad Scan to Focused Refresh handoff using existing `RouteCandidate` contracts.
@@ -158,6 +160,16 @@ No current RX task is active.
 - `git diff --check`: exit 0
 - `git diff --cached --check`: exit 0
 
+## Tests last reported for RX-015 task branch
+
+- `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
+- `python3 -m pytest tests/invariant`: `33 passed`
+- `python3 -m pytest`: `270 passed`
+- `python3 -m compileall apps core storage tests scripts`: exit 0
+- `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
+- `git diff --check`: exit 0
+- `git diff --cached --check`: exit 0
+
 ## Known limitations
 
 - Funding settlement verifier, ledger reconciliation, and CapturePlan freshness remain deterministic fake offline replay scaffolding only.
@@ -178,7 +190,8 @@ No current RX task is active.
 - Exact fake live gate evidence bundle is not permission to trade live by itself.
 - Replayed successful fake live gate evidence bundle ledger recording is not permission to trade live by itself.
 - SQLite persistence replay coverage is deterministic offline test coverage only.
+- SQLite reopen append-continuity replay coverage is deterministic offline test coverage only.
 
 ## Next recommended task
 
-RX-015 — Offline SQLite Ledger Reopen Append Continuity Replay Coverage.
+RX-016 — Offline SQLite Ledger Reopen Fail-Closed Replay Coverage.

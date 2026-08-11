@@ -563,6 +563,97 @@ def test_reconciliation_replays_sqlite_live_gate_bundle_record_after_new_reconci
     reopened.close()
 
 
+def test_sqlite_reopen_append_after_reconciliation_is_stale_until_later_reconciliation(
+    tmp_path: Path,
+) -> None:
+    db_path = tmp_path / "ledger-reopen-append-reconciled.sqlite"
+    ledger = SQLiteLedger(db_path)
+    route, snapshot = _append_verified_history(ledger)
+    first_result = reconcile_ledger(
+        ledger,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+    first_records = ledger.records()
+    ledger.close()
+
+    assert first_result.reconciled is True
+    assert is_ledger_explicitly_reconciled(first_records) is True
+    assert first_records[-1].payload["event_count"] == 10
+    assert first_records[-1].payload["last_sequence"] == 10
+
+    reopened = SQLiteLedger(db_path)
+    reopened_records = reopened.records()
+    assert is_ledger_explicitly_reconciled(reopened_records) is True
+    assert [event.sequence for event in reopened_records] == list(range(1, 12))
+
+    _append_live_gate_bundle_record(reopened, route=route, snapshot=snapshot)
+    stale_records = reopened.records()
+    reopened.close()
+
+    assert [event.sequence for event in stale_records] == list(range(1, 13))
+    assert stale_records[-1].event_type == LedgerEventType.LIVE_GATE_EVIDENCE_BUNDLE_RECORDED.value
+    assert stale_records[-1].sequence == 12
+    assert is_ledger_explicitly_reconciled(stale_records) is False
+    assert all(
+        event.payload.get("status") != RouteStatus.LIVE_ELIGIBLE.value
+        for event in stale_records
+    )
+
+    stale_reopened = SQLiteLedger(db_path)
+    persisted_stale_records = stale_reopened.records()
+    assert is_ledger_explicitly_reconciled(persisted_stale_records) is False
+
+    later_result = reconcile_ledger(
+        stale_reopened,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+    later_records = stale_reopened.records()
+    stale_reopened.close()
+
+    assert later_result.reconciled is True
+    assert later_result.reasons == ()
+    assert later_result.checked_event_sequences == (
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        12,
+    )
+    assert [event.sequence for event in later_records] == list(range(1, 14))
+    assert later_records[-1].event_type == LedgerEventType.LEDGER_RECONCILIATION_RECORDED.value
+    assert later_records[-1].payload["event_count"] == 12
+    assert later_records[-1].payload["last_sequence"] == 12
+    assert is_ledger_explicitly_reconciled(later_records) is True
+
+    final_reopened = SQLiteLedger(db_path)
+    final_records = final_reopened.records()
+    replayed_once = replay_ledger_reconciliation(
+        final_records,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+    )
+    replayed_twice = replay_ledger_reconciliation(
+        final_records,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+    )
+
+    assert replayed_once == later_result
+    assert replayed_twice == later_result
+    assert is_ledger_explicitly_reconciled(final_records) is True
+    final_reopened.close()
+
+
 def test_reconciliation_fails_closed_on_contradictory_live_gate_bundle_record() -> None:
     ledger = InMemoryLedger()
     route, snapshot = _append_verified_history(ledger)

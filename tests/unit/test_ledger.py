@@ -1,3 +1,5 @@
+from datetime import UTC, datetime, timedelta
+
 import pytest
 
 from apps.research_runner.fake_data import build_fake_route_and_snapshot
@@ -59,6 +61,51 @@ def test_sqlite_ledger_persists_append_only_events(tmp_path) -> None:
     assert not hasattr(reopened, "update")
     assert not hasattr(reopened, "delete")
     reopened.close()
+
+
+def test_sqlite_ledger_continues_append_sequence_after_reopen(tmp_path) -> None:
+    db_path = tmp_path / "ledger-reopen-continuity.sqlite"
+    recorded_at = datetime(2026, 1, 1, tzinfo=UTC)
+
+    ledger = SQLiteLedger(db_path)
+    first = ledger.append(
+        event_type=LedgerEventType.PAPER_REJECTION_RECORDED,
+        payload={"route_id": "route-a", "reasons": ("first",)},
+        recorded_at=recorded_at,
+    )
+    ledger.close()
+
+    first_reopen = SQLiteLedger(db_path)
+    second = first_reopen.append(
+        event_type=LedgerEventType.PAPER_REJECTION_RECORDED,
+        payload={"route_id": "route-b", "reasons": ("second",)},
+        recorded_at=recorded_at + timedelta(seconds=1),
+    )
+    first_reopen.close()
+
+    second_reopen = SQLiteLedger(db_path)
+    third = second_reopen.append(
+        event_type=LedgerEventType.PAPER_REJECTION_RECORDED,
+        payload={"route_id": "route-c", "reasons": ("third",)},
+        recorded_at=recorded_at + timedelta(seconds=2),
+    )
+    records = second_reopen.records()
+
+    assert (first.sequence, second.sequence, third.sequence) == (1, 2, 3)
+    assert [event.sequence for event in records] == [1, 2, 3]
+    assert [event.payload["route_id"] for event in records] == [
+        "route-a",
+        "route-b",
+        "route-c",
+    ]
+    assert [event.payload["reasons"] for event in records] == [
+        ("first",),
+        ("second",),
+        ("third",),
+    ]
+    assert not hasattr(second_reopen, "update")
+    assert not hasattr(second_reopen, "delete")
+    second_reopen.close()
 
 
 def test_replay_from_sqlite_ledger_events_is_deterministic(tmp_path) -> None:

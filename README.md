@@ -45,6 +45,8 @@ The deterministic fake ledger reconciliation layer is downstream of route decisi
 
 Missing, duplicated, non-contiguous, out-of-order, unknown, malformed, stale, forged, or contradictory ledger evidence fails closed as unreconciled. A reconciliation result records the checked `event_count` and `last_sequence`, and `is_ledger_explicitly_reconciled()` returns true only when the latest ledger event reconciles the exact current history. Reconciliation does not evaluate profitability, assemble snapshots, calculate EV, place orders, create `CapturePlan` objects, mutate route decisions, or enable live trading.
 
+SQLite reopen coverage proves that `SQLiteLedger` keeps append-only sequence continuity across close/reopen boundaries. A later persisted append after successful reconciliation makes the prior explicit reconciliation stale until a new reconciliation result covers the current persisted history, and replay from reopened SQLite records remains deterministic.
+
 ## Offline CapturePlan freshness gate
 
 The deterministic fake CapturePlan freshness gate is downstream of route decisions, funding settlement verification, and ledger reconciliation. It consumes fake `CapturePlanFreshnessEvidence` values only; these are not executable order plans and do not contain exchange instructions.
