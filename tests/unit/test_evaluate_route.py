@@ -93,6 +93,18 @@ def test_evaluate_route_does_not_create_live_capture_plan_when_live_disabled() -
     assert RejectReason.LIVE_TRADING_DISABLED in decision.reasons
 
 
+def test_evaluate_route_preserves_paper_eligible_behavior_for_matching_settlement_timestamps() -> None:
+    route, snapshot = build_fake_route_and_snapshot()
+
+    assert snapshot.risex_funding_settlement_at == snapshot.hedge_funding_settlement_at
+
+    decision = evaluate_route(route, snapshot, EvaluationMode.ENTRY)
+
+    assert decision.status is RouteStatus.PAPER_ELIGIBLE
+    assert decision.entry_ev is not None
+    assert decision.capture_plan is None
+
+
 def test_evaluate_route_rejects_when_net_profit_below_minimum() -> None:
     route, snapshot = build_fake_route_and_snapshot()
     low_profit_snapshot = replace(
@@ -153,6 +165,21 @@ def test_evaluate_route_rejects_route_notional_mismatched_with_quote_notional() 
 
     assert decision.status is RouteStatus.REJECTED
     assert decision.reasons == (RejectReason.TECHNICALLY_NOT_EXECUTABLE,)
+    assert decision.capture_plan is None
+
+
+def test_evaluate_route_rejects_mismatched_funding_settlement_timestamps() -> None:
+    route, snapshot = build_fake_route_and_snapshot()
+    mismatched_snapshot = replace(
+        snapshot,
+        hedge_funding_settlement_at=snapshot.risex_funding_settlement_at + timedelta(seconds=1),
+    )
+
+    decision = evaluate_route(route, mismatched_snapshot, EvaluationMode.ENTRY)
+
+    assert decision.status is RouteStatus.REJECTED
+    assert decision.reasons == (RejectReason.TECHNICALLY_NOT_EXECUTABLE,)
+    assert decision.entry_ev is None
     assert decision.capture_plan is None
 
 

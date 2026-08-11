@@ -62,6 +62,8 @@ def check_route_snapshot_alignment(
         return False, RejectReason.TECHNICALLY_NOT_EXECUTABLE
     if route.risex_entry_side == route.hedge_entry_side:
         return False, RejectReason.TECHNICALLY_NOT_EXECUTABLE
+    if snapshot.risex_funding_settlement_at != snapshot.hedge_funding_settlement_at:
+        return False, RejectReason.TECHNICALLY_NOT_EXECUTABLE
 
     risex_entry = snapshot.risex_entry_quote
     risex_exit = snapshot.risex_estimated_exit_quote

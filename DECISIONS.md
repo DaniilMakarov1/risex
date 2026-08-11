@@ -276,3 +276,16 @@
 - Affected files/modules: `core/accounting/reconciliation.py`, `tests/replay/test_ledger_reconciliation.py`, `README.md`, `ARCHITECTURE.md`, `PRODUCT_INVARIANTS.md`, `DECISIONS.md`, `STATUS.md`, and `NEXT_TASK.md`.
 - Superseded decisions: RX-013's bundle event shape validation is tightened; semantic bundle replay is now part of ledger reconciliation when bundle records are present.
 - Non-decisions: RX-013 FIX does not change route decisions, economics, risk gate behavior, route statuses, `RejectReason` values, adapters, orders, live runner behavior, live trading, executable live order plans, live `CapturePlan` creation, canary architecture, hold-next-cycle logic, artificial filters, or RX-014 implementation.
+
+## 2026-08-11 - RX-018
+
+- Date: 2026-08-11
+- Decision: `core/risk/gates.py` route/snapshot alignment now requires `snapshot.risex_funding_settlement_at == snapshot.hedge_funding_settlement_at` before a route can pass into executability, EV, and paper eligibility.
+- Reason: One route snapshot must represent exactly one funding settlement opportunity. If the RiseX and hedge legs settle at different timestamps, the route is not one aligned capture opportunity and must fail closed before `PAPER_ELIGIBLE`.
+- Decision: Mismatched settlement timestamps fail through existing `RejectReason.TECHNICALLY_NOT_EXECUTABLE`.
+- Reason: The failure is a route/snapshot alignment problem like mismatched venue, symbol, side, quote source, or quote notional. It is not a profitability calculation and does not require a new route status or reject reason.
+- Decision: `assemble_route_snapshot()` continues to preserve per-leg settlement timestamps without deciding eligibility.
+- Reason: Snapshot assembly remains the single normalized data assembly path, while `evaluate_route()` remains the single decision path through the existing risk gate.
+- Affected files/modules: `core/risk/gates.py`, focused unit tests, `STATUS.md`, `DECISIONS.md`, and `NEXT_TASK.md`.
+- Superseded decisions: no previous decision is superseded; RX-018 tightens the existing route/snapshot alignment contract.
+- Non-decisions: RX-018 does not recalculate EV, fees, funding, VWAP, basis, or profitability; it does not add spread, impact, slippage, max-level, buffer, or safety-margin filters; it does not add adapters, network calls, orders, live runner behavior, live trading, executable `CapturePlan`, route statuses, reject reasons, second decision paths, or second snapshot assembly paths.

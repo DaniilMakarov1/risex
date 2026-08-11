@@ -2,19 +2,19 @@
 
 ## Task ID
 
-RX-017 - Reviewer-Directed Follow-up After RX-016
+RX-019 - Reviewer-Directed Follow-up After RX-018
 
 ## Objective
 
-Handle only explicit reviewer direction after the RX-016 task branch is reviewed. If fixes are requested, apply the requested corrections in the existing RX-016 branch and keep them inside the original RX-016 scope. If RX-016 is accepted with no fixes, wait for the user to provide the accepted `main` baseline and the next concrete RX task prompt before changing files.
+Handle only explicit reviewer direction after the RX-018 task branch is reviewed. If fixes are requested, apply the requested corrections in the existing RX-018 branch and keep them inside the original RX-018 scope. If RX-018 is accepted with no fixes, wait for the user to provide the accepted `main` baseline and the next concrete RX task prompt before changing files.
 
 ## Starting baseline
 
-Start from the reviewer-designated state after RX-016 review. For same-branch fixes, use the existing RX-016 task branch. For any new product task, stop unless the user provides the accepted `main` baseline and a concrete task prompt.
+Start from the reviewer-designated state after RX-018 review. For same-branch fixes, use the existing RX-018 task branch. For any new product task, stop unless the user provides the accepted `main` baseline and a concrete task prompt.
 
 ## Branch
 
-For RX-016 review fixes, continue on `task/rx-016-sqlite-ledger-reopen-fail-closed-replay`. Do not create a new branch unless the user provides a new concrete RX task.
+For RX-018 review fixes, continue on `task/rx-018-settlement-timestamp-alignment-contract`. Do not create a new branch unless the user provides a new concrete RX task.
 
 ## Before changing files
 
@@ -34,14 +34,13 @@ Read:
 ## Allowed scope
 
 - Files explicitly named by reviewer feedback.
-- For same-branch RX-016 fixes, stay inside the original RX-016 allowed scope unless the reviewer explicitly expands it.
+- For same-branch RX-018 fixes, stay inside the original RX-018 allowed scope unless the reviewer explicitly expands it.
 - If there is no reviewer-requested fix and no new concrete task prompt, no files may be changed.
 
 ## Forbidden scope
 
-- No product behavior changes beyond explicit reviewer-requested RX-016 fixes.
-- No route evaluation changes.
-- No risk gate behavior changes unless reviewer feedback identifies a persistence/replay bug that makes existing replay impossible, and then keep the change narrowly scoped.
+- No product behavior changes beyond explicit reviewer-requested RX-018 fixes.
+- No route evaluation changes beyond reviewer-requested settlement timestamp alignment corrections.
 - No economics changes.
 - No VWAP/liquidity recalculation changes.
 - No standalone spread, price-impact, basis, slippage, max-level, hidden-buffer, or safety-margin filters.
@@ -60,10 +59,12 @@ Read:
 ## Implementation requirements
 
 - Treat reviewer feedback as the only source of scope for this follow-up.
-- Preserve `SQLiteLedger` as the existing minimal append-only persistence contract unless reviewer feedback identifies a narrow storage bug.
-- Do not introduce migrations or a second storage layer.
-- Do not recalculate EV, fees, funding, VWAP, basis, or profitability in SQLite replay tests.
-- Do not call adapters, call execution modules, place orders, create live plans, mutate route eligibility decisions, or return `LIVE_ELIGIBLE`.
+- Preserve `check_route_snapshot_alignment()` as the route/snapshot alignment owner unless reviewer feedback explicitly identifies a narrow bug in that contract.
+- Preserve `evaluate_route(route, snapshot, mode)` as the single route decision path.
+- Preserve `assemble_route_snapshot()` as the single route snapshot assembly path.
+- Use existing `RejectReason` values.
+- Do not recalculate EV, fees, funding, VWAP, basis, or profitability.
+- Do not call adapters, call execution modules, place orders, create live plans, mutate route eligibility outside the existing decision path, or return `LIVE_ELIGIBLE`.
 - Worker policy: one supervised worker is required for any non-trivial architecture-sensitive fix; otherwise workers are optional for tiny reviewer-requested fixes.
 - A required worker must stop at DESIGN CHECKPOINT before implementation edits and wait for Parent approval or steering before continuing.
 - A required worker must also stop at CODE CHECKPOINT, TEST CHECKPOINT, and VALIDATION CHECKPOINT if it continues beyond design support.
@@ -80,6 +81,7 @@ Read:
 
 - `python3 scripts/validate_next_task.py`
 - `python3 -m pytest tests/invariant`
+- Focused tests for reviewer-requested route/snapshot/evaluate behavior, if files change.
 - `python3 -m pytest`
 - `python3 -m compileall apps core storage tests scripts`
 - `python3 -m apps.cli.main`

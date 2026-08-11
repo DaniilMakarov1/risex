@@ -18,6 +18,7 @@ from core.risk.gates import (
     check_capture_plan_freshness_gate,
     check_execution_capability_gate,
     check_live_gate_evidence_bundle,
+    check_route_snapshot_alignment,
 )
 
 
@@ -81,6 +82,28 @@ def _forge_execution_evidence(
     for name, value in values.items():
         object.__setattr__(forged, name, value)
     return forged
+
+
+def test_route_snapshot_alignment_rejects_mismatched_funding_settlement_timestamps() -> None:
+    route, snapshot = build_fake_route_and_snapshot()
+    mismatched_snapshot = replace(
+        snapshot,
+        hedge_funding_settlement_at=snapshot.risex_funding_settlement_at + timedelta(seconds=1),
+    )
+
+    ok, reason = check_route_snapshot_alignment(route, mismatched_snapshot)
+
+    assert ok is False
+    assert reason is RejectReason.TECHNICALLY_NOT_EXECUTABLE
+
+
+def test_route_snapshot_alignment_accepts_matching_funding_settlement_timestamps() -> None:
+    route, snapshot = build_fake_route_and_snapshot()
+
+    ok, reason = check_route_snapshot_alignment(route, snapshot)
+
+    assert ok is True
+    assert reason is None
 
 
 def test_missing_capture_plan_freshness_evidence_fails_closed() -> None:

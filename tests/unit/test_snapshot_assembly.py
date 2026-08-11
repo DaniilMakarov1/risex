@@ -23,7 +23,8 @@ from core.pipeline.snapshot import SnapshotAssemblyInputError, assemble_route_sn
 RISEX_OBSERVED_AT = datetime(2026, 1, 1, 12, 0, tzinfo=UTC)
 HEDGE_OBSERVED_AT = datetime(2026, 1, 1, 12, 0, 1, tzinfo=UTC)
 RISEX_SETTLEMENT_AT = datetime(2026, 1, 1, 16, 0, tzinfo=UTC)
-HEDGE_SETTLEMENT_AT = datetime(2026, 1, 1, 16, 0, 2, tzinfo=UTC)
+HEDGE_SETTLEMENT_AT = RISEX_SETTLEMENT_AT
+MISMATCHED_HEDGE_SETTLEMENT_AT = datetime(2026, 1, 1, 16, 0, 2, tzinfo=UTC)
 ASSEMBLED_AT = datetime(2026, 1, 1, 12, 0, 5, tzinfo=UTC)
 
 
@@ -168,6 +169,34 @@ def test_valid_observations_assemble_route_aligned_snapshot_from_vwap_logic() ->
         *risex_observation.fees.components,
         *hedge_observation.fees.components,
     )
+
+
+def test_assembly_preserves_mismatched_settlement_timestamps_but_evaluation_rejects() -> None:
+    route = _route()
+    risex_observation, hedge_observation = _observations()
+    mismatched_hedge_observation = _observation(
+        venue=hedge_observation.venue,
+        symbol=hedge_observation.symbol,
+        observed_at=hedge_observation.observed_at,
+        settlement_at=MISMATCHED_HEDGE_SETTLEMENT_AT,
+        funding=hedge_observation.expected_funding_usd,
+        fees=hedge_observation.fees,
+        order_book=hedge_observation.order_book,
+    )
+
+    snapshot = assemble_route_snapshot(
+        route=route,
+        observations=_observation_mapping(risex_observation, mismatched_hedge_observation),
+        assembled_at=ASSEMBLED_AT,
+    )
+
+    assert snapshot.risex_funding_settlement_at == RISEX_SETTLEMENT_AT
+    assert snapshot.hedge_funding_settlement_at == MISMATCHED_HEDGE_SETTLEMENT_AT
+
+    decision = evaluate_route(route, snapshot, EvaluationMode.ENTRY)
+
+    assert decision.status is RouteStatus.REJECTED
+    assert decision.reasons == (RejectReason.TECHNICALLY_NOT_EXECUTABLE,)
 
 
 def test_missing_risex_observation_fails_explicitly() -> None:
