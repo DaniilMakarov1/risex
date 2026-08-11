@@ -1,20 +1,23 @@
 # Status
 
-- Last accepted task: RX-012 — Offline Live Gate Evidence Bundle Design and Fake Replay Coverage
+- Last accepted task: RX-Q002 — Worker Checkpoint Requirement for Architecture-Sensitive Tasks
+- Accepted RX-Q002 implementation HEAD: `f5a709d290c0d919058cad1e7304fb52c1d12e20`
+- Previous accepted product task: RX-012 — Offline Live Gate Evidence Bundle Design and Fake Replay Coverage
 - Accepted RX-012 implementation HEAD: `1c1c878372be2cbfab7216ef9411b2e4ed3ec94b`
-- Previous accepted governance task: RX-Q001 — Repository Workflow and Quality Guardrails
+- Previous accepted governance task before RX-Q002: RX-Q001 — Repository Workflow and Quality Guardrails
 - Accepted RX-Q001 implementation HEAD: `74ded8e38e324fcf550c1e6946376067dbe08e55`
 - Previous accepted product task before RX-012: RX-011 — Offline Execution Capability Gate Design and Fake Replay Coverage
 - Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
-- Current RX task: RX-Q002 — Worker Checkpoint Requirement for Architecture-Sensitive Tasks
-- Current RX task branch: `task/rx-q002-worker-checkpoint-requirement`
-- Current RX task status: implementation complete on task branch; pending reviewer acceptance
+- Current RX task: none
+- Current RX task branch: none
+- Current RX task status: RX-Q002 accepted and finalized on `main`; RX-013 not started
 
-The accepted RX-012 implementation is the latest accepted baseline on `main`.
-RX-Q001 remains the previous accepted governance baseline.
+RX-Q002 is the latest accepted governance baseline on `main`.
+RX-012 remains the previous accepted product baseline.
+RX-Q001 remains the previous accepted governance baseline before RX-Q002.
 RX-011 remains the previous accepted product implementation baseline before RX-012.
-RX-Q002 is a governance-only task branch and is not accepted until reviewer acceptance is explicit.
+RX-013 has not been started. `NEXT_TASK.md` remains the prepared next task.
 
 ## Completed accepted tasks
 
@@ -33,6 +36,7 @@ RX-Q002 is a governance-only task branch and is not accepted until reviewer acce
 - RX-011 — Offline Execution Capability Gate Design and Fake Replay Coverage
 - RX-Q001 — Repository Workflow and Quality Guardrails
 - RX-012 — Offline Live Gate Evidence Bundle Design and Fake Replay Coverage
+- RX-Q002 — Worker Checkpoint Requirement for Architecture-Sensitive Tasks
 
 ## Current architecture status
 
@@ -110,6 +114,15 @@ RX-Q002 is a governance-only task branch and is not accepted until reviewer acce
 - `git diff --check`: exit 0
 - `git diff --cached --check`: exit 0
 
+## Tests last reported for accepted RX-Q002 on main
+
+- `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
+- `python3 -m pytest`: `255 passed in 0.41s`
+- `python3 -m compileall apps core storage tests scripts`: exit 0
+- `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
+- `git diff --check`: exit 0
+- `git diff --cached --check`: exit 0
+
 ## Known limitations
 
 - Funding settlement verifier, ledger reconciliation, and CapturePlan freshness remain deterministic fake offline replay scaffolding only.
@@ -130,4 +143,4 @@ RX-Q002 is a governance-only task branch and is not accepted until reviewer acce
 
 ## Next recommended task
 
-RX-013 — Offline Live Gate Evidence Bundle Ledger Recording and Replay Coverage, starting from the accepted RX-Q002 baseline after reviewer acceptance.
+RX-013 — Offline Live Gate Evidence Bundle Ledger Recording and Replay Coverage, starting from the accepted RX-Q002 baseline. RX-013 has not been started.
