@@ -12,8 +12,9 @@ The current baseline is a non-trading research, fake paper-lifecycle, funding-ve
 - `MIN_LEG_NOTIONAL_USD = 500`.
 - `MIN_NET_PROFIT_USD = 1`.
 - Live trading is disabled by default.
-- Future live eligibility requires an explicitly reconciled ledger result derived from current append-only ledger history plus exactly one fresh fake CapturePlan evidence record for the current Capture, route, and funding settlement opportunity.
-- Missing, stale, or false reconciliation fails closed. Missing, stale, duplicated, cross-capture, cross-route, or cross-settlement CapturePlan freshness evidence also fails closed.
+- Future live gate evidence is fail-closed and currently requires verified fake funding settlement evidence, explicit ledger reconciliation derived from current append-only ledger history, exactly one fresh fake CapturePlan evidence record, and exactly one fresh fake execution-capability evidence record for the current Capture, route, and funding settlement opportunity.
+- Where the fake live gate evidence bundle path is used, the bundle must match the current Capture, route, and funding settlement opportunity and carry the already-derived funding verification, explicit ledger reconciliation, CapturePlan freshness, and execution-capability evidence.
+- Missing, stale, duplicated, cross-capture, cross-route, cross-settlement, unverified funding, false reconciliation, or non-executable execution evidence fails closed. Exact fake evidence still does not permit `LIVE_ELIGIBLE`; live trading remains disabled by default and current route decisions stop at `PAPER_ELIGIBLE` with `LIVE_GATES_NOT_IMPLEMENTED`.
 - Route statuses are `RESEARCH_ONLY`, `PAPER_ELIGIBLE`, `LIVE_ELIGIBLE`, and `REJECTED`.
 - `CANARY_ELIGIBLE` and a separate canary runner are forbidden.
 
