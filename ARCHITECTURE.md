@@ -57,6 +57,7 @@ tests/
 - `LedgerReconciliationResult`: deterministic replay result proving whether one Capture ledger history is internally consistent and explicitly reconciled.
 - `LiveGateEvidenceBundleReplayResult`: deterministic accounting replay result proving whether one recorded fake live-gate evidence bundle check is well-formed, current, and consistent with the existing bundle gate result.
 - `NonSendingExecutionPlan`: execution-boundary evidence describing intended entry and unwind actions for one already-verified Capture settlement without credentials, sendable requests, or order placement.
+- `GuardedLiveRunnerResult`: app-local deterministic live-runner outcome proving whether one already-planned Capture remains blocked or reaches no-order readiness.
 - `PaperResultExplanation`: app-local fake paper result attribution copied from the input `DecisionResult`, including start/non-start blockers and existing PnL components without recalculating profitability.
 
 ## Capture lifecycle state machine
@@ -109,6 +110,7 @@ Any non-terminal Capture may transition to `FAILED`. Capture states with possibl
 - Broad Scan and Focused Refresh orchestration happens only in `core/pipeline/scan_refresh.py`.
 - One-route real-data research orchestration happens only in `apps/research_runner/real_data.py`.
 - Non-sending execution planning happens only in `core/execution/planning.py`.
+- Guarded live runner readiness without orders happens only in `apps/live_runner/guarded.py`.
 - Orders can be sent only through `core/execution/`.
 - Ledger writes happen only through `core/accounting/ledger.py`.
 - Ledger reconciliation happens only in `core/accounting/reconciliation.py`.
@@ -276,6 +278,14 @@ RX-027 adds one non-sending execution planning workflow:
 3. It validates exact Capture/route/settlement identity, ENTRY `PAPER_ELIGIBLE` decision evidence, verified funding settlement, reconciled ledger result with route/funding event references, fresh plan evidence, and executable capability evidence.
 4. It returns `NonSendingExecutionPlan` evidence describing intended venues, symbols, entry sides, unwind sides, target notional, settlement timestamp, validity, and prerequisite event-sequence references.
 5. It does not write ledger events, replay ledger history, call `evaluate_route()`, assemble snapshots, calculate EV/profitability, calculate VWAP/liquidity, call adapters, import live runner behavior, create executable order requests, include credentials or account state, place orders, mutate route eligibility, or enable live trading.
+
+RX-028 adds one guarded live runner workflow without orders:
+
+1. `apps/live_runner/guarded.py` owns `run_guarded_live_without_orders()`.
+2. The workflow accepts one existing `Capture`, one existing `RouteCandidate`, one explicit timezone-aware funding settlement timestamp, one existing `NonSendingExecutionPlan`, one funding settlement verification result, one ledger reconciliation result, one live-gate evidence bundle, one explicit timezone-aware evaluation timestamp, and explicit `ProductRules`.
+3. It fails closed unless `ProductRules.live_trading_enabled is True`, exact Capture/route/settlement identity is present, funding verification is the current verified result contract, ledger reconciliation is the current reconciled result contract, the live-gate bundle passes `check_live_gate_evidence_bundle()`, and the existing non-sending plan is fresh and matches route identity plus prerequisite evidence references.
+4. It returns `GuardedLiveRunnerResult` with either a centralized blocked reason or a no-order ready flag.
+5. It does not call `evaluate_route()`, assemble snapshots, calculate EV/profitability, calculate VWAP/liquidity, replay funding or ledger history, write ledger events, call adapters, import order placement behavior, create executable order requests, include credentials or account state, place orders, mutate route eligibility, or enable live trading by default.
 
 RX-005 adds deterministic offline orchestration over multiple fake route candidates:
 

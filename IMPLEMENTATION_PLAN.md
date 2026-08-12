@@ -41,19 +41,18 @@ RX-027 — Execution Planning Without Orders is reviewer-accepted and finalized 
 
 ## Current Product Branch Progress
 
-No product branch is active in this checkout. RX-028 is the immediate next task and has not been started.
+RX-028 is implemented on `task/rx-028-guarded-live-runner-without-orders` and pending reviewer acceptance. The latest accepted product baseline remains RX-027 until review explicitly accepts RX-028.
 
 ## Current Product Handoff
 
-`NEXT_TASK.md` is prepared for RX-028, the next gated guarded-live-runner-without-orders task after RX-027 finalization.
+`NEXT_TASK.md` is prepared for the next gated task after RX-028 branch review.
 
 ## Remaining Gated Roadmap After RX-027
 
 Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts:
 
-1. Add a guarded live runner without order placement.
-2. Add order placement only in a future explicitly approved task.
-3. Add read-only monitoring/dashboard work later, without turning it into a decision, execution, or ledger-write path.
+1. Add order placement only in a future explicitly approved task.
+2. Add read-only monitoring/dashboard work later, without turning it into a decision, execution, or ledger-write path.
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
 
@@ -226,8 +225,20 @@ RX-027 implementation notes:
 - The returned plan describes intended venues, symbols, entry and unwind sides, target notional, settlement timestamp, validity, and prerequisite event-sequence references only.
 - RX-027 does not call `evaluate_route()`, assemble snapshots, calculate profitability, write ledger events, replay ledgers, call adapters, import live runner behavior, create live `CapturePlan` objects, place orders, include credentials or sendable API requests, enable live trading, add route statuses, add reject reasons, or create a second decision, snapshot, verifier, ledger-write, replay, economics, or live execution path.
 
+## RX-028 — Guarded Live Runner Without Orders
+
+Add the smallest guarded live runner workflow for one existing `Capture`, one existing `RouteCandidate`, one explicit funding settlement timestamp, one existing non-sending execution plan, and already-derived prerequisite evidence.
+
+RX-028 implementation notes:
+
+- `apps/live_runner/guarded.py` owns `run_guarded_live_without_orders()` and `GuardedLiveRunnerResult`.
+- The workflow requires explicit `ProductRules(live_trading_enabled=True)` before any no-order ready state. Missing rules, default rules, or non-bool truthy switch values fail closed with `LIVE_TRADING_DISABLED`.
+- The workflow accepts exact Capture/route/settlement inputs plus existing verified funding settlement evidence, current ledger reconciliation evidence, a passing `LiveGateEvidenceBundle`, one fresh `NonSendingExecutionPlan`, and an explicit timezone-aware evaluation timestamp.
+- Missing, stale, malformed, cross-capture, cross-route, cross-settlement, unverified funding, unreconciled ledger, stale plan prerequisites, non-executable execution capability evidence, missing non-sending plan, stale non-sending plan, live switch disabled, or sendable order material fails closed through existing centralized reject reasons.
+- A successful result is no-order readiness only. RX-028 does not call `evaluate_route()`, assemble snapshots, calculate profitability, replay funding or ledger history, write ledger events, call adapters, import order placement behavior, create live `CapturePlan` objects, construct sendable exchange requests, place orders, enable live trading by default, add route statuses, add reject reasons, or create a second decision, snapshot, verifier, ledger-write, replay, economics, execution-planning, or order path.
+
 ## Next Sequence
 
-1. RX-028 — Guarded Live Runner Without Orders.
+1. RX-029 — Explicit Approval-Gated Order Placement Boundary.
 
-Do not promote order placement, monitoring, dashboards, or later roadmap stages into the current handoff until RX-028 is reviewed and accepted.
+Do not promote monitoring, dashboards, or later roadmap stages into the current handoff until RX-029 is reviewed and accepted.

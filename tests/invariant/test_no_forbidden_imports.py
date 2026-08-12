@@ -51,7 +51,7 @@ def test_execution_imports_do_not_leak_into_upstream_modules() -> None:
     offenders: list[tuple[Path, str]] = []
 
     for path in _python_files():
-        if path.parts[:2] == ("core", "execution"):
+        if path.parts[:2] in (("core", "execution"), ("apps", "live_runner")):
             continue
         for module in _imported_modules(path):
             if module == "core.execution" or module.startswith("core.execution."):

@@ -1,9 +1,9 @@
 # Status
 
-- Current branch: `main`.
-- Current task: RX-027 — Execution Planning Without Orders finalization.
-- RX-027 starting baseline: `174df24c41169cb9a031b27f573473bd164471b5`
-- RX-027 review state: reviewer-accepted and finalized on `main` after same-branch corrective current-contract prerequisite-evidence hardening.
+- Current branch: `task/rx-028-guarded-live-runner-without-orders`.
+- Current task: RX-028 — Guarded Live Runner Without Orders.
+- RX-028 starting baseline: `4d8ea09ba5e06cb9d46ed22a9ea1f89564c8bfbb`
+- RX-028 review state: implemented on task branch and pending reviewer acceptance.
 - Latest accepted product task: RX-027 — Execution Planning Without Orders.
 - Accepted RX-027 implementation HEAD: `7131d752e23598515fb8eaf426e1cf98f97b756f`
 - RX-027 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
@@ -60,10 +60,11 @@
 - Accepted baseline branch: `main`
 - Current accepted `main` governance task: RX-Q004.
 - Current accepted `main` product task: RX-027.
-- Current RX task state: RX-027 is reviewer-accepted and finalized on `main`; `NEXT_TASK.md` is prepared for RX-028.
+- Current RX task state: RX-028 is implemented on `task/rx-028-guarded-live-runner-without-orders` and pending review; `NEXT_TASK.md` is prepared for RX-029.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
+RX-028 is the current task-branch implementation and is not an accepted product baseline until reviewer acceptance.
 RX-027 is the latest accepted product baseline on `main`. The accepted work includes corrective hardening so execution planning accepts only actual current funding verification and ledger reconciliation result contracts rather than attribute-compatible or module/qualname-spoofed wrong-type objects.
 RX-026 remains the previous accepted product baseline before RX-027.
 RX-025 remains the previous accepted product baseline before RX-026.
@@ -81,7 +82,7 @@ RX-013 remains the previous accepted product baseline before RX-014.
 RX-012 remains the previous accepted product baseline before RX-013.
 RX-Q001 remains the previous accepted governance baseline before RX-Q002.
 RX-011 remains the previous accepted product implementation baseline before RX-012.
-`NEXT_TASK.md` is prepared for RX-028 after RX-027 finalization on `main`.
+`NEXT_TASK.md` is prepared for RX-029 after RX-028 branch review.
 
 ## Completed accepted tasks
 
@@ -170,7 +171,8 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - One real-data research runner exists in `apps/research_runner/real_data.py` and evaluates one explicit existing route at a time through the existing adapter handoff and `evaluate_route()` path.
 - One approval-gated funding settlement verification workflow exists in `core/monitoring/funding_settlement.py`; it records explicit caller-supplied observed settlement evidence through the existing ledger helper and does not call `evaluate_route()`, assemble snapshots, calculate profitability, reconcile ledgers, plan execution, place orders, or enable live trading.
 - One non-sending execution planning workflow exists in `core/execution/planning.py`; it consumes existing Capture, RouteCandidate, route decision, funding verification, ledger reconciliation, CapturePlan freshness, and execution-capability evidence and returns evidence-only intended entry/unwind actions without ledger writes, adapters, live runner behavior, sendable API requests, orders, route eligibility mutation, or live trading.
-- No paper exchange simulation, live runner behavior, orders, or live trading.
+- One guarded no-order live runner workflow exists in `apps/live_runner/guarded.py`; it consumes existing Capture, RouteCandidate, funding verification, ledger reconciliation, live-gate bundle, and non-sending execution-plan evidence and returns only blocked or no-order readiness without ledger writes, adapters, order placement imports, sendable API requests, route eligibility mutation, or live trading by default.
+- No paper exchange simulation, order placement, or live trading.
 
 ## Current repository governance status
 
@@ -194,8 +196,20 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - RX-025 is reviewer-accepted and finalized on `main`.
 - RX-026 is reviewer-accepted and finalized on `main`.
 - RX-027 is reviewer-accepted and finalized on `main`.
-- The next recommended product task is a guarded live runner without orders, followed by order placement only in a future explicitly approved task and read-only monitoring/dashboard later.
+- RX-028 is implemented on task branch and pending reviewer acceptance.
+- The next recommended product task is an explicit approval-gated order placement boundary, followed by read-only monitoring/dashboard later.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized.
+
+## Tests last reported for RX-028 branch
+
+- `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
+- `python3 -m pytest tests/invariant`: `36 passed in 0.24s`
+- `python3 -m pytest tests/unit/test_guarded_live_runner.py`: `39 passed in 0.08s`
+- `python3 -m pytest`: `506 passed in 0.77s`
+- `python3 -m compileall apps core storage tests scripts`: exit 0
+- `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
+- `git diff --check`: exit 0
+- `git diff --cached --check`: exit 0
 
 ## Tests last reported for RX-027 branch
 
@@ -432,7 +446,7 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - Offline fake runners still perform no network calls.
 - The real-data research runner has no CLI command in this branch; existing fake CLI behavior is unchanged.
 - No orders.
-- No live runner behavior.
+- No order-placing live runner behavior.
 - No live trading.
 - No live `CapturePlan` creation.
 - Fresh CapturePlan evidence is not permission to trade live by itself.
@@ -447,4 +461,4 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 
 ## Next recommended task
 
-RX-028 — Guarded Live Runner Without Orders.
+RX-029 — Explicit Approval-Gated Order Placement Boundary.
