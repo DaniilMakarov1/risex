@@ -3,7 +3,7 @@
 - Current branch: `task/rx-030-read-only-monitoring-dashboard-without-decisions-or-orders`.
 - Current task: RX-030 — Read-Only Monitoring Dashboard Without Decisions Or Orders.
 - RX-030 starting baseline: `c91e7190b122de621fd035c38ed4943fac618bab`
-- RX-030 review state: implementation in progress on task branch; pending validation, commit, push, and reviewer acceptance.
+- RX-030 review state: implemented, validated, committed, and pushed on the task branch; pending reviewer review and acceptance.
 - RX-029 starting baseline: `e2771bc9e6ce2730159bb120d784635e9030f428`
 - RX-029 review state: reviewer-accepted and finalized on `main`.
 - Latest accepted product task: RX-029 — Explicit Approval-Gated Order Placement Boundary.
