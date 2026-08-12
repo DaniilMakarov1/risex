@@ -277,7 +277,7 @@ RX-021 adds deterministic fake paper-result attribution and PnL explanation down
 3. Discovery decisions, rejected decisions, research-only decisions, and live-eligible decisions still record paper rejections and do not create `Capture` objects.
 4. PnL explanation copies existing `DecisionResult` economics: expected funding, total fees, simulated roundtrip cost, and net profit when `entry_ev` is present, plus top-level decision net profit.
 5. Missing `DecisionResult` economics remain `None`; paper attribution does not treat unknown values as zero.
-6. Existing paper ledger events may carry optional `paper_result_explanation` payloads. Reconciliation validates the optional payload shape when present but does not replay profitability or change paper lifecycle state replay.
+6. Existing paper ledger events may carry optional `paper_result_explanation` payloads. Reconciliation shape-validates optional payloads when present, semantically checks them against authoritative route-decision or rejection event payloads where ledger evidence exists, and fails closed on contradictory well-formed explanation fields. It does not replay or recalculate profitability and does not change paper lifecycle state replay.
 7. RX-021 does not call `evaluate_route()`, assemble route snapshots, recalculate EV, fees, funding, VWAP, liquidity, basis, spread, slippage, or profitability, create plans, place orders, import live/execution modules, or change route eligibility.
 
 RX-008 adds deterministic offline funding settlement verifier contracts and fake replay coverage:
