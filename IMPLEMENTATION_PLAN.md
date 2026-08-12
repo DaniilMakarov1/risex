@@ -29,6 +29,7 @@ The original product direction remains hedged funding capture on RiseX with hedg
 - RX-027 added non-sending execution planning for already-verified prerequisite evidence.
 - RX-028 added a guarded no-order live runner for already-verified prerequisite evidence and existing non-sending execution-plan evidence.
 - RX-029 added an explicit approval-gated order placement boundary downstream of guarded no-order readiness and non-sending execution planning.
+- RX-030 added a read-only monitoring dashboard renderer for already-derived deterministic fixture evidence without adding decisions, polling, network I/O, or orders.
 - RX-Q001 and RX-Q002 added repository workflow, handoff validation, and supervised-worker governance.
 
 ## Accepted Offline Safety-Hardening Detour
@@ -39,11 +40,11 @@ The detour's purpose is to keep future live-adjacent work honest: funding settle
 
 ## Latest Accepted Product Task
 
-RX-029 — Explicit Approval-Gated Order Placement Boundary is reviewer-accepted and finalized on `main`. It adds one explicit approval-gated order placement boundary downstream of RX-028 guarded no-order readiness and RX-027 non-sending execution planning. It does not call `evaluate_route()`, assemble snapshots, calculate profitability, replay funding or ledger history, write ledger events, call adapters, use credentials, create exchange request payloads, place real orders, or enable live trading by default.
+RX-030 — Read-Only Monitoring Dashboard Without Decisions Or Orders is reviewer-accepted and finalized on `main`. It adds one read-only monitoring dashboard renderer for one existing Capture, one existing RouteCandidate, one explicit settlement timestamp, and already-derived caller-supplied deterministic evidence. It does not call `evaluate_route()`, assemble snapshots, calculate profitability, verify funding, reconcile ledgers, check live-gate bundles, plan execution, run guarded live readiness, call approval-boundary execution, write ledger events, call adapters, use credentials, perform network I/O, place orders, or enable live trading by default.
 
 ## Current Product Branch Progress
 
-RX-030 — Read-Only Monitoring Dashboard Without Decisions Or Orders is active on `task/rx-030-read-only-monitoring-dashboard-without-decisions-or-orders` and pending review.
+No product branch is active after RX-030 finalization. RX-031 is prepared as the next review-directed follow-up and roadmap handoff.
 
 ## Current Product Handoff
 
@@ -266,4 +267,4 @@ RX-030 implementation notes:
 
 1. RX-031 — Review-Directed Follow-up After RX-030.
 
-Do not promote execution automation, background loops, ranking, order placement, polling, alerts, auto-refresh, or later roadmap stages into the current handoff until RX-030 is reviewed and accepted.
+Do not promote execution automation, background loops, ranking, order placement, polling, alerts, auto-refresh, or later roadmap stages into the current handoff unless that exact future task is explicitly authorized.
