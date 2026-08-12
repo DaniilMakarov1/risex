@@ -1,10 +1,13 @@
 # Status
 
-- Current branch: `task/rx-027-execution-planning-without-orders`.
-- Current task: RX-027 — Execution Planning Without Orders.
+- Current branch: `main`.
+- Current task: RX-027 — Execution Planning Without Orders finalization.
 - RX-027 starting baseline: `174df24c41169cb9a031b27f573473bd164471b5`
-- RX-027 review state: implemented on task branch with same-branch corrective current-contract prerequisite-evidence hardening and pending review; not accepted until reviewer acceptance.
-- Latest accepted product task: RX-026 — Approval-Gated Real Funding Settlement Verification.
+- RX-027 review state: reviewer-accepted and finalized on `main` after same-branch corrective current-contract prerequisite-evidence hardening.
+- Latest accepted product task: RX-027 — Execution Planning Without Orders.
+- Accepted RX-027 implementation HEAD: `7131d752e23598515fb8eaf426e1cf98f97b756f`
+- RX-027 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
+- Previous accepted product task before RX-027: RX-026 — Approval-Gated Real Funding Settlement Verification.
 - Accepted RX-026 implementation HEAD: `481f9257ad5e541508001d86248cdac96e90ba7c`
 - RX-026 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
 - RX-026 starting baseline: `709cf6c6e1b32ccb06f57d66ee18d862fef2056c`
@@ -56,13 +59,13 @@
 - Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
 - Current accepted `main` governance task: RX-Q004.
-- Current accepted `main` product task: RX-026.
-- Current RX task state: RX-027 is implemented on `task/rx-027-execution-planning-without-orders` and pending review; RX-026 remains the latest accepted product baseline on `main`.
+- Current accepted `main` product task: RX-027.
+- Current RX task state: RX-027 is reviewer-accepted and finalized on `main`; `NEXT_TASK.md` is prepared for RX-028.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
-RX-027 is current branch work only and is not accepted until reviewer acceptance. The current branch includes corrective hardening so execution planning accepts only actual current funding verification and ledger reconciliation result contracts rather than attribute-compatible or module/qualname-spoofed wrong-type objects.
-RX-026 is the latest accepted product baseline on `main`.
+RX-027 is the latest accepted product baseline on `main`. The accepted work includes corrective hardening so execution planning accepts only actual current funding verification and ledger reconciliation result contracts rather than attribute-compatible or module/qualname-spoofed wrong-type objects.
+RX-026 remains the previous accepted product baseline before RX-027.
 RX-025 remains the previous accepted product baseline before RX-026.
 RX-024 remains the previous accepted product baseline before RX-025.
 RX-023 remains the previous accepted product baseline before RX-024.
@@ -78,7 +81,7 @@ RX-013 remains the previous accepted product baseline before RX-014.
 RX-012 remains the previous accepted product baseline before RX-013.
 RX-Q001 remains the previous accepted governance baseline before RX-Q002.
 RX-011 remains the previous accepted product implementation baseline before RX-012.
-`NEXT_TASK.md` is prepared for RX-028 after RX-027 branch implementation and same-branch corrective current-contract hardening.
+`NEXT_TASK.md` is prepared for RX-028 after RX-027 finalization on `main`.
 
 ## Completed accepted tasks
 
@@ -112,6 +115,7 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - RX-024 — Real Market-Data Route Snapshot Assembly
 - RX-025 — Real-Data Research Runner
 - RX-026 — Approval-Gated Real Funding Settlement Verification
+- RX-027 — Execution Planning Without Orders
 
 ## Current architecture status
 
@@ -183,13 +187,13 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 ## Current roadmap status
 
 - RX-008 through RX-016 are accepted fail-closed offline safety-hardening detour tasks.
-- The project continues along the intended product implementation path after RX-026.
+- The project continues along the intended product implementation path after RX-027.
 - RX-022 is reviewer-accepted and finalized on `main`.
 - RX-023 is reviewer-accepted and finalized on `main`.
 - RX-024 is reviewer-accepted and finalized on `main`.
 - RX-025 is reviewer-accepted and finalized on `main`.
 - RX-026 is reviewer-accepted and finalized on `main`.
-- RX-027 is implemented on a task branch with corrective current-contract prerequisite-evidence hardening and pending review.
+- RX-027 is reviewer-accepted and finalized on `main`.
 - The next recommended product task is a guarded live runner without orders, followed by order placement only in a future explicitly approved task and read-only monitoring/dashboard later.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized.
 
@@ -201,6 +205,15 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - `python3 -m pytest`: `467 passed in 0.62s`
 - `python3 -m compileall apps core storage tests scripts`: exit 0
 - `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
+- `git diff --check`: exit 0
+- `git diff --cached --check`: exit 0
+
+## Tests last reported for RX-027 finalization on main
+
+- `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
+- `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
+- `python3 -m pytest`: `467 passed`
+- `python3 -m compileall apps core storage tests`: exit 0
 - `git diff --check`: exit 0
 - `git diff --cached --check`: exit 0
 

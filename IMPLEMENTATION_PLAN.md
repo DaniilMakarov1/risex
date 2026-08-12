@@ -26,6 +26,7 @@ The original product direction remains hedged funding capture on RiseX with hedg
 - RX-024 added the real market-data route snapshot assembly handoff from read-only per-venue observations into the existing `assemble_route_snapshot()` path.
 - RX-025 added the one-route real-data research runner that uses the existing adapter handoff and `evaluate_route()` path.
 - RX-026 added approval-gated funding settlement verification for explicit caller-supplied observed evidence.
+- RX-027 added non-sending execution planning for already-verified prerequisite evidence.
 - RX-Q001 and RX-Q002 added repository workflow, handoff validation, and supervised-worker governance.
 
 ## Accepted Offline Safety-Hardening Detour
@@ -36,21 +37,21 @@ The detour's purpose is to keep future live-adjacent work honest: funding settle
 
 ## Latest Accepted Product Task
 
-RX-026 — Approval-Gated Real Funding Settlement Verification is reviewer-accepted and finalized on `main`. It adds one approval-gated workflow for one existing `Capture`, one existing `RouteCandidate`, and one explicit funding settlement timestamp using explicit caller-supplied observed settlement evidence. It does not call `evaluate_route()`, assemble snapshots, calculate profitability, mutate route eligibility, start paper lifecycle, reconcile ledgers, plan execution, place orders, add private endpoints, add credentials, or add live runner behavior.
+RX-027 — Execution Planning Without Orders is reviewer-accepted and finalized on `main`. It adds one non-sending execution planning workflow for one existing `Capture`, one existing `RouteCandidate`, one explicit funding settlement timestamp, and already-derived prerequisite evidence. It does not call `evaluate_route()`, assemble snapshots, calculate profitability, write ledger events, call adapters, import live runner behavior, create live `CapturePlan` objects, include credentials or sendable API requests, place orders, or enable live trading.
 
 ## Current Product Branch Progress
 
-RX-027 — Execution Planning Without Orders is implemented on `task/rx-027-execution-planning-without-orders` and is pending review. It is not accepted until reviewer acceptance and finalization on `main`.
+No product branch is active in this checkout. RX-028 is the immediate next task and has not been started.
 
 ## Current Product Handoff
 
-`NEXT_TASK.md` is prepared for RX-028, the next gated guarded-live-runner-without-orders task after RX-027 review acceptance.
+`NEXT_TASK.md` is prepared for RX-028, the next gated guarded-live-runner-without-orders task after RX-027 finalization.
 
 ## Remaining Gated Roadmap After RX-027
 
 Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts:
 
-1. Add a guarded live runner without order placement only after RX-027 is reviewed and accepted.
+1. Add a guarded live runner without order placement.
 2. Add order placement only in a future explicitly approved task.
 3. Add read-only monitoring/dashboard work later, without turning it into a decision, execution, or ledger-write path.
 
