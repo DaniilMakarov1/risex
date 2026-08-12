@@ -21,6 +21,8 @@ The original product direction remains hedged funding capture on RiseX with hedg
 - RX-019 updated repository handoff metadata after RX-018 review without changing product behavior.
 - RX-020 hardened the existing `RouteCandidate` identity and selected-notional construction contract.
 - RX-021 added deterministic fake paper-result attribution and PnL explanation downstream of existing route decisions and fake paper lifecycle events.
+- RX-022 added the read-only RiseX public market-data observation adapter.
+- RX-023 added the read-only Hyperliquid public market-data observation adapter.
 - RX-Q001 and RX-Q002 added repository workflow, handoff validation, and supervised-worker governance.
 
 ## Accepted Offline Safety-Hardening Detour
@@ -31,11 +33,11 @@ The detour's purpose is to keep future live-adjacent work honest: funding settle
 
 ## Latest Accepted Product Task
 
-RX-022 — Read-only RiseX Observation Adapter is reviewer-accepted and finalized on `main`. It adds a read-only RiseX public market-data adapter only, preserves per-venue observation normalization, and does not assemble route snapshots, evaluate routes, rank routes, write ledger events, create plans, place orders, or add live runner behavior.
+RX-023 — Read-only Hyperliquid Observation Adapter is reviewer-accepted and finalized on `main`. It adds a read-only Hyperliquid public market-data adapter only, preserves per-venue observation normalization, and does not assemble route snapshots, evaluate routes, rank routes, write ledger events, create plans, place orders, or add live runner behavior.
 
 ## Current Product Handoff
 
-RX-023 — Read-only Hyperliquid Observation Adapter is implemented on the current task branch and is pending review. It adds a read-only Hyperliquid public market-data adapter only, preserves per-venue observation normalization, and does not assemble route snapshots, evaluate routes, rank routes, write ledger events, create plans, place orders, or add live runner behavior.
+RX-024 — Real Market-Data Route Snapshot Assembly is the immediate next task in `NEXT_TASK.md`. It has not been started.
 
 ## Remaining Gated Roadmap After RX-023
 
@@ -174,4 +176,4 @@ RX-023 implementation notes:
 
 1. RX-024 — Real Market-Data Route Snapshot Assembly.
 
-Do not promote any later roadmap stage into the current handoff until RX-023 is reviewed and accepted.
+Do not promote any later roadmap stage into the current handoff until RX-024 is reviewed and accepted.
