@@ -2,19 +2,19 @@
 
 ## Task ID
 
-RX-023 — Read-only Hyperliquid Observation Adapter
+RX-024 — Real Market-Data Route Snapshot Assembly
 
 ## Objective
 
-Add a read-only Hyperliquid adapter that fetches and normalizes per-venue `VenueObservation` inputs only. Keep it downstream of venue data ingestion and upstream of the existing `assemble_route_snapshot()` path; do not evaluate routes, rank routes, start paper lifecycle, write ledger events, or perform any trading behavior inside the adapter.
+Add the smallest real market-data route snapshot assembly handoff that consumes existing read-only per-venue observations and calls the existing `assemble_route_snapshot()` path for one `RouteCandidate` at a time. Keep this as data assembly only; do not evaluate routes, rank routes, start paper lifecycle, write ledger events, or perform any trading behavior.
 
 ## Starting baseline
 
-Start from reviewer-accepted `main` with RX-022 finalized. Before edits, verify the exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
+Start from reviewer-accepted `main` after the read-only Hyperliquid observation adapter is finalized. Before edits, verify the exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
 
 ## Branch
 
-Create and work on `task/rx-023-read-only-hyperliquid-observation-adapter`. Do not implement on `main`.
+Create and work on `task/rx-024-real-market-data-route-snapshot-assembly`. Do not implement on `main`.
 
 ## Before changing files
 
@@ -33,40 +33,39 @@ Read:
 
 ## Allowed scope
 
-- A read-only Hyperliquid venue adapter that returns normalized `VenueObservation` values for one Hyperliquid venue/symbol at a time.
-- Minimal adapter tests using deterministic fixtures or injected read-only responses; tests must not depend on live external availability.
-- Existing venue adapter interfaces and normalized domain contracts only where required for the Hyperliquid adapter.
-- Focused invariant coverage proving the adapter does not own route decisions, EV, VWAP, ledger writes, paper lifecycle, live behavior, or order placement.
+- A narrow assembly handoff that fetches or accepts one RiseX `VenueObservation` and one Hyperliquid `VenueObservation` for an existing `RouteCandidate`, then delegates route-aligned snapshot construction to `assemble_route_snapshot()`.
+- Existing venue adapter interfaces and normalized domain contracts only where required for the handoff.
+- Deterministic tests using injected adapters or fixtures; tests must not depend on live external availability.
+- Focused invariant coverage proving the handoff does not own route decisions, EV, VWAP, ledger writes, paper lifecycle, live behavior, or order placement.
 - Required repository metadata updates after implementation.
 
 ## Forbidden scope
 
-- No RiseX adapter changes except compatibility fixes required by existing tests.
-- No route profitability calculation, route ranking, route eligibility mutation, or calls to `evaluate_route()` from the adapter.
-- No route snapshot assembly inside the adapter; preserve `assemble_route_snapshot()` as the single snapshot path.
-- No second EV, fee, funding, VWAP/liquidity, basis, route decision, snapshot assembly, ledger-write, replay, or live execution path.
+- No route profitability calculation, route ranking, route eligibility mutation, or calls to `evaluate_route()` from the assembly handoff.
+- No second snapshot assembly path; preserve `assemble_route_snapshot()` as the single owner of route snapshot construction.
+- No second EV, fee, funding, VWAP/liquidity, basis, route decision, ledger-write, replay, or live execution path.
 - No standalone spread, price-impact, basis, slippage, max-level, hidden-buffer, or safety-margin filters.
 - No private account endpoints, credentials, secrets, orders, live runner behavior, live trading, executable `CapturePlan`, or executable order plan.
 - No canary architecture.
 - No hold-next-cycle logic.
 - No speculative helpers, wrappers, unused abstractions, or future hooks.
-- Do not implement real market-data route snapshot assembly, real-data research runner, funding settlement approval, execution planning, live runner behavior, order placement, monitoring, or dashboards.
+- Do not implement a real-data research runner, funding settlement approval, execution planning, live runner behavior, order placement, monitoring, or dashboards.
 
 ## Implementation requirements
 
-- Keep adapters read-only and per-venue: they may fetch/parse Hyperliquid market data and produce one `VenueObservation`, but they must not assemble cross-venue route snapshots or evaluate route profitability.
-- Preserve `VenueAdapter.fetch_observation(symbol) -> VenueObservation` as the adapter-facing contract unless code inspection proves the current interface differs.
-- Normalize timestamps as timezone-aware values and preserve unknown economics explicitly through existing `EstimatedValue`/`ValueSource` contracts.
-- Do not silently convert missing fees, funding, order-book depth, or timestamps into zero/default success values.
-- If a live HTTP boundary is introduced, isolate it behind deterministic tests that use fixtures or injected fake responses; do not require network access for tests.
-- Worker policy: this task touches adapter and data-ingestion boundaries, so one supervised worker/subagent is required before implementation edits. If worker tooling is unavailable, stop before edits and report the blocker. The worker must stop at DESIGN CHECKPOINT before edits and at CODE, TEST, and VALIDATION checkpoints if it continues.
+- Reuse `VenueAdapter.fetch_observation(symbol) -> VenueObservation` for venue data ingestion.
+- Reuse the existing `assemble_route_snapshot()` function for route snapshot construction.
+- Keep adapters read-only and per-venue; do not move cross-venue logic into adapters.
+- Normalize no economics inside the handoff; economics remain owned by the existing owner modules and consumed later by `evaluate_route()`.
+- Missing, malformed, or contradictory observations must fail closed before any route decision can run.
+- If any live HTTP boundary is reachable through existing adapters, isolate tests behind injected adapters or fixtures; do not require network access for tests.
+- Worker policy: this task touches data-ingestion and snapshot boundaries, so one supervised worker/subagent is required before implementation edits. If worker tooling is unavailable, stop before edits and report the blocker. The worker must stop at DESIGN CHECKPOINT before edits and at CODE, TEST, and VALIDATION checkpoints if it continues.
 - Parent owns steering, final diff review, validation, commit, push, and final report.
 
 ## Required files
 
-- Likely `core/venues/`
+- Likely `core/pipeline/`
 - Likely focused tests under `tests/unit/`
-- Possibly deterministic fixture files under `tests/fixtures/` only if needed
 - Repository metadata files required by `AGENTS.md`
 - Do not touch product code outside the owner modules required by the final design checkpoint.
 
@@ -74,7 +73,7 @@ Read:
 
 - `python3 scripts/validate_next_task.py`
 - `python3 -m pytest tests/invariant`
-- Focused tests for read-only Hyperliquid observation normalization and fail-closed missing/unknown data behavior
+- Focused tests for real market-data route snapshot assembly handoff behavior and fail-closed missing/contradictory observation behavior
 - `python3 -m pytest`
 - `python3 -m compileall apps core storage tests scripts`
 - `python3 -m apps.cli.main`

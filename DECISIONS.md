@@ -343,3 +343,18 @@
 - Affected files/modules: `core/venues/risex.py`, `core/venues/__init__.py`, focused unit tests, invariant tests, and governance docs.
 - Superseded decisions: RX-004's adapter boundary remains unchanged; RX-022 fills it for RiseX only.
 - Non-decisions: RX-022 does not implement a Hyperliquid adapter, route snapshot assembly, route evaluation, route ranking, route eligibility mutation, EV/fee/funding/VWAP/basis calculations, ledger writes, replay paths, private/account/auth endpoints, credentials, orders, paper lifecycle, live runner behavior, live trading, executable `CapturePlan`, execution planning, canary architecture, hold-next-cycle logic, artificial filters, or a second decision, snapshot, ledger-write, economics, or live execution path.
+
+## 2026-08-12 - RX-023
+
+- Date: 2026-08-12
+- Decision: Added `HyperliquidObservationAdapter` in `core/venues/hyperliquid.py` as a read-only public market-data adapter implementing the existing `VenueAdapter.fetch_observation(symbol) -> VenueObservation` boundary.
+- Reason: RX-023 needs the hedge venue data-ingestion boundary while preserving per-venue normalization and keeping cross-venue snapshot assembly in `core/pipeline/snapshot.py`.
+- Decision: The adapter posts only public Hyperliquid `/info` requests for `metaAndAssetCtxs`, `l2Book`, and `predictedFundings`, maps the requested symbol to exactly one Hyperliquid coin, normalizes orderbook levels into `OrderBook`/`OrderBookLevel`, converts `l2Book.time` into `observed_at`, and converts `HlPerp.nextFundingTime` into the funding settlement timestamp.
+- Reason: `VenueObservation` requires normalized per-venue orderbook, observation timestamp, and settlement timestamp inputs before the existing snapshot assembly and route decision paths can consume real data in later tasks.
+- Decision: Hyperliquid expected funding cash flow and fee cash flow remain `ValueSource.UNKNOWN` inside the adapter.
+- Reason: Hyperliquid public market data exposes funding rates and fee schedules, while the existing `VenueObservation` economics contract requires USD cash values and `fetch_observation(symbol)` has no selected route notional, side, or account fee tier. Converting rates or schedule terms to USD inside the adapter would duplicate economics and silently invent missing inputs.
+- Decision: Adapter tests use injected deterministic `/info` responses; live HTTP availability is not required for test success.
+- Reason: The adapter may have a production read-only HTTP fallback, but repository tests must remain deterministic and fail closed over malformed or missing market-data shapes.
+- Affected files/modules: `core/venues/hyperliquid.py`, `core/venues/__init__.py`, focused unit tests, invariant tests, and governance docs.
+- Superseded decisions: RX-004's adapter boundary remains unchanged; RX-023 fills it for Hyperliquid only.
+- Non-decisions: RX-023 does not implement real market-data route snapshot assembly, route evaluation, route ranking, route eligibility mutation, EV/fee/funding/VWAP/basis calculations, ledger writes, replay paths, private/account/auth endpoints, credentials, orders, paper lifecycle, live runner behavior, live trading, executable `CapturePlan`, execution planning, canary architecture, hold-next-cycle logic, artificial filters, or a second decision, snapshot, ledger-write, economics, or live execution path.

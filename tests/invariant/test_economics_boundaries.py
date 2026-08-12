@@ -149,13 +149,18 @@ def test_venue_adapter_contract_is_per_venue_observation_only() -> None:
     assert "fetch_snapshot" not in adapter_source
 
 
-def test_only_read_only_risex_adapter_is_introduced_without_secrets_or_dashboard_code() -> None:
+def test_only_read_only_venue_adapters_are_introduced_without_secrets_or_dashboard_code() -> None:
     production_text = "\n".join(path.read_text().lower() for path in _production_python_files())
     venue_python_files = {path.relative_to(Path("core/venues")) for path in Path("core/venues").rglob("*.py")}
     dashboard_python_files = tuple(Path("apps/dashboard").rglob("*.py"))
     storage_python_files = {path.relative_to(Path("storage")) for path in Path("storage").rglob("*.py")}
 
-    assert venue_python_files == {Path("__init__.py"), Path("base.py"), Path("risex.py")}
+    assert venue_python_files == {
+        Path("__init__.py"),
+        Path("base.py"),
+        Path("hyperliquid.py"),
+        Path("risex.py"),
+    }
     assert all(path.name == "__init__.py" and path.read_text() == "" for path in dashboard_python_files)
     assert storage_python_files == {
         Path("__init__.py"),
@@ -189,6 +194,30 @@ def test_risex_adapter_stays_read_only_observation_only() -> None:
     assert "/v1/portfolio" not in risex_source
     assert "api_key" not in risex_source.lower()
     assert "secret" not in risex_source.lower()
+
+
+def test_hyperliquid_adapter_stays_read_only_observation_only() -> None:
+    hyperliquid_source = Path("core/venues/hyperliquid.py").read_text()
+
+    assert "VenueObservation" in hyperliquid_source
+    assert "VenueSnapshot" not in hyperliquid_source
+    assert "assemble_route_snapshot" not in hyperliquid_source
+    assert "evaluate_route" not in hyperliquid_source
+    assert "calculate_entry_ev" not in hyperliquid_source
+    assert "calculate_executable_quote" not in hyperliquid_source
+    assert "core.pipeline" not in hyperliquid_source
+    assert "core.economics" not in hyperliquid_source
+    assert "core.risk" not in hyperliquid_source
+    assert "core.accounting" not in hyperliquid_source
+    assert "core.execution" not in hyperliquid_source
+    assert "apps.paper_runner" not in hyperliquid_source
+    assert "apps.live_runner" not in hyperliquid_source
+    assert "clearinghouseState" not in hyperliquid_source
+    assert "openOrders" not in hyperliquid_source
+    assert "userFills" not in hyperliquid_source
+    assert "/exchange" not in hyperliquid_source
+    assert "api_key" not in hyperliquid_source.lower()
+    assert "secret" not in hyperliquid_source.lower()
 
 
 def test_paper_runner_stays_downstream_of_route_decisions() -> None:

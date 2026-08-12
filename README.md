@@ -2,7 +2,7 @@
 
 RiseX Points Farmer is a modular-monolith research system for capture-centric hedged funding opportunities on RiseX with hedge venue support, initially Hyperliquid.
 
-The current branch remains a non-trading research, fake paper-lifecycle, funding-verification, and ledger-reconciliation skeleton. Offline runners still use fake data and do not place orders. RX-022 adds one read-only RiseX public market-data adapter; it uses no credentials, private account endpoints, live runner behavior, or real API keys.
+The current branch remains a non-trading research, fake paper-lifecycle, funding-verification, and ledger-reconciliation skeleton. Offline runners still use fake data and do not place orders. RX-022 adds one read-only RiseX public market-data adapter, and RX-023 adds one read-only Hyperliquid public market-data adapter. Neither adapter uses credentials, private account endpoints, live runner behavior, or real API keys.
 
 ## Product baseline
 
@@ -23,7 +23,7 @@ The current branch remains a non-trading research, fake paper-lifecycle, funding
 
 RX-008 through RX-016 are accepted fail-closed offline safety hardening. They prove funding verification, ledger reconciliation, fake CapturePlan freshness, fake execution capability, fake live-gate bundle checks, and SQLite replay behavior from deterministic evidence. They are not a product strategy change, not executable live architecture, and not permission to keep adding offline scaffolding ahead of the current task.
 
-RX-022 adds a read-only RiseX observation adapter only. Later roadmap stages must be promoted through `NEXT_TASK.md` one at a time and remain gated: read-only Hyperliquid adapter, real market-data snapshot assembly, a real-data research runner, funding settlement verification with explicit approval, execution planning without orders, guarded live runner work only after accepted gates, future order placement only after explicit approval, and read-only monitoring/dashboard work later.
+RX-022 adds a read-only RiseX observation adapter only. RX-023 adds a read-only Hyperliquid observation adapter only. Later roadmap stages must be promoted through `NEXT_TASK.md` one at a time and remain gated: real market-data snapshot assembly, a real-data research runner, funding settlement verification with explicit approval, execution planning without orders, guarded live runner work only after accepted gates, future order placement only after explicit approval, and read-only monitoring/dashboard work later.
 
 ## Offline research runner
 

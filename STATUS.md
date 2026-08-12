@@ -1,6 +1,6 @@
 # Status
 
-- Current branch: `main`.
+- Current branch: `task/rx-023-read-only-hyperliquid-observation-adapter`.
 - Latest accepted product task: RX-022 — Read-only RiseX Observation Adapter.
 - Accepted RX-022 implementation HEAD: `5f274c17d605cb75485c2d79608cd089190ac5a8`
 - RX-022 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
@@ -39,7 +39,7 @@
 - Accepted baseline branch: `main`
 - Current accepted `main` governance task: RX-Q004.
 - Current accepted `main` product task: RX-022.
-- Current RX task state: RX-022 is reviewer-accepted and finalized on `main`; RX-023 remains the immediate next task and has not been started.
+- Current RX task state: RX-023 is implemented on the current task branch and pending review; RX-022 remains the latest reviewer-accepted product baseline on `main`.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
@@ -55,7 +55,7 @@ RX-013 remains the previous accepted product baseline before RX-014.
 RX-012 remains the previous accepted product baseline before RX-013.
 RX-Q001 remains the previous accepted governance baseline before RX-Q002.
 RX-011 remains the previous accepted product implementation baseline before RX-012.
-`NEXT_TASK.md` is prepared for RX-023.
+`NEXT_TASK.md` is prepared for RX-024 after RX-023 review acceptance.
 
 ## Completed accepted tasks
 
@@ -132,7 +132,8 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - Unknown economics fail closed.
 - Live `CapturePlan` creation blocked.
 - One read-only RiseX public market-data adapter exists in `core/venues/risex.py`.
-- No Hyperliquid adapter, orders, paper exchange simulation, live runner behavior, or live trading.
+- One read-only Hyperliquid public market-data adapter exists in `core/venues/hyperliquid.py`.
+- No real market-data route snapshot assembly, paper exchange simulation, live runner behavior, orders, or live trading.
 
 ## Current repository governance status
 
@@ -149,10 +150,10 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 ## Current roadmap status
 
 - RX-008 through RX-016 are accepted fail-closed offline safety-hardening detour tasks.
-- The project continues along the intended product implementation path after RX-022.
+- The project continues along the intended product implementation path after RX-023.
 - RX-022 is reviewer-accepted and finalized on `main`.
-- RX-023 is prepared as the immediate next task and was not started during RX-022 finalization.
-- The next recommended product task is a read-only Hyperliquid adapter, followed by real market-data snapshot assembly, real-data research runner, funding settlement verification with explicit approval, execution planning without orders, guarded live runner after explicit acceptance gates, order placement only in a future explicitly approved task, and read-only monitoring/dashboard later.
+- RX-023 is implemented on the current task branch and pending review.
+- The next recommended product task is real market-data snapshot assembly, followed by a real-data research runner, funding settlement verification with explicit approval, execution planning without orders, guarded live runner after explicit acceptance gates, order placement only in a future explicitly approved task, and read-only monitoring/dashboard later.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized.
 
 ## Tests last reported for accepted RX-011
@@ -290,6 +291,17 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - `git diff --check`: exit 0
 - `git diff --cached --check`: exit 0
 
+## Tests last reported for RX-023 branch
+
+- `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
+- `python3 -m pytest tests/invariant`: `35 passed`
+- `python3 -m pytest tests/unit/test_hyperliquid_adapter.py`: `41 passed`
+- `python3 -m pytest`: `397 passed`
+- `python3 -m compileall apps core storage tests scripts`: exit 0
+- `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
+- `git diff --check`: exit 0
+- `git diff --cached --check`: exit 0
+
 ## Known limitations
 
 - Funding settlement verifier, ledger reconciliation, and CapturePlan freshness remain deterministic fake offline replay scaffolding only.
@@ -300,7 +312,7 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - Execution capability evidence is not executable live order planning.
 - Live gate evidence bundle is not executable live order planning.
 - RiseX adapter is read-only public market data only and is not wired into the offline runners by default.
-- No Hyperliquid adapter.
+- Hyperliquid adapter is read-only public market data only and is not wired into the offline runners by default.
 - Offline fake runners still perform no network calls.
 - No orders.
 - No live runner behavior.
@@ -317,4 +329,4 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 
 ## Next recommended task
 
-RX-023 — Read-only Hyperliquid Observation Adapter.
+RX-024 — Real Market-Data Route Snapshot Assembly.
