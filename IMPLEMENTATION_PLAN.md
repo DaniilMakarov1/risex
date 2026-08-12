@@ -23,6 +23,7 @@ The original product direction remains hedged funding capture on RiseX with hedg
 - RX-021 added deterministic fake paper-result attribution and PnL explanation downstream of existing route decisions and fake paper lifecycle events.
 - RX-022 added the read-only RiseX public market-data observation adapter.
 - RX-023 added the read-only Hyperliquid public market-data observation adapter.
+- RX-024 added the real market-data route snapshot assembly handoff from read-only per-venue observations into the existing `assemble_route_snapshot()` path.
 - RX-Q001 and RX-Q002 added repository workflow, handoff validation, and supervised-worker governance.
 
 ## Accepted Offline Safety-Hardening Detour
@@ -33,11 +34,11 @@ The detour's purpose is to keep future live-adjacent work honest: funding settle
 
 ## Latest Accepted Product Task
 
-RX-023 — Read-only Hyperliquid Observation Adapter is reviewer-accepted and finalized on `main`. It adds a read-only Hyperliquid public market-data adapter only, preserves per-venue observation normalization, and does not assemble route snapshots, evaluate routes, rank routes, write ledger events, create plans, place orders, or add live runner behavior.
+RX-024 — Real Market-Data Route Snapshot Assembly is reviewer-accepted and finalized on `main`. It adds a one-route handoff from existing read-only RiseX and Hyperliquid `VenueAdapter.fetch_observation(symbol)` calls into the existing `assemble_route_snapshot()` path. It does not evaluate routes, rank routes, mutate eligibility, write ledger events, start paper lifecycle, create plans, place orders, or add live runner behavior.
 
 ## Current Product Branch Progress
 
-RX-024 — Real Market-Data Route Snapshot Assembly is implemented on the current task branch and pending review. It adds a one-route handoff from existing read-only RiseX and Hyperliquid `VenueAdapter.fetch_observation(symbol)` calls into the existing `assemble_route_snapshot()` path. It does not evaluate routes, rank routes, mutate eligibility, write ledger events, start paper lifecycle, create plans, place orders, or add live runner behavior.
+No active product task is started in this finalized state. RX-025 must start from reviewer-accepted `main` on a new task branch.
 
 ## Current Product Handoff
 

@@ -1,12 +1,13 @@
 # Status
 
-- Current branch: `task/rx-024-real-market-data-route-snapshot-assembly`.
-- Latest accepted product task: RX-023 — Read-only Hyperliquid Observation Adapter.
+- Current branch: `main`.
+- Latest accepted product task: RX-024 — Real Market-Data Route Snapshot Assembly.
+- Accepted RX-024 implementation HEAD: `0a336dd5e00ee54795540fa5170e953b2b7d7131`
+- RX-024 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
+- Previous accepted product task before RX-024: RX-023 — Read-only Hyperliquid Observation Adapter.
 - Accepted RX-023 implementation HEAD: `49fd3215e8835c7beeb13a3261b562dfd782ae24`
 - RX-023 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
-- Current task branch: RX-024 — Real Market-Data Route Snapshot Assembly.
 - RX-024 starting baseline: `ff5898c654c68859bdd07ea5099e94ae66e0cfd8`
-- RX-024 state: implemented with runtime type-hint contract fix on task branch and pending review.
 - Previous accepted product task before RX-023: RX-022 — Read-only RiseX Observation Adapter.
 - Accepted RX-022 implementation HEAD: `5f274c17d605cb75485c2d79608cd089190ac5a8`
 - RX-022 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
@@ -44,12 +45,13 @@
 - Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
 - Current accepted `main` governance task: RX-Q004.
-- Current accepted `main` product task: RX-023.
-- Current RX task state: RX-024 is implemented with runtime type-hint contract fix on `task/rx-024-real-market-data-route-snapshot-assembly` and pending review; `NEXT_TASK.md` remains prepared for RX-025.
+- Current accepted `main` product task: RX-024.
+- Current RX task state: RX-024 is reviewer-accepted and finalized on `main`; `NEXT_TASK.md` remains prepared for RX-025. RX-025 has not been started.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
-RX-023 is the latest accepted product baseline on `main`.
+RX-024 is the latest accepted product baseline on `main`.
+RX-023 remains the previous accepted product baseline before RX-024.
 RX-022 remains the previous accepted product baseline before RX-023.
 RX-021 remains the previous accepted product baseline before RX-022.
 RX-020 remains the previous accepted product baseline before RX-021.
@@ -62,7 +64,7 @@ RX-013 remains the previous accepted product baseline before RX-014.
 RX-012 remains the previous accepted product baseline before RX-013.
 RX-Q001 remains the previous accepted governance baseline before RX-Q002.
 RX-011 remains the previous accepted product implementation baseline before RX-012.
-`NEXT_TASK.md` is prepared for RX-025 after RX-024 implementation.
+`NEXT_TASK.md` is prepared for RX-025 after RX-024 finalization.
 
 ## Completed accepted tasks
 
@@ -93,6 +95,7 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - RX-021 — Paper Result Attribution And PnL Explanation
 - RX-022 — Read-only RiseX Observation Adapter
 - RX-023 — Read-only Hyperliquid Observation Adapter
+- RX-024 — Real Market-Data Route Snapshot Assembly
 
 ## Current architecture status
 
@@ -159,14 +162,14 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 ## Current roadmap status
 
 - RX-008 through RX-016 are accepted fail-closed offline safety-hardening detour tasks.
-- The project continues along the intended product implementation path after RX-023.
+- The project continues along the intended product implementation path after RX-024.
 - RX-022 is reviewer-accepted and finalized on `main`.
 - RX-023 is reviewer-accepted and finalized on `main`.
-- RX-024 is implemented with runtime type-hint contract fix on the current task branch and pending review.
+- RX-024 is reviewer-accepted and finalized on `main`.
 - The next recommended product task is a real-data research runner, followed by funding settlement verification with explicit approval, execution planning without orders, guarded live runner after explicit acceptance gates, order placement only in a future explicitly approved task, and read-only monitoring/dashboard later.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized.
 
-## Tests last reported for RX-024 branch
+## Tests last reported for accepted RX-024 branch
 
 - `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
 - `python3 -m pytest tests/invariant`: `36 passed`
@@ -350,4 +353,4 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 
 ## Next recommended task
 
-RX-024 — Real Market-Data Route Snapshot Assembly.
+RX-025 — Real-Data Research Runner.
