@@ -7,6 +7,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any
 
+from apps.live_runner.guarded import GuardedLiveRunnerResult
 from core.accounting.reconciliation import LedgerReconciliationResult
 from core.domain.contracts import (
     Capture,
@@ -18,6 +19,11 @@ from core.domain.contracts import (
     validate_timezone_aware_datetime,
 )
 from core.domain.enums import EvaluationMode, RouteStatus
+from core.execution.orders import (
+    ApprovalGatedOrderPlacementResult,
+    OrderPlacementApproval,
+)
+from core.execution.planning import NonSendingExecutionPlan
 from core.monitoring.funding_settlement import FundingSettlementVerificationResult
 
 _AVAILABLE = "available"
@@ -336,7 +342,7 @@ def _non_sending_plan_section(
     ledger_reconciliation: object,
     live_gate_evidence_bundle: object,
 ) -> dict[str, object]:
-    if not _is_contract(non_sending_plan, "core.execution.planning", "NonSendingExecutionPlan"):
+    if type(non_sending_plan) is not NonSendingExecutionPlan:
         return _missing_section("non_sending_plan_missing_or_malformed")
     payload = {
         "capture_id": getattr(non_sending_plan, "capture_id", None),
@@ -411,7 +417,7 @@ def _guarded_readiness_section(
     viewed_at: object,
     non_sending_plan: object,
 ) -> dict[str, object]:
-    if not _is_contract(guarded_readiness, "apps.live_runner.guarded", "GuardedLiveRunnerResult"):
+    if type(guarded_readiness) is not GuardedLiveRunnerResult:
         return _missing_section("guarded_readiness_missing_or_malformed")
     payload = {
         "no_order_ready": getattr(guarded_readiness, "no_order_ready", None),
@@ -434,7 +440,7 @@ def _guarded_readiness_section(
         return _blocked_section("cross_identity_guarded_readiness", **payload)
     if not _timezone_aware(viewed_at) or guarded_readiness.evaluated_at > viewed_at:
         return _blocked_section("guarded_readiness_time_missing_or_future", **payload)
-    if _is_contract(non_sending_plan, "core.execution.planning", "NonSendingExecutionPlan"):
+    if type(non_sending_plan) is NonSendingExecutionPlan:
         if not _timezone_aware(getattr(non_sending_plan, "planned_at", None)) or not _timezone_aware(
             getattr(non_sending_plan, "valid_until", None)
         ):
@@ -456,7 +462,7 @@ def _approval_section(
     guarded_readiness: object,
     non_sending_plan: object,
 ) -> dict[str, object]:
-    if not _is_contract(approval, "core.execution.orders", "OrderPlacementApproval"):
+    if type(approval) is not OrderPlacementApproval:
         return _missing_section("approval_missing_or_malformed")
     payload = {
         "approval_id": getattr(approval, "approval_id", None),
@@ -481,13 +487,13 @@ def _approval_section(
         return _blocked_section("approval_time_missing_or_malformed", **payload)
     if not _timezone_aware(viewed_at) or approval.approved_at > viewed_at or viewed_at >= approval.valid_until:
         return _blocked_section("approval_stale_or_future", **payload)
-    if _is_contract(guarded_readiness, "apps.live_runner.guarded", "GuardedLiveRunnerResult"):
+    if type(guarded_readiness) is GuardedLiveRunnerResult:
         if (
             approval.guarded_evaluated_at != guarded_readiness.evaluated_at
             or approval.approved_at < guarded_readiness.evaluated_at
         ):
             return _blocked_section("approval_guarded_reference_mismatch", **payload)
-    if _is_contract(non_sending_plan, "core.execution.planning", "NonSendingExecutionPlan"):
+    if type(non_sending_plan) is NonSendingExecutionPlan:
         prerequisite_reason = _approval_plan_prerequisite_blocker(
             approval,
             non_sending_plan=non_sending_plan,
@@ -505,11 +511,7 @@ def _approval_boundary_section(
     viewed_at: object,
     approval: object,
 ) -> dict[str, object]:
-    if not _is_contract(
-        approval_boundary_result,
-        "core.execution.orders",
-        "ApprovalGatedOrderPlacementResult",
-    ):
+    if type(approval_boundary_result) is not ApprovalGatedOrderPlacementResult:
         return _missing_section("approval_boundary_result_missing_or_malformed")
     payload = {
         "boundary_invoked": getattr(approval_boundary_result, "boundary_invoked", None),
@@ -533,7 +535,7 @@ def _approval_boundary_section(
         return _blocked_section("cross_identity_approval_boundary", **payload)
     if not _timezone_aware(viewed_at) or approval_boundary_result.requested_at > viewed_at:
         return _blocked_section("approval_boundary_request_future_or_malformed", **payload)
-    if _is_contract(approval, "core.execution.orders", "OrderPlacementApproval"):
+    if type(approval) is OrderPlacementApproval:
         if approval_boundary_result.approval_id != approval.approval_id:
             return _blocked_section("approval_boundary_approval_mismatch", **payload)
     return _available_section(**payload)
@@ -721,11 +723,6 @@ def _positive_sequence_values(value: object) -> bool:
 
 def _tuple_count(value: object) -> int | None:
     return len(value) if isinstance(value, tuple) else None
-
-
-def _is_contract(value: object, module: str, qualname: str) -> bool:
-    value_type = type(value)
-    return value_type.__module__ == module and value_type.__qualname__ == qualname
 
 
 def _decimal_display(value: object) -> dict[str, object]:

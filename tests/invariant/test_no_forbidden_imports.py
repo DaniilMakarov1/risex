@@ -16,6 +16,13 @@ NETWORK_OR_EXCHANGE_MODULES = {
     "websockets",
 }
 PRODUCT_MODULE_PREFIXES = ("apps.", "core.", "storage.")
+READ_ONLY_DASHBOARD_CONTRACT_IMPORTS = {
+    Path("apps/dashboard/read_only.py"): {
+        "apps.live_runner.guarded",
+        "core.execution.orders",
+        "core.execution.planning",
+    },
+}
 
 
 def _python_files() -> tuple[Path, ...]:
@@ -31,6 +38,17 @@ def _imported_modules(path: Path) -> set[str]:
             imports.update(alias.name for alias in node.names)
         elif isinstance(node, ast.ImportFrom) and node.module:
             imports.add(node.module)
+
+    return imports
+
+
+def _imported_names_by_module(path: Path) -> dict[str, set[str]]:
+    tree = ast.parse(path.read_text(), filename=str(path))
+    imports: dict[str, set[str]] = {}
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.module:
+            imports.setdefault(node.module, set()).update(alias.name for alias in node.names)
 
     return imports
 
@@ -54,6 +72,8 @@ def test_execution_imports_do_not_leak_into_upstream_modules() -> None:
         if path.parts[:2] in (("core", "execution"), ("apps", "live_runner")):
             continue
         for module in _imported_modules(path):
+            if module in READ_ONLY_DASHBOARD_CONTRACT_IMPORTS.get(path, set()):
+                continue
             if module == "core.execution" or module.startswith("core.execution."):
                 offenders.append((path, module))
 
@@ -67,10 +87,23 @@ def test_live_runner_imports_do_not_leak_into_offline_paths() -> None:
         if path.parts[:2] == ("apps", "live_runner"):
             continue
         for module in _imported_modules(path):
+            if module in READ_ONLY_DASHBOARD_CONTRACT_IMPORTS.get(path, set()):
+                continue
             if module == "apps.live_runner" or module.startswith("apps.live_runner."):
                 offenders.append((path, module))
 
     assert offenders == []
+
+
+def test_read_only_dashboard_imports_only_exact_downstream_display_contracts() -> None:
+    imports = _imported_names_by_module(Path("apps/dashboard/read_only.py"))
+
+    assert imports.get("core.execution.planning") == {"NonSendingExecutionPlan"}
+    assert imports.get("apps.live_runner.guarded") == {"GuardedLiveRunnerResult"}
+    assert imports.get("core.execution.orders") == {
+        "ApprovalGatedOrderPlacementResult",
+        "OrderPlacementApproval",
+    }
 
 
 def test_repository_validators_do_not_import_product_modules() -> None:

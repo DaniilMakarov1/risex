@@ -210,6 +210,20 @@ def _forged(value: object, *, field_name: str, replacement: object) -> object:
     return forged
 
 
+def _spoof_like(real: object) -> object:
+    real_type = type(real)
+    spoof_type = type(
+        real_type.__name__,
+        (),
+        {"__slots__": tuple(field.name for field in fields(real_type))},
+    )
+    spoof_type.__module__ = real_type.__module__
+    spoof = object.__new__(spoof_type)
+    for field in fields(real_type):
+        object.__setattr__(spoof, field.name, getattr(real, field.name))
+    return spoof
+
+
 def test_exact_identity_and_existing_evidence_render_available_summary() -> None:
     fixture = _fixture()
 
@@ -283,6 +297,23 @@ def test_missing_malformed_and_cross_identity_inputs_fail_closed_in_display() ->
     assert cross_settlement["sections"]["live_gate_evidence_bundle"][
         "display_reason"
     ] == "cross_identity_live_gate_bundle"
+
+
+def test_spoofed_module_qualname_contracts_render_missing_not_available() -> None:
+    fixture = _fixture()
+
+    for key, section_name in (
+        ("non_sending_plan", "non_sending_plan"),
+        ("guarded_readiness", "guarded_readiness"),
+        ("approval", "approval"),
+        ("approval_boundary_result", "approval_boundary_result"),
+    ):
+        view = _render(fixture, **{key: _spoof_like(fixture[key])})
+
+        section = view["sections"][section_name]
+        assert section["display_state"] == "missing"
+        assert section["display_reason"].endswith("_missing_or_malformed")
+        assert view["display_state"] == "blocked"
 
 
 def test_unverified_unreconciled_and_stale_inputs_render_blocked() -> None:
