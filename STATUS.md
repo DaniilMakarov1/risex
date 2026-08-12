@@ -1,12 +1,15 @@
 # Status
 
-- Current branch: `task/rx-029-explicit-approval-gated-order-placement-boundary`.
-- Current task: RX-029 — Explicit Approval-Gated Order Placement Boundary.
+- Current branch: `main`.
+- Current task: RX-029 — Explicit Approval-Gated Order Placement Boundary finalization.
 - RX-029 starting baseline: `e2771bc9e6ce2730159bb120d784635e9030f428`
-- RX-029 review state: implemented on task branch and pending review.
+- RX-029 review state: reviewer-accepted and finalized on `main`.
+- Latest accepted product task: RX-029 — Explicit Approval-Gated Order Placement Boundary.
+- Accepted RX-029 implementation HEAD: `101544b08c0233b9bebc90958e2d1049c8127116`
+- RX-029 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
+- Previous accepted product task before RX-029: RX-028 — Guarded Live Runner Without Orders.
 - RX-028 starting baseline: `4d8ea09ba5e06cb9d46ed22a9ea1f89564c8bfbb`
 - RX-028 review state: reviewer-accepted and finalized on `main`.
-- Latest accepted product task: RX-028 — Guarded Live Runner Without Orders.
 - Accepted RX-028 implementation HEAD: `ca475a6c2ea3686e0ebf7710658160b1b4d3e4fc`
 - RX-028 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
 - Previous accepted product task before RX-028: RX-027 — Execution Planning Without Orders.
@@ -64,13 +67,13 @@
 - Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
 - Current accepted `main` governance task: RX-Q004.
-- Current accepted `main` product task: RX-028.
-- Current RX task state: RX-029 is implemented on its task branch and pending review; `NEXT_TASK.md` is prepared for RX-030.
+- Current accepted `main` product task: RX-029.
+- Current RX task state: RX-029 is reviewer-accepted and finalized on `main`; `NEXT_TASK.md` is prepared for RX-030.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
-RX-029 is the current task branch implementation. It adds an explicit approval-gated order placement boundary downstream of RX-028 guarded no-order readiness and RX-027 non-sending execution planning while still avoiding real exchange order submission, credentials, private endpoints, account state, and live trading by default.
-RX-028 is the latest accepted product baseline on `main`. The accepted work adds a guarded no-order live runner for existing verified prerequisite evidence and existing non-sending execution-plan evidence while stopping before orders, sendable exchange requests, private endpoints, or live trading by default.
+RX-029 is the latest accepted product baseline on `main`. The accepted work adds an explicit approval-gated order placement boundary downstream of RX-028 guarded no-order readiness and RX-027 non-sending execution planning while still avoiding real exchange order submission, credentials, private endpoints, account state, and live trading by default.
+RX-028 remains the previous accepted product baseline before RX-029. The accepted work adds a guarded no-order live runner for existing verified prerequisite evidence and existing non-sending execution-plan evidence while stopping before orders, sendable exchange requests, private endpoints, or live trading by default.
 RX-027 remains the previous accepted product baseline before RX-028. The accepted RX-027 work includes corrective hardening so execution planning accepts only actual current funding verification and ledger reconciliation result contracts rather than attribute-compatible or module/qualname-spoofed wrong-type objects.
 RX-026 remains the previous accepted product baseline before RX-027.
 RX-025 remains the previous accepted product baseline before RX-026.
@@ -88,7 +91,7 @@ RX-013 remains the previous accepted product baseline before RX-014.
 RX-012 remains the previous accepted product baseline before RX-013.
 RX-Q001 remains the previous accepted governance baseline before RX-Q002.
 RX-011 remains the previous accepted product implementation baseline before RX-012.
-`NEXT_TASK.md` is prepared for RX-030 after RX-029 branch implementation.
+`NEXT_TASK.md` is prepared for RX-030 after RX-029 finalization on `main`.
 
 ## Completed accepted tasks
 
@@ -124,6 +127,7 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - RX-026 — Approval-Gated Real Funding Settlement Verification
 - RX-027 — Execution Planning Without Orders
 - RX-028 — Guarded Live Runner Without Orders
+- RX-029 — Explicit Approval-Gated Order Placement Boundary
 
 ## Current architecture status
 
@@ -197,7 +201,7 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 ## Current roadmap status
 
 - RX-008 through RX-016 are accepted fail-closed offline safety-hardening detour tasks.
-- The project continues along the intended product implementation path after RX-028.
+- The project continues along the intended product implementation path after RX-029.
 - RX-022 is reviewer-accepted and finalized on `main`.
 - RX-023 is reviewer-accepted and finalized on `main`.
 - RX-024 is reviewer-accepted and finalized on `main`.
@@ -205,8 +209,8 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - RX-026 is reviewer-accepted and finalized on `main`.
 - RX-027 is reviewer-accepted and finalized on `main`.
 - RX-028 is reviewer-accepted and finalized on `main`.
-- RX-029 is implemented on its task branch and pending review.
-- The next recommended product task after RX-029 acceptance is read-only monitoring/dashboard work without decisions, execution, or ledger writes.
+- RX-029 is reviewer-accepted and finalized on `main`.
+- The next recommended product task is RX-030 read-only monitoring/dashboard work without decisions, execution, or ledger writes.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized.
 
 ## Tests last reported for RX-029 branch
@@ -215,6 +219,15 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - `python3 -m pytest tests/invariant`: `36 passed in 0.24s`
 - `python3 -m pytest tests/unit/test_approval_gated_order_placement.py`: `45 passed in 0.09s`
 - `python3 -m pytest`: `551 passed in 0.82s`
+- `python3 -m compileall apps core storage tests scripts`: exit 0
+- `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
+- `git diff --check`: exit 0
+- `git diff --cached --check`: exit 0
+
+## Tests last reported for RX-029 finalization on main
+
+- `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
+- `python3 -m pytest`: `551 passed`
 - `python3 -m compileall apps core storage tests scripts`: exit 0
 - `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
 - `git diff --check`: exit 0

@@ -28,6 +28,7 @@ The original product direction remains hedged funding capture on RiseX with hedg
 - RX-026 added approval-gated funding settlement verification for explicit caller-supplied observed evidence.
 - RX-027 added non-sending execution planning for already-verified prerequisite evidence.
 - RX-028 added a guarded no-order live runner for already-verified prerequisite evidence and existing non-sending execution-plan evidence.
+- RX-029 added an explicit approval-gated order placement boundary downstream of guarded no-order readiness and non-sending execution planning.
 - RX-Q001 and RX-Q002 added repository workflow, handoff validation, and supervised-worker governance.
 
 ## Accepted Offline Safety-Hardening Detour
@@ -38,21 +39,21 @@ The detour's purpose is to keep future live-adjacent work honest: funding settle
 
 ## Latest Accepted Product Task
 
-RX-028 — Guarded Live Runner Without Orders is reviewer-accepted and finalized on `main`. It adds one guarded no-order live runner workflow for one existing `Capture`, one existing `RouteCandidate`, one explicit funding settlement timestamp, one existing non-sending execution plan, and already-derived prerequisite evidence. It does not call `evaluate_route()`, assemble snapshots, calculate profitability, replay funding or ledger history, write ledger events, call adapters, import order placement behavior, create live `CapturePlan` objects, construct sendable exchange requests, place orders, or enable live trading by default.
+RX-029 — Explicit Approval-Gated Order Placement Boundary is reviewer-accepted and finalized on `main`. It adds one explicit approval-gated order placement boundary downstream of RX-028 guarded no-order readiness and RX-027 non-sending execution planning. It does not call `evaluate_route()`, assemble snapshots, calculate profitability, replay funding or ledger history, write ledger events, call adapters, use credentials, create exchange request payloads, place real orders, or enable live trading by default.
 
 ## Current Product Branch Progress
 
-RX-029 is implemented on `task/rx-029-explicit-approval-gated-order-placement-boundary` and is pending review. It adds one explicit approval-gated order placement boundary downstream of RX-028 guarded no-order readiness and RX-027 non-sending execution planning. It does not change the latest accepted `main` product baseline until review and finalization.
+No product branch is active in this checkout. RX-030 is the immediate next task and has not been started.
 
 ## Current Product Handoff
 
-`NEXT_TASK.md` is prepared for RX-030, the next gated read-only monitoring/dashboard task after RX-029 review acceptance.
+`NEXT_TASK.md` is prepared for RX-030, the next gated read-only monitoring/dashboard task after RX-029 finalization.
 
-## Remaining Gated Roadmap After RX-029 Branch
+## Remaining Gated Roadmap After RX-029
 
 Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts:
 
-1. Add read-only monitoring/dashboard work only after RX-029 is reviewed and accepted, without turning it into a decision, execution, or ledger-write path.
+1. Add read-only monitoring/dashboard work in RX-030, without turning it into a decision, execution, or ledger-write path.
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
 
