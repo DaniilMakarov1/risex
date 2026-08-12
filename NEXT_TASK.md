@@ -10,7 +10,7 @@ Add the smallest guarded live runner workflow that consumes one existing `Captur
 
 ## Starting baseline
 
-Start from reviewer-accepted `main` after RX-027 — Execution Planning Without Orders, including same-branch corrective prerequisite-evidence hardening, is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
+Start from reviewer-accepted `main` after RX-027 — Execution Planning Without Orders, including same-branch corrective current-contract prerequisite-evidence hardening, is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
 
 ## Branch
 

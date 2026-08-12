@@ -16,7 +16,7 @@ from core.accounting.ledger import (
     append_funding_checkpoint_observed_event,
     append_funding_settlement_evidence_event,
 )
-from core.accounting.reconciliation import LedgerReconciliationResult, reconcile_ledger
+from core.accounting.reconciliation import LedgerReconciliationResult
 from core.domain.contracts import (
     Capture,
     CapturePlan,
@@ -36,7 +36,6 @@ from core.execution.planning import (
 from core.monitoring.funding_settlement import (
     FundingSettlementVerificationResult,
     REQUIRED_FUNDING_CHECKPOINTS,
-    verify_funding_settlement,
 )
 
 
@@ -157,6 +156,9 @@ def _planning_fixture() -> dict[str, object]:
     )
     _append_required_checkpoints(ledger, route=route, snapshot=snapshot)
     _append_settlement_evidence(ledger, route=route, snapshot=snapshot)
+    from core.accounting.reconciliation import reconcile_ledger
+    from core.monitoring.funding_settlement import verify_funding_settlement
+
     funding_verification = verify_funding_settlement(
         ledger,
         capture_id=route.capture_id,
@@ -332,6 +334,21 @@ def test_live_capture_plan_decision_fails_closed() -> None:
             checkpoint_event_sequences=result.checkpoint_event_sequences,
             settlement_event_sequence=result.settlement_event_sequence,
         ),
+        lambda result: type(
+            FundingSettlementVerificationResult.__qualname__,
+            (),
+            {
+                "__module__": FundingSettlementVerificationResult.__module__,
+                "__qualname__": FundingSettlementVerificationResult.__qualname__,
+                "capture_id": result.capture_id,
+                "route_id": result.route_id,
+                "settlement_time": result.settlement_time,
+                "verified": True,
+                "reasons": result.reasons,
+                "checkpoint_event_sequences": result.checkpoint_event_sequences,
+                "settlement_event_sequence": result.settlement_event_sequence,
+            },
+        )(),
     ),
 )
 def test_funding_verification_prerequisites_fail_closed(funding_override: object) -> None:
@@ -386,6 +403,25 @@ def test_funding_verification_prerequisites_fail_closed(funding_override: object
             funding_verification_event_sequence=result.funding_verification_event_sequence,
             checked_event_sequences=result.checked_event_sequences,
         ),
+        lambda result: type(
+            LedgerReconciliationResult.__qualname__,
+            (),
+            {
+                "__module__": LedgerReconciliationResult.__module__,
+                "__qualname__": LedgerReconciliationResult.__qualname__,
+                "capture_id": result.capture_id,
+                "route_id": result.route_id,
+                "settlement_time": result.settlement_time,
+                "reconciled": True,
+                "reasons": result.reasons,
+                "route_decision_event_sequence": result.route_decision_event_sequence,
+                "paper_event_sequences": result.paper_event_sequences,
+                "funding_verification_event_sequence": (
+                    result.funding_verification_event_sequence
+                ),
+                "checked_event_sequences": result.checked_event_sequences,
+            },
+        )(),
     ),
 )
 def test_ledger_reconciliation_prerequisites_fail_closed(ledger_override: object) -> None:
