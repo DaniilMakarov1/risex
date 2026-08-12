@@ -6,8 +6,8 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING
 
+from core.accounting.reconciliation import LedgerReconciliationResult
 from core.domain.contracts import (
     Capture,
     CapturePlanFreshnessEvidence,
@@ -19,14 +19,11 @@ from core.domain.contracts import (
     validate_timezone_aware_datetime,
 )
 from core.domain.enums import EvaluationMode, RejectReason, RouteStatus
+from core.monitoring.funding_settlement import FundingSettlementVerificationResult
 from core.risk.gates import (
     check_capture_plan_freshness_gate,
     check_execution_capability_gate,
 )
-
-if TYPE_CHECKING:
-    from core.accounting.reconciliation import LedgerReconciliationResult
-    from core.monitoring.funding_settlement import FundingSettlementVerificationResult
 
 
 @dataclass(frozen=True, slots=True)
@@ -128,11 +125,20 @@ def _funding_verification_is_verified(
     route: RouteCandidate,
     settlement_time: datetime,
 ) -> bool:
+    value_type = type(value)
+    if not (
+        value_type is FundingSettlementVerificationResult
+        or (
+            value_type.__module__ == FundingSettlementVerificationResult.__module__
+            and value_type.__qualname__ == FundingSettlementVerificationResult.__qualname__
+        )
+    ):
+        return False
     return (
-        getattr(value, "capture_id", None) == route.capture_id
-        and getattr(value, "route_id", None) == route.route_id
-        and getattr(value, "settlement_time", None) == settlement_time
-        and getattr(value, "verified", None) is True
+        value.capture_id == route.capture_id
+        and value.route_id == route.route_id
+        and value.settlement_time == settlement_time
+        and value.verified is True
     )
 
 
@@ -142,13 +148,18 @@ def _ledger_reconciliation_is_current(
     route: RouteCandidate,
     settlement_time: datetime,
 ) -> bool:
-    route_decision_sequence = getattr(value, "route_decision_event_sequence", None)
-    funding_verification_sequence = getattr(
-        value,
-        "funding_verification_event_sequence",
-        None,
-    )
-    checked_sequences = getattr(value, "checked_event_sequences", ())
+    value_type = type(value)
+    if not (
+        value_type is LedgerReconciliationResult
+        or (
+            value_type.__module__ == LedgerReconciliationResult.__module__
+            and value_type.__qualname__ == LedgerReconciliationResult.__qualname__
+        )
+    ):
+        return False
+    route_decision_sequence = value.route_decision_event_sequence
+    funding_verification_sequence = value.funding_verification_event_sequence
+    checked_sequences = value.checked_event_sequences
     if not isinstance(checked_sequences, Sequence):
         return False
     try:
@@ -157,10 +168,10 @@ def _ledger_reconciliation_is_current(
         return False
 
     return (
-        getattr(value, "capture_id", None) == route.capture_id
-        and getattr(value, "route_id", None) == route.route_id
-        and getattr(value, "settlement_time", None) == settlement_time
-        and getattr(value, "reconciled", None) is True
+        value.capture_id == route.capture_id
+        and value.route_id == route.route_id
+        and value.settlement_time == settlement_time
+        and value.reconciled is True
         and _positive_sequence(route_decision_sequence)
         and _positive_sequence(funding_verification_sequence)
         and route_decision_sequence in checked_sequence_values

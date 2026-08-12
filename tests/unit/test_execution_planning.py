@@ -4,6 +4,7 @@ from dataclasses import fields, replace
 from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -322,6 +323,15 @@ def test_live_capture_plan_decision_fails_closed() -> None:
             result,
             settlement_time=result.settlement_time + timedelta(hours=8),
         ),
+        lambda result: SimpleNamespace(
+            capture_id=result.capture_id,
+            route_id=result.route_id,
+            settlement_time=result.settlement_time,
+            verified=True,
+            reasons=result.reasons,
+            checkpoint_event_sequences=result.checkpoint_event_sequences,
+            settlement_event_sequence=result.settlement_event_sequence,
+        ),
     ),
 )
 def test_funding_verification_prerequisites_fail_closed(funding_override: object) -> None:
@@ -364,6 +374,17 @@ def test_funding_verification_prerequisites_fail_closed(funding_override: object
             paper_event_sequences=result.paper_event_sequences,
             funding_verification_event_sequence=result.funding_verification_event_sequence,
             checked_event_sequences=(),
+        ),
+        lambda result: SimpleNamespace(
+            capture_id=result.capture_id,
+            route_id=result.route_id,
+            settlement_time=result.settlement_time,
+            reconciled=True,
+            reasons=result.reasons,
+            route_decision_event_sequence=result.route_decision_event_sequence,
+            paper_event_sequences=result.paper_event_sequences,
+            funding_verification_event_sequence=result.funding_verification_event_sequence,
+            checked_event_sequences=result.checked_event_sequences,
         ),
     ),
 )
