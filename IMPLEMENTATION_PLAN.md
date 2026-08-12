@@ -40,20 +40,19 @@ RX-026 — Approval-Gated Real Funding Settlement Verification is reviewer-accep
 
 ## Current Product Branch Progress
 
-No product branch is active in this checkout. RX-027 is the immediate next task and has not been started.
+RX-027 — Execution Planning Without Orders is implemented on `task/rx-027-execution-planning-without-orders` and is pending review. It is not accepted until reviewer acceptance and finalization on `main`.
 
 ## Current Product Handoff
 
-`NEXT_TASK.md` is prepared for RX-027, the next gated execution-planning-without-orders task after RX-026 finalization.
+`NEXT_TASK.md` is prepared for RX-028, the next gated guarded-live-runner-without-orders task after RX-027 review acceptance.
 
-## Remaining Gated Roadmap After RX-026
+## Remaining Gated Roadmap After RX-027
 
 Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts:
 
-1. Add execution planning without orders; plans must remain non-sending until a later explicit task.
-2. Add a guarded live runner only after explicit acceptance gates prove data, ledger, settlement verification, plan freshness, execution capability, and live switch behavior.
-3. Add order placement only in a future explicitly approved task.
-4. Add read-only monitoring/dashboard work later, without turning it into a decision, execution, or ledger-write path.
+1. Add a guarded live runner without order placement only after RX-027 is reviewed and accepted.
+2. Add order placement only in a future explicitly approved task.
+3. Add read-only monitoring/dashboard work later, without turning it into a decision, execution, or ledger-write path.
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
 
@@ -214,8 +213,20 @@ RX-026 implementation notes:
 - Missing approval, false approval, stale observation time, unknown values, unobserved sources, malformed payloads, cross-capture, cross-route, cross-settlement, or contradictory evidence fails closed.
 - RX-026 does not call `evaluate_route()`, assemble snapshots, calculate profitability, mutate route eligibility, start paper lifecycle, reconcile ledgers, plan execution, place orders, add private endpoints, add credentials, add live runner behavior, or create a second funding verifier, ledger-write path, replay path, snapshot path, or decision path.
 
+## RX-027 — Execution Planning Without Orders
+
+Add the smallest non-sending execution planning workflow for one existing `Capture`, one existing `RouteCandidate`, one explicit funding settlement timestamp, and already-derived prerequisite evidence.
+
+RX-027 implementation notes:
+
+- `core/execution/planning.py` owns `plan_execution_without_orders()` and `NonSendingExecutionPlan`.
+- The workflow accepts exact Capture/route/settlement inputs plus an existing ENTRY `PAPER_ELIGIBLE` `DecisionResult`, verified `FundingSettlementVerificationResult`, reconciled `LedgerReconciliationResult`, one fresh `CapturePlanFreshnessEvidence`, one fresh `ExecutionCapabilityEvidence`, and an explicit timezone-aware planning timestamp.
+- Missing, stale, malformed, cross-capture, cross-route, cross-settlement, unverified funding, unreconciled ledger, stale plan prerequisites, or non-executable execution capability evidence fails closed through existing centralized reject reasons.
+- The returned plan describes intended venues, symbols, entry and unwind sides, target notional, settlement timestamp, validity, and prerequisite event-sequence references only.
+- RX-027 does not call `evaluate_route()`, assemble snapshots, calculate profitability, write ledger events, replay ledgers, call adapters, import live runner behavior, create live `CapturePlan` objects, place orders, include credentials or sendable API requests, enable live trading, add route statuses, add reject reasons, or create a second decision, snapshot, verifier, ledger-write, replay, economics, or live execution path.
+
 ## Next Sequence
 
-1. RX-027 — Execution Planning Without Orders.
+1. RX-028 — Guarded Live Runner Without Orders.
 
-Do not promote any later roadmap stage into the current handoff until RX-027 is reviewed and accepted.
+Do not promote order placement, monitoring, dashboards, or later roadmap stages into the current handoff until RX-028 is reviewed and accepted.

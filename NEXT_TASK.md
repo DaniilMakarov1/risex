@@ -2,19 +2,19 @@
 
 ## Task ID
 
-RX-027 — Execution Planning Without Orders
+RX-028 — Guarded Live Runner Without Orders
 
 ## Objective
 
-Add the smallest non-sending execution planning contract for one existing Capture, one existing `RouteCandidate`, one explicit funding settlement timestamp, and already-verified prerequisite evidence. The plan must describe intended entry and unwind actions without sending orders, calling private endpoints, mutating route eligibility, or enabling live trading.
+Add the smallest guarded live runner workflow that consumes one existing `Capture`, one existing `RouteCandidate`, one explicit funding settlement timestamp, one existing non-sending execution plan, and already-derived prerequisite evidence. The runner must prove that live execution remains blocked unless every accepted gate is present and the live switch is explicit, but it must not place orders or construct sendable exchange requests.
 
 ## Starting baseline
 
-Start from reviewer-accepted `main` after the approval-gated funding settlement verification task is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
+Start from reviewer-accepted `main` after RX-027 — Execution Planning Without Orders is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
 
 ## Branch
 
-Create and work on `task/rx-027-execution-planning-without-orders`. Do not implement on `main`.
+Create and work on `task/rx-028-guarded-live-runner-without-orders`. Do not implement on `main`.
 
 ## Before changing files
 
@@ -33,9 +33,10 @@ Read:
 
 ## Allowed scope
 
-- One non-sending execution planning workflow for one explicit existing Capture, route, and settlement timestamp.
-- Reuse existing `RouteCandidate`, `Capture`, funding verification, ledger reconciliation, CapturePlan freshness, and execution-capability evidence contracts where applicable.
-- Plan output may describe intended venues, symbols, sides, target notional, settlement timestamp, and required prerequisite evidence references.
+- One guarded live runner workflow for one explicit existing Capture, route, settlement timestamp, and non-sending execution plan.
+- Reuse existing route, capture, funding verification, ledger reconciliation, CapturePlan freshness, execution-capability evidence, live-gate bundle, and non-sending execution-planning contracts where applicable.
+- The runner may return a deterministic result explaining whether the live runner remained blocked or reached a no-order dry-run ready state.
+- The runner may check `ProductRules.live_trading_enabled`, but live trading must remain disabled by default.
 - Deterministic tests with injected fixtures only.
 - Minimal owner-module additions only where the final design checkpoint proves they are necessary.
 - Required repository metadata updates after implementation.
@@ -43,32 +44,34 @@ Read:
 ## Forbidden scope
 
 - No order placement.
-- No live runner behavior.
-- No private endpoints, credentials, account balances, exchange account state, automatic polling, or network-dependent tests.
-- No route discovery, ranking, watchlists, background loops, paper lifecycle changes, real-data research runner behavior changes, funding settlement verifier changes unless strictly required by the plan contract.
-- No second route decision path, snapshot path, funding verifier, ledger-write path, replay path, VWAP/liquidity path, economics path, or live execution path.
+- No sendable exchange API requests, order payloads, private endpoints, credentials, account balances, exchange account state, automatic polling, or network-dependent tests.
+- No route discovery, ranking, watchlists, background loops, paper lifecycle changes, real-data research runner behavior changes, funding settlement verifier changes, ledger reconciliation changes, or execution planning changes unless strictly required by the guarded runner contract.
+- No second route decision path, snapshot path, funding verifier, ledger-write path, replay path, VWAP/liquidity path, economics path, execution-planning path, or order path.
 - No EV, fee, funding, VWAP/liquidity, basis, spread, price-impact, slippage, max-level, hidden-buffer, or safety-margin filters.
 - No canary architecture.
 - No hold-next-cycle logic.
 - No speculative helpers, wrappers, unused abstractions, or future hooks.
-- Do not add monitoring, dashboards, guarded live runner behavior, or order placement.
+- Do not enable live trading by default.
+- Do not promote order placement, monitoring, dashboards, or later roadmap work into this task.
 
 ## Implementation requirements
 
-- Plans must be non-executable evidence only and must not contain exchange credentials or sendable API requests.
-- Missing, stale, malformed, cross-capture, cross-route, cross-settlement, unverified funding, unreconciled ledger, stale plan prerequisites, or non-executable execution capability evidence must fail closed.
-- Planning must remain downstream of existing route decisions, settlement verification, ledger reconciliation, and execution-capability evidence.
-- Any ledger writes, if strictly needed, must use existing append-only ledger helpers or a narrowly justified accounting-owned event; do not add update/delete behavior.
-- Do not call `evaluate_route()`, assemble snapshots, calculate profitability, call venue adapters, import live runner behavior, or place orders.
+- The guarded live runner must remain downstream of existing route decisions, funding settlement verification, ledger reconciliation, CapturePlan freshness, execution-capability evidence, live-gate bundle checks, and non-sending execution planning.
+- Missing, stale, malformed, cross-capture, cross-route, cross-settlement, unverified funding, unreconciled ledger, stale plan prerequisites, non-executable execution capability evidence, missing non-sending plan, stale non-sending plan, live switch disabled, or any sendable order material must fail closed.
+- The runner must not call `evaluate_route()`, assemble snapshots, calculate profitability, call venue adapters, import or call order placement behavior, write ledger events unless strictly justified by an accounting-owned event, or place orders.
+- If `ProductRules.live_trading_enabled` is false, the runner must fail closed before any no-order ready state.
+- Even when `ProductRules.live_trading_enabled` is true and all prerequisite evidence is exact, RX-028 must stop at a no-order guarded state and must not send orders.
 - Tests must inject all prerequisite evidence and avoid live network dependency.
-- Worker policy: this task touches execution-boundary and live-adjacent safety boundaries, so one supervised worker/subagent is required before implementation edits. If worker tooling is unavailable, stop before edits and report the blocker. The worker must stop at DESIGN CHECKPOINT before edits and at CODE, TEST, and VALIDATION checkpoints if it continues.
+- Worker policy: this task touches live-runner and execution-boundary safety boundaries, so one supervised worker/subagent is required before implementation edits. If worker tooling is unavailable, stop before edits and report the blocker.
+- The worker must stop at DESIGN CHECKPOINT before edits and at CODE, TEST, and VALIDATION checkpoints if it continues.
 - Parent owns steering, final diff review, validation, commit, push, and final report.
+- Worker must not commit, push, merge, approve work, or start unrelated scope.
 
 ## Required files
 
-- Likely `core/execution/`
-- Likely `core/domain/contracts.py` only if a new narrow non-sending plan contract is strictly necessary
-- Likely `core/risk/gates.py` only if prerequisite gating must be reused or extended
+- Likely `apps/live_runner/`
+- Likely `core/execution/planning.py` only if the existing non-sending plan contract needs a strictly necessary compatibility check
+- Likely `core/risk/gates.py` only if existing gate reuse is insufficient and the design checkpoint proves a risk-owned check is necessary
 - Likely focused tests under `tests/unit/` or `tests/replay/`
 - Repository metadata files required by `AGENTS.md`
 - Do not touch product code outside owner modules required by the final design checkpoint.
@@ -77,7 +80,7 @@ Read:
 
 - `python3 scripts/validate_next_task.py`
 - `python3 -m pytest tests/invariant`
-- Focused execution planning tests for successful non-sending plans and fail-closed missing/stale/malformed/cross-identity prerequisite evidence
+- Focused guarded live runner tests for live-disabled fail-closed behavior, successful no-order guarded readiness, and fail-closed missing/stale/malformed/cross-identity prerequisite evidence
 - `python3 -m pytest`
 - `python3 -m compileall apps core storage tests scripts`
 - `python3 -m apps.cli.main`

@@ -56,6 +56,7 @@ tests/
 - `FundingSettlementVerificationResult`: deterministic replay result proving whether checkpoint evidence and approval-gated observed settlement evidence agree for one Capture settlement.
 - `LedgerReconciliationResult`: deterministic replay result proving whether one Capture ledger history is internally consistent and explicitly reconciled.
 - `LiveGateEvidenceBundleReplayResult`: deterministic accounting replay result proving whether one recorded fake live-gate evidence bundle check is well-formed, current, and consistent with the existing bundle gate result.
+- `NonSendingExecutionPlan`: execution-boundary evidence describing intended entry and unwind actions for one already-verified Capture settlement without credentials, sendable requests, or order placement.
 - `PaperResultExplanation`: app-local fake paper result attribution copied from the input `DecisionResult`, including start/non-start blockers and existing PnL components without recalculating profitability.
 
 ## Capture lifecycle state machine
@@ -107,6 +108,7 @@ Any non-terminal Capture may transition to `FAILED`. Capture states with possibl
 - Offline route-candidate orchestration happens only in `core/pipeline/offline_scan.py`.
 - Broad Scan and Focused Refresh orchestration happens only in `core/pipeline/scan_refresh.py`.
 - One-route real-data research orchestration happens only in `apps/research_runner/real_data.py`.
+- Non-sending execution planning happens only in `core/execution/planning.py`.
 - Orders can be sent only through `core/execution/`.
 - Ledger writes happen only through `core/accounting/ledger.py`.
 - Ledger reconciliation happens only in `core/accounting/reconciliation.py`.
@@ -266,6 +268,14 @@ RX-026 adds one approval-gated funding settlement verification workflow:
 5. Canonical funding settlement replay requires `approval_granted=True`, `observed_at == settlement_time`, and actual funding/notional values with `ValueSource.OBSERVED`; missing, false, stale, malformed, cross-capture, cross-route, cross-settlement, unobserved, unknown, or contradictory evidence fails closed.
 6. It then calls the existing `verify_funding_settlement()` replay path and does not calculate verification success itself.
 7. It does not call `evaluate_route()`, assemble snapshots, calculate EV/profitability, reconcile ledgers, mutate route eligibility, start paper lifecycle, create plans, call execution modules, connect to private endpoints, place orders, or add live runner behavior.
+
+RX-027 adds one non-sending execution planning workflow:
+
+1. `core/execution/planning.py` owns `plan_execution_without_orders()`.
+2. The workflow accepts one existing `Capture`, one existing `RouteCandidate`, one explicit timezone-aware funding settlement timestamp, one existing route decision, one funding settlement verification result, one ledger reconciliation result, one fresh CapturePlan freshness evidence record, one execution-capability evidence record, and one explicit timezone-aware planning timestamp.
+3. It validates exact Capture/route/settlement identity, ENTRY `PAPER_ELIGIBLE` decision evidence, verified funding settlement, reconciled ledger result with route/funding event references, fresh plan evidence, and executable capability evidence.
+4. It returns `NonSendingExecutionPlan` evidence describing intended venues, symbols, entry sides, unwind sides, target notional, settlement timestamp, validity, and prerequisite event-sequence references.
+5. It does not write ledger events, replay ledger history, call `evaluate_route()`, assemble snapshots, calculate EV/profitability, calculate VWAP/liquidity, call adapters, import live runner behavior, create executable order requests, include credentials or account state, place orders, mutate route eligibility, or enable live trading.
 
 RX-005 adds deterministic offline orchestration over multiple fake route candidates:
 

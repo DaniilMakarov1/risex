@@ -47,7 +47,8 @@ The single authoritative code contract for these constants is `ProductRules`.
 - The real-data research runner may evaluate one explicit existing route only by calling the existing adapter handoff and then `evaluate_route(route, snapshot, mode)`. It must fail closed before evaluation on adapter or snapshot handoff failures and must not write ledger events, start paper lifecycle, verify funding settlement, plan execution, place orders, or add live runner behavior.
 - Approval-gated funding settlement verification may record only explicit caller-supplied observed settlement evidence for one existing `Capture`, one existing `RouteCandidate`, and one explicit settlement timestamp. It is not permission to trade live by itself.
 - Approval-gated settlement evidence must carry `approval_granted=True`, an observation timestamp equal to the explicit settlement timestamp, and actual funding/notional values with `ValueSource.OBSERVED`; missing approval, false approval, stale observations, unknown values, unobserved sources, malformed payloads, cross-capture, cross-route, cross-settlement, or contradictory evidence fails closed.
-- Execution planning without orders, a guarded live runner, and order placement must remain separate future tasks with explicit acceptance gates.
+- Non-sending execution plans are evidence only. They may describe intended venues, symbols, entry/unwind sides, target notional, settlement timestamp, validity, and prerequisite evidence references, but they must not contain credentials, account state, private endpoint payloads, sendable API requests, or order placement permission.
+- Execution planning without orders, a guarded live runner, and order placement must remain separate tasks with explicit acceptance gates.
 
 ## Route statuses
 
@@ -103,6 +104,8 @@ Execution capability is a fake live-gate evidence contract over existing order-b
 Live gate evidence bundles are fake aggregate evidence only. They must not replay ledger history, replay funding settlement verification, recalculate VWAP/EV/profitability, replace the existing plan freshness or execution-capability gates, create live plans, or place orders.
 
 Live gate evidence bundle ledger records are fake accounting evidence only. They must not recalculate VWAP/EV/profitability, replace ledger reconciliation, replace funding settlement verification, create live plans, place orders, or turn a recorded successful fake bundle check into live eligibility. Ledger reconciliation must fail closed over any malformed, stale, duplicated, missing-reference, or contradictory live gate bundle record. SQLite-persisted live gate bundle records must replay with the same deterministic outcomes as in-memory ledger records.
+
+Execution planning without orders must remain downstream of existing route decisions, funding settlement verification, ledger reconciliation, CapturePlan freshness, and execution capability evidence. It must not call route evaluation, assemble snapshots, calculate profitability, write ledger events, call adapters, import live runner behavior, create executable `CapturePlan` objects, place orders, or enable live trading.
 
 Allowed value sources are exactly:
 
