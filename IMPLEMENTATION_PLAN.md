@@ -31,11 +31,11 @@ The detour's purpose is to keep future live-adjacent work honest: funding settle
 
 ## Latest Accepted Product Task
 
-RX-021 — Paper Result Attribution And PnL Explanation is reviewer-accepted and finalized on `main`. It adds deterministic fake paper start/non-start attribution and PnL explanation downstream of existing `DecisionResult` values and fake paper lifecycle events, preserves economics already produced by `evaluate_route()`, and does not change route eligibility.
+RX-022 — Read-only RiseX Observation Adapter is reviewer-accepted and finalized on `main`. It adds a read-only RiseX public market-data adapter only, preserves per-venue observation normalization, and does not assemble route snapshots, evaluate routes, rank routes, write ledger events, create plans, place orders, or add live runner behavior.
 
-## Current Product Task Branch
+## Current Product Handoff
 
-RX-022 — Read-only RiseX Observation Adapter is implementation-complete on `task/rx-022-read-only-risex-observation-adapter` and pending reviewer acceptance. It adds a read-only RiseX public market-data adapter only; RX-021 remains the latest accepted product task until reviewer acceptance is explicit.
+RX-023 — Read-only Hyperliquid Observation Adapter is prepared in `NEXT_TASK.md` as the immediate next task. Do not start RX-023 during RX-022 finalization.
 
 ## Remaining Gated Roadmap After RX-022
 
@@ -164,4 +164,4 @@ RX-022 implementation notes:
 
 1. RX-023 — Read-only Hyperliquid Observation Adapter.
 
-Do not promote any later roadmap stage into the current handoff until RX-022 is reviewed and accepted.
+Do not promote any later roadmap stage into the current handoff until RX-023 is reviewed and accepted.

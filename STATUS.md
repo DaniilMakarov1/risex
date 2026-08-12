@@ -1,7 +1,10 @@
 # Status
 
-- Current branch: `task/rx-022-read-only-risex-observation-adapter`.
-- Latest accepted product task: RX-021 — Paper Result Attribution And PnL Explanation.
+- Current branch: `main`.
+- Latest accepted product task: RX-022 — Read-only RiseX Observation Adapter.
+- Accepted RX-022 implementation HEAD: `5f274c17d605cb75485c2d79608cd089190ac5a8`
+- RX-022 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
+- Previous accepted product task before RX-022: RX-021 — Paper Result Attribution And PnL Explanation.
 - Accepted RX-021 implementation HEAD: `4298916ed72067bbf4c008b2750f155de36761ee`
 - RX-021 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
 - Previous accepted product task before RX-021: RX-020 — RouteCandidate Identity And Notional Contract Hardening.
@@ -35,11 +38,13 @@
 - Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
 - Current accepted `main` governance task: RX-Q004.
-- Current RX task state: RX-022 is implementation-complete on the task branch and pending reviewer acceptance; RX-021 remains the latest accepted product task on `main`.
+- Current accepted `main` product task: RX-022.
+- Current RX task state: RX-022 is reviewer-accepted and finalized on `main`; RX-023 remains the immediate next task and has not been started.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
-RX-021 is the latest accepted product baseline on `main`.
+RX-022 is the latest accepted product baseline on `main`.
+RX-021 remains the previous accepted product baseline before RX-022.
 RX-020 remains the previous accepted product baseline before RX-021.
 RX-018 remains the previous accepted product baseline before RX-020.
 RX-016 remains the previous accepted product baseline before RX-018.
@@ -79,6 +84,7 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - RX-Q004 — Roadmap And Rulebook Consolidation
 - RX-020 — RouteCandidate Identity And Notional Contract Hardening
 - RX-021 — Paper Result Attribution And PnL Explanation
+- RX-022 — Read-only RiseX Observation Adapter
 
 ## Current architecture status
 
@@ -143,10 +149,10 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 ## Current roadmap status
 
 - RX-008 through RX-016 are accepted fail-closed offline safety-hardening detour tasks.
-- The project continues along the intended product implementation path after RX-021.
-- RX-021 is reviewer-accepted and finalized on `main`.
-- RX-022 is implementation-complete on the task branch and pending reviewer acceptance.
-- The next recommended product task after RX-022 review is a read-only Hyperliquid adapter, followed by real market-data snapshot assembly, real-data research runner, funding settlement verification with explicit approval, execution planning without orders, guarded live runner after explicit acceptance gates, order placement only in a future explicitly approved task, and read-only monitoring/dashboard later.
+- The project continues along the intended product implementation path after RX-022.
+- RX-022 is reviewer-accepted and finalized on `main`.
+- RX-023 is prepared as the immediate next task and was not started during RX-022 finalization.
+- The next recommended product task is a read-only Hyperliquid adapter, followed by real market-data snapshot assembly, real-data research runner, funding settlement verification with explicit approval, execution planning without orders, guarded live runner after explicit acceptance gates, order placement only in a future explicitly approved task, and read-only monitoring/dashboard later.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized.
 
 ## Tests last reported for accepted RX-011
