@@ -61,6 +61,7 @@ tests/
 - `OrderPlacementApproval`: execution-owned explicit caller-supplied approval evidence for one exact Capture, route, settlement timestamp, guarded result timestamp, and non-sending plan reference set.
 - `ApprovalGatedOrderPlacementResult`: execution-owned deterministic blocked-or-boundary-invoked outcome that carries no exchange request material.
 - `PaperResultExplanation`: app-local fake paper result attribution copied from the input `DecisionResult`, including start/non-start blockers and existing PnL components without recalculating profitability.
+- Read-only dashboard view: app-local display dictionary returned from caller-supplied evidence without creating decisions, replaying accounting history, running live workflows, or placing orders.
 
 ## Capture lifecycle state machine
 
@@ -115,6 +116,7 @@ Any non-terminal Capture may transition to `FAILED`. Capture states with possibl
 - Guarded live runner readiness without orders happens only in `apps/live_runner/guarded.py`.
 - Explicit approval-gated order placement boundaries happen only in `core/execution/orders.py`.
 - Guarded live runner result compatibility for that boundary happens only in `apps/live_runner/order_placement.py`.
+- Read-only dashboard rendering happens only in `apps/dashboard/read_only.py`.
 - Direct order submission remains disabled; any later send path can exist only inside `core/execution/`.
 - Ledger writes happen only through `core/accounting/ledger.py`.
 - Ledger reconciliation happens only in `core/accounting/reconciliation.py`.
@@ -299,6 +301,15 @@ RX-029 adds one explicit approval-gated order placement boundary:
 4. It fails closed unless `ProductRules.live_trading_enabled is True`, the guarded result is exactly ready for the current Capture route and settlement, the non-sending plan is fresh and route-aligned, and approval is true, fresh, after guarded readiness, and exactly tied to the plan's prerequisite references.
 5. Missing, false, stale, malformed, cross-capture, cross-route, cross-settlement, disabled-live, non-ready guarded result, missing/stale plan, stale plan prerequisites, non-executable prerequisite evidence as represented by the guarded result, missing approval, false approval, stale approval, or cross-identity approval stops before the injected boundary is called.
 6. It does not call `evaluate_route()`, assemble snapshots, calculate EV/profitability, calculate VWAP/liquidity, replay funding or ledger history, write ledger events, call adapters, use credentials, create exchange request payloads, place real orders, mutate route eligibility, enable live trading by default, add route statuses, add reject reasons, or create a second decision, snapshot, verifier, ledger-write, replay, economics, live-runner, execution-planning, or order path.
+
+RX-030 adds one read-only monitoring dashboard surface:
+
+1. `apps/dashboard/read_only.py` owns `render_capture_monitor_view()`.
+2. The renderer accepts one existing `Capture`, one existing `RouteCandidate`, one explicit settlement timestamp, one explicit view timestamp, and already-derived caller-supplied fixture evidence.
+3. It displays exact identity, route details, existing decision state, funding verification state, ledger reconciliation state, live-gate bundle state, non-sending execution plan state, guarded no-order readiness state, approval evidence state, approval-boundary result state, and existing economics values.
+4. Missing, malformed, stale, cross-capture, cross-route, cross-settlement, unverified, unreconciled, non-ready, false approval, stale approval, or boundary-blocked evidence renders as missing or blocked display state.
+5. Missing economics remain missing display values rather than zero.
+6. It does not call `evaluate_route()`, assemble snapshots, calculate EV/profitability, calculate VWAP/liquidity, replay funding or ledger history, write ledger events, call adapters, check live-gate bundles, plan execution, run guarded live readiness, call an approval boundary, use credentials, perform network I/O, construct sendable requests, place orders, mutate route eligibility, enable live trading, add route statuses, add reject reasons, or create a second decision, snapshot, verifier, ledger-write, replay, economics, live-runner, execution-planning, or order path.
 
 RX-005 adds deterministic offline orchestration over multiple fake route candidates:
 

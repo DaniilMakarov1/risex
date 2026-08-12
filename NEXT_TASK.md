@@ -2,19 +2,19 @@
 
 ## Task ID
 
-RX-030 — Read-Only Monitoring Dashboard Without Decisions Or Orders
+RX-031 — Review-Directed Follow-up After RX-030
 
 ## Objective
 
-Add the smallest read-only monitoring/dashboard surface for already-derived local evidence after the explicit approval-gated order-boundary task is reviewed and accepted. The dashboard must display one existing Capture, one existing RouteCandidate, one explicit funding settlement timestamp, existing route decision/evidence state, existing non-sending execution plan state, existing guarded no-order readiness state, and existing approval-boundary result state from caller-supplied deterministic fixtures only. It must not make decisions, poll venues, place orders, write ledger events, or change lifecycle state.
+Apply only explicit reviewer-directed fixes or handoff metadata updates after the read-only monitoring dashboard branch is reviewed. Keep the prior dashboard work read-only, downstream of existing owner modules, and free of decisions, polling, ledger writes, execution automation, or orders.
 
 ## Starting baseline
 
-Start from reviewer-accepted `main` after the explicit approval-gated order-boundary task is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
+Start from reviewer-accepted `main` after the prior dashboard task is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
 
 ## Branch
 
-Create and work on `task/rx-030-read-only-monitoring-dashboard-without-decisions-or-orders`. Do not implement on `main`.
+Create and work on `task/rx-031-review-directed-follow-up-after-rx-030`. Do not implement on `main`.
 
 ## Before changing files
 
@@ -33,30 +33,27 @@ Read:
 
 ## Allowed scope
 
-- One read-only dashboard or monitor view over one existing Capture and one existing route.
-- Use caller-supplied deterministic fixture inputs only.
-- Reuse existing Capture, RouteCandidate, DecisionResult, funding verification, ledger reconciliation, live-gate bundle, non-sending execution plan, guarded readiness, approval evidence, and approval-boundary result contracts.
-- Display status summaries and fail-closed missing-data states without recomputing product decisions.
-- Minimal app-layer code under the dashboard owner area only, plus focused deterministic tests and repository metadata updates.
+- Explicit reviewer-directed fixes to the read-only dashboard renderer and its focused deterministic tests.
+- Repository metadata updates required to record review disposition and prepare the next single handoff.
+- No product behavior changes unless the reviewer specifically directs a correction to the already-scoped dashboard display behavior.
 
 ## Forbidden scope
 
-- No route discovery, ranking, watchlists, background loops, polling, scheduling, alerts, or auto-refresh.
-- No venue adapters, public market-data calls, private endpoints, credentials, account balances, exchange account state, or network-dependent tests.
+- No new product stage, route discovery, ranking, watchlists, background loops, polling, scheduling, alerts, or auto-refresh.
+- No venue adapters, market-data calls, private endpoints, credentials, account balances, exchange account state, or network-dependent tests.
 - No order placement, sendable exchange request construction, order cancellation, order status fetching, or execution automation.
-- No route evaluation, snapshot assembly, profitability calculation, funding verification, ledger reconciliation, live-gate bundle checking, execution planning, guarded live runner execution, or approval-boundary execution unless strictly isolated to tests that provide already-derived fixture outputs.
+- No route evaluation, snapshot assembly, profitability calculation, funding verification, ledger reconciliation, live-gate bundle checking, execution planning, guarded live runner execution, or approval-boundary execution.
 - No ledger writes, storage migrations, replay changes, paper lifecycle changes, route eligibility mutation, or Capture state transitions.
 - No EV, fee, funding, VWAP/liquidity, basis, spread, price-impact, slippage, max-level, hidden-buffer, or safety-margin filters.
 - No new route statuses, reject reasons, canary architecture, hold-next-cycle logic, or live trading by default.
 
 ## Implementation requirements
 
-- The dashboard must remain read-only and downstream of existing owner modules.
-- Missing, malformed, stale, cross-capture, cross-route, cross-settlement, unverified, unreconciled, non-ready, disabled-live, false approval, stale approval, or boundary-blocked inputs must render as blocked/missing state instead of recalculating or silently normalizing values.
-- The implementation must not call `evaluate_route()`, assemble snapshots, calculate profitability, call venue adapters, replay funding or ledger history, write ledger events, call order-boundary execution, use real credentials, or perform network I/O.
-- Any display model must preserve unknown/missing economics as missing rather than zero.
-- Tests must inject all input evidence and avoid live network dependency.
-- Use a supervised worker/subagent before implementation edits if the final design touches execution-boundary, order-placement safety, accounting/reconciliation, or broad owner-boundary code. If the work stays strictly read-only app/dashboard display code, worker use is optional under `AGENTS.md`.
+- Treat reviewer feedback as the only source of scope.
+- Preserve the read-only dashboard as an app-layer display surface over already-derived deterministic inputs.
+- Missing or unknown economics must remain missing display values rather than zero.
+- Preserve accepted owner boundaries unless the reviewer explicitly identifies a defect in the prior dashboard task.
+- Use a supervised worker/subagent before implementation edits if the reviewer-directed fix touches execution-boundary, order-placement safety, accounting/reconciliation, broad owner-boundary code, or repository-governance code.
 - Parent owns steering, final diff review, validation, commit, push, and final report.
 
 ## Required files
@@ -64,13 +61,13 @@ Read:
 - Likely `apps/dashboard/`
 - Likely focused tests under `tests/unit/`
 - Repository metadata files required by `AGENTS.md`
-- Do not touch product code outside owner modules required by the final design.
+- Do not touch product code outside files required by explicit reviewer feedback.
 
 ## Required tests
 
 - `python3 scripts/validate_next_task.py`
 - `python3 -m pytest tests/invariant`
-- Focused read-only dashboard tests for exact identity rendering, missing/malformed/cross-identity fail-closed display state, blocked guarded readiness, blocked approval-boundary result, unknown economics preserved as missing, and no network/order/ledger dependency
+- Focused tests covering any reviewer-directed dashboard fix
 - `python3 -m pytest`
 - `python3 -m compileall apps core storage tests scripts`
 - `python3 -m apps.cli.main`

@@ -170,10 +170,11 @@ def test_venue_adapter_contract_is_per_venue_observation_only() -> None:
     assert "fetch_snapshot" not in adapter_source
 
 
-def test_only_read_only_venue_adapters_are_introduced_without_secrets_or_dashboard_code() -> None:
+def test_only_read_only_venue_adapters_and_dashboard_surfaces_are_introduced_without_secrets() -> None:
     production_text = "\n".join(path.read_text().lower() for path in _production_python_files())
     venue_python_files = {path.relative_to(Path("core/venues")) for path in Path("core/venues").rglob("*.py")}
-    dashboard_python_files = tuple(Path("apps/dashboard").rglob("*.py"))
+    dashboard_python_files = {path.relative_to(Path("apps/dashboard")) for path in Path("apps/dashboard").rglob("*.py")}
+    dashboard_source = Path("apps/dashboard/read_only.py").read_text()
     storage_python_files = {path.relative_to(Path("storage")) for path in Path("storage").rglob("*.py")}
 
     assert venue_python_files == {
@@ -182,7 +183,20 @@ def test_only_read_only_venue_adapters_are_introduced_without_secrets_or_dashboa
         Path("hyperliquid.py"),
         Path("risex.py"),
     }
-    assert all(path.name == "__init__.py" and path.read_text() == "" for path in dashboard_python_files)
+    assert dashboard_python_files == {
+        Path("__init__.py"),
+        Path("read_only.py"),
+    }
+    assert "evaluate_route" not in dashboard_source
+    assert "assemble_route_snapshot" not in dashboard_source
+    assert "fetch_observation" not in dashboard_source
+    assert "append_" not in dashboard_source
+    assert "reconcile_ledger" not in dashboard_source
+    assert "verify_funding_settlement" not in dashboard_source
+    assert "plan_execution_without_orders" not in dashboard_source
+    assert "run_guarded_live_without_orders" not in dashboard_source
+    assert "run_approval_gated_order_boundary" not in dashboard_source
+    assert "send_order" not in dashboard_source
     assert storage_python_files == {
         Path("__init__.py"),
         Path("sqlite/__init__.py"),

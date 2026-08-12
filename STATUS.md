@@ -1,7 +1,9 @@
 # Status
 
-- Current branch: `main`.
-- Current task: RX-029 — Explicit Approval-Gated Order Placement Boundary finalization.
+- Current branch: `task/rx-030-read-only-monitoring-dashboard-without-decisions-or-orders`.
+- Current task: RX-030 — Read-Only Monitoring Dashboard Without Decisions Or Orders.
+- RX-030 starting baseline: `c91e7190b122de621fd035c38ed4943fac618bab`
+- RX-030 review state: implementation in progress on task branch; pending validation, commit, push, and reviewer acceptance.
 - RX-029 starting baseline: `e2771bc9e6ce2730159bb120d784635e9030f428`
 - RX-029 review state: reviewer-accepted and finalized on `main`.
 - Latest accepted product task: RX-029 — Explicit Approval-Gated Order Placement Boundary.
@@ -68,7 +70,7 @@
 - Accepted baseline branch: `main`
 - Current accepted `main` governance task: RX-Q004.
 - Current accepted `main` product task: RX-029.
-- Current RX task state: RX-029 is reviewer-accepted and finalized on `main`; `NEXT_TASK.md` is prepared for RX-030.
+- Current RX task state: RX-030 is active on the task branch and remains downstream read-only dashboard display work; RX-029 remains the latest accepted product baseline on `main`.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
@@ -91,7 +93,8 @@ RX-013 remains the previous accepted product baseline before RX-014.
 RX-012 remains the previous accepted product baseline before RX-013.
 RX-Q001 remains the previous accepted governance baseline before RX-Q002.
 RX-011 remains the previous accepted product implementation baseline before RX-012.
-`NEXT_TASK.md` is prepared for RX-030 after RX-029 finalization on `main`.
+`NEXT_TASK.md` is prepared for RX-031 after RX-030 branch implementation.
+RX-030 is active on `task/rx-030-read-only-monitoring-dashboard-without-decisions-or-orders` and adds one read-only dashboard renderer for already-derived deterministic fixture evidence only. It does not add route discovery, polling, adapters, route evaluation, snapshot assembly, funding verification, ledger reconciliation, live-gate bundle checking, execution planning, guarded live execution, approval-boundary execution, ledger writes, network I/O, or orders.
 
 ## Completed accepted tasks
 
@@ -184,6 +187,7 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - One non-sending execution planning workflow exists in `core/execution/planning.py`; it consumes existing Capture, RouteCandidate, route decision, funding verification, ledger reconciliation, CapturePlan freshness, and execution-capability evidence and returns evidence-only intended entry/unwind actions without ledger writes, adapters, live runner behavior, sendable API requests, orders, route eligibility mutation, or live trading.
 - One guarded no-order live runner workflow exists in `apps/live_runner/guarded.py`; it consumes existing Capture, RouteCandidate, funding verification, ledger reconciliation, live-gate bundle, and non-sending execution-plan evidence and returns only blocked or no-order readiness without ledger writes, adapters, order placement imports, sendable API requests, route eligibility mutation, or live trading by default.
 - One explicit approval-gated order placement boundary exists in `core/execution/orders.py`; it consumes exact current Capture, RouteCandidate, guarded readiness timestamp, non-sending execution plan, explicit approval evidence, explicit ProductRules, and an injected deterministic boundary. `apps/live_runner/order_placement.py` validates exact `GuardedLiveRunnerResult` values before delegation. Missing, stale, false, malformed, cross-identity, disabled-live, non-ready, or stale-plan evidence fails closed before the injected boundary is invoked.
+- One read-only monitoring dashboard renderer exists in `apps/dashboard/read_only.py`; it consumes one existing Capture, one existing RouteCandidate, one explicit settlement timestamp, and already-derived caller-supplied fixture evidence only. Missing, malformed, stale, cross-identity, unverified, unreconciled, non-ready, false approval, stale approval, and boundary-blocked inputs render as missing or blocked display state without recomputing product decisions or invoking owner workflows.
 - No paper exchange simulation, real exchange order submission, or live trading by default.
 
 ## Current repository governance status
@@ -201,7 +205,7 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 ## Current roadmap status
 
 - RX-008 through RX-016 are accepted fail-closed offline safety-hardening detour tasks.
-- The project continues along the intended product implementation path after RX-029.
+- The project continues along the intended product implementation path after RX-029 with RX-030 read-only monitoring/dashboard display work pending review.
 - RX-022 is reviewer-accepted and finalized on `main`.
 - RX-023 is reviewer-accepted and finalized on `main`.
 - RX-024 is reviewer-accepted and finalized on `main`.
@@ -210,7 +214,7 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - RX-027 is reviewer-accepted and finalized on `main`.
 - RX-028 is reviewer-accepted and finalized on `main`.
 - RX-029 is reviewer-accepted and finalized on `main`.
-- The next recommended product task is RX-030 read-only monitoring/dashboard work without decisions, execution, or ledger writes.
+- The next recommended task is RX-031 review-directed follow-up after RX-030.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized.
 
 ## Tests last reported for RX-029 branch
@@ -480,6 +484,7 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - Live gate evidence bundle ledger recording remains deterministic fake offline accounting scaffolding only.
 - Non-sending execution plans are evidence-only descriptions, are not ledger-recorded in RX-027, and do not contain credentials, account state, private endpoint payloads, sendable order requests, or order placement permission.
 - Approval-gated order placement remains a deterministic injected boundary only; it does not submit real exchange orders, read account state, create exchange request payloads, use credentials, or enable live trading by default.
+- The read-only dashboard renderer consumes caller-supplied deterministic evidence only; it does not poll venues, read ledger/storage state, run verification/reconciliation, plan execution, run guarded readiness, invoke approval boundaries, or place orders.
 - CapturePlan freshness evidence is not executable live order planning.
 - Execution capability evidence is not executable live order planning.
 - Live gate evidence bundle is not executable live order planning.
@@ -504,4 +509,4 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 
 ## Next recommended task
 
-RX-030 — Read-Only Monitoring Dashboard Without Decisions Or Orders.
+RX-031 — Review-Directed Follow-up After RX-030.

@@ -43,17 +43,17 @@ RX-029 — Explicit Approval-Gated Order Placement Boundary is reviewer-accepted
 
 ## Current Product Branch Progress
 
-No product branch is active in this checkout. RX-030 is the immediate next task and has not been started.
+RX-030 — Read-Only Monitoring Dashboard Without Decisions Or Orders is active on `task/rx-030-read-only-monitoring-dashboard-without-decisions-or-orders` and pending review.
 
 ## Current Product Handoff
 
-`NEXT_TASK.md` is prepared for RX-030, the next gated read-only monitoring/dashboard task after RX-029 finalization.
+`NEXT_TASK.md` is prepared for RX-031, a review-directed follow-up and roadmap handoff after RX-030.
 
-## Remaining Gated Roadmap After RX-029
+## Remaining Gated Roadmap After RX-030
 
-Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts:
+Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030.
 
-1. Add read-only monitoring/dashboard work in RX-030, without turning it into a decision, execution, or ledger-write path.
+1. RX-031 — Review-Directed Follow-up After RX-030.
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
 
@@ -250,8 +250,20 @@ RX-029 implementation notes:
 - Missing, stale, malformed, cross-capture, cross-route, cross-settlement, failed existing live prerequisites, non-ready guarded result, disabled live switch, missing/stale non-sending plan, missing approval, false approval, stale approval, or cross-identity approval fails closed before the injected deterministic boundary is invoked.
 - RX-029 does not call `evaluate_route()`, assemble snapshots, calculate profitability, replay funding or ledger history, write ledger events, call adapters, use credentials, create exchange request payloads, place real orders, enable live trading by default, add route statuses, add reject reasons, or create a second decision, snapshot, verifier, ledger-write, replay, economics, live-runner, execution-planning, or order path.
 
+## RX-030 — Read-Only Monitoring Dashboard Without Decisions Or Orders
+
+Add the smallest read-only monitoring/dashboard surface for one existing `Capture`, one existing `RouteCandidate`, one explicit funding settlement timestamp, and already-derived caller-supplied deterministic evidence.
+
+RX-030 implementation notes:
+
+- `apps/dashboard/read_only.py` owns `render_capture_monitor_view()`.
+- The renderer displays exact identity, existing route decision status, funding verification state, ledger reconciliation state, live-gate bundle state, non-sending execution plan state, guarded no-order readiness state, approval evidence state, approval-boundary result state, and copied economics values.
+- Missing, malformed, stale, cross-capture, cross-route, cross-settlement, unverified, unreconciled, non-ready, false approval, stale approval, or boundary-blocked inputs render as missing or blocked display state.
+- Missing economics remain missing display values instead of zero.
+- RX-030 does not call `evaluate_route()`, assemble snapshots, calculate profitability, verify funding, reconcile ledgers, check live-gate bundles, plan execution, run guarded live readiness, call approval-boundary execution, write ledger events, call adapters, use credentials, perform network I/O, place orders, enable live trading, add route statuses, add reject reasons, or create a second decision, snapshot, verifier, ledger-write, replay, economics, live-runner, execution-planning, or order path.
+
 ## Next Sequence
 
-1. RX-030 — Read-Only Monitoring Dashboard Without Decisions Or Orders.
+1. RX-031 — Review-Directed Follow-up After RX-030.
 
-Do not promote execution automation, background loops, ranking, order placement, or later roadmap stages into the current handoff until RX-030 is reviewed and accepted.
+Do not promote execution automation, background loops, ranking, order placement, polling, alerts, auto-refresh, or later roadmap stages into the current handoff until RX-030 is reviewed and accepted.
