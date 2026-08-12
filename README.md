@@ -2,7 +2,7 @@
 
 RiseX Points Farmer is a modular-monolith research system for capture-centric hedged funding opportunities on RiseX with hedge venue support, initially Hyperliquid.
 
-The current branch remains a non-trading research, fake paper-lifecycle, funding-verification, ledger-reconciliation, non-sending execution-planning, and guarded no-order live-runner skeleton. Offline runners still use fake data and do not place orders. RX-022 adds one read-only RiseX public market-data adapter, RX-023 adds one read-only Hyperliquid public market-data adapter, RX-024 adds one narrow real market-data route snapshot assembly handoff, RX-025 adds one-route real-data research runner behavior, RX-026 adds one approval-gated funding settlement verification path for explicit caller-supplied observed evidence, RX-027 adds one non-sending execution planning workflow for already-verified prerequisite evidence, and RX-028 adds one guarded live runner workflow without orders. These pieces do not use credentials, private account endpoints, order placement, or real API keys.
+The current branch remains a non-trading research, fake paper-lifecycle, funding-verification, ledger-reconciliation, non-sending execution-planning, guarded no-order live-runner, and explicit approval-gated order-boundary skeleton. Offline runners still use fake data and do not place orders. RX-022 adds one read-only RiseX public market-data adapter, RX-023 adds one read-only Hyperliquid public market-data adapter, RX-024 adds one narrow real market-data route snapshot assembly handoff, RX-025 adds one-route real-data research runner behavior, RX-026 adds one approval-gated funding settlement verification path for explicit caller-supplied observed evidence, RX-027 adds one non-sending execution planning workflow for already-verified prerequisite evidence, RX-028 adds one guarded live runner workflow without orders, and RX-029 adds one explicit approval-gated order placement boundary that invokes only an injected deterministic boundary after exact evidence checks. These pieces do not use credentials, private account endpoints, real exchange order submission, or real API keys.
 
 ## Product baseline
 
@@ -17,6 +17,7 @@ The current branch remains a non-trading research, fake paper-lifecycle, funding
 - Missing, stale, duplicated, cross-capture, cross-route, cross-settlement, unverified funding, false reconciliation, or non-executable execution evidence fails closed. Exact gate evidence still does not permit `LIVE_ELIGIBLE`; live trading remains disabled by default and current route decisions stop at `PAPER_ELIGIBLE` with `LIVE_GATES_NOT_IMPLEMENTED`.
 - Non-sending execution plans are evidence only. They describe intended venues, symbols, sides, target notional, settlement timestamp, and prerequisite evidence references, but they contain no credentials, account state, private endpoint payloads, sendable order requests, or order placement permission.
 - The guarded live runner consumes existing prerequisite evidence plus one existing non-sending execution plan. It fails closed unless the live switch is explicit and every prerequisite matches the current Capture settlement, then stops at a no-order dry-run ready state without constructing sendable order material.
+- The approval-gated order placement boundary consumes one exact no-order ready guarded result, one existing non-sending execution plan, and one caller-supplied `OrderPlacementApproval`. Missing, stale, false, malformed, cross-identity, disabled-live, non-ready, or stale-plan evidence fails closed before the injected deterministic boundary can be called.
 - Route statuses are `RESEARCH_ONLY`, `PAPER_ELIGIBLE`, `LIVE_ELIGIBLE`, and `REJECTED`.
 - `CANARY_ELIGIBLE` and a separate canary runner are forbidden.
 - `RouteCandidate` is the authoritative route identity and selected-notional contract. Empty or malformed capture/route identity, venues, symbols, entry sides, or target notional fail at construction; positive notionals below the product minimum still fail through the existing route-evaluation minimum-notional gate.
@@ -25,7 +26,7 @@ The current branch remains a non-trading research, fake paper-lifecycle, funding
 
 RX-008 through RX-016 are accepted fail-closed offline safety hardening. They prove funding verification, ledger reconciliation, fake CapturePlan freshness, fake execution capability, fake live-gate bundle checks, and SQLite replay behavior from deterministic evidence. They are not a product strategy change, not executable live architecture, and not permission to keep adding offline scaffolding ahead of the current task.
 
-RX-022 adds a read-only RiseX observation adapter only. RX-023 adds a read-only Hyperliquid observation adapter only. RX-024 adds a one-route real market-data snapshot handoff only. RX-025 adds a one-route real-data research runner only. RX-026 adds approval-gated funding settlement verification only. RX-027 adds non-sending execution planning only. RX-028 adds guarded live runner readiness without orders only. Later roadmap stages must be promoted through `NEXT_TASK.md` one at a time and remain gated: future order placement only after explicit approval, and read-only monitoring/dashboard work later.
+RX-022 adds a read-only RiseX observation adapter only. RX-023 adds a read-only Hyperliquid observation adapter only. RX-024 adds a one-route real market-data snapshot handoff only. RX-025 adds a one-route real-data research runner only. RX-026 adds approval-gated funding settlement verification only. RX-027 adds non-sending execution planning only. RX-028 adds guarded live runner readiness without orders only. RX-029 adds an explicit approval-gated order placement boundary only; it still does not add real exchange adapters, credentials, private endpoints, or automatic order placement. Later roadmap stages must be promoted through `NEXT_TASK.md` one at a time and remain gated, with read-only monitoring/dashboard work later.
 
 ## Offline research runner
 
@@ -79,6 +80,12 @@ The workflow validates exact Capture, route, settlement, ENTRY `PAPER_ELIGIBLE` 
 RX-028 adds `run_guarded_live_without_orders()` in `apps/live_runner/guarded.py`. It accepts one existing `Capture`, one existing `RouteCandidate`, one explicit funding settlement timestamp, one existing `NonSendingExecutionPlan`, one funding verification result, one ledger reconciliation result, one live-gate evidence bundle, one explicit evaluation timestamp, and explicit `ProductRules`.
 
 The runner fails closed unless `ProductRules.live_trading_enabled is True`, the Capture/route/settlement identity is exact, funding is verified, ledger reconciliation is current, the live-gate bundle passes the existing risk-owned bundle check, and the existing non-sending plan is fresh and matches route identity plus prerequisite evidence references. Even when every prerequisite is exact, it returns only a no-order guarded readiness result. It does not call `evaluate_route()`, assemble snapshots, calculate profitability, replay ledgers, write ledger events, call adapters, import order placement behavior, construct sendable exchange requests, place orders, or enable live trading by default.
+
+## Approval-gated order placement boundary
+
+RX-029 adds `OrderPlacementApproval`, `ApprovalGatedOrderPlacementResult`, and `run_approval_gated_order_boundary()` in `core/execution/orders.py`, plus `run_approval_gated_live_order_placement()` in `apps/live_runner/order_placement.py` to consume the app-local guarded result without reversing core/app imports.
+
+The workflow requires explicit `ProductRules(live_trading_enabled=True)`, exact Capture/route/settlement identity, an exact no-order ready `GuardedLiveRunnerResult`, a fresh `NonSendingExecutionPlan`, and caller-supplied approval that matches the guarded evaluation timestamp plus the plan's prerequisite references. Only after all checks pass does it invoke the injected deterministic boundary. It does not call `evaluate_route()`, assemble snapshots, calculate profitability, replay funding or ledger history, write ledger events, call adapters, use credentials, create exchange request payloads, place real orders, or enable live trading by default.
 
 ## Offline ledger reconciliation
 
@@ -136,5 +143,7 @@ Business logic has single-owner modules:
 - execution capability gating: `core/risk/gates.py`
 - live gate evidence bundling: `core/risk/gates.py`
 - guarded live runner without orders: `apps/live_runner/guarded.py`
+- explicit approval-gated order boundary: `core/execution/orders.py`
+- guarded-result compatibility wrapper: `apps/live_runner/order_placement.py`
 
 Venue adapters may fetch and normalize data only. They must not calculate EV, make route decisions, send orders, or write ledger events.

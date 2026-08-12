@@ -42,18 +42,17 @@ RX-028 — Guarded Live Runner Without Orders is reviewer-accepted and finalized
 
 ## Current Product Branch Progress
 
-No product branch is active in this checkout. RX-029 is the immediate next task and has not been started.
+RX-029 is implemented on `task/rx-029-explicit-approval-gated-order-placement-boundary` and is pending review. It adds one explicit approval-gated order placement boundary downstream of RX-028 guarded no-order readiness and RX-027 non-sending execution planning. It does not change the latest accepted `main` product baseline until review and finalization.
 
 ## Current Product Handoff
 
-`NEXT_TASK.md` is prepared for RX-029, the next gated explicit approval-gated order placement boundary task after RX-028 finalization.
+`NEXT_TASK.md` is prepared for RX-030, the next gated read-only monitoring/dashboard task after RX-029 review acceptance.
 
-## Remaining Gated Roadmap After RX-028
+## Remaining Gated Roadmap After RX-029 Branch
 
 Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts:
 
-1. Add order placement only in the explicit approval-gated RX-029 task.
-2. Add read-only monitoring/dashboard work later, without turning it into a decision, execution, or ledger-write path.
+1. Add read-only monitoring/dashboard work only after RX-029 is reviewed and accepted, without turning it into a decision, execution, or ledger-write path.
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
 
@@ -238,8 +237,20 @@ RX-028 implementation notes:
 - Missing, stale, malformed, cross-capture, cross-route, cross-settlement, unverified funding, unreconciled ledger, stale plan prerequisites, non-executable execution capability evidence, missing non-sending plan, stale non-sending plan, live switch disabled, or sendable order material fails closed through existing centralized reject reasons.
 - A successful result is no-order readiness only. RX-028 does not call `evaluate_route()`, assemble snapshots, calculate profitability, replay funding or ledger history, write ledger events, call adapters, import order placement behavior, create live `CapturePlan` objects, construct sendable exchange requests, place orders, enable live trading by default, add route statuses, add reject reasons, or create a second decision, snapshot, verifier, ledger-write, replay, economics, execution-planning, or order path.
 
+## RX-029 — Explicit Approval-Gated Order Placement Boundary
+
+Add the smallest explicit approval-gated order placement boundary for one existing `Capture`, one existing `RouteCandidate`, one explicit funding settlement timestamp, one existing no-order ready guarded live runner result, one existing non-sending execution plan, and one caller-supplied approval.
+
+RX-029 implementation notes:
+
+- `core/execution/orders.py` owns `OrderPlacementApproval`, `ApprovalGatedOrderPlacementResult`, and `run_approval_gated_order_boundary()`.
+- `apps/live_runner/order_placement.py` owns `run_approval_gated_live_order_placement()` as a thin app wrapper that consumes exact `GuardedLiveRunnerResult` values without making `core/execution` import app-layer code.
+- The workflow requires explicit `ProductRules(live_trading_enabled=True)`, exact Capture/route/settlement identity, no-order ready guarded result identity, a fresh existing `NonSendingExecutionPlan`, and approval evidence tied to the guarded result timestamp plus plan prerequisite references.
+- Missing, stale, malformed, cross-capture, cross-route, cross-settlement, failed existing live prerequisites, non-ready guarded result, disabled live switch, missing/stale non-sending plan, missing approval, false approval, stale approval, or cross-identity approval fails closed before the injected deterministic boundary is invoked.
+- RX-029 does not call `evaluate_route()`, assemble snapshots, calculate profitability, replay funding or ledger history, write ledger events, call adapters, use credentials, create exchange request payloads, place real orders, enable live trading by default, add route statuses, add reject reasons, or create a second decision, snapshot, verifier, ledger-write, replay, economics, live-runner, execution-planning, or order path.
+
 ## Next Sequence
 
-1. RX-029 — Explicit Approval-Gated Order Placement Boundary.
+1. RX-030 — Read-Only Monitoring Dashboard Without Decisions Or Orders.
 
-Do not promote monitoring, dashboards, or later roadmap stages into the current handoff until RX-029 is reviewed and accepted.
+Do not promote execution automation, background loops, ranking, order placement, or later roadmap stages into the current handoff until RX-030 is reviewed and accepted.

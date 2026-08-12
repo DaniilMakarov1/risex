@@ -58,6 +58,8 @@ tests/
 - `LiveGateEvidenceBundleReplayResult`: deterministic accounting replay result proving whether one recorded fake live-gate evidence bundle check is well-formed, current, and consistent with the existing bundle gate result.
 - `NonSendingExecutionPlan`: execution-boundary evidence describing intended entry and unwind actions for one already-verified Capture settlement without credentials, sendable requests, or order placement.
 - `GuardedLiveRunnerResult`: app-local deterministic live-runner outcome proving whether one already-planned Capture remains blocked or reaches no-order readiness.
+- `OrderPlacementApproval`: execution-owned explicit caller-supplied approval evidence for one exact Capture, route, settlement timestamp, guarded result timestamp, and non-sending plan reference set.
+- `ApprovalGatedOrderPlacementResult`: execution-owned deterministic blocked-or-boundary-invoked outcome that carries no exchange request material.
 - `PaperResultExplanation`: app-local fake paper result attribution copied from the input `DecisionResult`, including start/non-start blockers and existing PnL components without recalculating profitability.
 
 ## Capture lifecycle state machine
@@ -111,7 +113,9 @@ Any non-terminal Capture may transition to `FAILED`. Capture states with possibl
 - One-route real-data research orchestration happens only in `apps/research_runner/real_data.py`.
 - Non-sending execution planning happens only in `core/execution/planning.py`.
 - Guarded live runner readiness without orders happens only in `apps/live_runner/guarded.py`.
-- Orders can be sent only through `core/execution/`.
+- Explicit approval-gated order placement boundaries happen only in `core/execution/orders.py`.
+- Guarded live runner result compatibility for that boundary happens only in `apps/live_runner/order_placement.py`.
+- Direct order submission remains disabled; any later send path can exist only inside `core/execution/`.
 - Ledger writes happen only through `core/accounting/ledger.py`.
 - Ledger reconciliation happens only in `core/accounting/reconciliation.py`.
 - Funding settlement verification happens only in `core/monitoring/funding_settlement.py`.
@@ -286,6 +290,15 @@ RX-028 adds one guarded live runner workflow without orders:
 3. It fails closed unless `ProductRules.live_trading_enabled is True`, exact Capture/route/settlement identity is present, funding verification is the current verified result contract, ledger reconciliation is the current reconciled result contract, the live-gate bundle passes `check_live_gate_evidence_bundle()`, and the existing non-sending plan is fresh and matches route identity plus prerequisite evidence references.
 4. It returns `GuardedLiveRunnerResult` with either a centralized blocked reason or a no-order ready flag.
 5. It does not call `evaluate_route()`, assemble snapshots, calculate EV/profitability, calculate VWAP/liquidity, replay funding or ledger history, write ledger events, call adapters, import order placement behavior, create executable order requests, include credentials or account state, place orders, mutate route eligibility, or enable live trading by default.
+
+RX-029 adds one explicit approval-gated order placement boundary:
+
+1. `core/execution/orders.py` owns `OrderPlacementApproval`, `ApprovalGatedOrderPlacementResult`, and `run_approval_gated_order_boundary()`.
+2. `apps/live_runner/order_placement.py` owns the thin `run_approval_gated_live_order_placement()` wrapper that validates the exact app-local `GuardedLiveRunnerResult` before delegating into `core/execution`.
+3. The workflow accepts one existing `Capture`, one existing `RouteCandidate`, one explicit funding settlement timestamp, one no-order ready guarded result, one existing `NonSendingExecutionPlan`, one explicit caller-supplied approval, one explicit request timestamp, explicit `ProductRules`, and an injected deterministic boundary.
+4. It fails closed unless `ProductRules.live_trading_enabled is True`, the guarded result is exactly ready for the current Capture route and settlement, the non-sending plan is fresh and route-aligned, and approval is true, fresh, after guarded readiness, and exactly tied to the plan's prerequisite references.
+5. Missing, false, stale, malformed, cross-capture, cross-route, cross-settlement, disabled-live, non-ready guarded result, missing/stale plan, stale plan prerequisites, non-executable prerequisite evidence as represented by the guarded result, missing approval, false approval, stale approval, or cross-identity approval stops before the injected boundary is called.
+6. It does not call `evaluate_route()`, assemble snapshots, calculate EV/profitability, calculate VWAP/liquidity, replay funding or ledger history, write ledger events, call adapters, use credentials, create exchange request payloads, place real orders, mutate route eligibility, enable live trading by default, add route statuses, add reject reasons, or create a second decision, snapshot, verifier, ledger-write, replay, economics, live-runner, execution-planning, or order path.
 
 RX-005 adds deterministic offline orchestration over multiple fake route candidates:
 

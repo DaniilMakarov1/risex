@@ -2,19 +2,19 @@
 
 ## Task ID
 
-RX-029 — Explicit Approval-Gated Order Placement Boundary
+RX-030 — Read-Only Monitoring Dashboard Without Decisions Or Orders
 
 ## Objective
 
-Add the smallest explicit approval-gated order placement boundary downstream of the guarded no-order live runner. The workflow must consume one existing `Capture`, one existing `RouteCandidate`, one explicit funding settlement timestamp, one existing no-order ready guarded live runner result, one existing non-sending execution plan, and one explicit caller-supplied approval. Live trading must remain disabled by default, and tests must remain deterministic with injected fixtures only.
+Add the smallest read-only monitoring/dashboard surface for already-derived local evidence after the explicit approval-gated order-boundary task is reviewed and accepted. The dashboard must display one existing Capture, one existing RouteCandidate, one explicit funding settlement timestamp, existing route decision/evidence state, existing non-sending execution plan state, existing guarded no-order readiness state, and existing approval-boundary result state from caller-supplied deterministic fixtures only. It must not make decisions, poll venues, place orders, write ledger events, or change lifecycle state.
 
 ## Starting baseline
 
-Start from reviewer-accepted `main` after RX-028 is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
+Start from reviewer-accepted `main` after the explicit approval-gated order-boundary task is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
 
 ## Branch
 
-Create and work on `task/rx-029-explicit-approval-gated-order-placement-boundary`. Do not implement on `main`.
+Create and work on `task/rx-030-read-only-monitoring-dashboard-without-decisions-or-orders`. Do not implement on `main`.
 
 ## Before changing files
 
@@ -33,52 +33,44 @@ Read:
 
 ## Allowed scope
 
-- One explicit approval-gated order placement boundary for one existing Capture, route, funding settlement timestamp, guarded no-order ready result, and non-sending execution plan.
-- Reuse the existing guarded live runner result, non-sending execution-planning contract, route identity, product rules, and centralized execution owner module.
-- The workflow may require `ProductRules.live_trading_enabled is True`, but live trading must remain disabled by default.
-- Deterministic tests with injected fixtures only.
-- Minimal owner-module additions only where the worker DESIGN checkpoint proves they are necessary.
-- Required repository metadata updates after implementation.
+- One read-only dashboard or monitor view over one existing Capture and one existing route.
+- Use caller-supplied deterministic fixture inputs only.
+- Reuse existing Capture, RouteCandidate, DecisionResult, funding verification, ledger reconciliation, live-gate bundle, non-sending execution plan, guarded readiness, approval evidence, and approval-boundary result contracts.
+- Display status summaries and fail-closed missing-data states without recomputing product decisions.
+- Minimal app-layer code under the dashboard owner area only, plus focused deterministic tests and repository metadata updates.
 
 ## Forbidden scope
 
-- No automatic order placement.
-- No background loops, watchlists, route discovery, ranking, polling, monitoring dashboards, or paper lifecycle changes.
-- No private endpoints, credentials, account balances, exchange account state, or network-dependent tests.
-- No real exchange adapters or public market-data adapter changes.
-- No route evaluation, snapshot assembly, profitability calculation, funding verification changes, ledger reconciliation changes, live-gate bundle changes, or non-sending execution-planning changes unless strictly required by the order boundary contract.
-- No second route decision path, snapshot path, funding verifier, ledger-write path, replay path, VWAP/liquidity path, economics path, live-runner path, execution-planning path, or order path.
+- No route discovery, ranking, watchlists, background loops, polling, scheduling, alerts, or auto-refresh.
+- No venue adapters, public market-data calls, private endpoints, credentials, account balances, exchange account state, or network-dependent tests.
+- No order placement, sendable exchange request construction, order cancellation, order status fetching, or execution automation.
+- No route evaluation, snapshot assembly, profitability calculation, funding verification, ledger reconciliation, live-gate bundle checking, execution planning, guarded live runner execution, or approval-boundary execution unless strictly isolated to tests that provide already-derived fixture outputs.
+- No ledger writes, storage migrations, replay changes, paper lifecycle changes, route eligibility mutation, or Capture state transitions.
 - No EV, fee, funding, VWAP/liquidity, basis, spread, price-impact, slippage, max-level, hidden-buffer, or safety-margin filters.
-- No canary architecture.
-- No hold-next-cycle logic.
-- Do not enable live trading by default.
-- Do not promote monitoring, dashboards, or later roadmap work into this task.
+- No new route statuses, reject reasons, canary architecture, hold-next-cycle logic, or live trading by default.
 
 ## Implementation requirements
 
-- The order placement boundary must remain downstream of existing route decisions, funding settlement verification, ledger reconciliation, CapturePlan freshness, execution-capability evidence, live-gate bundle checks, non-sending execution planning, and guarded no-order live runner readiness.
-- Missing, stale, malformed, cross-capture, cross-route, cross-settlement, unverified funding, unreconciled ledger, stale plan prerequisites, non-executable execution capability evidence, missing non-sending plan, stale non-sending plan, disabled live switch, non-ready guarded result, missing approval, false approval, stale approval, or cross-identity approval must fail closed.
-- The workflow must not call `evaluate_route()`, assemble snapshots, calculate profitability, call venue adapters, replay funding or ledger history, write ledger events unless strictly justified by an accounting-owned event, or use real credentials.
-- Any future sendable material must be created only inside the authoritative `core/execution/` owner boundary and only after exact explicit approval has passed.
-- Tests must inject all prerequisite evidence and avoid live network dependency.
-- Worker policy: this task touches execution-boundary and order-placement safety boundaries, so one supervised worker/subagent is required before implementation edits. If worker tooling is unavailable, stop before edits and report the blocker.
-- The worker must stop at DESIGN CHECKPOINT before edits and at CODE, TEST, and VALIDATION checkpoints if it continues.
+- The dashboard must remain read-only and downstream of existing owner modules.
+- Missing, malformed, stale, cross-capture, cross-route, cross-settlement, unverified, unreconciled, non-ready, disabled-live, false approval, stale approval, or boundary-blocked inputs must render as blocked/missing state instead of recalculating or silently normalizing values.
+- The implementation must not call `evaluate_route()`, assemble snapshots, calculate profitability, call venue adapters, replay funding or ledger history, write ledger events, call order-boundary execution, use real credentials, or perform network I/O.
+- Any display model must preserve unknown/missing economics as missing rather than zero.
+- Tests must inject all input evidence and avoid live network dependency.
+- Use a supervised worker/subagent before implementation edits if the final design touches execution-boundary, order-placement safety, accounting/reconciliation, or broad owner-boundary code. If the work stays strictly read-only app/dashboard display code, worker use is optional under `AGENTS.md`.
 - Parent owns steering, final diff review, validation, commit, push, and final report.
-- Worker must not commit, push, merge, approve work, or start unrelated scope.
 
 ## Required files
 
-- Likely `core/execution/orders.py`
-- Likely `apps/live_runner/` only if the existing guarded no-order result needs a strictly necessary compatibility check
+- Likely `apps/dashboard/`
 - Likely focused tests under `tests/unit/`
 - Repository metadata files required by `AGENTS.md`
-- Do not touch product code outside owner modules required by the final design checkpoint.
+- Do not touch product code outside owner modules required by the final design.
 
 ## Required tests
 
 - `python3 scripts/validate_next_task.py`
 - `python3 -m pytest tests/invariant`
-- Focused approval-gated order-boundary tests for live-disabled fail-closed behavior, missing/false/stale/cross-identity approval, missing/stale prerequisite evidence, non-ready guarded result, successful explicit approval through injected deterministic order boundary, and no network or credential dependency
+- Focused read-only dashboard tests for exact identity rendering, missing/malformed/cross-identity fail-closed display state, blocked guarded readiness, blocked approval-boundary result, unknown economics preserved as missing, and no network/order/ledger dependency
 - `python3 -m pytest`
 - `python3 -m compileall apps core storage tests scripts`
 - `python3 -m apps.cli.main`
