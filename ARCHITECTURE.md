@@ -53,7 +53,7 @@ tests/
 - `ValueSource`: `DOCUMENTED`, `OBSERVED`, `ESTIMATED_FROM_ORDERBOOK`, `ESTIMATED_FROM_LAST_VALUE`, `USER_CONFIGURED`, `UNKNOWN`.
 - `RejectReason`: the centralized route rejection and live-gate reason enum.
 - `FundingCheckpointRequirement`: one required pre-settlement observation offset for future settlement proof.
-- `FundingSettlementVerificationResult`: deterministic replay result proving whether fake checkpoint evidence and fake observed settlement evidence agree for one Capture settlement.
+- `FundingSettlementVerificationResult`: deterministic replay result proving whether checkpoint evidence and approval-gated observed settlement evidence agree for one Capture settlement.
 - `LedgerReconciliationResult`: deterministic replay result proving whether one Capture ledger history is internally consistent and explicitly reconciled.
 - `LiveGateEvidenceBundleReplayResult`: deterministic accounting replay result proving whether one recorded fake live-gate evidence bundle check is well-formed, current, and consistent with the existing bundle gate result.
 - `PaperResultExplanation`: app-local fake paper result attribution copied from the input `DecisionResult`, including start/non-start blockers and existing PnL components without recalculating profitability.
@@ -256,6 +256,16 @@ RX-025 adds a narrow one-route real-data research runner:
 4. It calls `evaluate_route(route, snapshot, mode)` only after successful snapshot assembly and passes no ledger.
 5. Adapter failures, non-observation returns, or contradictory route/observation metadata fail closed as `RejectReason.REQUIRED_LIVE_DATA_MISSING` before evaluation.
 6. It does not discover routes, rank routes, loop in the background, write ledger events, start paper lifecycle, verify funding settlement, create plans, call execution modules, connect to private endpoints, place orders, or add live runner behavior.
+
+RX-026 adds one approval-gated funding settlement verification workflow:
+
+1. `core/monitoring/funding_settlement.py` owns `verify_approval_gated_funding_settlement()`.
+2. The workflow accepts one existing `Capture`, one existing `RouteCandidate`, one explicit timezone-aware funding settlement timestamp, one explicit approval flag, one explicit observation timestamp, and caller-supplied actual settlement funding/notional evidence.
+3. It validates that the `Capture`, `RouteCandidate`, and explicit settlement timestamp match before appending evidence.
+4. It records settlement evidence only through the existing `append_funding_settlement_evidence_event()` helper and existing `funding_settlement_evidence_recorded` event type.
+5. Canonical funding settlement replay requires `approval_granted=True`, `observed_at == settlement_time`, and actual funding/notional values with `ValueSource.OBSERVED`; missing, false, stale, malformed, cross-capture, cross-route, cross-settlement, unobserved, unknown, or contradictory evidence fails closed.
+6. It then calls the existing `verify_funding_settlement()` replay path and does not calculate verification success itself.
+7. It does not call `evaluate_route()`, assemble snapshots, calculate EV/profitability, reconcile ledgers, mutate route eligibility, start paper lifecycle, create plans, call execution modules, connect to private endpoints, place orders, or add live runner behavior.
 
 RX-005 adds deterministic offline orchestration over multiple fake route candidates:
 

@@ -457,6 +457,7 @@ def _funding_settlement_evidence_payload_is_well_formed(payload: Mapping[str, An
         and _payload_str(payload, "route_id") is not None
         and _payload_datetime(payload, "settlement_time") is not None
         and _payload_datetime(payload, "observed_at") is not None
+        and type(payload.get("approval_granted")) is bool
         and _estimated_value_payload_is_well_formed(payload, "actual_risex_funding_usd")
         and _estimated_value_payload_is_well_formed(payload, "actual_hedge_funding_usd")
         and _estimated_value_payload_is_well_formed(payload, "actual_risex_notional_usd")

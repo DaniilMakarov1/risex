@@ -45,6 +45,8 @@ The single authoritative code contract for these constants is `ProductRules`.
 - Read-only venue adapters, real market-data snapshot assembly, and real-data research runners are data-ingestion and research stages only. They are not permission to place orders, enable live trading, or create executable order plans.
 - The real market-data snapshot handoff may fetch one RiseX observation and one Hyperliquid observation for one existing route, then must delegate to `assemble_route_snapshot()` without route decisions, profitability calculations, ledger writes, paper lifecycle, execution planning, or live runner behavior.
 - The real-data research runner may evaluate one explicit existing route only by calling the existing adapter handoff and then `evaluate_route(route, snapshot, mode)`. It must fail closed before evaluation on adapter or snapshot handoff failures and must not write ledger events, start paper lifecycle, verify funding settlement, plan execution, place orders, or add live runner behavior.
+- Approval-gated funding settlement verification may record only explicit caller-supplied observed settlement evidence for one existing `Capture`, one existing `RouteCandidate`, and one explicit settlement timestamp. It is not permission to trade live by itself.
+- Approval-gated settlement evidence must carry `approval_granted=True`, an observation timestamp equal to the explicit settlement timestamp, and actual funding/notional values with `ValueSource.OBSERVED`; missing approval, false approval, stale observations, unknown values, unobserved sources, malformed payloads, cross-capture, cross-route, cross-settlement, or contradictory evidence fails closed.
 - Execution planning without orders, a guarded live runner, and order placement must remain separate future tasks with explicit acceptance gates.
 
 ## Route statuses
@@ -86,7 +88,7 @@ Unknown values must not silently become zero. If a fee is unknown, use only a us
 
 `RouteCandidate.target_notional_usd` must be an explicit positive finite `Decimal`. Unknown, missing, non-numeric, non-finite, zero, or negative target notionals must fail at construction instead of becoming zero or a default notional. Positive target notionals below `MIN_LEG_NOTIONAL_USD` fail through the centralized minimum-notional route evaluation gate.
 
-Actual settlement funding and actual settlement notional evidence are proof inputs for funding settlement verification. They must be `OBSERVED`; documented, estimated, user-configured, unknown, missing, malformed, or non-positive notional actuals are not proof. Ledger reconciliation must verify any recorded funding settlement result against the canonical funding verifier replay from raw checkpoint and settlement evidence.
+Actual settlement funding and actual settlement notional evidence are proof inputs for funding settlement verification. They must be explicitly approved, observed at the settlement timestamp, and `OBSERVED`; documented, estimated, user-configured, unknown, missing, malformed, stale, or non-positive notional actuals are not proof. Ledger reconciliation must verify any recorded funding settlement result against the canonical funding verifier replay from raw checkpoint and settlement evidence.
 
 Ledger reconciliation is a replay contract for append-only history consistency. It must not calculate profitability, mutate route decisions, create live plans, place orders, or silently treat missing, duplicated, non-contiguous, out-of-order, unknown, malformed, stale, or contradictory evidence as reconciled.
 

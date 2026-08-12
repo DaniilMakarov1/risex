@@ -7,6 +7,8 @@ from datetime import timedelta
 from decimal import Decimal
 from pathlib import Path
 
+import pytest
+
 from apps.paper_runner.lifecycle import run_paper_lifecycle
 from apps.research_runner.fake_data import build_fake_route_and_snapshot
 from core.accounting.ledger import (
@@ -17,13 +19,14 @@ from core.accounting.ledger import (
     append_funding_settlement_evidence_event,
 )
 from core.config.product_rules import ProductRules
-from core.domain.contracts import EstimatedValue, RouteCandidate, VenueSnapshot
+from core.domain.contracts import Capture, EstimatedValue, RouteCandidate, VenueSnapshot
 from core.domain.enums import EvaluationMode, RejectReason, RouteStatus, ValueSource
 from core.monitoring.funding_settlement import (
     REQUIRED_FUNDING_CHECKPOINTS,
     FundingCheckpointLabel,
     FundingSettlementVerificationReason,
     replay_funding_settlement_verification,
+    verify_approval_gated_funding_settlement,
     verify_funding_settlement,
 )
 from core.pipeline.evaluate import evaluate_route
@@ -92,6 +95,7 @@ def _append_settlement_evidence(
     *,
     route: RouteCandidate,
     snapshot: VenueSnapshot,
+    route_id: str | None = None,
     actual_risex_funding_usd: EstimatedValue | None = None,
     actual_hedge_funding_usd: EstimatedValue | None = None,
     actual_risex_notional_usd: EstimatedValue | None = None,
@@ -100,9 +104,10 @@ def _append_settlement_evidence(
     append_funding_settlement_evidence_event(
         ledger,
         capture_id=route.capture_id,
-        route_id=route.route_id,
+        route_id=route_id or route.route_id,
         settlement_time=snapshot.risex_funding_settlement_at,
         observed_at=snapshot.risex_funding_settlement_at,
+        approval_granted=True,
         actual_risex_funding_usd=actual_risex_funding_usd or snapshot.funding.risex_funding_usd,
         actual_hedge_funding_usd=actual_hedge_funding_usd or snapshot.funding.hedge_funding_usd,
         actual_risex_notional_usd=actual_risex_notional_usd or _observed(route.target_notional_usd),
@@ -118,6 +123,207 @@ def _append_complete_evidence(
 ) -> None:
     _append_required_checkpoints(ledger, route=route, snapshot=snapshot)
     _append_settlement_evidence(ledger, route=route, snapshot=snapshot)
+
+
+def test_approval_gated_verification_records_explicit_observed_settlement_evidence() -> None:
+    ledger = InMemoryLedger()
+    route, snapshot = _started_paper_capture(ledger)
+    _append_required_checkpoints(ledger, route=route, snapshot=snapshot)
+    capture = Capture(
+        capture_id=route.capture_id,
+        route_id=route.route_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+    )
+
+    result = verify_approval_gated_funding_settlement(
+        ledger,
+        capture=capture,
+        route=route,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        approval_granted=True,
+        observed_at=snapshot.risex_funding_settlement_at,
+        actual_risex_funding_usd=snapshot.funding.risex_funding_usd,
+        actual_hedge_funding_usd=snapshot.funding.hedge_funding_usd,
+        actual_risex_notional_usd=_observed(route.target_notional_usd),
+        actual_hedge_notional_usd=_observed(route.target_notional_usd),
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+
+    assert result.verified is True
+    assert result.reasons == ()
+    settlement_event = ledger.records()[-2]
+    verification_event = ledger.records()[-1]
+    assert settlement_event.event_type == LedgerEventType.FUNDING_SETTLEMENT_EVIDENCE_RECORDED.value
+    assert settlement_event.payload["approval_granted"] is True
+    assert settlement_event.payload["actual_risex_funding_usd"]["source"] == ValueSource.OBSERVED.value
+    assert settlement_event.payload["actual_hedge_funding_usd"]["source"] == ValueSource.OBSERVED.value
+    assert settlement_event.payload["actual_risex_notional_usd"]["source"] == ValueSource.OBSERVED.value
+    assert settlement_event.payload["actual_hedge_notional_usd"]["source"] == ValueSource.OBSERVED.value
+    assert verification_event.event_type == LedgerEventType.FUNDING_SETTLEMENT_VERIFICATION_RECORDED.value
+    assert verification_event.payload["verified"] is True
+
+
+def test_approval_gated_verification_requires_explicit_approval() -> None:
+    ledger = InMemoryLedger()
+    route, snapshot = _started_paper_capture(ledger)
+    _append_required_checkpoints(ledger, route=route, snapshot=snapshot)
+    capture = Capture(
+        capture_id=route.capture_id,
+        route_id=route.route_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+    )
+
+    result = verify_approval_gated_funding_settlement(
+        ledger,
+        capture=capture,
+        route=route,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        approval_granted=False,
+        observed_at=snapshot.risex_funding_settlement_at,
+        actual_risex_funding_usd=snapshot.funding.risex_funding_usd,
+        actual_hedge_funding_usd=snapshot.funding.hedge_funding_usd,
+        actual_risex_notional_usd=_observed(route.target_notional_usd),
+        actual_hedge_notional_usd=_observed(route.target_notional_usd),
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+
+    assert result.verified is False
+    assert FundingSettlementVerificationReason.UNOBSERVED_SETTLEMENT_EVIDENCE in result.reasons
+    assert ledger.records()[-2].payload["approval_granted"] is False
+    assert ledger.records()[-1].payload["verified"] is False
+
+
+def test_approval_gated_verification_rejects_stale_settlement_observation() -> None:
+    ledger = InMemoryLedger()
+    route, snapshot = _started_paper_capture(ledger)
+    _append_required_checkpoints(ledger, route=route, snapshot=snapshot)
+    capture = Capture(
+        capture_id=route.capture_id,
+        route_id=route.route_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+    )
+
+    result = verify_approval_gated_funding_settlement(
+        ledger,
+        capture=capture,
+        route=route,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        approval_granted=True,
+        observed_at=snapshot.risex_funding_settlement_at + timedelta(seconds=1),
+        actual_risex_funding_usd=snapshot.funding.risex_funding_usd,
+        actual_hedge_funding_usd=snapshot.funding.hedge_funding_usd,
+        actual_risex_notional_usd=_observed(route.target_notional_usd),
+        actual_hedge_notional_usd=_observed(route.target_notional_usd),
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+
+    assert result.verified is False
+    assert FundingSettlementVerificationReason.INCONSISTENT_SETTLEMENT_EVIDENCE in result.reasons
+    assert ledger.records()[-1].payload["verified"] is False
+
+
+def test_settlement_evidence_without_approval_payload_fails_closed() -> None:
+    ledger = InMemoryLedger()
+    route, snapshot = _started_paper_capture(ledger)
+    _append_required_checkpoints(ledger, route=route, snapshot=snapshot)
+    ledger.append(
+        event_type=LedgerEventType.FUNDING_SETTLEMENT_EVIDENCE_RECORDED,
+        payload={
+            "capture_id": route.capture_id,
+            "route_id": route.route_id,
+            "settlement_time": snapshot.risex_funding_settlement_at.isoformat(),
+            "observed_at": snapshot.risex_funding_settlement_at.isoformat(),
+            "actual_risex_funding_usd": {
+                "value": str(snapshot.funding.risex_funding_usd.value),
+                "source": ValueSource.OBSERVED.value,
+            },
+            "actual_hedge_funding_usd": {
+                "value": str(snapshot.funding.hedge_funding_usd.value),
+                "source": ValueSource.OBSERVED.value,
+            },
+            "actual_risex_notional_usd": {
+                "value": str(route.target_notional_usd),
+                "source": ValueSource.OBSERVED.value,
+            },
+            "actual_hedge_notional_usd": {
+                "value": str(route.target_notional_usd),
+                "source": ValueSource.OBSERVED.value,
+            },
+        },
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+
+    result = verify_funding_settlement(
+        ledger,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+
+    assert result.verified is False
+    assert FundingSettlementVerificationReason.UNOBSERVED_SETTLEMENT_EVIDENCE in result.reasons
+
+
+def test_approval_gated_verification_rejects_cross_identity_inputs_before_append() -> None:
+    ledger = InMemoryLedger()
+    route, snapshot = _started_paper_capture(ledger)
+    _append_required_checkpoints(ledger, route=route, snapshot=snapshot)
+    capture = Capture(
+        capture_id=route.capture_id,
+        route_id=route.route_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+    )
+    initial_event_count = len(ledger.records())
+
+    bad_route = replace(route, route_id="other-route")
+    with pytest.raises(ValueError, match="capture and route identity must match"):
+        verify_approval_gated_funding_settlement(
+            ledger,
+            capture=capture,
+            route=bad_route,
+            settlement_time=snapshot.risex_funding_settlement_at,
+            approval_granted=True,
+            observed_at=snapshot.risex_funding_settlement_at,
+            actual_risex_funding_usd=snapshot.funding.risex_funding_usd,
+            actual_hedge_funding_usd=snapshot.funding.hedge_funding_usd,
+            actual_risex_notional_usd=_observed(route.target_notional_usd),
+            actual_hedge_notional_usd=_observed(route.target_notional_usd),
+            recorded_at=snapshot.risex_funding_settlement_at,
+        )
+
+    with pytest.raises(ValueError, match="capture settlement_time must match settlement_time"):
+        verify_approval_gated_funding_settlement(
+            ledger,
+            capture=capture,
+            route=route,
+            settlement_time=snapshot.risex_funding_settlement_at + timedelta(hours=8),
+            approval_granted=True,
+            observed_at=snapshot.risex_funding_settlement_at,
+            actual_risex_funding_usd=snapshot.funding.risex_funding_usd,
+            actual_hedge_funding_usd=snapshot.funding.hedge_funding_usd,
+            actual_risex_notional_usd=_observed(route.target_notional_usd),
+            actual_hedge_notional_usd=_observed(route.target_notional_usd),
+            recorded_at=snapshot.risex_funding_settlement_at,
+        )
+
+    assert len(ledger.records()) == initial_event_count
+
+
+def test_cross_route_settlement_evidence_fails_closed() -> None:
+    ledger = InMemoryLedger()
+    route, snapshot = _started_paper_capture(ledger)
+    _append_required_checkpoints(ledger, route=route, snapshot=snapshot)
+    _append_settlement_evidence(ledger, route=route, snapshot=snapshot, route_id="other-route")
+
+    result = verify_funding_settlement(
+        ledger,
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+
+    assert result.verified is False
+    assert FundingSettlementVerificationReason.INCONSISTENT_CAPTURE_IDENTITY in result.reasons
 
 
 def test_verifier_records_successful_fake_settlement_from_required_checkpoints() -> None:

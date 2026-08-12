@@ -2,19 +2,19 @@
 
 ## Task ID
 
-RX-026 — Approval-Gated Real Funding Settlement Verification
+RX-027 — Execution Planning Without Orders
 
 ## Objective
 
-Add the smallest approval-gated funding settlement verification path for one existing Capture, one existing `RouteCandidate`, and one explicit funding settlement timestamp. It must reuse the existing funding settlement verification and append-only ledger boundaries, consume only explicitly approved observed settlement evidence, and remain non-trading.
+Add the smallest non-sending execution planning contract for one existing Capture, one existing `RouteCandidate`, one explicit funding settlement timestamp, and already-verified prerequisite evidence. The plan must describe intended entry and unwind actions without sending orders, calling private endpoints, mutating route eligibility, or enabling live trading.
 
 ## Starting baseline
 
-Start from reviewer-accepted `main` after the one-route real-data research runner is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
+Start from reviewer-accepted `main` after the approval-gated funding settlement verification task is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
 
 ## Branch
 
-Create and work on `task/rx-026-approval-gated-funding-verification`. Do not implement on `main`.
+Create and work on `task/rx-027-execution-planning-without-orders`. Do not implement on `main`.
 
 ## Before changing files
 
@@ -33,49 +33,51 @@ Read:
 
 ## Allowed scope
 
-- One funding settlement verification workflow for one explicit existing Capture, route, and settlement timestamp.
-- Reuse existing funding settlement verification owner logic in `core/monitoring/funding_settlement.py`.
-- Reuse existing append-only ledger event helpers in `core/accounting/ledger.py` when evidence or verification results must be recorded.
-- Accept only explicit observed settlement evidence supplied by the caller or deterministic tests.
+- One non-sending execution planning workflow for one explicit existing Capture, route, and settlement timestamp.
+- Reuse existing `RouteCandidate`, `Capture`, funding verification, ledger reconciliation, CapturePlan freshness, and execution-capability evidence contracts where applicable.
+- Plan output may describe intended venues, symbols, sides, target notional, settlement timestamp, and required prerequisite evidence references.
 - Deterministic tests with injected fixtures only.
-- Minimal app wiring only if needed.
+- Minimal owner-module additions only where the final design checkpoint proves they are necessary.
 - Required repository metadata updates after implementation.
 
 ## Forbidden scope
 
-- No route ranking, broad discovery, watchlists, background loops, paper lifecycle changes, real-data route runner changes, execution planning, orders, live runner behavior, credentials, private endpoints, or live trading.
-- No automatic venue polling or private account balance fetching.
-- No second funding verifier, second ledger-write path, second replay path, second route decision path, or second snapshot assembly path.
+- No order placement.
+- No live runner behavior.
+- No private endpoints, credentials, account balances, exchange account state, automatic polling, or network-dependent tests.
+- No route discovery, ranking, watchlists, background loops, paper lifecycle changes, real-data research runner behavior changes, funding settlement verifier changes unless strictly required by the plan contract.
+- No second route decision path, snapshot path, funding verifier, ledger-write path, replay path, VWAP/liquidity path, economics path, or live execution path.
 - No EV, fee, funding, VWAP/liquidity, basis, spread, price-impact, slippage, max-level, hidden-buffer, or safety-margin filters.
 - No canary architecture.
 - No hold-next-cycle logic.
 - No speculative helpers, wrappers, unused abstractions, or future hooks.
-- Do not implement execution planning, guarded live runner behavior, order placement, monitoring, or dashboards.
+- Do not add monitoring, dashboards, guarded live runner behavior, or order placement.
 
 ## Implementation requirements
 
-- Require explicit approval/evidence inputs before treating settlement data as observed.
-- Unknown, missing, stale, malformed, cross-capture, cross-route, cross-settlement, unobserved, or contradictory evidence must fail closed.
-- Verification must remain downstream of existing route decisions and snapshots and must not mutate route eligibility.
-- Any ledger writes must use existing append-only ledger helpers; do not add update/delete behavior.
-- Do not call `evaluate_route()`, assemble snapshots, calculate profitability, create plans, import execution/live runner modules, or place orders.
-- Tests must inject observed evidence fixtures and avoid live network dependency.
-- Worker policy: this task touches funding settlement and ledger boundaries, so one supervised worker/subagent is required before implementation edits. If worker tooling is unavailable, stop before edits and report the blocker. The worker must stop at DESIGN CHECKPOINT before edits and at CODE, TEST, and VALIDATION checkpoints if it continues.
+- Plans must be non-executable evidence only and must not contain exchange credentials or sendable API requests.
+- Missing, stale, malformed, cross-capture, cross-route, cross-settlement, unverified funding, unreconciled ledger, stale plan prerequisites, or non-executable execution capability evidence must fail closed.
+- Planning must remain downstream of existing route decisions, settlement verification, ledger reconciliation, and execution-capability evidence.
+- Any ledger writes, if strictly needed, must use existing append-only ledger helpers or a narrowly justified accounting-owned event; do not add update/delete behavior.
+- Do not call `evaluate_route()`, assemble snapshots, calculate profitability, call venue adapters, import live runner behavior, or place orders.
+- Tests must inject all prerequisite evidence and avoid live network dependency.
+- Worker policy: this task touches execution-boundary and live-adjacent safety boundaries, so one supervised worker/subagent is required before implementation edits. If worker tooling is unavailable, stop before edits and report the blocker. The worker must stop at DESIGN CHECKPOINT before edits and at CODE, TEST, and VALIDATION checkpoints if it continues.
 - Parent owns steering, final diff review, validation, commit, push, and final report.
 
 ## Required files
 
-- Likely `core/monitoring/funding_settlement.py`
-- Likely `core/accounting/ledger.py`
+- Likely `core/execution/`
+- Likely `core/domain/contracts.py` only if a new narrow non-sending plan contract is strictly necessary
+- Likely `core/risk/gates.py` only if prerequisite gating must be reused or extended
 - Likely focused tests under `tests/unit/` or `tests/replay/`
 - Repository metadata files required by `AGENTS.md`
-- Do not touch product code outside the owner modules required by the final design checkpoint.
+- Do not touch product code outside owner modules required by the final design checkpoint.
 
 ## Required tests
 
 - `python3 scripts/validate_next_task.py`
 - `python3 -m pytest tests/invariant`
-- Focused funding settlement verification tests for explicit observed evidence and fail-closed missing/malformed/contradictory evidence
+- Focused execution planning tests for successful non-sending plans and fail-closed missing/stale/malformed/cross-identity prerequisite evidence
 - `python3 -m pytest`
 - `python3 -m compileall apps core storage tests scripts`
 - `python3 -m apps.cli.main`

@@ -1,7 +1,9 @@
 # Status
 
-- Current branch: `main`.
+- Current branch: `task/rx-026-approval-gated-funding-verification`.
 - Latest accepted product task: RX-025 — Real-Data Research Runner.
+- Current product branch task: RX-026 — Approval-Gated Real Funding Settlement Verification.
+- RX-026 starting baseline: `709cf6c6e1b32ccb06f57d66ee18d862fef2056c`
 - Accepted RX-025 implementation HEAD: `c684c167579372b06c4400858bcff0763ecf1b38`
 - RX-025 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
 - RX-025 starting baseline: `d2ef60e9ba5d0d06da23755c389d9981a66a22d7`
@@ -50,7 +52,7 @@
 - Accepted baseline branch: `main`
 - Current accepted `main` governance task: RX-Q004.
 - Current accepted `main` product task: RX-025.
-- Current RX task state: RX-025 is reviewer-accepted and finalized on `main`; `NEXT_TASK.md` keeps RX-026 as the immediate next task and RX-026 has not been started.
+- Current RX task state: RX-026 is implemented on `task/rx-026-approval-gated-funding-verification` and awaiting reviewer acceptance; `NEXT_TASK.md` keeps RX-027 as the immediate next task after RX-026 review.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
@@ -69,7 +71,7 @@ RX-013 remains the previous accepted product baseline before RX-014.
 RX-012 remains the previous accepted product baseline before RX-013.
 RX-Q001 remains the previous accepted governance baseline before RX-Q002.
 RX-011 remains the previous accepted product implementation baseline before RX-012.
-`NEXT_TASK.md` is prepared for RX-026 after RX-025 finalization.
+`NEXT_TASK.md` is prepared for RX-027 after RX-026 implementation.
 
 ## Completed accepted tasks
 
@@ -119,6 +121,8 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - Append-only ledger event contracts and helpers live in `core/accounting/ledger.py`.
 - Existing `paper_capture_opened` and `paper_rejection_recorded` ledger events may carry optional paper-result explanation payloads; reconciliation validates their shape and fails closed on contradictory well-formed explanation fields without replaying profitability.
 - Deterministic offline funding settlement verifier lives in `core/monitoring/funding_settlement.py`.
+- Approval-gated funding settlement verification also lives in `core/monitoring/funding_settlement.py` and reuses canonical funding settlement replay for one existing Capture, route, and explicit settlement timestamp.
+- Funding settlement evidence recorded through `core/accounting/ledger.py` now requires explicit `approval_granted` evidence; canonical replay requires `approval_granted=True`, `observed_at == settlement_time`, and actual funding/notional values with `ValueSource.OBSERVED`.
 - Deterministic offline ledger reconciliation lives in `core/accounting/reconciliation.py`.
 - Ledger reconciliation records checked `event_count` and `last_sequence`, and `is_ledger_explicitly_reconciled(ledger.records())` returns true only for the exact current append-only history.
 - Deterministic fake CapturePlan freshness evidence lives in `core/domain/contracts.py` as `CapturePlanFreshnessEvidence`.
@@ -152,6 +156,7 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - One read-only Hyperliquid public market-data adapter exists in `core/venues/hyperliquid.py`.
 - One real market-data route snapshot handoff exists in `core/pipeline/snapshot.py` and delegates to `assemble_route_snapshot()` for one existing route at a time.
 - One real-data research runner exists in `apps/research_runner/real_data.py` and evaluates one explicit existing route at a time through the existing adapter handoff and `evaluate_route()` path.
+- One approval-gated funding settlement verification workflow exists in `core/monitoring/funding_settlement.py`; it records explicit caller-supplied observed settlement evidence through the existing ledger helper and does not call `evaluate_route()`, assemble snapshots, calculate profitability, reconcile ledgers, plan execution, place orders, or enable live trading.
 - No paper exchange simulation, live runner behavior, orders, or live trading.
 
 ## Current repository governance status
@@ -169,13 +174,26 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 ## Current roadmap status
 
 - RX-008 through RX-016 are accepted fail-closed offline safety-hardening detour tasks.
-- The project continues along the intended product implementation path after RX-025.
+- The project continues along the intended product implementation path after RX-026.
 - RX-022 is reviewer-accepted and finalized on `main`.
 - RX-023 is reviewer-accepted and finalized on `main`.
 - RX-024 is reviewer-accepted and finalized on `main`.
 - RX-025 is reviewer-accepted and finalized on `main`.
-- The next recommended product task is approval-gated funding settlement verification, followed by execution planning without orders, guarded live runner after explicit acceptance gates, order placement only in a future explicitly approved task, and read-only monitoring/dashboard later.
+- RX-026 is implemented on `task/rx-026-approval-gated-funding-verification` and awaits reviewer acceptance.
+- The next recommended product task is execution planning without orders, followed by guarded live runner after explicit acceptance gates, order placement only in a future explicitly approved task, and read-only monitoring/dashboard later.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized.
+
+## Tests last reported for RX-026 branch
+
+- `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
+- `python3 -m pytest tests/invariant`: `36 passed in 0.21s`
+- `python3 -m pytest tests/replay/test_funding_settlement_verifier.py`: `21 passed in 0.07s`
+- `python3 -m pytest tests/replay/test_ledger_reconciliation.py tests/replay/test_live_gate_evidence_bundle.py tests/replay/test_capture_plan_freshness.py tests/replay/test_execution_capability.py`: `73 passed in 0.37s`
+- `python3 -m pytest`: `418 passed in 0.63s`
+- `python3 -m compileall apps core storage tests scripts`: exit 0
+- `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
+- `git diff --check`: exit 0
+- `git diff --cached --check`: exit 0
 
 ## Tests last reported for RX-025 branch
 
@@ -356,7 +374,8 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 
 ## Known limitations
 
-- Funding settlement verifier, ledger reconciliation, and CapturePlan freshness remain deterministic fake offline replay scaffolding only.
+- Funding settlement verifier, ledger reconciliation, and CapturePlan freshness remain deterministic offline replay scaffolding only.
+- Approval-gated funding settlement verification consumes only explicit caller/test-supplied observed settlement evidence; it does not poll venues, read private account state, reconcile ledgers, mutate route eligibility, plan execution, place orders, or enable live trading.
 - Execution capability remains deterministic fake offline gate scaffolding only.
 - Live gate evidence bundle remains deterministic fake offline gate scaffolding only.
 - Live gate evidence bundle ledger recording remains deterministic fake offline accounting scaffolding only.
@@ -373,6 +392,7 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - No live trading.
 - No live `CapturePlan` creation.
 - Fresh CapturePlan evidence is not permission to trade live by itself.
+- Approval-gated verified settlement evidence is not permission to trade live by itself.
 - Fresh execution capability evidence is not permission to trade live by itself.
 - Exact fake live gate evidence bundle is not permission to trade live by itself.
 - Replayed successful fake live gate evidence bundle ledger recording is not permission to trade live by itself.
@@ -383,4 +403,4 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 
 ## Next recommended task
 
-RX-026 — Approval-Gated Real Funding Settlement Verification.
+RX-027 — Execution Planning Without Orders.

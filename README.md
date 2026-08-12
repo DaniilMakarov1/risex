@@ -2,7 +2,7 @@
 
 RiseX Points Farmer is a modular-monolith research system for capture-centric hedged funding opportunities on RiseX with hedge venue support, initially Hyperliquid.
 
-The current branch remains a non-trading research, fake paper-lifecycle, funding-verification, and ledger-reconciliation skeleton. Offline runners still use fake data and do not place orders. RX-022 adds one read-only RiseX public market-data adapter, RX-023 adds one read-only Hyperliquid public market-data adapter, RX-024 adds one narrow real market-data route snapshot assembly handoff, and RX-025 adds one-route real-data research runner behavior. These data-ingestion pieces do not use credentials, private account endpoints, live runner behavior, or real API keys.
+The current branch remains a non-trading research, fake paper-lifecycle, funding-verification, and ledger-reconciliation skeleton. Offline runners still use fake data and do not place orders. RX-022 adds one read-only RiseX public market-data adapter, RX-023 adds one read-only Hyperliquid public market-data adapter, RX-024 adds one narrow real market-data route snapshot assembly handoff, RX-025 adds one-route real-data research runner behavior, and RX-026 adds one approval-gated funding settlement verification path for explicit caller-supplied observed evidence. These pieces do not use credentials, private account endpoints, live runner behavior, or real API keys.
 
 ## Product baseline
 
@@ -12,9 +12,9 @@ The current branch remains a non-trading research, fake paper-lifecycle, funding
 - `MIN_LEG_NOTIONAL_USD = 500`.
 - `MIN_NET_PROFIT_USD = 1`.
 - Live trading is disabled by default.
-- Future live gate evidence is fail-closed and currently requires verified fake funding settlement evidence, explicit ledger reconciliation derived from current append-only ledger history, exactly one fresh fake CapturePlan evidence record, and exactly one fresh fake execution-capability evidence record for the current Capture, route, and funding settlement opportunity.
+- Future live gate evidence is fail-closed and currently requires verified funding settlement evidence from canonical replay, explicit ledger reconciliation derived from current append-only ledger history, exactly one fresh fake CapturePlan evidence record, and exactly one fresh fake execution-capability evidence record for the current Capture, route, and funding settlement opportunity.
 - Where the fake live gate evidence bundle path is used, the bundle must match the current Capture, route, and funding settlement opportunity and carry the already-derived funding verification, explicit ledger reconciliation, CapturePlan freshness, and execution-capability evidence.
-- Missing, stale, duplicated, cross-capture, cross-route, cross-settlement, unverified funding, false reconciliation, or non-executable execution evidence fails closed. Exact fake evidence still does not permit `LIVE_ELIGIBLE`; live trading remains disabled by default and current route decisions stop at `PAPER_ELIGIBLE` with `LIVE_GATES_NOT_IMPLEMENTED`.
+- Missing, stale, duplicated, cross-capture, cross-route, cross-settlement, unverified funding, false reconciliation, or non-executable execution evidence fails closed. Exact gate evidence still does not permit `LIVE_ELIGIBLE`; live trading remains disabled by default and current route decisions stop at `PAPER_ELIGIBLE` with `LIVE_GATES_NOT_IMPLEMENTED`.
 - Route statuses are `RESEARCH_ONLY`, `PAPER_ELIGIBLE`, `LIVE_ELIGIBLE`, and `REJECTED`.
 - `CANARY_ELIGIBLE` and a separate canary runner are forbidden.
 - `RouteCandidate` is the authoritative route identity and selected-notional contract. Empty or malformed capture/route identity, venues, symbols, entry sides, or target notional fail at construction; positive notionals below the product minimum still fail through the existing route-evaluation minimum-notional gate.
@@ -23,7 +23,7 @@ The current branch remains a non-trading research, fake paper-lifecycle, funding
 
 RX-008 through RX-016 are accepted fail-closed offline safety hardening. They prove funding verification, ledger reconciliation, fake CapturePlan freshness, fake execution capability, fake live-gate bundle checks, and SQLite replay behavior from deterministic evidence. They are not a product strategy change, not executable live architecture, and not permission to keep adding offline scaffolding ahead of the current task.
 
-RX-022 adds a read-only RiseX observation adapter only. RX-023 adds a read-only Hyperliquid observation adapter only. RX-024 adds a one-route real market-data snapshot handoff only. RX-025 adds a one-route real-data research runner only. Later roadmap stages must be promoted through `NEXT_TASK.md` one at a time and remain gated: funding settlement verification with explicit approval, execution planning without orders, guarded live runner work only after accepted gates, future order placement only after explicit approval, and read-only monitoring/dashboard work later.
+RX-022 adds a read-only RiseX observation adapter only. RX-023 adds a read-only Hyperliquid observation adapter only. RX-024 adds a one-route real market-data snapshot handoff only. RX-025 adds a one-route real-data research runner only. RX-026 adds approval-gated funding settlement verification only. Later roadmap stages must be promoted through `NEXT_TASK.md` one at a time and remain gated: execution planning without orders, guarded live runner work only after accepted gates, future order placement only after explicit approval, and read-only monitoring/dashboard work later.
 
 ## Offline research runner
 
@@ -56,9 +56,15 @@ Paper history is written through `core/accounting/ledger.py` as append-only even
 
 ## Offline funding settlement verifier
 
-The deterministic fake funding settlement verifier is downstream of paper lifecycle and ledger evidence. It models required pre-settlement checkpoints at T-20 minutes, T-60 seconds, T-10 seconds, and T-5 seconds, then replays append-only ledger events to compare fake expected funding/notional inputs with observed fake settlement evidence.
+The deterministic funding settlement verifier is downstream of paper lifecycle and ledger evidence. It models required pre-settlement checkpoints at T-20 minutes, T-60 seconds, T-10 seconds, and T-5 seconds, then replays append-only ledger events to compare checkpoint expected funding/notional inputs with observed settlement evidence.
 
 The verifier records evidence and verification results only through `core/accounting/ledger.py`. Missing, unknown, or inconsistent settlement evidence fails closed as not verified. It does not evaluate route profitability, assemble snapshots, calculate EV, place orders, create `CapturePlan` objects, or enable live trading.
+
+## Approval-gated funding settlement verification
+
+RX-026 keeps settlement verification in `core/monitoring/funding_settlement.py` and ledger writes in `core/accounting/ledger.py`. `verify_approval_gated_funding_settlement()` accepts one existing `Capture`, one existing `RouteCandidate`, one explicit funding settlement timestamp, one explicit approval flag, and caller-supplied observed settlement funding/notional evidence.
+
+The workflow records settlement evidence through the existing `funding_settlement_evidence_recorded` event and then calls the canonical verifier replay. Settlement evidence must carry `approval_granted=True`, `observed_at` equal to the settlement timestamp, and actual funding/notional values with `ValueSource.OBSERVED`; missing approval, false approval, stale observation time, unknown values, unobserved sources, malformed payloads, cross-capture, cross-route, cross-settlement, or contradictory evidence fails closed. The workflow does not call `evaluate_route()`, assemble snapshots, calculate profitability, reconcile ledgers, mutate eligibility, plan execution, place orders, or enable live trading.
 
 ## Offline ledger reconciliation
 

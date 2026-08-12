@@ -317,6 +317,7 @@ def append_funding_settlement_evidence_event(
     route_id: str,
     settlement_time: datetime,
     observed_at: datetime,
+    approval_granted: bool,
     actual_risex_funding_usd: EstimatedValue,
     actual_hedge_funding_usd: EstimatedValue,
     actual_risex_notional_usd: EstimatedValue,
@@ -329,6 +330,8 @@ def append_funding_settlement_evidence_event(
     _validate_non_empty(route_id, "route_id")
     validate_timezone_aware_datetime(settlement_time, "settlement_time")
     validate_timezone_aware_datetime(observed_at, "observed_at")
+    if type(approval_granted) is not bool:
+        raise ValueError("approval_granted must be a bool")
 
     return ledger.append(
         event_type=LedgerEventType.FUNDING_SETTLEMENT_EVIDENCE_RECORDED,
@@ -337,6 +340,7 @@ def append_funding_settlement_evidence_event(
             "route_id": route_id,
             "settlement_time": settlement_time.isoformat(),
             "observed_at": observed_at.isoformat(),
+            "approval_granted": approval_granted,
             "actual_risex_funding_usd": _estimated_value_payload(actual_risex_funding_usd),
             "actual_hedge_funding_usd": _estimated_value_payload(actual_hedge_funding_usd),
             "actual_risex_notional_usd": _estimated_value_payload(actual_risex_notional_usd),

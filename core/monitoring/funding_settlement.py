@@ -13,9 +13,15 @@ from core.accounting.ledger import (
     Ledger,
     LedgerEvent,
     LedgerEventType,
+    append_funding_settlement_evidence_event,
     append_funding_settlement_verification_event,
 )
-from core.domain.contracts import validate_timezone_aware_datetime
+from core.domain.contracts import (
+    Capture,
+    EstimatedValue,
+    RouteCandidate,
+    validate_timezone_aware_datetime,
+)
 from core.domain.enums import ValueSource
 
 
@@ -90,7 +96,9 @@ class _CheckpointEvidence:
 @dataclass(frozen=True, slots=True)
 class _SettlementEvidence:
     event: LedgerEvent
+    observed_at: datetime | None
     settlement_time: datetime | None
+    approval_granted: bool
     actual_risex_funding_usd: Decimal | None
     actual_hedge_funding_usd: Decimal | None
     actual_risex_notional_usd: Decimal | None
@@ -265,7 +273,9 @@ def _parse_settlement(event: LedgerEvent) -> _SettlementEvidence:
 
     return _SettlementEvidence(
         event=event,
+        observed_at=_payload_datetime(event.payload, "observed_at"),
         settlement_time=_payload_datetime(event.payload, "settlement_time"),
+        approval_granted=event.payload.get("approval_granted") is True,
         actual_risex_funding_usd=risex_funding,
         actual_hedge_funding_usd=hedge_funding,
         actual_risex_notional_usd=risex_notional,
@@ -369,6 +379,13 @@ def replay_funding_settlement_verification(
         settlement_evidence = _parse_settlement(settlement_events[0])
         if settlement_evidence.settlement_time != settlement_time:
             _add_reason(reasons, FundingSettlementVerificationReason.INCONSISTENT_SETTLEMENT_TIME)
+        if settlement_evidence.observed_at != settlement_time:
+            _add_reason(
+                reasons,
+                FundingSettlementVerificationReason.INCONSISTENT_SETTLEMENT_EVIDENCE,
+            )
+        if settlement_evidence.approval_granted is not True:
+            _add_reason(reasons, FundingSettlementVerificationReason.UNOBSERVED_SETTLEMENT_EVIDENCE)
         if settlement_evidence.has_unknown_funding:
             _add_reason(reasons, FundingSettlementVerificationReason.UNKNOWN_FUNDING_EVIDENCE)
         if settlement_evidence.has_unknown_notional:
@@ -451,3 +468,53 @@ def verify_funding_settlement(
         recorded_at=recorded_at or settlement_time,
     )
     return result
+
+
+def verify_approval_gated_funding_settlement(
+    ledger: Ledger,
+    *,
+    capture: Capture,
+    route: RouteCandidate,
+    settlement_time: datetime,
+    approval_granted: bool,
+    observed_at: datetime,
+    actual_risex_funding_usd: EstimatedValue,
+    actual_hedge_funding_usd: EstimatedValue,
+    actual_risex_notional_usd: EstimatedValue,
+    actual_hedge_notional_usd: EstimatedValue,
+    recorded_at: datetime | None = None,
+) -> FundingSettlementVerificationResult:
+    """Record approved observed settlement evidence and run canonical verification."""
+
+    if not isinstance(capture, Capture):
+        raise ValueError("capture must be a Capture")
+    if not isinstance(route, RouteCandidate):
+        raise ValueError("route must be a RouteCandidate")
+    validate_timezone_aware_datetime(settlement_time, "settlement_time")
+    validate_timezone_aware_datetime(observed_at, "observed_at")
+    if type(approval_granted) is not bool:
+        raise ValueError("approval_granted must be a bool")
+    if capture.capture_id != route.capture_id or capture.route_id != route.route_id:
+        raise ValueError("capture and route identity must match")
+    if capture.settlement_time != settlement_time:
+        raise ValueError("capture settlement_time must match settlement_time")
+
+    append_funding_settlement_evidence_event(
+        ledger,
+        capture_id=capture.capture_id,
+        route_id=route.route_id,
+        settlement_time=settlement_time,
+        observed_at=observed_at,
+        approval_granted=approval_granted,
+        actual_risex_funding_usd=actual_risex_funding_usd,
+        actual_hedge_funding_usd=actual_hedge_funding_usd,
+        actual_risex_notional_usd=actual_risex_notional_usd,
+        actual_hedge_notional_usd=actual_hedge_notional_usd,
+        recorded_at=recorded_at or observed_at,
+    )
+    return verify_funding_settlement(
+        ledger,
+        capture_id=capture.capture_id,
+        settlement_time=settlement_time,
+        recorded_at=recorded_at or settlement_time,
+    )

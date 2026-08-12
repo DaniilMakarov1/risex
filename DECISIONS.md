@@ -386,3 +386,16 @@
 - Affected files/modules: `apps/research_runner/real_data.py`, focused unit tests, `README.md`, `ARCHITECTURE.md`, `PRODUCT_INVARIANTS.md`, `IMPLEMENTATION_PLAN.md`, `STATUS.md`, `DECISIONS.md`, and `NEXT_TASK.md`.
 - Superseded decisions: no previous decision is superseded; RX-025 reuses the RX-024 adapter handoff, the RX-004 `assemble_route_snapshot()` owner boundary, and the existing `evaluate_route()` decision path.
 - Non-decisions: RX-025 does not discover routes, rank routes, add watchlists, start background loops, write ledger events, start paper lifecycle, verify funding settlement, plan execution, place orders, use private/account/auth endpoints, add credentials, add CLI behavior, add live runner behavior, enable live trading, add route statuses, add reject reasons, add artificial filters, create canary architecture, add hold-next-cycle logic, or create a second decision, snapshot, EV, fee, funding, VWAP, basis, ledger-write, replay, or live execution path.
+
+## 2026-08-12 - RX-026
+
+- Date: 2026-08-12
+- Decision: Added `verify_approval_gated_funding_settlement()` in `core/monitoring/funding_settlement.py` as the approval-gated workflow for one existing `Capture`, one existing `RouteCandidate`, and one explicit funding settlement timestamp.
+- Reason: RX-026 needs a narrow caller-supplied observed settlement verification path without creating a second funding verifier, second ledger-write path, second replay path, route decision path, snapshot path, execution path, or live runner.
+- Decision: Existing `funding_settlement_evidence_recorded` events now carry mandatory `approval_granted` evidence through `append_funding_settlement_evidence_event()`.
+- Reason: Canonical replay must not treat settlement values as observed proof unless the caller or deterministic test explicitly approved that evidence for the current Capture settlement.
+- Decision: Canonical funding settlement replay now requires `approval_granted=True`, `observed_at == settlement_time`, actual settlement funding/notional values with `ValueSource.OBSERVED`, and exact Capture/route/settlement consistency.
+- Reason: Missing approval, false approval, stale observation time, unknown values, unobserved sources, malformed payloads, cross-capture, cross-route, cross-settlement, or contradictory settlement evidence must fail closed.
+- Affected files/modules: `core/monitoring/funding_settlement.py`, `core/accounting/ledger.py`, `core/accounting/reconciliation.py`, replay tests, and governance docs.
+- Superseded decisions: RX-008's observed settlement evidence contract is tightened; observed actual values alone are not sufficient proof without explicit approval and exact settlement-time observation.
+- Non-decisions: RX-026 does not call `evaluate_route()`, assemble snapshots, calculate EV, fees, funding, VWAP, basis, spread, slippage, or profitability; does not mutate route eligibility; does not start or change paper lifecycle; does not change real-data research runner behavior; does not reconcile ledgers; does not add execution planning, orders, live runner behavior, private/account/auth endpoints, credentials, live trading, executable `CapturePlan`, route statuses, reject reasons, artificial filters, canary architecture, hold-next-cycle logic, or a second decision, snapshot, verifier, ledger-write, replay, economics, or live execution path.

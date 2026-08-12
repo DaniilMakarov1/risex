@@ -114,6 +114,7 @@ def _append_settlement_evidence(
         route_id=route_id or route.route_id,
         settlement_time=snapshot.risex_funding_settlement_at,
         observed_at=snapshot.risex_funding_settlement_at,
+        approval_granted=True,
         actual_risex_funding_usd=actual_risex_funding_usd or snapshot.funding.risex_funding_usd,
         actual_hedge_funding_usd=actual_hedge_funding_usd or snapshot.funding.hedge_funding_usd,
         actual_risex_notional_usd=actual_risex_notional_usd or _observed(route.target_notional_usd),

@@ -39,21 +39,20 @@ RX-025 — Real-Data Research Runner is reviewer-accepted and finalized on `main
 
 ## Current Product Branch Progress
 
-No product branch is active in this checkout. RX-026 is the immediate next task and has not been started.
+RX-026 is implemented on `task/rx-026-approval-gated-funding-verification` and awaits reviewer acceptance.
 
 ## Current Product Handoff
 
-`NEXT_TASK.md` is prepared for RX-026, the next gated funding settlement verification task after RX-025 finalization.
+`NEXT_TASK.md` is prepared for RX-027, the next gated execution-planning-without-orders task after RX-026 review.
 
-## Remaining Gated Roadmap After RX-025
+## Remaining Gated Roadmap After RX-026
 
 Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts:
 
-1. Verify funding settlement on real or explicitly approved observed evidence, with approval gates documented in the task prompt.
-2. Add execution planning without orders; plans must remain non-sending until a later explicit task.
-3. Add a guarded live runner only after explicit acceptance gates prove data, ledger, settlement verification, plan freshness, execution capability, and live switch behavior.
-4. Add order placement only in a future explicitly approved task.
-5. Add read-only monitoring/dashboard work later, without turning it into a decision, execution, or ledger-write path.
+1. Add execution planning without orders; plans must remain non-sending until a later explicit task.
+2. Add a guarded live runner only after explicit acceptance gates prove data, ledger, settlement verification, plan freshness, execution capability, and live switch behavior.
+3. Add order placement only in a future explicitly approved task.
+4. Add read-only monitoring/dashboard work later, without turning it into a decision, execution, or ledger-write path.
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
 
@@ -201,8 +200,21 @@ RX-025 implementation notes:
 - Adapter or snapshot handoff failures return a deterministic `REJECTED` decision with `RejectReason.REQUIRED_LIVE_DATA_MISSING` and do not call `evaluate_route()`.
 - RX-025 does not discover routes, rank routes, change fake runner behavior, write ledger events, start paper lifecycle, verify funding settlement, create plans, place orders, add private endpoints, add credentials, add live runner behavior, or create a second snapshot or decision path.
 
+## RX-026 — Approval-Gated Real Funding Settlement Verification
+
+Add the smallest approval-gated funding settlement verification path for one existing `Capture`, one existing `RouteCandidate`, and one explicit funding settlement timestamp.
+
+RX-026 implementation notes:
+
+- `core/monitoring/funding_settlement.py` owns `verify_approval_gated_funding_settlement()`.
+- The workflow validates exact `Capture`/`RouteCandidate`/settlement timestamp identity before evidence is appended.
+- Settlement evidence is recorded through the existing `append_funding_settlement_evidence_event()` helper and existing `funding_settlement_evidence_recorded` event type.
+- Canonical funding settlement replay requires `approval_granted=True`, `observed_at == settlement_time`, and actual funding/notional values with `ValueSource.OBSERVED`.
+- Missing approval, false approval, stale observation time, unknown values, unobserved sources, malformed payloads, cross-capture, cross-route, cross-settlement, or contradictory evidence fails closed.
+- RX-026 does not call `evaluate_route()`, assemble snapshots, calculate profitability, mutate route eligibility, start paper lifecycle, reconcile ledgers, plan execution, place orders, add private endpoints, add credentials, add live runner behavior, or create a second funding verifier, ledger-write path, replay path, snapshot path, or decision path.
+
 ## Next Sequence
 
-1. RX-026 — Approval-Gated Real Funding Settlement Verification.
+1. RX-027 — Execution Planning Without Orders.
 
-Do not promote any later roadmap stage into the current handoff until RX-026 is reviewed and accepted.
+Do not promote any later roadmap stage into the current handoff until RX-027 is reviewed and accepted.
