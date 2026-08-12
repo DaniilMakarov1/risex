@@ -106,6 +106,7 @@ Any non-terminal Capture may transition to `FAILED`. Capture states with possibl
 - Route decisions happen only in `core/pipeline/evaluate.py`.
 - Offline route-candidate orchestration happens only in `core/pipeline/offline_scan.py`.
 - Broad Scan and Focused Refresh orchestration happens only in `core/pipeline/scan_refresh.py`.
+- One-route real-data research orchestration happens only in `apps/research_runner/real_data.py`.
 - Orders can be sent only through `core/execution/`.
 - Ledger writes happen only through `core/accounting/ledger.py`.
 - Ledger reconciliation happens only in `core/accounting/reconciliation.py`.
@@ -246,6 +247,15 @@ RX-024 adds a narrow real market-data snapshot handoff:
 4. It passes the two returned `VenueObservation` values into the existing `assemble_route_snapshot()` path; the handoff does not construct executable quotes, merge economics, or replace route/snapshot validation.
 5. Adapter failures, non-observation returns, missing route observations, or contradictory observation metadata fail before any route decision path can run.
 6. It does not call `evaluate_route()`, calculate EV, rank routes, mutate eligibility, write ledger events, start paper lifecycle, create plans, call execution modules, connect to private endpoints, or place orders.
+
+RX-025 adds a narrow one-route real-data research runner:
+
+1. `apps/research_runner/real_data.py` owns `run_real_data_research_route()`.
+2. The runner accepts one existing `RouteCandidate`, one RiseX `VenueAdapter`, one hedge `VenueAdapter`, an explicit timezone-aware assembly timestamp, and one `EvaluationMode`.
+3. It calls `assemble_route_snapshot_from_adapters()`, which remains the real market-data handoff into the single `assemble_route_snapshot()` path.
+4. It calls `evaluate_route(route, snapshot, mode)` only after successful snapshot assembly and passes no ledger.
+5. Adapter failures, non-observation returns, or contradictory route/observation metadata fail closed as `RejectReason.REQUIRED_LIVE_DATA_MISSING` before evaluation.
+6. It does not discover routes, rank routes, loop in the background, write ledger events, start paper lifecycle, verify funding settlement, create plans, call execution modules, connect to private endpoints, place orders, or add live runner behavior.
 
 RX-005 adds deterministic offline orchestration over multiple fake route candidates:
 

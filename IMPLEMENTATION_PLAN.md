@@ -38,22 +38,21 @@ RX-024 — Real Market-Data Route Snapshot Assembly is reviewer-accepted and fin
 
 ## Current Product Branch Progress
 
-No active product task is started in this finalized state. RX-025 must start from reviewer-accepted `main` on a new task branch.
+RX-025 is active on `task/rx-025-real-data-research-runner` for review. It adds a one-route real-data research runner without changing accepted `main` status.
 
 ## Current Product Handoff
 
-RX-025 — Real-Data Research Runner is the immediate next task in `NEXT_TASK.md`.
+`NEXT_TASK.md` is prepared for the next gated funding settlement verification task after RX-025 review.
 
-## Remaining Gated Roadmap After RX-024
+## Remaining Gated Roadmap After RX-025
 
 Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts:
 
-1. Add a real-data research runner that still uses the existing scan/refresh and `evaluate_route()` paths.
-2. Verify funding settlement on real or explicitly approved observed evidence, with approval gates documented in the task prompt.
-3. Add execution planning without orders; plans must remain non-sending until a later explicit task.
-4. Add a guarded live runner only after explicit acceptance gates prove data, ledger, settlement verification, plan freshness, execution capability, and live switch behavior.
-5. Add order placement only in a future explicitly approved task.
-6. Add read-only monitoring/dashboard work later, without turning it into a decision, execution, or ledger-write path.
+1. Verify funding settlement on real or explicitly approved observed evidence, with approval gates documented in the task prompt.
+2. Add execution planning without orders; plans must remain non-sending until a later explicit task.
+3. Add a guarded live runner only after explicit acceptance gates prove data, ledger, settlement verification, plan freshness, execution capability, and live switch behavior.
+4. Add order placement only in a future explicitly approved task.
+5. Add read-only monitoring/dashboard work later, without turning it into a decision, execution, or ledger-write path.
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
 
@@ -188,8 +187,21 @@ RX-024 implementation notes:
 - Non-observation adapter returns and contradictory route/observation metadata fail before any route decision can run.
 - RX-024 does not call `evaluate_route()`, calculate EV, rank routes, mutate eligibility, write ledger events, start paper lifecycle, create plans, place orders, add private endpoints, add credentials, add live runner behavior, or create a second snapshot assembly path.
 
+## RX-025 — Real-Data Research Runner
+
+Add the smallest non-trading one-route real-data research runner that consumes one existing `RouteCandidate`, existing read-only venue adapters, the existing real market-data snapshot handoff, and the existing `evaluate_route(route, snapshot, mode)` path.
+
+RX-025 implementation notes:
+
+- `apps/research_runner/real_data.py` owns `run_real_data_research_route()`.
+- The runner accepts one existing `RouteCandidate`, one RiseX `VenueAdapter`, one hedge `VenueAdapter`, an explicit timezone-aware assembly timestamp, and one `EvaluationMode`.
+- Snapshot creation flows through `assemble_route_snapshot_from_adapters()` and then the existing `assemble_route_snapshot()` path.
+- Route decisions flow through `evaluate_route(route, snapshot, mode)` only after successful snapshot assembly.
+- Adapter or snapshot handoff failures return a deterministic `REJECTED` decision with `RejectReason.REQUIRED_LIVE_DATA_MISSING` and do not call `evaluate_route()`.
+- RX-025 does not discover routes, rank routes, change fake runner behavior, write ledger events, start paper lifecycle, verify funding settlement, create plans, place orders, add private endpoints, add credentials, add live runner behavior, or create a second snapshot or decision path.
+
 ## Next Sequence
 
-1. RX-025 — Real-Data Research Runner.
+1. RX-026 — Approval-Gated Real Funding Settlement Verification.
 
 Do not promote any later roadmap stage into the current handoff until RX-025 is reviewed and accepted.

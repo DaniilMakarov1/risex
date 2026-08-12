@@ -371,3 +371,18 @@
 - Affected files/modules: `core/pipeline/snapshot.py`, focused unit tests, invariant tests, `README.md`, `ARCHITECTURE.md`, `PRODUCT_INVARIANTS.md`, `IMPLEMENTATION_PLAN.md`, `STATUS.md`, `DECISIONS.md`, and `NEXT_TASK.md`.
 - Superseded decisions: no previous decision is superseded; RX-024 reuses the RX-004 `assemble_route_snapshot()` owner boundary and the RX-022/RX-023 read-only adapter boundaries.
 - Non-decisions: RX-024 does not call `evaluate_route()`, calculate EV, rank routes, mutate eligibility, write ledger events, replay ledger history, start paper lifecycle, create plans, use private/account/auth endpoints, add credentials, place orders, add live runner behavior, enable live trading, add route statuses, add reject reasons, add artificial filters, create canary architecture, add hold-next-cycle logic, or create a second decision, snapshot, EV, fee, funding, VWAP, basis, ledger-write, replay, or live execution path.
+
+## 2026-08-12 - RX-025
+
+- Date: 2026-08-12
+- Decision: Added `run_real_data_research_route()` in `apps/research_runner/real_data.py` as the one-route real-data research runner.
+- Reason: RX-025 needs a non-trading runner surface that accepts one existing `RouteCandidate`, existing read-only venue adapters, an explicit timezone-aware assembly timestamp, and an `EvaluationMode` while preserving the existing snapshot and decision owners.
+- Decision: The runner delegates snapshot creation to `assemble_route_snapshot_from_adapters()` and delegates route decisions to `evaluate_route(route, snapshot, mode)` only after successful snapshot assembly.
+- Reason: Real-data research orchestration must not become a second snapshot assembly path, second route decision path, or app-owned economics path.
+- Decision: Adapter or snapshot handoff failures return a deterministic `DecisionResult` with `RouteStatus.REJECTED`, `RejectReason.REQUIRED_LIVE_DATA_MISSING`, and `decided_at=assembled_at` before evaluation.
+- Reason: Real-data availability failures must fail closed without calculating profitability, writing ledger evidence, starting paper lifecycle, or invoking live/execution behavior.
+- Decision: The existing fake CLI remains unchanged; RX-025 exposes an importable app-layer runner only.
+- Reason: The task required minimal app wiring only if needed, and avoiding CLI changes preserves fake runner behavior while still exposing the research runner to explicit callers.
+- Affected files/modules: `apps/research_runner/real_data.py`, focused unit tests, `README.md`, `ARCHITECTURE.md`, `PRODUCT_INVARIANTS.md`, `IMPLEMENTATION_PLAN.md`, `STATUS.md`, `DECISIONS.md`, and `NEXT_TASK.md`.
+- Superseded decisions: no previous decision is superseded; RX-025 reuses the RX-024 adapter handoff, the RX-004 `assemble_route_snapshot()` owner boundary, and the existing `evaluate_route()` decision path.
+- Non-decisions: RX-025 does not discover routes, rank routes, add watchlists, start background loops, write ledger events, start paper lifecycle, verify funding settlement, plan execution, place orders, use private/account/auth endpoints, add credentials, add CLI behavior, add live runner behavior, enable live trading, add route statuses, add reject reasons, add artificial filters, create canary architecture, add hold-next-cycle logic, or create a second decision, snapshot, EV, fee, funding, VWAP, basis, ledger-write, replay, or live execution path.

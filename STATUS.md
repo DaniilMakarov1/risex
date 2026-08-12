@@ -1,6 +1,6 @@
 # Status
 
-- Current branch: `main`.
+- Current branch: `task/rx-025-real-data-research-runner`.
 - Latest accepted product task: RX-024 — Real Market-Data Route Snapshot Assembly.
 - Accepted RX-024 implementation HEAD: `0a336dd5e00ee54795540fa5170e953b2b7d7131`
 - RX-024 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
@@ -46,7 +46,7 @@
 - Accepted baseline branch: `main`
 - Current accepted `main` governance task: RX-Q004.
 - Current accepted `main` product task: RX-024.
-- Current RX task state: RX-024 is reviewer-accepted and finalized on `main`; `NEXT_TASK.md` remains prepared for RX-025. RX-025 has not been started.
+- Current RX task state: RX-025 is implemented on `task/rx-025-real-data-research-runner` and awaiting review. RX-024 remains the latest accepted product baseline on `main`; `NEXT_TASK.md` is prepared for the next gated task after RX-025.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
@@ -64,7 +64,7 @@ RX-013 remains the previous accepted product baseline before RX-014.
 RX-012 remains the previous accepted product baseline before RX-013.
 RX-Q001 remains the previous accepted governance baseline before RX-Q002.
 RX-011 remains the previous accepted product implementation baseline before RX-012.
-`NEXT_TASK.md` is prepared for RX-025 after RX-024 finalization.
+`NEXT_TASK.md` is prepared for the next gated task after RX-025.
 
 ## Completed accepted tasks
 
@@ -145,7 +145,8 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - One read-only RiseX public market-data adapter exists in `core/venues/risex.py`.
 - One read-only Hyperliquid public market-data adapter exists in `core/venues/hyperliquid.py`.
 - One real market-data route snapshot handoff exists in `core/pipeline/snapshot.py` and delegates to `assemble_route_snapshot()` for one existing route at a time.
-- No real-data research runner, paper exchange simulation, live runner behavior, orders, or live trading.
+- One real-data research runner exists in `apps/research_runner/real_data.py` and evaluates one explicit existing route at a time through the existing adapter handoff and `evaluate_route()` path.
+- No paper exchange simulation, live runner behavior, orders, or live trading.
 
 ## Current repository governance status
 
@@ -166,8 +167,19 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - RX-022 is reviewer-accepted and finalized on `main`.
 - RX-023 is reviewer-accepted and finalized on `main`.
 - RX-024 is reviewer-accepted and finalized on `main`.
-- The next recommended product task is a real-data research runner, followed by funding settlement verification with explicit approval, execution planning without orders, guarded live runner after explicit acceptance gates, order placement only in a future explicitly approved task, and read-only monitoring/dashboard later.
+- The next recommended product task is approval-gated funding settlement verification, followed by execution planning without orders, guarded live runner after explicit acceptance gates, order placement only in a future explicitly approved task, and read-only monitoring/dashboard later.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized.
+
+## Tests last reported for RX-025 branch
+
+- `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
+- `python3 -m pytest tests/invariant`: `36 passed in 0.23s`
+- `python3 -m pytest tests/unit/test_real_data_research_runner.py`: `7 passed in 0.02s`
+- `python3 -m pytest`: `412 passed in 0.59s`
+- `python3 -m compileall apps core storage tests scripts`: exit 0
+- `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
+- `git diff --check`: exit 0
+- `git diff --cached --check`: exit 0
 
 ## Tests last reported for accepted RX-024 branch
 
@@ -335,9 +347,11 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - CapturePlan freshness evidence is not executable live order planning.
 - Execution capability evidence is not executable live order planning.
 - Live gate evidence bundle is not executable live order planning.
-- RiseX adapter is read-only public market data only and is not wired into the offline runners by default.
-- Hyperliquid adapter is read-only public market data only and is not wired into the offline runners by default.
+- RiseX adapter is read-only public market data only and is wired only through the one-route real-data research runner when a caller explicitly supplies it.
+- Hyperliquid adapter is read-only public market data only and is wired only through the one-route real-data research runner when a caller explicitly supplies it.
+- Current public real adapters still return `UNKNOWN` funding and fee cash-flow values, so real public-adapter research decisions are expected to fail closed as missing live data until a future task supplies approved source-aware economics.
 - Offline fake runners still perform no network calls.
+- The real-data research runner has no CLI command in this branch; existing fake CLI behavior is unchanged.
 - No orders.
 - No live runner behavior.
 - No live trading.
@@ -353,4 +367,4 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 
 ## Next recommended task
 
-RX-025 — Real-Data Research Runner.
+RX-026 — Approval-Gated Real Funding Settlement Verification.

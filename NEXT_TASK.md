@@ -2,19 +2,19 @@
 
 ## Task ID
 
-RX-025 — Real-Data Research Runner
+RX-026 — Approval-Gated Real Funding Settlement Verification
 
 ## Objective
 
-Add the smallest non-trading real-data research runner that uses existing `RouteCandidate` inputs, existing read-only venue adapters, the existing real market-data snapshot handoff, and the existing route decision pipeline. Keep it as a research-only runner: assemble and evaluate one explicit route at a time, report deterministic decision output, and do not start paper lifecycle, write ledger events, plan execution, or trade.
+Add the smallest approval-gated funding settlement verification path for one existing Capture, one existing `RouteCandidate`, and one explicit funding settlement timestamp. It must reuse the existing funding settlement verification and append-only ledger boundaries, consume only explicitly approved observed settlement evidence, and remain non-trading.
 
 ## Starting baseline
 
-Start from reviewer-accepted `main` after the real market-data route snapshot assembly handoff is finalized. Before edits, verify the exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
+Start from reviewer-accepted `main` after the one-route real-data research runner is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
 
 ## Branch
 
-Create and work on `task/rx-025-real-data-research-runner`. Do not implement on `main`.
+Create and work on `task/rx-026-approval-gated-funding-verification`. Do not implement on `main`.
 
 ## Before changing files
 
@@ -33,42 +33,41 @@ Read:
 
 ## Allowed scope
 
-- A narrow non-trading research runner for one explicit existing `RouteCandidate` at a time.
-- Reuse existing read-only `VenueAdapter.fetch_observation(symbol)` implementations.
-- Reuse the existing real market-data snapshot handoff and `assemble_route_snapshot()` path.
-- Reuse the existing `evaluate_route(route, snapshot, mode)` decision path.
-- Deterministic tests with injected adapters and fixtures only.
-- Minimal CLI or app wiring only if needed to expose the research runner without changing fake runner behavior.
+- One funding settlement verification workflow for one explicit existing Capture, route, and settlement timestamp.
+- Reuse existing funding settlement verification owner logic in `core/monitoring/funding_settlement.py`.
+- Reuse existing append-only ledger event helpers in `core/accounting/ledger.py` when evidence or verification results must be recorded.
+- Accept only explicit observed settlement evidence supplied by the caller or deterministic tests.
+- Deterministic tests with injected fixtures only.
+- Minimal app wiring only if needed.
 - Required repository metadata updates after implementation.
 
 ## Forbidden scope
 
-- No route ranking, broad opportunity discovery, watchlists, background loops, paper lifecycle, ledger writes, funding settlement verification, execution planning, orders, live runner behavior, credentials, private endpoints, or live trading.
-- No second snapshot assembly path; preserve `assemble_route_snapshot()` as the single owner of route snapshot construction.
-- No second route decision path; preserve `evaluate_route(route, snapshot, mode)` as the single owner of route decisions.
-- No second EV, fee, funding, VWAP/liquidity, basis, ledger-write, replay, or live execution path.
-- No standalone spread, price-impact, basis, slippage, max-level, hidden-buffer, or safety-margin filters.
+- No route ranking, broad discovery, watchlists, background loops, paper lifecycle changes, real-data route runner changes, execution planning, orders, live runner behavior, credentials, private endpoints, or live trading.
+- No automatic venue polling or private account balance fetching.
+- No second funding verifier, second ledger-write path, second replay path, second route decision path, or second snapshot assembly path.
+- No EV, fee, funding, VWAP/liquidity, basis, spread, price-impact, slippage, max-level, hidden-buffer, or safety-margin filters.
 - No canary architecture.
 - No hold-next-cycle logic.
 - No speculative helpers, wrappers, unused abstractions, or future hooks.
-- Do not implement funding settlement approval, execution planning, guarded live runner behavior, order placement, monitoring, or dashboards.
+- Do not implement execution planning, guarded live runner behavior, order placement, monitoring, or dashboards.
 
 ## Implementation requirements
 
-- The runner must accept or construct exactly one explicit `RouteCandidate`; do not discover or rank routes.
-- Snapshot creation must flow through the existing real market-data snapshot handoff and then the existing `assemble_route_snapshot()` path.
-- Route decisions must flow through `evaluate_route(route, snapshot, mode)` only after successful snapshot assembly.
-- Snapshot assembly or adapter failures must fail closed without evaluating the route.
-- The runner must not write to the append-only ledger.
-- Tests must inject fake adapters and avoid live network dependency.
-- Worker policy: this task touches runner and route-decision orchestration boundaries, so one supervised worker/subagent is required before implementation edits. If worker tooling is unavailable, stop before edits and report the blocker. The worker must stop at DESIGN CHECKPOINT before edits and at CODE, TEST, and VALIDATION checkpoints if it continues.
+- Require explicit approval/evidence inputs before treating settlement data as observed.
+- Unknown, missing, stale, malformed, cross-capture, cross-route, cross-settlement, unobserved, or contradictory evidence must fail closed.
+- Verification must remain downstream of existing route decisions and snapshots and must not mutate route eligibility.
+- Any ledger writes must use existing append-only ledger helpers; do not add update/delete behavior.
+- Do not call `evaluate_route()`, assemble snapshots, calculate profitability, create plans, import execution/live runner modules, or place orders.
+- Tests must inject observed evidence fixtures and avoid live network dependency.
+- Worker policy: this task touches funding settlement and ledger boundaries, so one supervised worker/subagent is required before implementation edits. If worker tooling is unavailable, stop before edits and report the blocker. The worker must stop at DESIGN CHECKPOINT before edits and at CODE, TEST, and VALIDATION checkpoints if it continues.
 - Parent owns steering, final diff review, validation, commit, push, and final report.
 
 ## Required files
 
-- Likely `apps/research_runner/`
-- Likely `apps/cli/`
-- Likely focused tests under `tests/unit/`
+- Likely `core/monitoring/funding_settlement.py`
+- Likely `core/accounting/ledger.py`
+- Likely focused tests under `tests/unit/` or `tests/replay/`
 - Repository metadata files required by `AGENTS.md`
 - Do not touch product code outside the owner modules required by the final design checkpoint.
 
@@ -76,7 +75,7 @@ Read:
 
 - `python3 scripts/validate_next_task.py`
 - `python3 -m pytest tests/invariant`
-- Focused tests for real-data research runner success and fail-closed snapshot/adapter failure behavior
+- Focused funding settlement verification tests for explicit observed evidence and fail-closed missing/malformed/contradictory evidence
 - `python3 -m pytest`
 - `python3 -m compileall apps core storage tests scripts`
 - `python3 -m apps.cli.main`

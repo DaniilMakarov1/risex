@@ -2,7 +2,7 @@
 
 RiseX Points Farmer is a modular-monolith research system for capture-centric hedged funding opportunities on RiseX with hedge venue support, initially Hyperliquid.
 
-The current branch remains a non-trading research, fake paper-lifecycle, funding-verification, and ledger-reconciliation skeleton. Offline runners still use fake data and do not place orders. RX-022 adds one read-only RiseX public market-data adapter, RX-023 adds one read-only Hyperliquid public market-data adapter, and RX-024 adds one narrow real market-data route snapshot assembly handoff. These data-ingestion pieces do not use credentials, private account endpoints, live runner behavior, or real API keys.
+The current branch remains a non-trading research, fake paper-lifecycle, funding-verification, and ledger-reconciliation skeleton. Offline runners still use fake data and do not place orders. RX-022 adds one read-only RiseX public market-data adapter, RX-023 adds one read-only Hyperliquid public market-data adapter, RX-024 adds one narrow real market-data route snapshot assembly handoff, and RX-025 adds one-route real-data research runner behavior. These data-ingestion pieces do not use credentials, private account endpoints, live runner behavior, or real API keys.
 
 ## Product baseline
 
@@ -23,7 +23,7 @@ The current branch remains a non-trading research, fake paper-lifecycle, funding
 
 RX-008 through RX-016 are accepted fail-closed offline safety hardening. They prove funding verification, ledger reconciliation, fake CapturePlan freshness, fake execution capability, fake live-gate bundle checks, and SQLite replay behavior from deterministic evidence. They are not a product strategy change, not executable live architecture, and not permission to keep adding offline scaffolding ahead of the current task.
 
-RX-022 adds a read-only RiseX observation adapter only. RX-023 adds a read-only Hyperliquid observation adapter only. RX-024 adds a one-route real market-data snapshot handoff only. Later roadmap stages must be promoted through `NEXT_TASK.md` one at a time and remain gated: a real-data research runner, funding settlement verification with explicit approval, execution planning without orders, guarded live runner work only after accepted gates, future order placement only after explicit approval, and read-only monitoring/dashboard work later.
+RX-022 adds a read-only RiseX observation adapter only. RX-023 adds a read-only Hyperliquid observation adapter only. RX-024 adds a one-route real market-data snapshot handoff only. RX-025 adds a one-route real-data research runner only. Later roadmap stages must be promoted through `NEXT_TASK.md` one at a time and remain gated: funding settlement verification with explicit approval, execution planning without orders, guarded live runner work only after accepted gates, future order placement only after explicit approval, and read-only monitoring/dashboard work later.
 
 ## Offline research runner
 
@@ -39,6 +39,12 @@ pytest
 RX-024 adds `assemble_route_snapshot_from_adapters()` in `core/pipeline/snapshot.py`. It accepts one existing `RouteCandidate`, one RiseX `VenueAdapter`, one Hyperliquid `VenueAdapter`, and an explicit timezone-aware assembly timestamp. The handoff fetches exactly the route's RiseX symbol and hedge symbol through `fetch_observation(symbol)`, then delegates construction to the existing `assemble_route_snapshot()` path.
 
 The handoff does not call `evaluate_route()`, calculate profitability, rank routes, mutate eligibility, write ledger events, start paper lifecycle, create plans, place orders, or add live runner behavior. Adapter tests and handoff tests use injected deterministic adapters or fixtures.
+
+## Real-data research runner
+
+RX-025 adds `run_real_data_research_route()` in `apps/research_runner/real_data.py`. It accepts one existing `RouteCandidate`, one RiseX `VenueAdapter`, one hedge `VenueAdapter`, one explicit timezone-aware assembly timestamp, and one `EvaluationMode`.
+
+The runner delegates snapshot creation to `assemble_route_snapshot_from_adapters()` and delegates route decisions to `evaluate_route(route, snapshot, mode)`. Adapter or snapshot handoff failures fail closed as `REJECTED` with `RejectReason.REQUIRED_LIVE_DATA_MISSING` before any route evaluation. The runner does not discover routes, rank routes, write ledger events, start paper lifecycle, verify settlement, plan execution, place orders, add CLI behavior, or enable live trading.
 
 ## Offline paper runner
 
