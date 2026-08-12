@@ -10,7 +10,7 @@ Add a read-only RiseX adapter that fetches and normalizes per-venue `VenueObserv
 
 ## Starting baseline
 
-Start from reviewer-accepted `main` after RX-021 is reviewed and accepted. Before edits, verify the exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
+Start from reviewer-accepted `main` with RX-021 finalized. Before edits, verify the exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
 
 ## Branch
 

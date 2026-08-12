@@ -1,10 +1,11 @@
 # Status
 
-- Current branch: `task/rx-021-paper-result-attribution-pnl-explanation`.
-- Latest accepted product task: RX-020 — RouteCandidate Identity And Notional Contract Hardening.
+- Current branch: `main`.
+- Latest accepted product task: RX-021 — Paper Result Attribution And PnL Explanation.
+- Accepted RX-021 implementation HEAD: `4298916ed72067bbf4c008b2750f155de36761ee`
+- RX-021 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
+- Previous accepted product task before RX-021: RX-020 — RouteCandidate Identity And Notional Contract Hardening.
 - Accepted RX-020 implementation HEAD: `832bcf54019a7314581d02749673e40ae4d36d2a`
-- RX-021 implementation branch includes the same-branch accounting reconciliation fix for optional `paper_result_explanation` payloads and awaits reviewer acceptance.
-- RX-021 completion is recorded without a final branch HEAD in this file to avoid self-referential handoff metadata; use git history for the exact implementation commit.
 - RX-020 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
 - Latest completed governance/docs task: RX-Q004 — Roadmap And Rulebook Consolidation.
 - RX-Q004 is accepted governance/docs-only consolidation work from `task/rx-q004-roadmap-rulebook-consolidation`; it does not change product behavior and is not a product baseline.
@@ -34,11 +35,12 @@
 - Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
 - Current accepted `main` governance task: RX-Q004.
-- Current RX task state: RX-020 is reviewer-accepted and finalized on `main`; RX-021 is implemented with the same-branch reconciliation fix on the current branch and awaits reviewer acceptance.
+- Current RX task state: RX-021 is reviewer-accepted and finalized on `main`; RX-022 remains the immediate next implementation task.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
-RX-020 is the latest accepted product baseline on `main`.
+RX-021 is the latest accepted product baseline on `main`.
+RX-020 remains the previous accepted product baseline before RX-021.
 RX-018 remains the previous accepted product baseline before RX-020.
 RX-016 remains the previous accepted product baseline before RX-018.
 RX-015 remains the previous accepted product baseline before RX-016.
@@ -48,7 +50,7 @@ RX-013 remains the previous accepted product baseline before RX-014.
 RX-012 remains the previous accepted product baseline before RX-013.
 RX-Q001 remains the previous accepted governance baseline before RX-Q002.
 RX-011 remains the previous accepted product implementation baseline before RX-012.
-`NEXT_TASK.md` is prepared for RX-022 after RX-021 review acceptance.
+`NEXT_TASK.md` is prepared for RX-022.
 
 ## Completed accepted tasks
 
@@ -76,6 +78,7 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - RX-019 — Reviewer-Directed Follow-up After RX-018
 - RX-Q004 — Roadmap And Rulebook Consolidation
 - RX-020 — RouteCandidate Identity And Notional Contract Hardening
+- RX-021 — Paper Result Attribution And PnL Explanation
 
 ## Current architecture status
 
@@ -139,9 +142,9 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 ## Current roadmap status
 
 - RX-008 through RX-016 are accepted fail-closed offline safety-hardening detour tasks.
-- The project now returns toward the intended product implementation path after RX-020.
-- RX-021 implementation is completed on the current branch and awaits reviewer acceptance.
-- RX-022 is the immediate next product task after RX-021 review acceptance.
+- The project continues along the intended product implementation path after RX-021.
+- RX-021 is reviewer-accepted and finalized on `main`.
+- RX-022 is the immediate next product task.
 - Later gated stages are read-only RiseX adapter, read-only Hyperliquid adapter, real market-data snapshot assembly, real-data research runner, funding settlement verification with explicit approval, execution planning without orders, guarded live runner after explicit acceptance gates, order placement only in a future explicitly approved task, and read-only monitoring/dashboard later.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized.
 
@@ -269,7 +272,7 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - `git diff --check`: exit 0
 - `git diff --cached --check`: exit 0
 
-## Tests last reported for RX-021 branch
+## Tests last reported for accepted RX-021 branch
 
 - `python3 -m pytest tests/unit/test_paper_runner_lifecycle.py tests/unit/test_ledger.py tests/replay/test_ledger_reconciliation.py`: `51 passed in 0.28s`
 - `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`

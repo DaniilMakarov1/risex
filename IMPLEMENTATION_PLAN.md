@@ -19,6 +19,8 @@ The original product direction remains hedged funding capture on RiseX with hedg
 - RX-008 through RX-016 are an accepted offline safety-hardening detour. They added deterministic fail-closed replay coverage for funding settlement verification, ledger reconciliation, fake CapturePlan freshness, fake execution capability, fake live-gate evidence bundles, bundle ledger recording, SQLite bundle replay, SQLite reopen append continuity, and SQLite reopen fail-closed behavior.
 - RX-018 tightened settlement timestamp alignment so one eligible route snapshot represents exactly one funding settlement opportunity.
 - RX-019 updated repository handoff metadata after RX-018 review without changing product behavior.
+- RX-020 hardened the existing `RouteCandidate` identity and selected-notional construction contract.
+- RX-021 added deterministic fake paper-result attribution and PnL explanation downstream of existing route decisions and fake paper lifecycle events.
 - RX-Q001 and RX-Q002 added repository workflow, handoff validation, and supervised-worker governance.
 
 ## Accepted Offline Safety-Hardening Detour
@@ -29,15 +31,11 @@ The detour's purpose is to keep future live-adjacent work honest: funding settle
 
 ## Latest Accepted Product Task
 
-RX-020 — RouteCandidate Identity And Notional Contract Hardening is reviewer-accepted and finalized on `main`. It hardens the existing `RouteCandidate` identity and target-notional construction contract without implementing real adapters, real market data, paper-result attribution, execution planning, live runner behavior, orders, or later roadmap stages.
-
-## Current Implementation Branch
-
-RX-021 — Paper Result Attribution And PnL Explanation adds deterministic fake paper start/non-start attribution and PnL explanation downstream of existing `DecisionResult` values and fake paper lifecycle events. It preserves economics already produced by `evaluate_route()` and does not change route eligibility.
+RX-021 — Paper Result Attribution And PnL Explanation is reviewer-accepted and finalized on `main`. It adds deterministic fake paper start/non-start attribution and PnL explanation downstream of existing `DecisionResult` values and fake paper lifecycle events, preserves economics already produced by `evaluate_route()`, and does not change route eligibility.
 
 ## Immediate Next Product Task
 
-After RX-021 is reviewed and accepted, the immediate next implementation task is RX-022 — Read-only RiseX Observation Adapter. It must remain the only next task in `NEXT_TASK.md` until completed and reviewed.
+The immediate next implementation task is RX-022 — Read-only RiseX Observation Adapter. It must remain the only next task in `NEXT_TASK.md` until completed and reviewed.
 
 ## Remaining Gated Roadmap After RX-021
 
