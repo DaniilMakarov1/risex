@@ -3,7 +3,7 @@
 - Current branch: `task/rx-021-paper-result-attribution-pnl-explanation`.
 - Latest accepted product task: RX-020 — RouteCandidate Identity And Notional Contract Hardening.
 - Accepted RX-020 implementation HEAD: `832bcf54019a7314581d02749673e40ae4d36d2a`
-- RX-021 implementation branch is completed and awaiting reviewer acceptance.
+- RX-021 implementation branch includes the same-branch accounting reconciliation fix for optional `paper_result_explanation` payloads and awaits reviewer acceptance.
 - RX-021 completion is recorded without a final branch HEAD in this file to avoid self-referential handoff metadata; use git history for the exact implementation commit.
 - RX-020 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
 - Latest completed governance/docs task: RX-Q004 — Roadmap And Rulebook Consolidation.
@@ -34,7 +34,7 @@
 - Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
 - Current accepted `main` governance task: RX-Q004.
-- Current RX task state: RX-020 is reviewer-accepted and finalized on `main`; RX-021 is implemented on the current branch and awaits reviewer acceptance.
+- Current RX task state: RX-020 is reviewer-accepted and finalized on `main`; RX-021 is implemented with the same-branch reconciliation fix on the current branch and awaits reviewer acceptance.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
@@ -91,7 +91,7 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - Paper PnL explanation copies existing `DecisionResult` expected funding, total fees, simulated roundtrip cost, and net profit when present; missing economics remain missing and do not become zero.
 - One fake paper `Capture` represents one funding settlement opportunity.
 - Append-only ledger event contracts and helpers live in `core/accounting/ledger.py`.
-- Existing `paper_capture_opened` and `paper_rejection_recorded` ledger events may carry optional paper-result explanation payloads; reconciliation validates their shape when present without replaying profitability.
+- Existing `paper_capture_opened` and `paper_rejection_recorded` ledger events may carry optional paper-result explanation payloads; reconciliation validates their shape and fails closed on contradictory well-formed explanation fields without replaying profitability.
 - Deterministic offline funding settlement verifier lives in `core/monitoring/funding_settlement.py`.
 - Deterministic offline ledger reconciliation lives in `core/accounting/reconciliation.py`.
 - Ledger reconciliation records checked `event_count` and `last_sequence`, and `is_ledger_explicitly_reconciled(ledger.records())` returns true only for the exact current append-only history.

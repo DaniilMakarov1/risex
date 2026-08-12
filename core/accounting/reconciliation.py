@@ -113,6 +113,11 @@ _PNL_EXPLANATION_FIELDS = (
     "simulated_roundtrip_cost_usd",
     "net_profit_usd",
 )
+_STARTED_ATTRIBUTION = "entry_paper_eligible_decision"
+_BLOCKED_ATTRIBUTION = "paper_start_blocked_by_decision"
+_MODE_BLOCKER = "decision_mode_not_entry"
+_STATUS_BLOCKER = "decision_status_not_paper_eligible"
+_MISSING_PAYLOAD_VALUE = object()
 _CAPTURE_SCOPED_EVENT_TYPES = frozenset(
     {
         _PAPER_OPENED_EVENT_TYPE,
@@ -236,6 +241,65 @@ def _pnl_explanation_payload_is_well_formed(payload: Mapping[str, Any]) -> bool:
     )
 
 
+def _paper_start_blockers_for_decision_payload(
+    *,
+    decision_mode: Any,
+    decision_status: Any,
+) -> tuple[str, ...] | None:
+    try:
+        mode = EvaluationMode(str(decision_mode))
+        status = RouteStatus(str(decision_status))
+    except ValueError:
+        return None
+
+    blockers: list[str] = []
+    if mode is not EvaluationMode.ENTRY:
+        blockers.append(_MODE_BLOCKER)
+    if status is not RouteStatus.PAPER_ELIGIBLE:
+        blockers.append(_STATUS_BLOCKER)
+    return tuple(blockers)
+
+
+def _paper_result_explanation_payload(
+    payload: Mapping[str, Any],
+) -> Mapping[str, Any] | None:
+    raw_explanation = payload.get("paper_result_explanation")
+    return raw_explanation if isinstance(raw_explanation, Mapping) else None
+
+
+def _paper_result_explanation_matches_expected_payload(
+    raw_explanation: Mapping[str, Any],
+    *,
+    route_id: Any,
+    decision_mode: Any,
+    decision_status: Any,
+    decision_reasons: Sequence[str],
+    paper_started: bool,
+    paper_start_attribution: str,
+    paper_start_blockers: Sequence[str],
+    net_profit_usd: Any = _MISSING_PAYLOAD_VALUE,
+) -> bool:
+    raw_pnl_explanation = raw_explanation.get("pnl_explanation")
+    if not isinstance(raw_pnl_explanation, Mapping):
+        return False
+
+    return (
+        raw_explanation.get("route_id") == route_id
+        and raw_explanation.get("decision_mode") == decision_mode
+        and raw_explanation.get("decision_status") == decision_status
+        and _payload_str_sequence(raw_explanation, "decision_reasons")
+        == tuple(decision_reasons)
+        and raw_explanation.get("paper_started") is paper_started
+        and raw_explanation.get("paper_start_attribution") == paper_start_attribution
+        and _payload_str_sequence(raw_explanation, "paper_start_blockers")
+        == tuple(paper_start_blockers)
+        and (
+            net_profit_usd is _MISSING_PAYLOAD_VALUE
+            or raw_pnl_explanation.get("net_profit_usd") == net_profit_usd
+        )
+    )
+
+
 def _optional_paper_result_explanation_is_well_formed(
     payload: Mapping[str, Any],
     *,
@@ -273,6 +337,31 @@ def _optional_paper_result_explanation_is_well_formed(
         and ((paper_started and not blockers) or (not paper_started and bool(blockers)))
         and isinstance(raw_pnl_explanation, Mapping)
         and _pnl_explanation_payload_is_well_formed(raw_pnl_explanation)
+    )
+
+
+def _paper_rejection_explanation_matches_event_payload(payload: Mapping[str, Any]) -> bool:
+    raw_explanation = _paper_result_explanation_payload(payload)
+    if raw_explanation is None:
+        return True
+
+    decision_reasons = _payload_str_sequence(payload, "reasons")
+    blockers = _paper_start_blockers_for_decision_payload(
+        decision_mode=payload.get("mode"),
+        decision_status=payload.get("status"),
+    )
+    if decision_reasons is None or blockers is None:
+        return True
+
+    return _paper_result_explanation_matches_expected_payload(
+        raw_explanation,
+        route_id=payload.get("route_id"),
+        decision_mode=payload.get("mode"),
+        decision_status=payload.get("status"),
+        decision_reasons=decision_reasons,
+        paper_started=False,
+        paper_start_attribution=_BLOCKED_ATTRIBUTION,
+        paper_start_blockers=blockers,
     )
 
 
@@ -657,6 +746,16 @@ def _event_payload_is_well_formed(event: LedgerEvent) -> bool:
     return False
 
 
+def _validate_well_formed_event_payload_semantics(
+    event: LedgerEvent,
+    reasons: list[LedgerReconciliationReason],
+) -> None:
+    if event.event_type == LedgerEventType.PAPER_REJECTION_RECORDED.value and (
+        not _paper_rejection_explanation_matches_event_payload(event.payload)
+    ):
+        _add_reason(reasons, LedgerReconciliationReason.CONTRADICTORY_LEDGER_EVIDENCE)
+
+
 def _validate_supplied_ledger_history(
     events: Sequence[LedgerEvent],
     reasons: list[LedgerReconciliationReason],
@@ -670,6 +769,8 @@ def _validate_supplied_ledger_history(
             continue
         if not _event_payload_is_well_formed(event):
             _add_reason(reasons, LedgerReconciliationReason.MALFORMED_LEDGER_EVENT_PAYLOAD)
+            continue
+        _validate_well_formed_event_payload_semantics(event, reasons)
     return supplied_events
 
 
@@ -743,6 +844,41 @@ def _events_of_type(events: Sequence[LedgerEvent], event_type: str) -> tuple[Led
     return tuple(event for event in events if event.event_type == event_type)
 
 
+def _validate_opened_paper_result_explanation(
+    *,
+    opened_event: LedgerEvent,
+    route_decision: LedgerEvent | None,
+    reasons: list[LedgerReconciliationReason],
+) -> None:
+    if route_decision is None:
+        return
+    raw_explanation = _paper_result_explanation_payload(opened_event.payload)
+    if raw_explanation is None:
+        return
+
+    decision_reasons = _payload_str_sequence(route_decision.payload, "reasons")
+    if decision_reasons is None:
+        return
+
+    net_profit_usd = (
+        route_decision.payload.get("net_profit_usd")
+        if "net_profit_usd" in route_decision.payload
+        else _MISSING_PAYLOAD_VALUE
+    )
+    if not _paper_result_explanation_matches_expected_payload(
+        raw_explanation,
+        route_id=route_decision.payload.get("route_id"),
+        decision_mode=route_decision.payload.get("mode"),
+        decision_status=route_decision.payload.get("status"),
+        decision_reasons=decision_reasons,
+        paper_started=True,
+        paper_start_attribution=_STARTED_ATTRIBUTION,
+        paper_start_blockers=(),
+        net_profit_usd=net_profit_usd,
+    ):
+        _add_reason(reasons, LedgerReconciliationReason.CONTRADICTORY_LEDGER_EVIDENCE)
+
+
 def _validate_paper_lifecycle(
     capture_events: Sequence[LedgerEvent],
     route_decision: LedgerEvent | None,
@@ -771,6 +907,14 @@ def _validate_paper_lifecycle(
     paper_event_sequences = tuple(event.sequence for event in paper_events)
     if len(paper_events) == len(_PAPER_LIFECYCLE_EVENT_ORDER):
         event_sequence_by_type = {event.event_type: event.sequence for event in paper_events}
+        opened_event = next(
+            event for event in paper_events if event.event_type == _PAPER_OPENED_EVENT_TYPE
+        )
+        _validate_opened_paper_result_explanation(
+            opened_event=opened_event,
+            route_decision=route_decision,
+            reasons=reasons,
+        )
         if not (
             event_sequence_by_type[_PAPER_OPENED_EVENT_TYPE]
             < event_sequence_by_type[_PAPER_SETTLEMENT_EVENT_TYPE]

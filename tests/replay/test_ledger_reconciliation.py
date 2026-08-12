@@ -8,6 +8,8 @@ from datetime import timedelta
 from decimal import Decimal
 from pathlib import Path
 
+import pytest
+
 from apps.paper_runner.lifecycle import run_paper_lifecycle
 from apps.research_runner.fake_data import build_fake_route_and_snapshot
 from core.accounting.ledger import (
@@ -332,6 +334,117 @@ def test_malformed_paper_result_explanation_payload_fails_closed() -> None:
 
     assert result.reconciled is False
     assert LedgerReconciliationReason.MALFORMED_LEDGER_EVENT_PAYLOAD in result.reasons
+
+
+@pytest.mark.parametrize(
+    ("field_name", "value"),
+    (
+        ("decision_mode", EvaluationMode.DISCOVERY.value),
+        ("decision_status", RouteStatus.REJECTED.value),
+        ("decision_reasons", (RejectReason.MIN_NET_PROFIT_NOT_MET.value,)),
+        ("paper_start_attribution", "paper_start_blocked_by_decision"),
+        ("pnl_explanation.net_profit_usd", "999"),
+    ),
+)
+def test_contradictory_opened_paper_result_explanation_fails_closed(
+    field_name: str,
+    value: object,
+) -> None:
+    ledger = InMemoryLedger()
+    route, snapshot = _append_verified_history(ledger)
+    records = list(ledger.records())
+    opened_index = next(
+        index
+        for index, event in enumerate(records)
+        if event.event_type == LedgerEventType.PAPER_CAPTURE_OPENED.value
+    )
+    contradictory_payload = dict(records[opened_index].payload)
+    contradictory_explanation = dict(contradictory_payload["paper_result_explanation"])
+
+    if field_name == "pnl_explanation.net_profit_usd":
+        pnl_explanation = dict(contradictory_explanation["pnl_explanation"])
+        pnl_explanation["net_profit_usd"] = value
+        contradictory_explanation["pnl_explanation"] = pnl_explanation
+    else:
+        contradictory_explanation[field_name] = value
+    contradictory_payload["paper_result_explanation"] = contradictory_explanation
+    records[opened_index] = _replace_ledger_event(
+        records[opened_index],
+        payload=contradictory_payload,
+    )
+
+    result = replay_ledger_reconciliation(
+        tuple(records),
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+    )
+
+    assert result.reconciled is False
+    assert LedgerReconciliationReason.CONTRADICTORY_LEDGER_EVIDENCE in result.reasons
+    assert LedgerReconciliationReason.MALFORMED_LEDGER_EVENT_PAYLOAD not in result.reasons
+
+
+def _well_formed_rejection_payload(route_id: str) -> dict[str, object]:
+    return {
+        "route_id": route_id,
+        "mode": EvaluationMode.ENTRY.value,
+        "status": RouteStatus.REJECTED.value,
+        "reasons": (RejectReason.MIN_NET_PROFIT_NOT_MET.value,),
+        "capture_started": False,
+        "paper_result_explanation": {
+            "route_id": route_id,
+            "decision_mode": EvaluationMode.ENTRY.value,
+            "decision_status": RouteStatus.REJECTED.value,
+            "decision_reasons": (RejectReason.MIN_NET_PROFIT_NOT_MET.value,),
+            "paper_started": False,
+            "paper_start_attribution": "paper_start_blocked_by_decision",
+            "paper_start_blockers": ("decision_status_not_paper_eligible",),
+            "pnl_explanation": {
+                "expected_funding_usd": None,
+                "total_fees_usd": None,
+                "simulated_roundtrip_cost_usd": None,
+                "net_profit_usd": None,
+            },
+        },
+    }
+
+
+@pytest.mark.parametrize(
+    ("field_name", "value"),
+    (
+        ("decision_mode", EvaluationMode.DISCOVERY.value),
+        ("decision_status", RouteStatus.PAPER_ELIGIBLE.value),
+        ("decision_reasons", (RejectReason.REQUIRED_LIVE_DATA_MISSING.value,)),
+        ("paper_start_attribution", "entry_paper_eligible_decision"),
+        ("paper_start_blockers", ("decision_mode_not_entry",)),
+    ),
+)
+def test_contradictory_rejection_paper_result_explanation_fails_closed(
+    field_name: str,
+    value: object,
+) -> None:
+    ledger = InMemoryLedger()
+    route, snapshot = _append_verified_history(ledger)
+    rejection_payload = _well_formed_rejection_payload("later-rejected-route")
+    rejection_explanation = dict(rejection_payload["paper_result_explanation"])
+    rejection_explanation[field_name] = value
+    rejection_payload["paper_result_explanation"] = rejection_explanation
+
+    ledger.append(
+        event_type=LedgerEventType.PAPER_REJECTION_RECORDED,
+        payload=rejection_payload,
+        recorded_at=snapshot.risex_funding_settlement_at,
+    )
+
+    result = replay_ledger_reconciliation(
+        ledger.records(),
+        capture_id=route.capture_id,
+        settlement_time=snapshot.risex_funding_settlement_at,
+    )
+
+    assert result.reconciled is False
+    assert LedgerReconciliationReason.CONTRADICTORY_LEDGER_EVIDENCE in result.reasons
+    assert LedgerReconciliationReason.MALFORMED_LEDGER_EVENT_PAYLOAD not in result.reasons
 
 
 def _funding_checkpoint_sequences(ledger: Ledger) -> tuple[int, ...]:
