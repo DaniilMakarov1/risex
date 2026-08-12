@@ -1,9 +1,11 @@
 # Status
 
-- Current branch: `task/rx-026-approval-gated-funding-verification`.
-- Latest accepted product task: RX-025 — Real-Data Research Runner.
-- Current product branch task: RX-026 — Approval-Gated Real Funding Settlement Verification.
+- Current branch: `main`.
+- Latest accepted product task: RX-026 — Approval-Gated Real Funding Settlement Verification.
+- Accepted RX-026 implementation HEAD: `481f9257ad5e541508001d86248cdac96e90ba7c`
+- RX-026 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
 - RX-026 starting baseline: `709cf6c6e1b32ccb06f57d66ee18d862fef2056c`
+- Previous accepted product task before RX-026: RX-025 — Real-Data Research Runner.
 - Accepted RX-025 implementation HEAD: `c684c167579372b06c4400858bcff0763ecf1b38`
 - RX-025 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
 - RX-025 starting baseline: `d2ef60e9ba5d0d06da23755c389d9981a66a22d7`
@@ -51,12 +53,13 @@
 - Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
 - Current accepted `main` governance task: RX-Q004.
-- Current accepted `main` product task: RX-025.
-- Current RX task state: RX-026 is implemented on `task/rx-026-approval-gated-funding-verification` and awaiting reviewer acceptance; `NEXT_TASK.md` keeps RX-027 as the immediate next task after RX-026 review.
+- Current accepted `main` product task: RX-026.
+- Current RX task state: RX-026 is reviewer-accepted and finalized on `main`; `NEXT_TASK.md` keeps RX-027 as the immediate next task and RX-027 has not been started.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
-RX-025 is the latest accepted product baseline on `main`.
+RX-026 is the latest accepted product baseline on `main`.
+RX-025 remains the previous accepted product baseline before RX-026.
 RX-024 remains the previous accepted product baseline before RX-025.
 RX-023 remains the previous accepted product baseline before RX-024.
 RX-022 remains the previous accepted product baseline before RX-023.
@@ -71,7 +74,7 @@ RX-013 remains the previous accepted product baseline before RX-014.
 RX-012 remains the previous accepted product baseline before RX-013.
 RX-Q001 remains the previous accepted governance baseline before RX-Q002.
 RX-011 remains the previous accepted product implementation baseline before RX-012.
-`NEXT_TASK.md` is prepared for RX-027 after RX-026 implementation.
+`NEXT_TASK.md` is prepared for RX-027 after RX-026 finalization.
 
 ## Completed accepted tasks
 
@@ -104,6 +107,7 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - RX-023 — Read-only Hyperliquid Observation Adapter
 - RX-024 — Real Market-Data Route Snapshot Assembly
 - RX-025 — Real-Data Research Runner
+- RX-026 — Approval-Gated Real Funding Settlement Verification
 
 ## Current architecture status
 
@@ -179,11 +183,11 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - RX-023 is reviewer-accepted and finalized on `main`.
 - RX-024 is reviewer-accepted and finalized on `main`.
 - RX-025 is reviewer-accepted and finalized on `main`.
-- RX-026 is implemented on `task/rx-026-approval-gated-funding-verification` and awaits reviewer acceptance.
+- RX-026 is reviewer-accepted and finalized on `main`.
 - The next recommended product task is execution planning without orders, followed by guarded live runner after explicit acceptance gates, order placement only in a future explicitly approved task, and read-only monitoring/dashboard later.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized.
 
-## Tests last reported for RX-026 branch
+## Tests last reported for accepted RX-026 branch
 
 - `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
 - `python3 -m pytest tests/invariant`: `36 passed in 0.21s`
@@ -192,6 +196,15 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - `python3 -m pytest`: `418 passed in 0.63s`
 - `python3 -m compileall apps core storage tests scripts`: exit 0
 - `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
+- `git diff --check`: exit 0
+- `git diff --cached --check`: exit 0
+
+## Tests last reported for RX-026 finalization on main
+
+- `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
+- `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
+- `python3 -m pytest`: `418 passed`
+- `python3 -m compileall apps core storage tests`: exit 0
 - `git diff --check`: exit 0
 - `git diff --cached --check`: exit 0
 

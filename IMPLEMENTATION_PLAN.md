@@ -25,6 +25,7 @@ The original product direction remains hedged funding capture on RiseX with hedg
 - RX-023 added the read-only Hyperliquid public market-data observation adapter.
 - RX-024 added the real market-data route snapshot assembly handoff from read-only per-venue observations into the existing `assemble_route_snapshot()` path.
 - RX-025 added the one-route real-data research runner that uses the existing adapter handoff and `evaluate_route()` path.
+- RX-026 added approval-gated funding settlement verification for explicit caller-supplied observed evidence.
 - RX-Q001 and RX-Q002 added repository workflow, handoff validation, and supervised-worker governance.
 
 ## Accepted Offline Safety-Hardening Detour
@@ -35,15 +36,15 @@ The detour's purpose is to keep future live-adjacent work honest: funding settle
 
 ## Latest Accepted Product Task
 
-RX-025 — Real-Data Research Runner is reviewer-accepted and finalized on `main`. It adds a one-route real-data research runner that consumes one existing `RouteCandidate`, read-only RiseX and hedge adapters, an explicit timezone-aware assembly timestamp, and one `EvaluationMode`, then delegates to the existing adapter handoff and `evaluate_route()` path. It does not discover routes, rank routes, write ledger events, start paper lifecycle, verify funding settlement, create plans, place orders, add CLI behavior, or add live runner behavior.
+RX-026 — Approval-Gated Real Funding Settlement Verification is reviewer-accepted and finalized on `main`. It adds one approval-gated workflow for one existing `Capture`, one existing `RouteCandidate`, and one explicit funding settlement timestamp using explicit caller-supplied observed settlement evidence. It does not call `evaluate_route()`, assemble snapshots, calculate profitability, mutate route eligibility, start paper lifecycle, reconcile ledgers, plan execution, place orders, add private endpoints, add credentials, or add live runner behavior.
 
 ## Current Product Branch Progress
 
-RX-026 is implemented on `task/rx-026-approval-gated-funding-verification` and awaits reviewer acceptance.
+No product branch is active in this checkout. RX-027 is the immediate next task and has not been started.
 
 ## Current Product Handoff
 
-`NEXT_TASK.md` is prepared for RX-027, the next gated execution-planning-without-orders task after RX-026 review.
+`NEXT_TASK.md` is prepared for RX-027, the next gated execution-planning-without-orders task after RX-026 finalization.
 
 ## Remaining Gated Roadmap After RX-026
 
