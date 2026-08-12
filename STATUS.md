@@ -1,9 +1,12 @@
 # Status
 
-- Current branch: `main`.
+- Current branch: `task/rx-024-real-market-data-route-snapshot-assembly`.
 - Latest accepted product task: RX-023 — Read-only Hyperliquid Observation Adapter.
 - Accepted RX-023 implementation HEAD: `49fd3215e8835c7beeb13a3261b562dfd782ae24`
 - RX-023 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
+- Current task branch: RX-024 — Real Market-Data Route Snapshot Assembly.
+- RX-024 starting baseline: `ff5898c654c68859bdd07ea5099e94ae66e0cfd8`
+- RX-024 state: implemented on task branch and pending review.
 - Previous accepted product task before RX-023: RX-022 — Read-only RiseX Observation Adapter.
 - Accepted RX-022 implementation HEAD: `5f274c17d605cb75485c2d79608cd089190ac5a8`
 - RX-022 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
@@ -42,7 +45,7 @@
 - Accepted baseline branch: `main`
 - Current accepted `main` governance task: RX-Q004.
 - Current accepted `main` product task: RX-023.
-- Current RX task state: RX-023 is reviewer-accepted and finalized on `main`; RX-024 is prepared as the immediate next task and has not been started.
+- Current RX task state: RX-024 is implemented on `task/rx-024-real-market-data-route-snapshot-assembly` and pending review; `NEXT_TASK.md` is prepared for RX-025.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
@@ -59,7 +62,7 @@ RX-013 remains the previous accepted product baseline before RX-014.
 RX-012 remains the previous accepted product baseline before RX-013.
 RX-Q001 remains the previous accepted governance baseline before RX-Q002.
 RX-011 remains the previous accepted product implementation baseline before RX-012.
-`NEXT_TASK.md` is prepared for RX-024 after RX-023 finalization.
+`NEXT_TASK.md` is prepared for RX-025 after RX-024 implementation.
 
 ## Completed accepted tasks
 
@@ -138,7 +141,8 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - Live `CapturePlan` creation blocked.
 - One read-only RiseX public market-data adapter exists in `core/venues/risex.py`.
 - One read-only Hyperliquid public market-data adapter exists in `core/venues/hyperliquid.py`.
-- No real market-data route snapshot assembly, paper exchange simulation, live runner behavior, orders, or live trading.
+- One real market-data route snapshot handoff exists in `core/pipeline/snapshot.py` and delegates to `assemble_route_snapshot()` for one existing route at a time.
+- No real-data research runner, paper exchange simulation, live runner behavior, orders, or live trading.
 
 ## Current repository governance status
 
@@ -158,8 +162,20 @@ RX-011 remains the previous accepted product implementation baseline before RX-0
 - The project continues along the intended product implementation path after RX-023.
 - RX-022 is reviewer-accepted and finalized on `main`.
 - RX-023 is reviewer-accepted and finalized on `main`.
-- The next recommended product task is real market-data snapshot assembly, followed by a real-data research runner, funding settlement verification with explicit approval, execution planning without orders, guarded live runner after explicit acceptance gates, order placement only in a future explicitly approved task, and read-only monitoring/dashboard later.
+- RX-024 is implemented on the current task branch and pending review.
+- The next recommended product task is a real-data research runner, followed by funding settlement verification with explicit approval, execution planning without orders, guarded live runner after explicit acceptance gates, order placement only in a future explicitly approved task, and read-only monitoring/dashboard later.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized.
+
+## Tests last reported for RX-024 branch
+
+- `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
+- `python3 -m pytest tests/invariant`: `36 passed`
+- `python3 -m pytest tests/unit/test_snapshot_assembly.py`: `22 passed`
+- `python3 -m pytest`: `404 passed`
+- `python3 -m compileall apps core storage tests scripts`: exit 0
+- `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
+- `git diff --check`: exit 0
+- `git diff --cached --check`: exit 0
 
 ## Tests last reported for accepted RX-011
 

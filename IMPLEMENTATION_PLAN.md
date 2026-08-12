@@ -35,21 +35,24 @@ The detour's purpose is to keep future live-adjacent work honest: funding settle
 
 RX-023 — Read-only Hyperliquid Observation Adapter is reviewer-accepted and finalized on `main`. It adds a read-only Hyperliquid public market-data adapter only, preserves per-venue observation normalization, and does not assemble route snapshots, evaluate routes, rank routes, write ledger events, create plans, place orders, or add live runner behavior.
 
+## Current Product Branch Progress
+
+RX-024 — Real Market-Data Route Snapshot Assembly is implemented on the current task branch and pending review. It adds a one-route handoff from existing read-only RiseX and Hyperliquid `VenueAdapter.fetch_observation(symbol)` calls into the existing `assemble_route_snapshot()` path. It does not evaluate routes, rank routes, mutate eligibility, write ledger events, start paper lifecycle, create plans, place orders, or add live runner behavior.
+
 ## Current Product Handoff
 
-RX-024 — Real Market-Data Route Snapshot Assembly is the immediate next task in `NEXT_TASK.md`. It has not been started.
+RX-025 — Real-Data Research Runner is the immediate next task in `NEXT_TASK.md`.
 
-## Remaining Gated Roadmap After RX-023
+## Remaining Gated Roadmap After RX-024
 
 Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts:
 
-1. Assemble real market-data route snapshots through the existing `assemble_route_snapshot()` path.
-2. Add a real-data research runner that still uses the existing scan/refresh and `evaluate_route()` paths.
-3. Verify funding settlement on real or explicitly approved observed evidence, with approval gates documented in the task prompt.
-4. Add execution planning without orders; plans must remain non-sending until a later explicit task.
-5. Add a guarded live runner only after explicit acceptance gates prove data, ledger, settlement verification, plan freshness, execution capability, and live switch behavior.
-6. Add order placement only in a future explicitly approved task.
-7. Add read-only monitoring/dashboard work later, without turning it into a decision, execution, or ledger-write path.
+1. Add a real-data research runner that still uses the existing scan/refresh and `evaluate_route()` paths.
+2. Verify funding settlement on real or explicitly approved observed evidence, with approval gates documented in the task prompt.
+3. Add execution planning without orders; plans must remain non-sending until a later explicit task.
+4. Add a guarded live runner only after explicit acceptance gates prove data, ledger, settlement verification, plan freshness, execution capability, and live switch behavior.
+5. Add order placement only in a future explicitly approved task.
+6. Add read-only monitoring/dashboard work later, without turning it into a decision, execution, or ledger-write path.
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
 
@@ -172,8 +175,20 @@ RX-023 implementation notes:
 - Missing or malformed market metadata, asset contexts, orderbook sides, prices, sizes, observation timestamps, or predicted `HlPerp.nextFundingTime` values fail closed before a `VenueObservation` is returned.
 - RX-023 does not assemble route snapshots, evaluate routes, rank routes, write ledger events, create plans, use private account endpoints, place orders, add live runner behavior, or change the RiseX adapter.
 
+## RX-024 — Real Market-Data Route Snapshot Assembly
+
+Add the smallest real market-data route snapshot assembly handoff that consumes existing read-only per-venue observations and calls the existing `assemble_route_snapshot()` path for one `RouteCandidate` at a time.
+
+RX-024 implementation notes:
+
+- `core/pipeline/snapshot.py` owns `assemble_route_snapshot_from_adapters()`.
+- The handoff calls `fetch_observation(route.risex_symbol)` once on the RiseX adapter and `fetch_observation(route.hedge_symbol)` once on the hedge adapter.
+- The handoff passes the two returned `VenueObservation` values into the existing `assemble_route_snapshot()` function and relies on that path for route-aligned snapshot construction and metadata validation.
+- Non-observation adapter returns and contradictory route/observation metadata fail before any route decision can run.
+- RX-024 does not call `evaluate_route()`, calculate EV, rank routes, mutate eligibility, write ledger events, start paper lifecycle, create plans, place orders, add private endpoints, add credentials, add live runner behavior, or create a second snapshot assembly path.
+
 ## Next Sequence
 
-1. RX-024 — Real Market-Data Route Snapshot Assembly.
+1. RX-025 — Real-Data Research Runner.
 
-Do not promote any later roadmap stage into the current handoff until RX-024 is reviewed and accepted.
+Do not promote any later roadmap stage into the current handoff until RX-025 is reviewed and accepted.

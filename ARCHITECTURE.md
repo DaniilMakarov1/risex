@@ -102,7 +102,7 @@ Any non-terminal Capture may transition to `FAILED`. Capture states with possibl
 - Basis and unwind tracking belong only in `core/economics/basis.py`.
 - Entry EV is calculated only in `core/economics/ev.py`.
 - Risk gates belong only in `core/risk/gates.py`.
-- Route snapshot assembly happens only in `core/pipeline/snapshot.py`.
+- Route snapshot assembly and the real market-data snapshot handoff happen only in `core/pipeline/snapshot.py`.
 - Route decisions happen only in `core/pipeline/evaluate.py`.
 - Offline route-candidate orchestration happens only in `core/pipeline/offline_scan.py`.
 - Broad Scan and Focused Refresh orchestration happens only in `core/pipeline/scan_refresh.py`.
@@ -237,6 +237,15 @@ RX-004 adds a deterministic offline snapshot assembly layer before evaluation:
 4. It locates the required RiseX and hedge observations, fails explicitly on missing or contradictory metadata, and uses `calculate_executable_quote()` for all four entry/immediate-unwind quotes.
 5. It preserves per-leg observation timestamps and funding settlement timestamps on the resulting `VenueSnapshot`.
 6. It does not call `evaluate_route()`, calculate EV, apply eligibility, rank routes, write ledger events, create `Capture`/`CapturePlan`, connect to venues, or place orders.
+
+RX-024 adds a narrow real market-data snapshot handoff:
+
+1. `core/pipeline/snapshot.py` owns `assemble_route_snapshot_from_adapters()`.
+2. The handoff accepts one existing `RouteCandidate`, one RiseX `VenueAdapter`, one hedge `VenueAdapter`, and an explicit timezone-aware assembly timestamp.
+3. It calls `fetch_observation(route.risex_symbol)` once on the RiseX adapter and `fetch_observation(route.hedge_symbol)` once on the hedge adapter.
+4. It passes the two returned `VenueObservation` values into the existing `assemble_route_snapshot()` path; the handoff does not construct executable quotes, merge economics, or replace route/snapshot validation.
+5. Adapter failures, non-observation returns, missing route observations, or contradictory observation metadata fail before any route decision path can run.
+6. It does not call `evaluate_route()`, calculate EV, rank routes, mutate eligibility, write ledger events, start paper lifecycle, create plans, call execution modules, connect to private endpoints, or place orders.
 
 RX-005 adds deterministic offline orchestration over multiple fake route candidates:
 

@@ -358,3 +358,16 @@
 - Affected files/modules: `core/venues/hyperliquid.py`, `core/venues/__init__.py`, focused unit tests, invariant tests, and governance docs.
 - Superseded decisions: RX-004's adapter boundary remains unchanged; RX-023 fills it for Hyperliquid only.
 - Non-decisions: RX-023 does not implement real market-data route snapshot assembly, route evaluation, route ranking, route eligibility mutation, EV/fee/funding/VWAP/basis calculations, ledger writes, replay paths, private/account/auth endpoints, credentials, orders, paper lifecycle, live runner behavior, live trading, executable `CapturePlan`, execution planning, canary architecture, hold-next-cycle logic, artificial filters, or a second decision, snapshot, ledger-write, economics, or live execution path.
+
+## 2026-08-12 - RX-024
+
+- Date: 2026-08-12
+- Decision: Added `assemble_route_snapshot_from_adapters()` in `core/pipeline/snapshot.py` as the narrow real market-data route snapshot handoff.
+- Reason: RX-024 needs one explicit bridge from the existing read-only RiseX and Hyperliquid `VenueAdapter.fetch_observation(symbol)` boundary into the existing `assemble_route_snapshot()` path for one `RouteCandidate`, without introducing a runner or second snapshot assembly owner.
+- Decision: The handoff fetches exactly `route.risex_symbol` from the RiseX adapter and `route.hedge_symbol` from the hedge adapter, verifies that both returned values are `VenueObservation` instances, and delegates route-aligned snapshot construction to `assemble_route_snapshot()`.
+- Reason: Adapters must remain per-venue observation sources, while cross-venue route alignment, executable quote construction, funding/fee preservation, and metadata validation remain in the existing snapshot owner path.
+- Decision: Focused tests use injected adapters only and invariant coverage checks that the handoff does not call `evaluate_route()` or own EV, VWAP, fee, funding, ledger, paper, execution, or live behavior.
+- Reason: Real HTTP availability, credentials, profitability decisions, and trading behavior are outside RX-024 and must remain fail-closed behind later explicit tasks.
+- Affected files/modules: `core/pipeline/snapshot.py`, focused unit tests, invariant tests, `README.md`, `ARCHITECTURE.md`, `PRODUCT_INVARIANTS.md`, `IMPLEMENTATION_PLAN.md`, `STATUS.md`, `DECISIONS.md`, and `NEXT_TASK.md`.
+- Superseded decisions: no previous decision is superseded; RX-024 reuses the RX-004 `assemble_route_snapshot()` owner boundary and the RX-022/RX-023 read-only adapter boundaries.
+- Non-decisions: RX-024 does not call `evaluate_route()`, calculate EV, rank routes, mutate eligibility, write ledger events, replay ledger history, start paper lifecycle, create plans, use private/account/auth endpoints, add credentials, place orders, add live runner behavior, enable live trading, add route statuses, add reject reasons, add artificial filters, create canary architecture, add hold-next-cycle logic, or create a second decision, snapshot, EV, fee, funding, VWAP, basis, ledger-write, replay, or live execution path.

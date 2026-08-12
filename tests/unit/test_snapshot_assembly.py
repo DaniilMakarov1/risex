@@ -5,6 +5,7 @@ from decimal import Decimal
 
 import pytest
 
+import core.pipeline.snapshot as snapshot_module
 from core.config.product_rules import ProductRules
 from core.domain.contracts import (
     EstimatedValue,
@@ -18,7 +19,11 @@ from core.domain.contracts import (
 from core.domain.enums import EvaluationMode, RejectReason, RouteStatus, ValueSource
 from core.economics.liquidity import calculate_executable_quote
 from core.pipeline.evaluate import evaluate_route
-from core.pipeline.snapshot import SnapshotAssemblyInputError, assemble_route_snapshot
+from core.pipeline.snapshot import (
+    SnapshotAssemblyInputError,
+    assemble_route_snapshot,
+    assemble_route_snapshot_from_adapters,
+)
 
 RISEX_OBSERVED_AT = datetime(2026, 1, 1, 12, 0, tzinfo=UTC)
 HEDGE_OBSERVED_AT = datetime(2026, 1, 1, 12, 0, 1, tzinfo=UTC)
@@ -118,6 +123,169 @@ def _observation_mapping(
         (risex_observation.venue, risex_observation.symbol): risex_observation,
         (hedge_observation.venue, hedge_observation.symbol): hedge_observation,
     }
+
+
+class RecordingObservationAdapter:
+    name = "recording"
+
+    def __init__(self, observation: VenueObservation) -> None:
+        self.observation = observation
+        self.requested_symbols: list[str] = []
+
+    def fetch_observation(self, symbol: str) -> VenueObservation:
+        self.requested_symbols.append(symbol)
+        return self.observation
+
+
+class FailingObservationAdapter:
+    name = "failing"
+
+    def __init__(self) -> None:
+        self.requested_symbols: list[str] = []
+
+    def fetch_observation(self, symbol: str) -> VenueObservation:
+        self.requested_symbols.append(symbol)
+        raise ValueError("adapter observation unavailable")
+
+
+def test_adapter_handoff_fetches_two_observations_and_returns_assembled_snapshot() -> None:
+    route = _route()
+    risex_observation, hedge_observation = _observations()
+    risex_adapter = RecordingObservationAdapter(risex_observation)
+    hedge_adapter = RecordingObservationAdapter(hedge_observation)
+
+    snapshot = assemble_route_snapshot_from_adapters(
+        route=route,
+        risex_adapter=risex_adapter,
+        hedge_adapter=hedge_adapter,
+        assembled_at=ASSEMBLED_AT,
+    )
+
+    expected_snapshot = assemble_route_snapshot(
+        route=route,
+        observations=_observation_mapping(risex_observation, hedge_observation),
+        assembled_at=ASSEMBLED_AT,
+    )
+    assert snapshot == expected_snapshot
+    assert risex_adapter.requested_symbols == [route.risex_symbol]
+    assert hedge_adapter.requested_symbols == [route.hedge_symbol]
+
+
+def test_adapter_handoff_delegates_to_single_snapshot_assembly_path(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    route = _route()
+    risex_observation, hedge_observation = _observations()
+    expected_snapshot = assemble_route_snapshot(
+        route=route,
+        observations=_observation_mapping(risex_observation, hedge_observation),
+        assembled_at=ASSEMBLED_AT,
+    )
+    captured: dict[str, object] = {}
+
+    def fake_assemble_route_snapshot(*, route, observations, assembled_at):
+        captured["route"] = route
+        captured["observations"] = observations
+        captured["assembled_at"] = assembled_at
+        return expected_snapshot
+
+    monkeypatch.setattr(
+        snapshot_module,
+        "assemble_route_snapshot",
+        fake_assemble_route_snapshot,
+    )
+
+    snapshot = snapshot_module.assemble_route_snapshot_from_adapters(
+        route=route,
+        risex_adapter=RecordingObservationAdapter(risex_observation),
+        hedge_adapter=RecordingObservationAdapter(hedge_observation),
+        assembled_at=ASSEMBLED_AT,
+    )
+
+    assert snapshot is expected_snapshot
+    assert captured == {
+        "route": route,
+        "observations": {
+            (route.risex_venue, route.risex_symbol): risex_observation,
+            (route.hedge_venue, route.hedge_symbol): hedge_observation,
+        },
+        "assembled_at": ASSEMBLED_AT,
+    }
+
+
+def test_adapter_handoff_propagates_adapter_observation_failure() -> None:
+    route = _route()
+    _, hedge_observation = _observations()
+    risex_adapter = FailingObservationAdapter()
+
+    with pytest.raises(ValueError, match="adapter observation unavailable"):
+        assemble_route_snapshot_from_adapters(
+            route=route,
+            risex_adapter=risex_adapter,
+            hedge_adapter=RecordingObservationAdapter(hedge_observation),
+            assembled_at=ASSEMBLED_AT,
+        )
+
+    assert risex_adapter.requested_symbols == [route.risex_symbol]
+
+
+def test_adapter_handoff_rejects_naive_assembly_timestamp_before_fetch() -> None:
+    route = _route()
+    risex_observation, hedge_observation = _observations()
+    risex_adapter = RecordingObservationAdapter(risex_observation)
+    hedge_adapter = RecordingObservationAdapter(hedge_observation)
+
+    with pytest.raises(ValueError, match="assembled_at"):
+        assemble_route_snapshot_from_adapters(
+            route=route,
+            risex_adapter=risex_adapter,
+            hedge_adapter=hedge_adapter,
+            assembled_at=datetime(2026, 1, 1, 12, 0),
+        )
+
+    assert risex_adapter.requested_symbols == []
+    assert hedge_adapter.requested_symbols == []
+
+
+def test_adapter_handoff_rejects_non_observation_return() -> None:
+    class NonObservationAdapter:
+        name = "non-observation"
+
+        def fetch_observation(self, symbol: str) -> object:
+            return object()
+
+    route = _route()
+    _, hedge_observation = _observations()
+
+    with pytest.raises(SnapshotAssemblyInputError, match="RiseX adapter"):
+        assemble_route_snapshot_from_adapters(
+            route=route,
+            risex_adapter=NonObservationAdapter(),
+            hedge_adapter=RecordingObservationAdapter(hedge_observation),
+            assembled_at=ASSEMBLED_AT,
+        )
+
+
+def test_adapter_handoff_fails_closed_on_route_conflicting_observation() -> None:
+    route = _route()
+    risex_observation, _ = _observations()
+    wrong_hedge_observation = _observation(
+        venue="Hyperliquid",
+        symbol="ETH",
+        observed_at=HEDGE_OBSERVED_AT,
+        settlement_at=HEDGE_SETTLEMENT_AT,
+        funding=EstimatedValue(value=Decimal("-0.5"), source=ValueSource.OBSERVED),
+        fees=_fees("wrong_hedge_fees"),
+        order_book=_book(venue="Hyperliquid", symbol="ETH"),
+    )
+
+    with pytest.raises(SnapshotAssemblyInputError, match="hedge observation symbol"):
+        assemble_route_snapshot_from_adapters(
+            route=route,
+            risex_adapter=RecordingObservationAdapter(risex_observation),
+            hedge_adapter=RecordingObservationAdapter(wrong_hedge_observation),
+            assembled_at=ASSEMBLED_AT,
+        )
 
 
 def test_valid_observations_assemble_route_aligned_snapshot_from_vwap_logic() -> None:

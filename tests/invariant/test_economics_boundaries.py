@@ -1,8 +1,10 @@
+import inspect
 import re
 from pathlib import Path
 from typing import get_type_hints
 
 from core.domain.contracts import LiveGateEvidenceBundle, VenueObservation
+from core.pipeline.snapshot import assemble_route_snapshot_from_adapters
 from core.venues.base import VenueAdapter
 
 
@@ -49,6 +51,24 @@ def test_assemble_route_snapshot_is_the_single_snapshot_assembly_function() -> N
     assert definitions == [Path("core/pipeline/snapshot.py")]
 
 
+def test_real_market_data_handoff_delegates_without_decisions_or_second_logic() -> None:
+    source = inspect.getsource(assemble_route_snapshot_from_adapters)
+
+    assert "fetch_observation" in source
+    assert "assemble_route_snapshot(" in source
+    assert "evaluate_route" not in source
+    assert "calculate_entry_ev" not in source
+    assert "calculate_executable_quote" not in source
+    assert "calculate_total_fees_usd" not in source
+    assert "calculate_total_expected_funding_usd" not in source
+    assert "calculate_current_unwind_pnl_usd" not in source
+    assert "core.accounting" not in source
+    assert "core.execution" not in source
+    assert "apps.paper_runner" not in source
+    assert "apps.live_runner" not in source
+    assert "CapturePlan(" not in source
+
+
 def test_business_logic_function_definitions_stay_in_single_owner_modules() -> None:
     expected_owners = {
         "calculate_total_fees_usd": Path("core/economics/fees.py"),
@@ -58,6 +78,7 @@ def test_business_logic_function_definitions_stay_in_single_owner_modules() -> N
         "calculate_entry_ev": Path("core/economics/ev.py"),
         "evaluate_route": Path("core/pipeline/evaluate.py"),
         "assemble_route_snapshot": Path("core/pipeline/snapshot.py"),
+        "assemble_route_snapshot_from_adapters": Path("core/pipeline/snapshot.py"),
         "check_live_gate_evidence_bundle": Path("core/risk/gates.py"),
         "append_live_gate_evidence_bundle_event": Path("core/accounting/ledger.py"),
         "replay_live_gate_evidence_bundle_recording": Path(

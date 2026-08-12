@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from core.domain.contracts import (
     FeeModel,
@@ -15,6 +16,9 @@ from core.domain.contracts import (
     validate_timezone_aware_datetime,
 )
 from core.economics.liquidity import calculate_executable_quote
+
+if TYPE_CHECKING:
+    from core.venues.base import VenueAdapter
 
 ObservationKey = tuple[str, str]
 
@@ -143,4 +147,33 @@ def assemble_route_snapshot(
         fees=FeeModel(
             components=risex_observation.fees.components + hedge_observation.fees.components
         ),
+    )
+
+
+def assemble_route_snapshot_from_adapters(
+    *,
+    route: RouteCandidate,
+    risex_adapter: VenueAdapter,
+    hedge_adapter: VenueAdapter,
+    assembled_at: datetime,
+) -> VenueSnapshot:
+    """Fetch the two route observations and delegate snapshot construction."""
+
+    validate_timezone_aware_datetime(assembled_at, "assembled_at")
+
+    risex_observation = risex_adapter.fetch_observation(route.risex_symbol)
+    hedge_observation = hedge_adapter.fetch_observation(route.hedge_symbol)
+
+    if not isinstance(risex_observation, VenueObservation):
+        raise SnapshotAssemblyInputError("RiseX adapter must return a VenueObservation")
+    if not isinstance(hedge_observation, VenueObservation):
+        raise SnapshotAssemblyInputError("hedge adapter must return a VenueObservation")
+
+    return assemble_route_snapshot(
+        route=route,
+        observations={
+            (route.risex_venue, route.risex_symbol): risex_observation,
+            (route.hedge_venue, route.hedge_symbol): hedge_observation,
+        },
+        assembled_at=assembled_at,
     )

@@ -43,6 +43,7 @@ The single authoritative code contract for these constants is `ProductRules`.
 - Recorded fake live gate evidence bundle checks are not permission to trade live by themselves.
 - A future live path that uses recorded fake bundle-check evidence must fail closed unless one current append-only ledger event replays against the current Capture, route, funding settlement timestamp, referenced route-decision, funding-verification, and ledger-reconciliation history, and its recorded bundle gate result matches `core/risk/gates.py`.
 - Read-only venue adapters, real market-data snapshot assembly, and real-data research runners are data-ingestion and research stages only. They are not permission to place orders, enable live trading, or create executable order plans.
+- The real market-data snapshot handoff may fetch one RiseX observation and one Hyperliquid observation for one existing route, then must delegate to `assemble_route_snapshot()` without route decisions, profitability calculations, ledger writes, paper lifecycle, execution planning, or live runner behavior.
 - Execution planning without orders, a guarded live runner, and order placement must remain separate future tasks with explicit acceptance gates.
 
 ## Route statuses
