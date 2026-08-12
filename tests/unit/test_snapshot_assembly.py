@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from typing import get_type_hints
 
 import pytest
 
@@ -15,6 +16,7 @@ from core.domain.contracts import (
     OrderBookLevel,
     RouteCandidate,
     VenueObservation,
+    VenueSnapshot,
 )
 from core.domain.enums import EvaluationMode, RejectReason, RouteStatus, ValueSource
 from core.economics.liquidity import calculate_executable_quote
@@ -24,6 +26,7 @@ from core.pipeline.snapshot import (
     assemble_route_snapshot,
     assemble_route_snapshot_from_adapters,
 )
+from core.venues.base import VenueAdapter
 
 RISEX_OBSERVED_AT = datetime(2026, 1, 1, 12, 0, tzinfo=UTC)
 HEDGE_OBSERVED_AT = datetime(2026, 1, 1, 12, 0, 1, tzinfo=UTC)
@@ -146,6 +149,14 @@ class FailingObservationAdapter:
     def fetch_observation(self, symbol: str) -> VenueObservation:
         self.requested_symbols.append(symbol)
         raise ValueError("adapter observation unavailable")
+
+
+def test_adapter_handoff_runtime_type_hints_resolve() -> None:
+    hints = get_type_hints(assemble_route_snapshot_from_adapters)
+
+    assert hints["risex_adapter"] is VenueAdapter
+    assert hints["hedge_adapter"] is VenueAdapter
+    assert hints["return"] is VenueSnapshot
 
 
 def test_adapter_handoff_fetches_two_observations_and_returns_assembled_snapshot() -> None:

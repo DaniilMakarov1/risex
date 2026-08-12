@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import datetime
-from typing import TYPE_CHECKING
 
 from core.domain.contracts import (
     FeeModel,
@@ -16,9 +15,7 @@ from core.domain.contracts import (
     validate_timezone_aware_datetime,
 )
 from core.economics.liquidity import calculate_executable_quote
-
-if TYPE_CHECKING:
-    from core.venues.base import VenueAdapter
+from core.venues.base import VenueAdapter
 
 ObservationKey = tuple[str, str]
 
