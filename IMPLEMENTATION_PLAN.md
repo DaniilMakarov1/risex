@@ -33,23 +33,22 @@ The detour's purpose is to keep future live-adjacent work honest: funding settle
 
 RX-021 — Paper Result Attribution And PnL Explanation is reviewer-accepted and finalized on `main`. It adds deterministic fake paper start/non-start attribution and PnL explanation downstream of existing `DecisionResult` values and fake paper lifecycle events, preserves economics already produced by `evaluate_route()`, and does not change route eligibility.
 
-## Immediate Next Product Task
+## Current Product Task Branch
 
-The immediate next implementation task is RX-022 — Read-only RiseX Observation Adapter. It must remain the only next task in `NEXT_TASK.md` until completed and reviewed.
+RX-022 — Read-only RiseX Observation Adapter is implementation-complete on `task/rx-022-read-only-risex-observation-adapter` and pending reviewer acceptance. It adds a read-only RiseX public market-data adapter only; RX-021 remains the latest accepted product task until reviewer acceptance is explicit.
 
-## Remaining Gated Roadmap After RX-021
+## Remaining Gated Roadmap After RX-022
 
 Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts:
 
-1. RX-022: Add a read-only RiseX adapter that fetches and normalizes per-venue observations only.
-2. Add a read-only Hyperliquid adapter that fetches and normalizes per-venue observations only.
-3. Assemble real market-data route snapshots through the existing `assemble_route_snapshot()` path.
-4. Add a real-data research runner that still uses the existing scan/refresh and `evaluate_route()` paths.
-5. Verify funding settlement on real or explicitly approved observed evidence, with approval gates documented in the task prompt.
-6. Add execution planning without orders; plans must remain non-sending until a later explicit task.
-7. Add a guarded live runner only after explicit acceptance gates prove data, ledger, settlement verification, plan freshness, execution capability, and live switch behavior.
-8. Add order placement only in a future explicitly approved task.
-9. Add read-only monitoring/dashboard work later, without turning it into a decision, execution, or ledger-write path.
+1. Add a read-only Hyperliquid adapter that fetches and normalizes per-venue observations only.
+2. Assemble real market-data route snapshots through the existing `assemble_route_snapshot()` path.
+3. Add a real-data research runner that still uses the existing scan/refresh and `evaluate_route()` paths.
+4. Verify funding settlement on real or explicitly approved observed evidence, with approval gates documented in the task prompt.
+5. Add execution planning without orders; plans must remain non-sending until a later explicit task.
+6. Add a guarded live runner only after explicit acceptance gates prove data, ledger, settlement verification, plan freshness, execution capability, and live switch behavior.
+7. Add order placement only in a future explicitly approved task.
+8. Add read-only monitoring/dashboard work later, without turning it into a decision, execution, or ledger-write path.
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
 
@@ -154,8 +153,15 @@ RX-021 must not recalculate EV, fees, funding, VWAP, liquidity, basis, spread, s
 
 Add a read-only RiseX adapter that fetches and normalizes per-venue `VenueObservation` inputs only. Keep route snapshot assembly in `assemble_route_snapshot()`, route decisions in `evaluate_route()`, and all trading/execution behavior out of scope.
 
+RX-022 implementation notes:
+
+- `core/venues/risex.py` fetches public `GET /v1/markets` and `GET /v1/orderbook` data and returns one normalized `VenueObservation`.
+- RiseX funding rates and fee bps are not converted into USD cash flow inside the adapter because `VenueObservation` requires source-aware cash values and `fetch_observation(symbol)` has no selected notional or account fee tier.
+- Missing or malformed markets, settlement timestamps, orderbook sides, prices, quantities, or observation timestamps fail closed before a `VenueObservation` is returned.
+- RX-022 does not assemble route snapshots, evaluate routes, rank routes, write ledger events, create plans, use private endpoints, place orders, add live runner behavior, or add a Hyperliquid adapter.
+
 ## Next Sequence
 
-1. RX-022 — Read-only RiseX Observation Adapter.
+1. RX-023 — Read-only Hyperliquid Observation Adapter.
 
-Do not promote any later roadmap stage into the current handoff until RX-022 is completed, reviewed, and accepted.
+Do not promote any later roadmap stage into the current handoff until RX-022 is reviewed and accepted.

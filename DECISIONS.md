@@ -328,3 +328,18 @@
 - Affected files/modules: `apps/paper_runner/lifecycle.py`, `apps/paper_runner/__init__.py`, `core/accounting/ledger.py`, `core/accounting/reconciliation.py`, focused tests, and governance docs.
 - Superseded decisions: no previous decision is superseded; RX-021 extends fake paper result reporting downstream of RX-007.
 - Non-decisions: RX-021 does not recalculate EV, fees, funding, VWAP/liquidity, basis, spread, slippage, price impact, or profitability; does not mutate route eligibility; does not add route statuses or `RejectReason` values; does not add adapters, network calls, orders, live runner behavior, live trading, executable `CapturePlan`, execution planning, canary architecture, hold-next-cycle logic, or a second decision, snapshot, ledger-write, replay, economics, or live execution path.
+
+## 2026-08-12 - RX-022
+
+- Date: 2026-08-12
+- Decision: Added `RiseXObservationAdapter` in `core/venues/risex.py` as a read-only public market-data adapter implementing the existing `VenueAdapter.fetch_observation(symbol) -> VenueObservation` boundary.
+- Reason: RX-022 needs a real RiseX venue-data ingestion boundary while preserving per-venue normalization and keeping cross-venue snapshot assembly in `core/pipeline/snapshot.py`.
+- Decision: The adapter fetches only public `GET /v1/markets` and `GET /v1/orderbook` data, maps the requested symbol to one RiseX market id, normalizes orderbook levels into `OrderBook`/`OrderBookLevel`, and converts `next_funding_time` from Unix nanoseconds into a timezone-aware funding settlement timestamp.
+- Reason: `VenueObservation` requires normalized per-venue orderbook and settlement timestamp inputs before the existing snapshot assembly and route decision paths can consume real data in later tasks.
+- Decision: RiseX expected funding cash flow and fee cash flow remain `ValueSource.UNKNOWN` inside the adapter.
+- Reason: RISEx public market data exposes funding rates and fee bps/account-tier schedules, while the existing `VenueObservation` economics contract requires USD cash values and `fetch_observation(symbol)` has no selected route notional or account fee tier. Converting rates or bps to USD inside the adapter would duplicate economics and silently invent missing inputs.
+- Decision: Adapter tests use injected deterministic JSON responses and an injected clock; live HTTP availability is not required for test success.
+- Reason: The adapter may have a production read-only HTTP fallback, but repository tests must remain deterministic and fail closed over malformed or missing market-data shapes.
+- Affected files/modules: `core/venues/risex.py`, `core/venues/__init__.py`, focused unit tests, invariant tests, and governance docs.
+- Superseded decisions: RX-004's adapter boundary remains unchanged; RX-022 fills it for RiseX only.
+- Non-decisions: RX-022 does not implement a Hyperliquid adapter, route snapshot assembly, route evaluation, route ranking, route eligibility mutation, EV/fee/funding/VWAP/basis calculations, ledger writes, replay paths, private/account/auth endpoints, credentials, orders, paper lifecycle, live runner behavior, live trading, executable `CapturePlan`, execution planning, canary architecture, hold-next-cycle logic, artificial filters, or a second decision, snapshot, ledger-write, economics, or live execution path.
