@@ -38,27 +38,43 @@ def _markets_payload(
     *,
     market_id: str = "1",
     name: str = "BTC/USDC",
+    active: Any = True,
+    unlocked: Any = True,
     next_funding_time: str | None = NEXT_FUNDING_NS,
 ) -> dict[str, Any]:
     market: dict[str, Any] = {
         "market_id": market_id,
-        "config": {"name": name},
+        "config": {"name": name, "unlocked": unlocked},
         "display_name": name,
         "underlying": name,
+        "active": active,
     }
     if next_funding_time is not None:
         market["next_funding_time"] = next_funding_time
     return {"data": {"markets": [market]}, "request_id": "fixture-request"}
 
 
+def _markets_payload_without_active() -> dict[str, Any]:
+    payload = _markets_payload()
+    del payload["data"]["markets"][0]["active"]
+    return payload
+
+
+def _markets_payload_without_unlocked() -> dict[str, Any]:
+    payload = _markets_payload()
+    del payload["data"]["markets"][0]["config"]["unlocked"]
+    return payload
+
+
 def _orderbook_payload(
     *,
+    market_id: Any = "1",
     bids: list[dict[str, Any]] | None = None,
     asks: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     return {
         "data": {
-            "market_id": "1",
+            "market_id": market_id,
             "bids": bids
             if bids is not None
             else [{"price": "63669.7", "quantity": "0.000785", "order_count": 1}],
@@ -118,6 +134,29 @@ def test_fetch_observation_fails_closed_when_market_is_missing() -> None:
     assert fake_api.calls == [("/v1/markets", {})]
 
 
+@pytest.mark.parametrize(
+    ("markets_payload", "message"),
+    (
+        (_markets_payload(active=False), "active must be true"),
+        (_markets_payload_without_active(), "active must be true"),
+        (_markets_payload(active=None), "active must be true"),
+        (_markets_payload(active="true"), "active must be true"),
+        (_markets_payload(unlocked=False), "config.unlocked must be true"),
+        (_markets_payload_without_unlocked(), "config.unlocked must be true"),
+        (_markets_payload(unlocked=None), "config.unlocked must be true"),
+        (_markets_payload(unlocked="true"), "config.unlocked must be true"),
+    ),
+)
+def test_fetch_observation_fails_closed_when_market_is_inactive_locked_or_malformed(
+    markets_payload: dict[str, Any],
+    message: str,
+) -> None:
+    fake_api = FakeRiseXAPI(markets_payload=markets_payload)
+
+    with pytest.raises(ValueError, match=message):
+        _adapter(fake_api).fetch_observation("BTC-PERP")
+
+
 def test_fetch_observation_fails_closed_when_response_is_not_object() -> None:
     def malformed_fetch(path: str, params: dict[str, str]) -> list[str]:
         return ["not", "an", "object"]
@@ -165,6 +204,16 @@ def test_fetch_observation_fails_closed_on_missing_or_invalid_settlement_time(
 @pytest.mark.parametrize(
     ("orderbook_payload", "message"),
     (
+        (
+            {
+                "data": {
+                    "bids": [{"price": "1", "quantity": "1"}],
+                    "asks": [{"price": "1", "quantity": "1"}],
+                }
+            },
+            "orderbook requires market_id",
+        ),
+        (_orderbook_payload(market_id="2"), "market_id must match selected market_id"),
         ({"data": {"market_id": "1", "asks": [{"price": "1", "quantity": "1"}]}}, "bids"),
         (_orderbook_payload(bids=[]), "non-empty bids"),
         (_orderbook_payload(bids=[{"price": "0", "quantity": "1"}]), "bids.price must be positive"),

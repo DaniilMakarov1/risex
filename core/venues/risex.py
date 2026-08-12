@@ -57,7 +57,11 @@ class RiseXObservationAdapter:
             "/v1/orderbook",
             {"market_id": market_id, "limit": str(self._orderbook_limit)},
         )
-        order_book = _parse_order_book(orderbook_payload, symbol=normalized_symbol)
+        order_book = _parse_order_book(
+            orderbook_payload,
+            symbol=normalized_symbol,
+            market_id=market_id,
+        )
 
         return VenueObservation(
             venue=self.name,
@@ -147,6 +151,12 @@ def _select_market(payload: Mapping[str, Any], symbol: str) -> Mapping[str, Any]
             str(market.get("underlying", "")),
         }
         if names & candidates:
+            active = market.get("active")
+            if active is not True:
+                raise ValueError("RISEx market active must be true")
+            unlocked = config.get("unlocked")
+            if unlocked is not True:
+                raise ValueError("RISEx market config.unlocked must be true")
             matches.append(market)
 
     if not matches:
@@ -207,8 +217,18 @@ def _parse_levels(raw_levels: Any, side: str) -> tuple[OrderBookLevel, ...]:
     return tuple(levels)
 
 
-def _parse_order_book(payload: Mapping[str, Any], *, symbol: str) -> OrderBook:
+def _parse_order_book(
+    payload: Mapping[str, Any],
+    *,
+    symbol: str,
+    market_id: str,
+) -> OrderBook:
     data = _data_object(payload, "orderbook")
+    raw_market_id = data.get("market_id")
+    if raw_market_id is None or str(raw_market_id).strip() == "":
+        raise ValueError("RISEx orderbook requires market_id")
+    if str(raw_market_id).strip() != market_id:
+        raise ValueError("RISEx orderbook market_id must match selected market_id")
     return OrderBook(
         venue=RiseXObservationAdapter.name,
         symbol=symbol,
