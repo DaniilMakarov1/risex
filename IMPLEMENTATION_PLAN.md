@@ -27,7 +27,7 @@ RX-057 is reviewer-accepted and finalized on `main` as the manual paper session 
 
 RX-058 is reviewer-accepted and finalized on `main` as the local paper session command payload parser/fixture helper. It normalizes explicit JSON payload fixtures into the same route-list input shape accepted by `paper-trade-session --routes-json-path`, while preserving the accepted 25-route ENTRY validation boundary and avoiding session execution, adapter construction, ledger writes, report writes, Telegram transport, credentials, messaging, network calls, discovery, polling, execution automation, live/order/private/account scope, and second owner paths.
 
-RX-059 is governance/source-of-truth only and implementation-complete on the task branch pending reviewer acceptance. It records explicit Product Owner direction supplied through Control Tower that the needed next step toward a fuller fake-money paper trader system for serial strategy testing is RX-060 Local Paper Session Operator Package Builder. RX-059 prepares RX-060 as one local/manual/fake-money testing-support handoff while preserving all hard-stop gates and avoiding runtime changes in RX-059 itself.
+RX-059 is reviewer-accepted and finalized on `main` as governance/source-of-truth only. It records explicit Product Owner direction supplied through Control Tower that the needed next step toward a fuller fake-money paper trader system for serial strategy testing is RX-060 Local Paper Session Operator Package Builder. RX-059 prepares RX-060 as one local/manual/fake-money testing-support handoff while preserving all hard-stop gates and avoiding runtime changes in RX-059 itself.
 
 ## Completed Accepted Work
 
@@ -96,7 +96,7 @@ RX-055 - Manual Serial Paper Session Runner is reviewer-accepted and finalized o
 
 ## Current Next Task
 
-RX-060 Local Paper Session Operator Package Builder is prepared in `NEXT_TASK.md` after RX-059 implementation and must not start until RX-059 is reviewer-accepted and finalized.
+RX-060 Local Paper Session Operator Package Builder is prepared in `NEXT_TASK.md` after RX-059 finalization and is not started.
 
 ## Previous Product Baseline
 
@@ -132,9 +132,9 @@ RX-057 is reviewer-accepted and finalized on `main` as the accepted product/runt
 
 RX-058 is reviewer-accepted and finalized on `main` as the latest accepted product/runtime input-preparation task. It extracts the accepted paper session route-list validation boundary into `apps/cli/paper_session_payloads.py`, keeps the existing `paper-trade-session --routes-json-path` file loader on that boundary, and adds a local command payload fixture parser that returns exact route-list dictionaries only. It does not run sessions, construct adapters, write ledgers, write reports, send messages, call networks, add credentials, discover/rank/watchlist/poll/schedule, automate execution, change economics, mutate eligibility, add statuses/reasons, or create second owner paths.
 
-RX-059 is implementation-complete on the current task branch and pending reviewer acceptance. It inspects the accepted RX-058 local payload parser outcome, the accepted RX-055 through RX-057 fake-money paper-trader testing trail, current source-of-truth docs, the supervised worker design checkpoint, and latest explicit Product Owner direction supplied through Control Tower. That direction grounds exactly one next safe local/manual/fake-money testing-support handoff: RX-060 Local Paper Session Operator Package Builder.
+RX-059 is reviewer-accepted and finalized on `main` as governance/source-of-truth only. It inspects the accepted RX-058 local payload parser outcome, the accepted RX-055 through RX-057 fake-money paper-trader testing trail, current source-of-truth docs, the supervised worker design checkpoint, and latest explicit Product Owner direction supplied through Control Tower. That direction grounds exactly one next safe local/manual/fake-money testing-support handoff: RX-060 Local Paper Session Operator Package Builder.
 
-## Remaining Gated Roadmap After RX-059 Branch
+## Remaining Gated Roadmap After RX-059 Finalization
 
 Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. RX-059 prepares exactly one next local/manual/fake-money testing-support handoff and does not authorize any additional trading, execution automation, execution planning, polling, ranking, discovery, ledger/storage/replay change, Telegram transport, credentials, messaging, alerts, webhooks, or live-order roadmap stage.
 
