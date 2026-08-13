@@ -2,25 +2,25 @@
 
 ## Task ID
 
-RX-052 - Product Owner Concrete Post-RX-048 Public Runtime Handoff Clarification
+RX-053 - Manual One-Route Public Paper Trader Bridge
 
 ## Objective
 
-After RX-051 reviewer acceptance, inspect the accepted RX-051 repository instruction hygiene outcome, the accepted RX-050 no-clarified-runtime-handoff conclusion, current source-of-truth docs, and any explicit Product Owner or Control Tower clarification supplied for exactly one concrete safe public/read-only/non-trading runtime handoff after the accepted RX-048 structured JSON stdout public readiness report. If explicit clarification clearly identifies one concrete safe task, prepare exactly that one later task in `NEXT_TASK.md`. If clarification is absent, ambiguous, unsafe, or reaches a hard-stop category, record the no-clarified-runtime-handoff conclusion and prepare one narrow Product Owner or Control Tower clarification handoff rather than inventing route discovery, ranking, polling, private endpoint, account-state, order, execution automation, execution planning, ledger/storage/replay, or live-trading scope.
+After RX-052 reviewer acceptance and finalization, add one explicit manual operator command or app-layer runner that connects one existing public one-route real-data ENTRY decision to the existing fake paper lifecycle and append-only ledger, then prints a deterministic stdout summary. This is a fake-money paper-trader bridge only. It must not implement live trading, real exchange orders, private/account endpoints, credentials, exchange account state, account balances, sendable exchange requests, order payload construction, execution automation, execution planning, polling, ranking, discovery, or any financially dangerous action.
 
 ## Starting baseline
 
-Start from reviewer-accepted `main` after RX-051 is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
+Start from reviewer-accepted `main` after RX-052 is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
 
 ## Branch
 
-Create and work on `task/rx-052-product-owner-concrete-post-rx-048-public-runtime-handoff-clarification`. Do not implement on `main`.
+Create and work on `task/rx-053-manual-one-route-public-paper-trader-bridge`. Do not implement on `main`.
 
 ## Before changing files
 
-Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, remote is wrong, branch is wrong, `origin/HEAD` is not `origin/main`, `HEAD` does not match the accepted starting baseline, RX-051 is not explicitly reviewer-accepted and finalized on `main`, or unrelated branch work would be mixed into this task.
+Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, remote is wrong, branch is wrong, `origin/HEAD` is not `origin/main`, `HEAD` does not match the accepted starting baseline, RX-052 is not explicitly reviewer-accepted and finalized on `main`, or unrelated branch work would be mixed into this task.
 
-If Control Tower selected this task autonomously, verify from the source-of-truth repository docs that the task is non-dangerous: governance/source-of-truth clarification only unless one exact safe public/read-only/non-trading runtime handoff is explicitly clarified, with no live trading, private/account endpoints, credentials, orders, sendable exchange request construction, execution automation, execution planning, account-state access, ledger/storage/replay changes, destructive reset, unsafe scope, or financially dangerous action. Stop before edits unless explicit user approval exists for any hard-stop category.
+If Control Tower selected this task autonomously, verify from the source-of-truth repository docs that the task is non-dangerous fake-money paper-trading runtime work only. Stop before edits unless explicit user approval exists for any task involving live trading, real order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, or financially dangerous actions.
 
 Read:
 
@@ -37,71 +37,80 @@ Read:
 
 ## Allowed scope
 
-- Inspect accepted RX-051 repository instruction hygiene outcome, accepted RX-050 Product Owner direction-gate outcome, accepted RX-049 governance/source-of-truth clarification outcome, accepted RX-048 structured JSON stdout public readiness report outcome, current source-of-truth docs, and any explicit Product Owner or Control Tower clarification supplied for the next public/read-only/non-trading handoff.
-- Update source-of-truth docs to record whether explicit clarification clearly identifies one concrete safe next public/read-only/non-trading runtime task after RX-048.
-- If one concrete safe next task is grounded, prepare exactly that one later task in `NEXT_TASK.md`.
-- If no concrete safe task is grounded, prepare exactly one narrow Product Owner or Control Tower clarification handoff in `NEXT_TASK.md`.
-- Preserve the latest accepted product/reporting baseline and latest accepted governance/source-of-truth task separately from current branch work.
-- Preserve reviewer-only acceptance and do not mark RX-052 or any later task accepted without explicit reviewer acceptance.
+- Add one explicit manual operator command or app-layer runner for one manually supplied RiseX plus Hyperliquid route.
+- Reuse the existing manual public route input requirements: route id, capture id, exact RiseX and Hyperliquid venues, symbols, opposing entry sides, positive finite target notional, `EvaluationMode.ENTRY`, and timezone-aware assembly timestamp.
+- Reuse the existing read-only public `RiseXObservationAdapter` and `HyperliquidObservationAdapter` construction boundaries after input validation.
+- Reuse the existing one-route real-data runner and the single `evaluate_route(route, snapshot, mode)` decision path.
+- Delegate fake paper execution to the existing `run_paper_lifecycle()` behavior in `apps/paper_runner/lifecycle.py`.
+- Write fake paper ledger events only through the existing `core/accounting/ledger.py` ownership boundary.
+- Optionally support one explicit local SQLite ledger path if implemented through the existing `storage/sqlite/ledger.py` contract and explicit operator input.
+- Print a deterministic stdout summary covering route id, decision mode/status/reasons, fake paper started/not-started state, paper start blockers, ledger event count/sequences/types, and existing PnL explanation values without recalculating profitability.
+- Add focused tests for started fake paper behavior, non-started fake paper rejection behavior, malformed operator input fail-closed before adapter construction, optional SQLite path behavior if implemented, and preservation of unknown economics as missing rather than zero.
+- Update source-of-truth docs to record the accepted bridge behavior and next handoff.
 
 ## Forbidden scope
 
-- No product/runtime behavior changes. Explicit clarification may select one later task, but RX-052 must not implement runtime behavior.
-- No route discovery.
-- No route ranking.
-- No watchlists.
-- No background loops.
-- No polling.
-- No scheduling.
-- No alerts.
-- No automatic refresh.
-- No adapters or adapter endpoint changes.
-- No private endpoints.
-- No credentials.
-- No API keys or secrets.
-- No account balances.
-- No exchange account state.
-- No account-tier assumptions.
-- No fee, funding, VWAP/liquidity, basis, spread, price-impact, slippage, max-level, hidden-buffer, or safety-margin rule changes.
-- No order placement.
+- No live trading.
+- No live trading by default.
+- No real exchange order placement.
 - No order cancellation.
 - No order status fetching.
+- No private endpoints.
+- No account endpoints.
+- No credentials.
+- No API keys or secrets.
+- No exchange account state.
+- No account balances.
+- No account-tier assumptions.
 - No sendable exchange request construction.
 - No order payload construction.
 - No execution automation.
 - No execution planning.
 - No guarded live runner execution.
 - No approval-boundary execution.
-- No ledger writes.
-- No storage migrations.
+- No automatic polling.
+- No background loops.
+- No scheduling.
+- No alerts.
+- No automatic refresh.
+- No route discovery.
+- No route ranking.
+- No watchlists.
+- No adapter endpoint changes.
+- No fee, funding, VWAP/liquidity, basis, spread, price-impact, slippage, max-level, hidden-buffer, or safety-margin rule changes.
+- No funding settlement verification changes.
+- No ledger reconciliation changes.
 - No replay changes.
-- No paper lifecycle changes.
-- No funding settlement verification.
-- No ledger reconciliation.
+- No storage migrations.
 - No route eligibility mutation.
-- No Capture state transitions.
+- No Capture state transition changes.
 - No route statuses.
 - No reject reasons.
 - No canary architecture.
 - No hold-next-cycle logic.
-- No live trading.
-- No live trading by default.
+- No unknown-to-zero behavior.
 - No weakening, bypassing, or removal of explicit user approval gates for live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, or financially dangerous actions.
 - No speculative live hooks, placeholder live paths, broad refactors, second route model, second decision path, second snapshot assembly path, second EV path, second VWAP path, second ledger-write path, second replay path, second execution-planning path, or second live execution path.
 
 ## Implementation requirements
 
-- Treat this as a narrow governance/source-of-truth concrete clarification gate. Explicit Product Owner or Control Tower clarification may ground one exact safe later runtime handoff, but RX-052 must only record and prepare that later task.
-- Use repository docs, accepted code paths, and explicit Product Owner or reviewer evidence only; do not rely on chat memory or broad roadmap implication.
-- Keep `NEXT_TASK.md` as exactly one next task and require the handoff validator to pass.
-- Preserve Control Tower autonomy for ordinary non-dangerous tasks grounded in source-of-truth repository docs.
-- Preserve one RX task equals one clean executor task and one task branch.
-- Preserve Parent ownership of branch discipline, final diff review, validation, commit, push, and final report.
-- Preserve RX-048 as the latest accepted product/reporting baseline unless a later reviewer-accepted product task exists.
-- Preserve RX-051 as pending or accepted according to explicit reviewer evidence.
-- Worker policy: one supervised worker required because this task is repository-governance/source-of-truth work.
-- The worker is required for design support before implementation edits and may continue only if Parent explicitly asks for implementation support.
-- At DESIGN CHECKPOINT, the worker must answer whether the planned handoff is source-grounded, non-dangerous, one-task/one-branch compliant, preserves accepted baseline versus pending review state, keeps `NEXT_TASK.md` to exactly one task, preserves reviewer-only acceptance, excludes all hard-stop categories, avoids invented runtime scope, and preserves Parent ownership.
+- Treat this as the smallest manual fake-money paper-trader bridge. It is runtime work, but it is not live trading and not exchange execution.
+- The bridge must require `EvaluationMode.ENTRY`; discovery-mode decisions must not start fake paper.
+- Public data flow must remain one-route-at-a-time and manually invoked. Do not add discovery, ranking, polling, watchlists, loops, scheduling, alerts, or auto-refresh.
+- Decision creation must remain downstream of the existing one-route real-data runner and `evaluate_route(route, snapshot, mode)`.
+- Paper lifecycle behavior must remain owned by `apps/paper_runner/lifecycle.py`; do not duplicate paper start predicates, state transitions, PnL attribution, or ledger event construction outside the existing owner path.
+- Ledger writes must remain owned by `core/accounting/ledger.py`; any SQLite persistence must use only the existing `SQLiteLedger` implementation and an explicit local path supplied by the operator.
+- Missing funding, fee, snapshot, Entry EV, or net profit values must stay missing/unknown in stdout and ledger-derived paper explanation. They must not become zero, success, or profitability.
+- The stdout summary must be deterministic and suitable for tests.
+- Preserve existing no-argument fake CLI behavior, existing `real-data-route` default output, existing public-readiness report text output, and existing public-readiness JSON output unless the new manual bridge command is explicitly invoked.
+- Preserve RX-048 as the latest accepted product/reporting baseline until this task is reviewer-accepted as a later product/runtime task.
+- Preserve RX-052 as pending or accepted according to explicit reviewer evidence.
+- Preserve reviewer-only acceptance; implementation-complete branch work is not accepted until an explicit reviewer accepts it.
+- Control Tower autonomous selection is allowed only because this is a non-dangerous fake-money paper runtime task grounded in source-of-truth repository docs.
+- Live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, and financially dangerous actions require explicit user approval before task selection, creation, execution, fixing, or finalization.
+- Worker policy: one supervised worker required.
+- The worker is required for design support before implementation edits because this bridge touches app/runtime, paper lifecycle, ledger ownership, and operator boundaries.
+- At DESIGN CHECKPOINT, the worker must answer whether the bridge is source-grounded, non-dangerous, one-task/one-branch compliant, preserves accepted baseline versus pending review state, uses the existing one-route public decision path, uses the existing fake paper lifecycle, keeps ledger writes inside accounting ownership, keeps `NEXT_TASK.md` to exactly one task, preserves reviewer-only acceptance, excludes all hard-stop categories, avoids invented live/order/private scope, avoids discovery/ranking/polling, preserves unknown-as-missing behavior, avoids new statuses/reasons and second owner paths, and preserves Parent ownership.
 - The worker must stop at DESIGN CHECKPOINT before implementation edits and wait for Parent approval or steering before continuing.
 - The worker must also stop at CODE CHECKPOINT, TEST CHECKPOINT, and VALIDATION CHECKPOINT if it continues beyond design support.
 - Parent owns steering, final diff review, validation, commit, push, and final report.
@@ -110,16 +119,22 @@ Read:
 
 ## Required files
 
-- Likely README.md
-- Likely ARCHITECTURE.md
-- Likely PRODUCT_INVARIANTS.md
-- Likely IMPLEMENTATION_PLAN.md
-- Likely STATUS.md
-- Likely DECISIONS.md
-- Likely NEXT_TASK.md
+- Likely `apps/cli/main.py`
+- Likely `apps/paper_runner/lifecycle.py` only if a strictly necessary owner-local adjustment is discovered
+- Likely `apps/paper_runner/__init__.py` only if a new app-layer bridge export is necessary
+- Likely `tests/unit/test_cli_main.py`
+- Likely focused paper bridge tests under `tests/unit/`
+- Likely `README.md`
+- Likely `ARCHITECTURE.md`
+- Likely `PRODUCT_INVARIANTS.md`
+- Likely `IMPLEMENTATION_PLAN.md`
+- Likely `STATUS.md`
+- Likely `DECISIONS.md`
+- `NEXT_TASK.md`
 
 ## Required tests
 
+- Focused tests for the new manual bridge behavior
 - `python3 scripts/validate_next_task.py`
 - `python3 -m pytest tests/invariant`
 - `python3 -m pytest`

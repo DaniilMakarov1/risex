@@ -113,6 +113,7 @@ Any non-terminal Capture may transition to `FAILED`. Capture states with possibl
 - Broad Scan and Focused Refresh orchestration happens only in `core/pipeline/scan_refresh.py`.
 - One-route real-data research orchestration and app-layer snapshot retention for reporting happen only in `apps/research_runner/real_data.py`.
 - Manual one-route real-data CLI input validation, output formatting, public readiness report formatting, and any later opt-in structured public-readiness stdout formatting happen only in `apps/cli/main.py`.
+- A later manual fake-money public paper-trader bridge must stay in an app-layer runner or explicit operator CLI command, consume the existing one-route public real-data runner decision in `EvaluationMode.ENTRY`, and delegate fake paper execution to `apps/paper_runner/lifecycle.py` plus ledger writes through `core/accounting/ledger.py`.
 - Non-sending execution planning happens only in `core/execution/planning.py`.
 - Guarded live runner readiness without orders happens only in `apps/live_runner/guarded.py`.
 - Explicit approval-gated order placement boundaries happen only in `core/execution/orders.py`.
@@ -143,6 +144,10 @@ The original architecture remains unchanged after the accepted offline safety-ha
 RX-008 through RX-016 added deterministic fail-closed offline safety scaffolding around funding settlement verification, ledger reconciliation, fake CapturePlan freshness, fake execution capability, fake live-gate evidence bundles, bundle ledger recording, and SQLite replay behavior. These modules are accepted safety hardening only. They are not executable live trading architecture, do not create order plans, do not place orders, do not connect to venues, do not replace real read-only adapters, and do not permit future tasks to add speculative second paths.
 
 Future roadmap stages are gates. A later roadmap item is not permission to implement live trading, adapters, dashboards, monitoring, execution planning, or order placement before that exact task is written into `NEXT_TASK.md`, reviewed in scope, implemented on its own branch, and accepted.
+
+RX-052 records Product Owner clarification that the next product path is paper-trading readiness with fake money before any live trading work is considered. In this repository, paper trader means existing fake paper lifecycle and append-only ledger behavior only. It does not mean live exchange execution, private/account endpoint access, credentials, account balances/state, sendable exchange requests, order payload construction, execution planning, guarded live runner execution, approval-boundary execution, or live trading.
+
+The prepared RX-053 bridge may connect one explicit manual public one-route real-data ENTRY decision to `run_paper_lifecycle()` and the existing ledger contract. It must not create a second route model, decision path, snapshot assembly path, EV path, VWAP path, ledger-write path, execution-planning path, or live execution path, and it must not turn unknown public economics into zero or success.
 
 ## Product rules
 
