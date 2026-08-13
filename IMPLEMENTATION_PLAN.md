@@ -33,6 +33,7 @@ The original product direction remains hedged funding capture on RiseX with hedg
 - RX-031 recorded the review-directed no-additional-fix disposition after RX-030 and prepared a Product Owner roadmap authorization gate without changing product behavior.
 - RX-032 recorded the narrowed Product Owner authorization for exactly one next governance/docs task without changing product behavior or removing hard approval gates.
 - RX-033 defined Control Tower autonomous task selection for future non-dangerous RX tasks from source-of-truth repository docs without changing product behavior or removing hard approval gates.
+- RX-034 recorded the roadmap selection audit outcome and prepared a metadata-only RX-035 cleanup handoff without changing product behavior or removing hard approval gates.
 - RX-Q001 and RX-Q002 added repository workflow, handoff validation, and supervised-worker governance.
 
 ## Accepted Offline Safety-Hardening Detour
@@ -47,7 +48,7 @@ RX-030 — Read-Only Monitoring Dashboard Without Decisions Or Orders is reviewe
 
 ## Current Product Branch Progress
 
-No product branch is active after RX-033 finalization. RX-034 is a governance/docs-only roadmap selection audit branch. It found that the source-of-truth docs list only RX-034 after RX-030 and do not clearly ground a concrete post-RX-034 product/runtime task, so it uses the RX-034 fallback path to prepare a metadata-only RX-035 handoff cleanup.
+No product branch is active after RX-034 finalization. RX-034 was a governance/docs-only roadmap selection audit branch. It found that the source-of-truth docs list only RX-034 after RX-030 and do not clearly ground a concrete post-RX-034 product/runtime task, so it used the RX-034 fallback path to prepare a metadata-only RX-035 handoff cleanup.
 
 ## Current Product Handoff
 
@@ -55,7 +56,7 @@ No product branch is active after RX-033 finalization. RX-034 is a governance/do
 
 ## Remaining Gated Roadmap After RX-030
 
-Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, or by RX-033 governance autonomy.
+Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, by RX-033 governance autonomy, or by the RX-034 roadmap selection audit.
 
 1. RX-035 — Post-RX-034 Roadmap Handoff Cleanup.
 

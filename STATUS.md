@@ -1,9 +1,11 @@
 # Status
 
-- Current branch: `task/rx-034-control-tower-roadmap-selection-audit-gate`.
-- Current task: RX-034 — Control Tower Roadmap Selection Audit Gate.
+- Current branch: `main`.
+- Current task: RX-034 — Control Tower Roadmap Selection Audit Gate finalization.
 - RX-034 starting baseline: `e4e7c940d17b83d08f78671f92ec5c18f4d71749`
-- RX-034 review state: implementation-complete on task branch; not reviewer-accepted.
+- RX-034 review state: reviewer-accepted and finalized on `main`.
+- Accepted RX-034 implementation HEAD: `25498f90a17889183fe4e5b262c3574ff362a785`
+- RX-034 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
 - RX-034 disposition: source-of-truth docs were inspected after RX-033 reviewer acceptance. They do not clearly ground a concrete post-RX-034 product/runtime task, so the RX-034 fallback path prepared one metadata-only RX-035 handoff cleanup instead of inventing product scope.
 - RX-034 branch-discipline steer: after an initial branch switch in `/Users/daniilmakarov/Desktop/risex-main`, Control Tower directed RX-034 work to continue only in the clean executor worktree `/Users/daniilmakarov/.codex/worktrees/69f5/risex-main`. No files were edited in the Desktop checkout; implementation edits are limited to the clean executor worktree.
 - RX-033 starting baseline: `ff27045e0f1dccbccc21aec1d41eb4ad91549e8c`
@@ -90,9 +92,9 @@
 - Previous accepted product task before RX-012: RX-011 — Offline Execution Capability Gate Design and Fake Replay Coverage
 - Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
-- Current accepted `main` metadata/governance task: RX-033.
+- Current accepted `main` metadata/governance task: RX-034.
 - Current accepted `main` product task: RX-030.
-- Current RX task state: RX-034 is implementation-complete on `task/rx-034-control-tower-roadmap-selection-audit-gate`; latest accepted product task remains RX-030 and latest accepted metadata/governance follow-up is RX-033 until explicit reviewer acceptance.
+- Current RX task state: RX-034 is reviewer-accepted and finalized on `main`; latest accepted product task remains RX-030 and latest accepted metadata/governance follow-up is RX-034.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
@@ -249,7 +251,7 @@ RX-030 remains the latest accepted product task and adds one read-only dashboard
 - RX-031 is reviewer-accepted and finalized on `main`.
 - RX-032 is reviewer-accepted and finalized on `main`.
 - RX-033 is reviewer-accepted and finalized on `main`.
-- RX-034 is implementation-complete on its task branch and is not reviewer-accepted.
+- RX-034 is reviewer-accepted and finalized on `main`.
 - The next recommended task is RX-035 Post-RX-034 Roadmap Handoff Cleanup.
 - The RX-032 authorization does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - RX-033 autonomy does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
@@ -265,6 +267,16 @@ RX-030 remains the latest accepted product task and adds one read-only dashboard
 - `git diff --check`: exit 0
 - `git diff --cached --check`: exit 0
 - `git status --short`: empty after commit and push
+
+## Tests last reported for RX-034 finalization on main
+
+- `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
+- `python3 -m pytest tests/invariant`: `37 passed in 0.23s`
+- `python3 -m pytest`: `560 passed in 0.75s`
+- `python3 -m compileall apps core storage tests scripts`: exit 0
+- `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
+- `git diff --check`: exit 0
+- `git diff --cached --check`: exit 0
 
 ## Tests last reported for RX-032 branch
 
