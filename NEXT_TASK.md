@@ -2,19 +2,19 @@
 
 ## Task ID
 
-RX-035 - Post-RX-034 Roadmap Handoff Cleanup
+RX-036 - Roadmap Source-of-Truth Clarification Gate
 
 ## Objective
 
-After `RX-034` reviewer acceptance, record the roadmap selection audit outcome and prepare exactly one next RX handoff without inventing product or runtime scope. If source-of-truth repository docs still do not clearly ground a concrete non-dangerous product task, keep the work metadata-only and prepare one roadmap cleanup or clarification handoff rather than promoting inferred product work.
+After `RX-035` reviewer acceptance, clarify the post-audit roadmap source of truth without inventing product or runtime scope. If the repository docs still do not clearly ground a concrete non-dangerous product task, keep the work metadata-only and prepare exactly one handoff that records the need for explicit Product Owner roadmap direction before product/runtime work resumes.
 
 ## Starting baseline
 
-Start from reviewer-accepted `main` after `RX-034` is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
+Start from reviewer-accepted `main` after `RX-035` is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
 
 ## Branch
 
-Create and work on `task/rx-035-post-rx-034-roadmap-handoff-cleanup`. Do not implement on `main`.
+Create and work on `task/rx-036-roadmap-source-of-truth-clarification-gate`. Do not implement on `main`.
 
 ## Before changing files
 
@@ -37,7 +37,7 @@ Read:
 
 ## Allowed scope
 
-- Repository governance and handoff metadata needed to record the RX-034 audit outcome and preserve exactly one next RX task.
+- Repository governance and handoff metadata needed to clarify the post-RX-035 roadmap source of truth.
 - `STATUS.md`
 - `IMPLEMENTATION_PLAN.md`
 - `DECISIONS.md`
@@ -61,13 +61,13 @@ Read:
 
 ## Implementation requirements
 
-- Treat this as a governance/metadata-only post-audit handoff cleanup.
+- Treat this as a governance/metadata-only roadmap source-of-truth clarification.
 - Use only source-of-truth repository docs for task selection and handoff cleanup: `NEXT_TASK.md`, `IMPLEMENTATION_PLAN.md`, `STATUS.md`, `DECISIONS.md`, `AGENTS.md`, `docs/WORKFLOW.md`, and required templates.
-- Control Tower selected this task autonomously through the RX-034 fallback path because the source-of-truth docs did not clearly ground a concrete post-RX-034 product/runtime task.
-- Do not ask the user to name or authorize ordinary safe metadata-only cleanup work.
+- Control Tower may select this task autonomously under RX-033 because it is non-dangerous metadata-only work grounded in the RX-035 handoff.
+- Do not ask the user to name or authorize ordinary safe metadata-only clarification work.
 - Stop for explicit user approval before selecting, creating, running, fixing, or finalizing any task involving live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, or financially dangerous actions.
 - Ask the user only if candidate selection reaches a hard-stop category, unsafe scope, financially dangerous action, destructive reset, or genuine product/architecture fork that cannot be resolved from repository docs.
-- If candidate tasks are still not clearly grounded in source-of-truth docs, prepare exactly one non-product roadmap audit, cleanup, or clarification handoff rather than inventing product scope.
+- If source-of-truth docs still do not clearly ground a concrete non-dangerous product/runtime task, prepare exactly one non-product handoff that records the need for explicit Product Owner roadmap direction before product/runtime scope resumes.
 - Preserve one RX task equals one clean executor task and one task branch.
 - Preserve `NEXT_TASK.md` as exactly one next task and require the handoff validator to pass.
 - Preserve reviewer acceptance as the only way to mark a task accepted.
@@ -75,7 +75,7 @@ Read:
 - Preserve worker/subagent checkpoint requirements for non-trivial architecture-sensitive work.
 - Do not add product code, runtime code, tests for product behavior, or new abstractions.
 - Worker policy: one supervised worker required for design support because this is repository-governance work.
-- The worker must stop at DESIGN CHECKPOINT before implementation edits and answer whether the planned handoff cleanup is source-of-truth grounded, non-dangerous or explicitly approval-gated, one-task/one-branch compliant, reviewer-acceptance compliant, Parent-owned, and exactly-one-task valid.
+- The worker must stop at DESIGN CHECKPOINT before implementation edits and answer whether the planned clarification is source-of-truth grounded, non-dangerous or explicitly approval-gated, one-task/one-branch compliant, reviewer-acceptance compliant, Parent-owned, and exactly-one-task valid.
 - The worker must wait for Parent approval or steering after DESIGN CHECKPOINT before any implementation edits continue.
 - The worker must also stop at CODE CHECKPOINT, TEST CHECKPOINT, and VALIDATION CHECKPOINT if it continues beyond design support.
 - Parent owns steering, final diff review, validation, commit, push, and final report.

@@ -48,17 +48,17 @@ RX-030 — Read-Only Monitoring Dashboard Without Decisions Or Orders is reviewe
 
 ## Current Product Branch Progress
 
-No product branch is active after RX-034 finalization. RX-034 was a governance/docs-only roadmap selection audit branch. It found that the source-of-truth docs list only RX-034 after RX-030 and do not clearly ground a concrete post-RX-034 product/runtime task, so it used the RX-034 fallback path to prepare a metadata-only RX-035 handoff cleanup.
+No product branch is active after RX-034 finalization. RX-035 is a governance/docs-only post-audit handoff cleanup branch. It re-confirms that the source-of-truth docs still do not clearly ground a concrete post-RX-034 product/runtime task, so it prepares a metadata-only RX-036 roadmap clarification handoff instead of inventing product scope.
 
 ## Current Product Handoff
 
-`NEXT_TASK.md` is prepared for RX-035, a metadata-only post-RX-034 roadmap handoff cleanup that records the audit outcome and preserves exactly one next task without inventing product scope.
+`NEXT_TASK.md` is prepared for RX-036, a metadata-only roadmap source-of-truth clarification gate that keeps future task selection grounded before any product/runtime scope resumes.
 
 ## Remaining Gated Roadmap After RX-030
 
-Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, by RX-033 governance autonomy, or by the RX-034 roadmap selection audit.
+Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, by RX-033 governance autonomy, by the RX-034 roadmap selection audit, or by the RX-035 post-audit handoff cleanup.
 
-1. RX-035 — Post-RX-034 Roadmap Handoff Cleanup.
+1. RX-036 — Roadmap Source-of-Truth Clarification Gate.
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
 
@@ -289,8 +289,16 @@ Autonomously inspect the source-of-truth repository docs after RX-033 reviewer a
 
 RX-034 preserves one RX task at a time, one clean executor task, one task branch, exactly-one-task `NEXT_TASK.md`, Parent ownership, worker checkpoint requirements, and explicit reviewer acceptance. It does not change product behavior, dashboard behavior, route discovery, ranking, polling, adapters, market-data calls, private endpoints, credentials, account state, order placement, sendable exchange requests, execution automation, route evaluation, snapshot assembly, profitability calculation, funding verification, ledger reconciliation, live-gate checks, execution planning, guarded live runner execution, approval-boundary execution, ledger writes, replay behavior, route statuses, reject reasons, live trading by default, or any product/runtime abstraction.
 
+## RX-035 — Post-RX-034 Roadmap Handoff Cleanup
+
+After RX-034 reviewer acceptance, record the roadmap selection audit outcome and prepare exactly one next RX handoff without inventing product or runtime scope. RX-035 re-inspects the source-of-truth docs and keeps the work metadata-only because they still do not clearly ground a concrete non-dangerous post-RX-034 product/runtime task.
+
+Under the post-audit fallback path, RX-035 prepares RX-036 as one metadata-only roadmap source-of-truth clarification gate. RX-035 preserves one RX task at a time, one clean executor task, one task branch, exactly-one-task `NEXT_TASK.md`, Parent ownership, worker checkpoint requirements, reviewer-only acceptance, and hard approval gates for live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, and financially dangerous actions.
+
+RX-035 does not change product behavior, dashboard behavior, route discovery, ranking, polling, adapters, market-data calls, private endpoints, credentials, account state, order placement, sendable exchange requests, execution automation, route evaluation, snapshot assembly, profitability calculation, funding verification, ledger reconciliation, live-gate checks, execution planning, guarded live runner execution, approval-boundary execution, ledger writes, replay behavior, route statuses, reject reasons, live trading by default, or any product/runtime abstraction.
+
 ## Next Sequence
 
-1. RX-035 — Post-RX-034 Roadmap Handoff Cleanup.
+1. RX-036 — Roadmap Source-of-Truth Clarification Gate.
 
 Do not promote execution automation, background loops, ranking, order placement, polling, alerts, auto-refresh, private endpoints, credentials, account-state access, destructive reset, financially dangerous actions, or later roadmap stages into the current handoff unless that exact future task is explicitly user-approved for hard-stop scope or autonomously selected by Control Tower under RX-033 for non-dangerous scope and passes the repository's hard approval gates.
