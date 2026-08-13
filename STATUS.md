@@ -1,15 +1,18 @@
 # Status
 
-- Current branch: `task/rx-038-one-route-real-data-cli-toward-live-readiness`.
-- Current task: RX-038 - One-Route Real Data CLI Toward Live Readiness implementation.
+- Current branch: `main`.
+- Current task: RX-038 - One-Route Real Data CLI Toward Live Readiness finalization.
 - RX-038 starting baseline: `a3b94823a7e0c182f931deb49b35107fbc771998`
-- RX-038 review state: implementation-complete on task branch; reviewer acceptance remains pending and separate.
-- RX-038 completion is recorded without a final branch HEAD in this file to avoid self-referential handoff metadata; use git history for the exact task commit.
+- RX-038 review state: reviewer-accepted and finalized on `main`.
+- Latest accepted product task: RX-038 — One-Route Real Data CLI Toward Live Readiness.
+- Accepted RX-038 implementation HEAD: `69d44af8710a6fb52fcd21f588fd188ed87a7b16`
+- RX-038 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
 - RX-038 disposition: adds one manual `real-data-route` CLI entry point for one explicit RiseX plus Hyperliquid route. The command validates identity, venues, symbols, opposing entry sides, target notional, evaluation mode, and timezone-aware assembly timestamp before adapter construction, then delegates to the existing one-route real-data research runner using the existing read-only public RiseX and Hyperliquid adapters.
 - RX-038 no-arg CLI preservation: existing `python3 -m apps.cli.main` fake Broad Scan and Focused Refresh output remains unchanged.
 - RX-038 next handoff: `NEXT_TASK.md` is prepared for exactly one next non-dangerous product/runtime task, RX-039 Public One-Route Economics Source Completion, scoped as source-aware, public-data-only, one-route-at-a-time, read-only, fail-closed, and non-trading.
 - RX-038 worker usage: one supervised worker was used for design support before implementation edits; Parent approved the `real-data-route` direction before code edits.
 - RX-038 Control Tower steer: after an internal git-directive stop, Control Tower directed this executor to continue the same task and same branch without reset, new task, or archive. Preflight was rerun in `/Users/daniilmakarov/.codex/worktrees/8707/risex-main`, and `/Users/daniilmakarov/Desktop/risex-main` remained clean `main` and untouched by RX-038.
+- Previous accepted product task before RX-038: RX-030 — Read-Only Monitoring Dashboard Without Decisions Or Orders.
 - RX-037 starting baseline: `b68fd88e95a034749ffe5008b71cdf3cead776a0`
 - RX-037 review state: reviewer-accepted and finalized on `main`.
 - Accepted RX-037 implementation HEAD: `f8477e3ddc0f6c31ab66c9e15a61ec1afb54c3d1`
@@ -52,7 +55,7 @@
 - RX-031 disposition: local repo/git evidence and the GitHub connector exposed no additional explicit actionable reviewer feedback after RX-030 finalization, so no dashboard or product code was changed.
 - RX-030 starting baseline: `c91e7190b122de621fd035c38ed4943fac618bab`
 - RX-030 review state: reviewer-accepted and finalized on `main`.
-- Latest accepted product task: RX-030 — Read-Only Monitoring Dashboard Without Decisions Or Orders.
+- RX-030 remains the previous accepted product task before RX-038.
 - Accepted RX-030 implementation HEAD: `dbbc7de1075a1dec9dfc295153f47859f1183763`
 - RX-030 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
 - Previous accepted product task before RX-030: RX-029 — Explicit Approval-Gated Order Placement Boundary.
@@ -120,12 +123,13 @@
 - Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
 - Current accepted `main` metadata/governance task: RX-037.
-- Current accepted `main` product task: RX-030.
-- Current RX task state: RX-037 is reviewer-accepted and finalized on `main`; latest accepted product task remains RX-030 and latest accepted metadata/governance follow-up is RX-037.
+- Current accepted `main` product task: RX-038.
+- Current RX task state: RX-038 is reviewer-accepted and finalized on `main`; latest accepted metadata/governance follow-up remains RX-037.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
-RX-030 is the latest accepted product baseline on `main`. The accepted work adds one read-only monitoring dashboard renderer for already-derived deterministic fixture evidence only while avoiding route discovery, polling, adapters, route evaluation, snapshot assembly, funding verification, ledger reconciliation, live-gate bundle checking, execution planning, guarded live execution, approval-boundary execution, ledger writes, network I/O, orders, and live trading by default.
+RX-038 is the latest accepted product baseline on `main`. The accepted work adds one manual read-only public-data `real-data-route` CLI entry point for one explicit RiseX plus Hyperliquid route while preserving the existing one-route real-data runner/evaluate path and avoiding route discovery, ranking, polling, private endpoints, credentials, account balances/state, order placement, sendable exchange request construction, execution automation, ledger writes, and live trading by default.
+RX-030 remains the previous accepted product baseline before RX-038. The accepted work adds one read-only monitoring dashboard renderer for already-derived deterministic fixture evidence only while avoiding route discovery, polling, adapters, route evaluation, snapshot assembly, funding verification, ledger reconciliation, live-gate bundle checking, execution planning, guarded live execution, approval-boundary execution, ledger writes, network I/O, orders, and live trading by default.
 RX-029 remains the previous accepted product baseline before RX-030. The accepted work adds an explicit approval-gated order placement boundary downstream of RX-028 guarded no-order readiness and RX-027 non-sending execution planning while still avoiding real exchange order submission, credentials, private endpoints, account state, and live trading by default.
 RX-028 remains the previous accepted product baseline before RX-029. The accepted work adds a guarded no-order live runner for existing verified prerequisite evidence and existing non-sending execution-plan evidence while stopping before orders, sendable exchange requests, private endpoints, or live trading by default.
 RX-027 remains the previous accepted product baseline before RX-028. The accepted RX-027 work includes corrective hardening so execution planning accepts only actual current funding verification and ledger reconciliation result contracts rather than attribute-compatible or module/qualname-spoofed wrong-type objects.
@@ -145,9 +149,9 @@ RX-013 remains the previous accepted product baseline before RX-014.
 RX-012 remains the previous accepted product baseline before RX-013.
 RX-Q001 remains the previous accepted governance baseline before RX-Q002.
 RX-011 remains the previous accepted product implementation baseline before RX-012.
-`NEXT_TASK.md` is prepared for RX-039 after the RX-038 one-route real-data CLI branch.
+`NEXT_TASK.md` is prepared for RX-039 after RX-038 finalization.
 RX-031 found no additional explicit actionable reviewer feedback in local repo/git evidence or GitHub connector context after RX-030 finalization. RX-031 is accepted metadata-only follow-up work and does not change dashboard or product code.
-RX-030 remains the latest accepted product task and adds one read-only dashboard renderer for already-derived deterministic fixture evidence only. It does not add route discovery, polling, adapters, route evaluation, snapshot assembly, funding verification, ledger reconciliation, live-gate bundle checking, execution planning, guarded live execution, approval-boundary execution, ledger writes, network I/O, or orders.
+RX-038 is the latest accepted product task and adds one manual read-only public-data CLI entry point for one explicit RiseX plus Hyperliquid route. It does not add route discovery, ranking, polling, private endpoints, credentials, account balances/state, execution automation, order placement, sendable exchange request construction, ledger writes, or live trading by default.
 
 ## Completed accepted tasks
 
@@ -192,6 +196,7 @@ RX-030 remains the latest accepted product task and adds one read-only dashboard
 - RX-035 — Post-RX-034 Roadmap Handoff Cleanup
 - RX-036 — Roadmap Source-of-Truth Clarification Gate
 - RX-037 — Product Owner Roadmap Direction Gate
+- RX-038 — One-Route Real Data CLI Toward Live Readiness
 
 ## Current architecture status
 
@@ -287,6 +292,7 @@ RX-030 remains the latest accepted product task and adds one read-only dashboard
 - RX-035 is reviewer-accepted and finalized on `main`.
 - RX-036 is reviewer-accepted and finalized on `main`.
 - RX-037 is reviewer-accepted and finalized on `main`.
+- RX-038 is reviewer-accepted and finalized on `main`.
 - The next recommended task is RX-039 Public One-Route Economics Source Completion.
 - The RX-032 authorization does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - RX-033 autonomy does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
@@ -303,6 +309,18 @@ RX-030 remains the latest accepted product task and adds one read-only dashboard
 - `git diff --check`: exit 0
 - `git diff --cached --check`: exit 0
 - `git status --short`: `M ARCHITECTURE.md`; `M DECISIONS.md`; `M IMPLEMENTATION_PLAN.md`; `M NEXT_TASK.md`; `M PRODUCT_INVARIANTS.md`; `M README.md`; `M STATUS.md`; `M apps/cli/main.py`; `?? tests/unit/test_cli_main.py`
+
+## Tests last reported for RX-038 finalization on main
+
+- `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
+- `python3 -m pytest tests/unit/test_cli_main.py`: `24 passed in 0.06s`
+- `python3 -m pytest tests/invariant`: `37 passed in 0.24s`
+- `python3 -m pytest`: `584 passed in 0.80s`
+- `python3 -m compileall apps core storage tests scripts`: exit 0
+- `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
+- `git diff --check`: exit 0
+- `git diff --cached --check`: exit 0
+- `git status --short`: `M IMPLEMENTATION_PLAN.md`; `M STATUS.md`
 
 ## Tests last reported for RX-037 branch
 
@@ -754,7 +772,7 @@ RX-030 remains the latest accepted product task and adds one read-only dashboard
 - RX-035 is governance/docs-only. It re-confirms that the source-of-truth docs still do not clearly ground a concrete product/runtime implementation task after RX-034 and prepares a metadata-only RX-036 clarification handoff instead.
 - RX-036 is governance/docs-only. It re-confirms that the source-of-truth docs still do not clearly ground a concrete non-dangerous product/runtime implementation task after RX-035 and prepares a Product Owner roadmap direction gate before product/runtime scope resumes.
 - RX-037 is governance/docs-only. It records explicit Product Owner roadmap direction and prepares the RX-038 manual one-route real-data CLI handoff, but it does not implement the CLI or change product/runtime behavior.
-- RX-038 adds the manual one-route real-data CLI only. It remains non-trading, public-data-only, read-only, and fail-closed; reviewer acceptance remains pending until explicit review.
+- RX-038 adds the manual one-route real-data CLI only. It is reviewer-accepted and finalized on `main`, remains non-trading, public-data-only, read-only, and fail-closed, and does not authorize live/order/private/account-state scope.
 
 ## Next recommended task
 

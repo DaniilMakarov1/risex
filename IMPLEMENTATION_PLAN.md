@@ -39,6 +39,7 @@ RX-037 records explicit Product Owner roadmap direction supplied through Control
 - RX-035 recorded the post-audit handoff cleanup outcome and prepared a metadata-only RX-036 clarification gate without changing product behavior or removing hard approval gates.
 - RX-036 recorded the roadmap source-of-truth clarification outcome and prepared a Product Owner roadmap direction gate before product/runtime scope resumes, without changing product behavior or removing hard approval gates.
 - RX-037 recorded explicit Product Owner roadmap direction toward a live-capable hedged funding capture system and prepared RX-038 as one manual read-only public-data CLI step toward live readiness, without changing product behavior or removing hard approval gates.
+- RX-038 added one manual read-only public-data `real-data-route` CLI entry point for one explicit RiseX plus Hyperliquid route, preserving the existing one-route real-data runner/evaluate path, no-argument fake CLI behavior, and all live/order/private/account-state gates.
 - RX-Q001 and RX-Q002 added repository workflow, handoff validation, and supervised-worker governance.
 
 ## Accepted Offline Safety-Hardening Detour
@@ -49,19 +50,19 @@ The detour's purpose is to keep future live-adjacent work honest: funding settle
 
 ## Latest Accepted Product Task
 
-RX-030 — Read-Only Monitoring Dashboard Without Decisions Or Orders is reviewer-accepted and finalized on `main`. It adds one read-only monitoring dashboard renderer for one existing Capture, one existing RouteCandidate, one explicit settlement timestamp, and already-derived caller-supplied deterministic evidence. It does not call `evaluate_route()`, assemble snapshots, calculate profitability, verify funding, reconcile ledgers, check live-gate bundles, plan execution, run guarded live readiness, call approval-boundary execution, write ledger events, call adapters, use credentials, perform network I/O, place orders, or enable live trading by default.
+RX-038 — One-Route Real Data CLI Toward Live Readiness is reviewer-accepted and finalized on `main`. It adds one manual `real-data-route` CLI entry point for one explicit RiseX plus Hyperliquid route. The command validates input before adapter construction, uses only the existing read-only public RiseX and Hyperliquid adapters, delegates to the existing one-route real-data runner and `evaluate_route()` path, preserves missing economics as missing, keeps no-argument fake CLI behavior unchanged, and does not add route discovery, ranking, polling, private endpoints, credentials, account state, orders, execution automation, ledger writes, or live trading by default.
 
 ## Current Product Branch Progress
 
-RX-038 is active on `task/rx-038-one-route-real-data-cli-toward-live-readiness`. It adds one manual `real-data-route` CLI entry point for one explicit RiseX plus Hyperliquid route, while preserving the no-argument fake Broad Scan/Focused Refresh CLI behavior. RX-038 is implementation-complete on the task branch but is not accepted until reviewer acceptance is explicit.
+No product task branch is active on `main` after RX-038 finalization. The next product/runtime step must start from `NEXT_TASK.md` as a clean RX-039 executor task and branch.
 
 ## Current Product Handoff
 
 `NEXT_TASK.md` is prepared for RX-039, a public-data-only one-route economics source completion task for the existing real-data research path. RX-039 must remain source-aware, one-route-at-a-time, read-only, non-trading, and fail-closed, with no private endpoints, credentials, account state, orders, automation, ledger writes, route discovery/ranking/polling, live trading, or unknown-to-zero conversion.
 
-## Remaining Gated Roadmap After RX-030
+## Remaining Gated Roadmap After RX-038
 
-Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, by RX-033 governance autonomy, by the RX-034 roadmap selection audit, by the RX-035 post-audit handoff cleanup, or by the RX-036 roadmap source-of-truth clarification.
+Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, by RX-033 governance autonomy, by the RX-034 roadmap selection audit, by the RX-035 post-audit handoff cleanup, by the RX-036 roadmap source-of-truth clarification, by the RX-037 roadmap direction record, or by RX-038 one-route real-data CLI finalization.
 
 1. RX-039 - Public One-Route Economics Source Completion.
 
