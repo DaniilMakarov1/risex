@@ -50,6 +50,9 @@ RX-037 records explicit Product Owner roadmap direction supplied through Control
 - RX-046 recorded that no concrete safe post-RX-045 public/read-only/non-trading runtime handoff was clearly grounded in the accepted docs, prepared RX-047 as a narrow Product Owner direction gate, and did not change product/runtime behavior.
 - RX-047 recorded explicit Product Owner and Control Tower direction selecting RX-048, opt-in structured JSON stdout for the existing manual one-route public readiness report, as the next safe handoff without changing product/runtime behavior.
 - RX-048 added one opt-in structured JSON stdout format for the existing manual one-route public readiness report, preserving existing public read-only adapter, snapshot, runner, fee/funding completion, and evaluation paths while keeping output stdout-only, display/report-only, and non-trading.
+- RX-049 recorded that no concrete safe post-RX-048 public/read-only/non-trading runtime handoff was clearly grounded in the accepted docs, prepared RX-050 as a narrow Product Owner direction gate, and did not change product/runtime behavior.
+- RX-050 recorded that explicit Product Owner/Control Tower direction remained broad live-capable product direction only, prepared RX-051 as a narrow concrete clarification handoff, and did not change product/runtime behavior.
+- RX-051 audited repository instruction/source-of-truth hygiene, removed the one stale tracked cross-project wording by rephrasing it generically, prepared RX-052 as the single next clarification handoff, and did not change product/runtime behavior.
 - RX-Q001 and RX-Q002 added repository workflow, handoff validation, and supervised-worker governance.
 
 ## Accepted Offline Safety-Hardening Detour
@@ -74,15 +77,15 @@ RX-048 reuses the existing public read-only one-route adapter handoff, retained 
 
 RX-049 inspected the accepted RX-048 outcome and current source-of-truth docs, found no clearly grounded concrete safe post-RX-048 public/read-only/non-trading runtime handoff, recorded the no-grounded-runtime-handoff conclusion, and prepares RX-050 as a narrow Product Owner direction gate. RX-049 changes no product/runtime behavior.
 
-RX-050 is reviewer-accepted and finalized on `main` as the latest accepted governance/source-of-truth task. It inspects the accepted RX-049 governance/source-of-truth clarification outcome, the accepted RX-048 structured JSON stdout public readiness report outcome, current source-of-truth docs, and explicit Product Owner/Control Tower direction. The supplied direction confirms the long-term goal of live-capable hedged funding capture/trading on RiseX with Hyperliquid hedge support, but remains broad product direction only and still does not clearly identify one concrete safe public/read-only/non-trading runtime handoff after RX-048. RX-050 records the no-clarified-runtime-handoff conclusion and prepares RX-051 as a narrow concrete clarification handoff without changing product/runtime behavior.
+RX-050 is reviewer-accepted and finalized on `main` as the prior accepted governance/source-of-truth task that prepared RX-051. It inspects the accepted RX-049 governance/source-of-truth clarification outcome, the accepted RX-048 structured JSON stdout public readiness report outcome, current source-of-truth docs, and explicit Product Owner/Control Tower direction. The supplied direction confirms the long-term goal of live-capable hedged funding capture/trading on RiseX with Hyperliquid hedge support, but remains broad product direction only and still does not clearly identify one concrete safe public/read-only/non-trading runtime handoff after RX-048. RX-050 records the no-clarified-runtime-handoff conclusion and prepares RX-051 as a narrow concrete clarification handoff without changing product/runtime behavior.
 
-RX-051 is the current repository instruction hygiene task branch after explicit Control Tower direction. It audits tracked and hidden non-.git repository files for stale cross-project workflow references, repo-local instruction directories, and tracked stale generated artifacts. RX-051 remains governance/source-of-truth hygiene only, changes no product/runtime behavior, and prepares RX-052 as the carried-forward narrow concrete clarification handoff.
+RX-051 is reviewer-accepted and finalized on `main` as the latest accepted governance/source-of-truth task after explicit Control Tower direction. It audits tracked and hidden non-.git repository files for stale cross-project workflow references, repo-local instruction directories, and tracked stale generated artifacts. RX-051 remains governance/source-of-truth hygiene only, changes no product/runtime behavior, and prepares RX-052 as the carried-forward narrow concrete clarification handoff.
 
-## Remaining Gated Roadmap After RX-050 Finalization
+## Remaining Gated Roadmap After RX-051 Finalization
 
-Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, execution planning, polling, ranking, discovery, ledger/storage/replay change, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, by RX-033 governance autonomy, by the RX-034 roadmap selection audit, by the RX-035 post-audit handoff cleanup, by the RX-036 roadmap source-of-truth clarification, by the RX-037 roadmap direction record, by RX-038 one-route real-data CLI finalization, by RX-039 public one-route economics source completion, by RX-040 public fee-source metadata preservation, by RX-041 public one-route account-independent fee cash completion, RX-042 finalization, RX-043 finalization, RX-044 finalization, RX-045 finalization, RX-046 finalization, RX-047 finalization, RX-048 finalization, RX-049 finalization, or RX-050 finalization.
+Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, execution planning, polling, ranking, discovery, ledger/storage/replay change, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, by RX-033 governance autonomy, by the RX-034 roadmap selection audit, by the RX-035 post-audit handoff cleanup, by the RX-036 roadmap source-of-truth clarification, by the RX-037 roadmap direction record, by RX-038 one-route real-data CLI finalization, by RX-039 public one-route economics source completion, by RX-040 public fee-source metadata preservation, by RX-041 public one-route account-independent fee cash completion, RX-042 finalization, RX-043 finalization, RX-044 finalization, RX-045 finalization, RX-046 finalization, RX-047 finalization, RX-048 finalization, RX-049 finalization, RX-050 finalization, or RX-051 finalization.
 
-1. RX-051 - Repository Instruction Hygiene And Stale Cross-Project Reference Audit.
+1. RX-052 - Product Owner Concrete Post-RX-048 Public Runtime Handoff Clarification.
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
 
@@ -613,7 +616,7 @@ RX-051 implementation notes:
 - Preserve RX-048 as the latest accepted product/reporting baseline and RX-050 as the latest accepted governance/source-of-truth baseline.
 - Prepare exactly one next non-dangerous handoff in `NEXT_TASK.md`.
 
-RX-051 branch outcome:
+RX-051 accepted outcome:
 
 - The audit found one historical stale literal cross-project workflow name in `STATUS.md` and reworded it to generic RiseX-safe language.
 - The audit found no repo-local `.codex` instruction directory.
@@ -634,7 +637,7 @@ RX-052 implementation notes:
 - If one concrete safe runtime task is clearly grounded, prepare exactly that one later task in `NEXT_TASK.md`.
 - If clarification is absent, ambiguous, unsafe, or reaches a hard-stop category, record that no clarified runtime handoff is available and do not invent product/runtime scope.
 - Preserve RX-048 as the latest accepted product/reporting baseline unless a later reviewer-accepted product task exists.
-- Preserve RX-051 as pending or accepted according to explicit reviewer evidence.
+- Preserve RX-051 as reviewer-accepted and finalized on `main`.
 
 RX-052 must not add product/runtime behavior, route discovery, ranking, watchlists, background loops, polling, scheduling, alerts, automatic refresh, adapters, adapter endpoint changes, private/account endpoints, credentials, API keys, account balances/state, account-tier assumptions, order placement, order cancellation, order status fetching, sendable exchange request construction, order payload construction, execution automation, execution planning, guarded live runner execution, approval-boundary execution, ledger writes, storage migrations, replay changes, paper lifecycle changes, funding settlement verification, ledger reconciliation, route eligibility mutation, Capture state transitions, route statuses, reject reasons, fee/funding/VWAP/liquidity/basis/spread/price-impact/slippage/max-level/hidden-buffer/safety-margin rule changes, canary architecture, hold-next-cycle logic, live trading by default, or any second route model, decision path, snapshot path, EV path, VWAP path, ledger-write path, replay path, execution-planning path, or live execution path.
 
