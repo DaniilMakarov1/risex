@@ -1,9 +1,11 @@
 # Status
 
-- Current branch: `task/rx-061-local-paper-session-report-display-renderer`.
-- Current task: RX-061 - Local Paper Session Report Display Renderer is implementation-complete on the task branch and pending reviewer acceptance.
+- Current branch: `main`.
+- Current task: RX-062 - Local Paper Session Display Command Payload Parser is prepared in `NEXT_TASK.md` and not started.
 - RX-061 starting baseline: `d16cd9cff95f53620c0d583ab50132e4f635e872`
-- RX-061 review state: pending reviewer acceptance.
+- RX-061 review state: reviewer-accepted after fix-in-same-branch and finalized on `main`.
+- Accepted RX-061 implementation HEAD: `0efac333755291ec60d4ba1cde597f273c8a2e04`
+- RX-061 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
 - RX-061 disposition: adds one local-only, manually invoked `render-paper-session-report` CLI command. The command reads an explicit local RX-057 `paper-trade-session --session-report-json-path` report JSON path, validates the accepted report shape, and emits deterministic stdout display lines copied from the report.
 - RX-061 display boundaries: output includes route count, route ids, per-route decision status, per-route paper started state, copied string-or-null decision and paper economics, known/unknown summary counts, and `aggregate_paper_net_profit_usd=null`. Malformed JSON, malformed report shape, missing displayed economics fields, numeric economics values, route-count mismatches, missing known/unknown summary counts, and non-null aggregate PnL fail before display output.
 - RX-061 review fix: Control Tower's same-branch blocking finding was fixed by requiring every displayed per-route economics key to be present in its owning report mapping before validation/rendering; present JSON `null` remains allowed and renders as `null`.
@@ -317,8 +319,8 @@
 - Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
 - Current accepted `main` metadata/governance task: RX-059.
-- Current accepted `main` product task: RX-060.
-- Current RX task state: RX-061 is implementation-complete on the task branch and pending reviewer acceptance; RX-060 remains the latest accepted product/runtime testing-support baseline on `main`, and RX-059 is the latest accepted metadata/governance follow-up on `main`.
+- Current accepted `main` product task: RX-061.
+- Current RX task state: RX-062 is prepared in `NEXT_TASK.md` and not started; RX-061 is the latest accepted product/runtime testing-support baseline on `main`, and RX-059 is the latest accepted metadata/governance follow-up on `main`.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
@@ -365,7 +367,7 @@ RX-040 prepared `NEXT_TASK.md` for RX-041 after RX-040 finalization.
 RX-031 found no additional explicit actionable reviewer feedback in local repo/git evidence or GitHub connector context after RX-030 finalization. RX-031 is accepted metadata-only follow-up work and does not change dashboard or product code.
 RX-041 remains the accepted public account-independent fee-cash completion product task before the later RX-045/RX-048 reporting tasks and completes explicit public account-independent taker fee-rate metadata into entry plus immediate estimated-exit route-notional USD fee cash only inside the existing one-route snapshot path, while preserving fail-closed unknown handling and avoiding live/order/private/account-state scope.
 RX-040 remains the previous accepted product task and preserves public fee-source metadata on unknown fee cash values for source-aware inspection only. It does not add route discovery, ranking, polling, private endpoints, credentials, account balances/state, execution automation, order placement, sendable exchange request construction, ledger writes, fee-cash defaults, or live trading by default.
-`NEXT_TASK.md` is prepared for RX-062 Local Paper Session Display Command Payload Parser after RX-061 implementation.
+`NEXT_TASK.md` is prepared for RX-062 Local Paper Session Display Command Payload Parser after RX-061 finalization.
 
 ## Completed accepted tasks
 

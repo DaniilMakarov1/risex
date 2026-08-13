@@ -935,12 +935,14 @@
 ## 2026-08-13 - RX-061
 
 - Date: 2026-08-13
+- Decision: Control Tower reviewer accepted RX-061 after a fix-in-same-branch review and finalized it on `main`.
+- Reason: The same-branch fix closed the blocking validation finding by requiring every displayed per-route economics key to be present in the report mapping before rendering; present JSON `null` remains allowed, missing fields fail as malformed input, and no hard-stop scope was added.
 - Decision: RX-061 adds one explicit CLI-layer `render-paper-session-report` command for local stdout display of already-written RX-057 paper session report JSON artifacts.
 - Reason: RX-060 prepared local operator package artifacts, RX-057 already writes deterministic session reports, and the next grounded fake-money paper testing-support step is a display renderer suitable for later interface adaptation without adding transport, automation, or trading behavior.
 - Decision: The renderer consumes only an explicit local `--session-report-json-path`, parses JSON with the standard JSON parser, validates the accepted report shape, and prints deterministic key/value lines copied from the report.
 - Reason: RX-061 must stay report-only and avoid reusing session execution, adapter, ledger, paper lifecycle, replay, reconciliation, or economics owner paths.
 - Decision: The display includes route count, route ids, per-route decision status, per-route paper started state, copied decision/paper string-or-null economics, known/unknown summary counts, and `aggregate_paper_net_profit_usd=null`.
-- Reason: Operators need compact display output while preserving the RX-057 report's unknown/null and no-aggregate-PnL semantics. Numeric economics values and non-null aggregate PnL fail closed rather than being coerced or calculated.
+- Reason: Operators need compact display output while preserving the RX-057 report's unknown/null and no-aggregate-PnL semantics. Missing displayed economics fields, numeric economics values, and non-null aggregate PnL fail closed rather than being invented, coerced, or calculated.
 - Decision: RX-061 implementation work occurs only in the clean executor worktree `/Users/daniilmakarov/.codex/worktrees/7faf/risex-main` on `task/rx-061-local-paper-session-report-display-renderer` from accepted baseline `d16cd9cff95f53620c0d583ab50132e4f635e872`.
 - Reason: The repository workflow requires one RX task, one clean executor task, one task branch, and no work in the Desktop checkout.
 - Decision: RX-061 used exactly one supervised worker for design support before implementation edits.
