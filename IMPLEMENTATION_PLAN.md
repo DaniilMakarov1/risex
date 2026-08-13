@@ -45,6 +45,8 @@ RX-066 is reviewer-accepted and finalized on `main` after a fix-in-same-branch r
 
 RX-067 is reviewer-accepted and finalized on `main`. It adds focused deterministic local smoke fixture coverage for the existing `paper-trade-session` command path with injected public-adapter doubles, two explicit valid `ENTRY` routes, real session/evaluate/lifecycle/ledger/report owner paths, deterministic stdout assertions, explicit local report export assertions, string-or-null economics checks, known/unknown count checks, `aggregate_paper_net_profit_usd=null`, no aggregate paper PnL calculation, and no unknown-to-zero behavior. RX-067 adds no production code, new commands, CLI behavior changes, network calls, credentials, Telegram transport, live/order/private/account scope, or second owner paths.
 
+RX-068 is implementation-complete on the task branch and pending reviewer acceptance. It adds focused deterministic local smoke fixture coverage proving accepted `build-paper-session-package` output can feed accepted `paper-trade-session` runtime/report/display paths under injected public-adapter doubles, explicit local package artifacts, explicit local SQLite ledger path, deterministic stdout, explicit local report export, accepted display rendering, string-or-null economics checks, known/unknown count checks, `aggregate_paper_net_profit_usd=null`, no aggregate paper PnL calculation, and no unknown-to-zero behavior. RX-068 adds no production code, new commands, CLI behavior changes, network calls, credentials, Telegram transport, live/order/private/account scope, or second owner paths.
+
 ## Completed Accepted Work
 
 - RX-000 through RX-007 established the project constitution, domain contracts, product rules, economics, per-venue observations, offline scan/refresh orchestration, fake paper lifecycle, and append-only ledger persistence scaffolding.
@@ -113,7 +115,7 @@ RX-067 - Local Paper Session Runtime Smoke Fixture Coverage is reviewer-accepted
 
 ## Current Task Branch
 
-No active product task branch is accepted as current. `NEXT_TASK.md` is prepared for RX-068 Local Paper Session Package-To-Runtime Smoke Fixture Coverage as the next clean task branch after RX-067 finalization.
+RX-068 - Local Paper Session Package-To-Runtime Smoke Fixture Coverage is implementation-complete on `task/rx-068-local-paper-session-package-to-runtime-smoke-fixture-coverage` and pending reviewer acceptance. The latest accepted product baseline remains RX-067 on `main`.
 
 ## Previous Product Task
 
@@ -125,7 +127,7 @@ RX-065 - Local Paper Session Display Command Text Parser is reviewer-accepted an
 
 ## Next Task
 
-`NEXT_TASK.md` is prepared for RX-068 Local Paper Session Package-To-Runtime Smoke Fixture Coverage after RX-067 finalization.
+`NEXT_TASK.md` is prepared for RX-069 Post-RX-068 Fake-Money Paper Trader Handoff Clarification after RX-068 reviewer acceptance and finalization.
 
 ## Previous Product Baseline
 
@@ -177,11 +179,13 @@ RX-065 is reviewer-accepted and finalized on `main` as the local/manual display 
 
 RX-067 is reviewer-accepted and finalized on `main`. It adds only test-local deterministic smoke coverage proving the existing `paper-trade-session` runtime path can process two explicit valid `ENTRY` routes through injected public-adapter doubles, the accepted one-route adapter handoff/evaluate path, fake paper lifecycle, ledger ownership, optional SQLite persistence, deterministic stdout, and explicit local report export. It preserves string-or-null economics, known/unknown counts, `aggregate_paper_net_profit_usd=null`, no aggregate paper PnL calculation, no unknown-to-zero behavior, and adds no production code or new CLI behavior.
 
-## Remaining Gated Roadmap After RX-067 Finalization
+RX-068 is implementation-complete on the task branch and pending reviewer acceptance. It adds only test-local deterministic package-to-runtime smoke coverage proving the accepted `build-paper-session-package` route-list artifact can feed accepted `paper-trade-session` runtime/report/display paths through injected public-adapter doubles, explicit local package artifacts, explicit SQLite ledger path, deterministic stdout, explicit report export, accepted display rendering, string-or-null economics, known/unknown counts, `aggregate_paper_net_profit_usd=null`, no aggregate PnL calculation, and no unknown-to-zero behavior.
 
-Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. RX-067 implements exactly one local/manual/fake-money runtime smoke coverage handoff and does not authorize any additional production behavior, trading, execution automation, execution planning, polling, ranking, discovery, ledger/storage/replay change, Telegram transport, credentials, messaging, alerts, webhooks, or live-order roadmap stage.
+## Remaining Gated Roadmap After RX-068 Branch Completion
 
-1. RX-068 Local Paper Session Package-To-Runtime Smoke Fixture Coverage.
+Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. RX-068 implements exactly one local/manual/fake-money package-to-runtime smoke coverage handoff on the task branch and does not authorize any additional production behavior, trading, execution automation, execution planning, polling, ranking, discovery, ledger/storage/replay change, Telegram transport, credentials, messaging, alerts, webhooks, or live-order roadmap stage.
+
+1. RX-069 Post-RX-068 Fake-Money Paper Trader Handoff Clarification.
 
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
@@ -1106,18 +1110,26 @@ RX-067 implementation notes:
 
 ## RX-068 — Local Paper Session Package-To-Runtime Smoke Fixture Coverage
 
-After RX-067 finalization, RX-068 should add focused deterministic local smoke fixture coverage connecting the accepted operator-package builder to the accepted paper-session runtime and report/display path.
+After RX-067 finalization, RX-068 adds focused deterministic local smoke fixture coverage connecting the accepted operator-package builder to the accepted paper-session runtime and report/display path.
 
 RX-068 implementation notes:
 
-- The smoke should use the existing `build-paper-session-package` command to write a validated route-list artifact and descriptive preview/manifest from an explicit local command payload fixture.
-- The smoke should feed that generated route-list artifact into the existing `paper-trade-session --routes-json-path ... --session-report-json-path ...` runtime under injected deterministic public-adapter doubles.
-- The smoke may validate the resulting report through the accepted report display path, but must not duplicate display behavior or mutate reports.
-- It should preserve deterministic stdout/report assertions, string-or-null economics, known/unknown count semantics, and `aggregate_paper_net_profit_usd=null`.
-- It must not add new commands, change CLI behavior, call networks, add Telegram transport, use credentials, enter live/order/private/account scope, discover/rank/watchlist/poll/schedule, automate execution, change adapters/economics/risk/ledger/replay/reconciliation/storage, add statuses/reasons, calculate aggregate PnL, turn unknowns into zero, or create second owner paths.
+- The smoke uses the existing `build-paper-session-package` command to write a validated route-list artifact and descriptive preview/manifest from an explicit local command payload fixture.
+- The smoke feeds that generated route-list artifact into the existing `paper-trade-session --routes-json-path ... --session-report-json-path ...` runtime under injected deterministic public-adapter doubles and an explicit local SQLite ledger path.
+- The smoke validates the resulting report through the accepted `render-paper-session-report` display path without duplicating display behavior or mutating reports.
+- It preserves deterministic package/runtime/display stdout and report assertions, string-or-null economics, known/unknown count semantics, and `aggregate_paper_net_profit_usd=null`.
+- It adds no new commands, CLI behavior changes, network calls, Telegram transport, credentials, live/order/private/account scope, discovery/ranking/watchlist/poll/schedule, execution automation, adapter/economics/risk/ledger/replay/reconciliation/storage changes, statuses/reasons, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
+
+RX-068 branch outcome:
+
+- RX-068 adds one focused test-only smoke in `tests/unit/test_cli_paper_session_smoke.py`.
+- The smoke validates deterministic package preview/manifest values, accepted route-list output shape, explicit local package artifacts, the generated route-list-to-runtime handoff, existing fake paper lifecycle handling, existing ledger ownership through SQLite event replay, deterministic runtime stdout, explicit local report export, and accepted report display rendering.
+- The fixture uses one grounded public-economics route that starts fake paper lifecycle and one valid unknown-economics route that rejects through the existing lifecycle/ledger path.
+- RX-068 does not change production code, add commands, alter CLI output behavior, call networks, add Telegram transport, enter live/order/private/account scope, calculate aggregate PnL, turn unknowns into zero, or create second owner paths.
+- RX-068 prepares RX-069 Post-RX-068 Fake-Money Paper Trader Handoff Clarification as exactly one next governance/source-of-truth handoff after reviewer acceptance and finalization.
 
 ## Next Sequence
 
-1. RX-068 Local Paper Session Package-To-Runtime Smoke Fixture Coverage.
+1. RX-069 Post-RX-068 Fake-Money Paper Trader Handoff Clarification.
 
 Do not promote execution automation, background loops, ranking, order placement, polling, alerts, auto-refresh, Telegram transport, bot tokens, private endpoints, credentials, account-state access, destructive reset, financially dangerous actions, or later roadmap stages into the current handoff unless that exact future task is explicitly user-approved for hard-stop scope or explicitly directed by the Product Owner, autonomously selected by Control Tower under RX-033 for non-dangerous scope, and passes the repository's hard approval gates.
