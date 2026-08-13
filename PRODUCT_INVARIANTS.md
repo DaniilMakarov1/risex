@@ -122,6 +122,8 @@ Read-only monitoring dashboard rendering must remain downstream of existing resu
 
 Manual one-route real-data CLI output must remain downstream of existing `DecisionResult` values. It may print route id, mode, status, reasons, net profit, and existing entry EV fields for inspection, but it must not recalculate profitability, mutate eligibility, call snapshot assembly or route evaluation directly, or turn missing economics into zero.
 
+Manual one-route public readiness report output must remain downstream of the existing public one-route adapter handoff, `assemble_route_snapshot()` path, source-aware fee/funding completion, and `evaluate_route()` path. It may display the retained snapshot's public funding and fee evidence, existing Entry EV fields, decision status/reasons, deterministic `UNKNOWN` components, and a display-only public-readiness conclusion, but it must not recalculate profitability, add or mutate route statuses or reject reasons, mutate eligibility, write ledger events, start paper lifecycle, verify funding settlement, reconcile ledgers, plan execution, run guarded live readiness, call approval-boundary execution, construct sendable requests, place orders, use private/account endpoints or credentials, read account state, enable live trading, or turn unknown evidence into zero or success.
+
 Allowed value sources are exactly:
 
 - `DOCUMENTED`

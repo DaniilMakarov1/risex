@@ -161,6 +161,33 @@ def test_real_data_runner_evaluates_one_explicit_route_from_adapter_observations
     assert decision.capture_plan is None
 
 
+def test_real_data_runner_with_snapshot_retains_existing_snapshot_evidence() -> None:
+    route = _route()
+    risex_observation, hedge_observation = _observations()
+    risex_adapter = RecordingObservationAdapter(risex_observation)
+    hedge_adapter = RecordingObservationAdapter(hedge_observation)
+
+    decision, snapshot = real_data.run_real_data_research_route_with_snapshot(
+        route=route,
+        risex_adapter=risex_adapter,
+        hedge_adapter=hedge_adapter,
+        assembled_at=ASSEMBLED_AT,
+        mode=EvaluationMode.ENTRY,
+    )
+
+    assert risex_adapter.requested_symbols == [route.risex_symbol]
+    assert hedge_adapter.requested_symbols == [route.hedge_symbol]
+    assert decision.route_id == route.route_id
+    assert decision.status is RouteStatus.PAPER_ELIGIBLE
+    assert snapshot is not None
+    assert snapshot.captured_at == ASSEMBLED_AT
+    assert snapshot.funding.risex_funding_usd == risex_observation.expected_funding_usd
+    assert snapshot.funding.hedge_funding_usd == hedge_observation.expected_funding_usd
+    assert snapshot.fees.components == (
+        risex_observation.fees.components + hedge_observation.fees.components
+    )
+
+
 def test_real_data_runner_uses_adapter_handoff_and_shared_decision_path(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -217,6 +244,61 @@ def test_real_data_runner_uses_adapter_handoff_and_shared_decision_path(
     assert decision.status is RouteStatus.RESEARCH_ONLY
 
 
+def test_real_data_runner_with_snapshot_uses_adapter_handoff_and_shared_decision_path(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    route = _route()
+    risex_observation, hedge_observation = _observations()
+    snapshot = assemble_route_snapshot(
+        route=route,
+        observations={
+            (route.risex_venue, route.risex_symbol): risex_observation,
+            (route.hedge_venue, route.hedge_symbol): hedge_observation,
+        },
+        assembled_at=ASSEMBLED_AT,
+    )
+    captured: dict[str, object] = {}
+
+    def fake_handoff(*, route, risex_adapter, hedge_adapter, assembled_at):
+        captured["handoff"] = (route, risex_adapter, hedge_adapter, assembled_at)
+        return snapshot
+
+    def fake_evaluate(route, snapshot, mode, *, rules=None, **kwargs):
+        captured["evaluate"] = (route, snapshot, mode, rules, kwargs)
+        return DecisionResult(
+            route_id=route.route_id,
+            mode=mode,
+            status=RouteStatus.RESEARCH_ONLY,
+            reasons=(),
+            capture_plan=None,
+            decided_at=ASSEMBLED_AT,
+        )
+
+    risex_adapter = RecordingObservationAdapter(risex_observation)
+    hedge_adapter = RecordingObservationAdapter(hedge_observation)
+    monkeypatch.setattr(real_data, "assemble_route_snapshot_from_adapters", fake_handoff)
+    monkeypatch.setattr(real_data, "evaluate_route", fake_evaluate)
+
+    decision, retained_snapshot = real_data.run_real_data_research_route_with_snapshot(
+        route=route,
+        risex_adapter=risex_adapter,
+        hedge_adapter=hedge_adapter,
+        assembled_at=ASSEMBLED_AT,
+        mode=EvaluationMode.DISCOVERY,
+    )
+
+    assert captured["handoff"] == (route, risex_adapter, hedge_adapter, ASSEMBLED_AT)
+    assert captured["evaluate"] == (
+        route,
+        snapshot,
+        EvaluationMode.DISCOVERY,
+        None,
+        {},
+    )
+    assert decision.status is RouteStatus.RESEARCH_ONLY
+    assert retained_snapshot is snapshot
+
+
 def test_real_data_runner_adapter_failure_fails_closed_before_evaluation(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -246,6 +328,34 @@ def test_real_data_runner_adapter_failure_fails_closed_before_evaluation(
     assert decision.entry_ev is None
     assert decision.capture_plan is None
     assert decision.decided_at == ASSEMBLED_AT
+
+
+def test_real_data_runner_with_snapshot_failure_returns_no_snapshot_before_evaluation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    route = _route()
+    _, hedge_observation = _observations()
+    risex_adapter = FailingObservationAdapter()
+
+    def fail_if_evaluated(*_args, **_kwargs):
+        raise AssertionError("evaluate_route must not run after adapter failure")
+
+    monkeypatch.setattr(real_data, "evaluate_route", fail_if_evaluated)
+
+    decision, snapshot = real_data.run_real_data_research_route_with_snapshot(
+        route=route,
+        risex_adapter=risex_adapter,
+        hedge_adapter=RecordingObservationAdapter(hedge_observation),
+        assembled_at=ASSEMBLED_AT,
+        mode=EvaluationMode.ENTRY,
+    )
+
+    assert risex_adapter.requested_symbols == [route.risex_symbol]
+    assert decision.status is RouteStatus.REJECTED
+    assert decision.reasons == (RejectReason.REQUIRED_LIVE_DATA_MISSING,)
+    assert decision.net_profit_usd is None
+    assert decision.entry_ev is None
+    assert snapshot is None
 
 
 def test_real_data_runner_snapshot_handoff_failure_fails_closed_before_evaluation(
@@ -301,8 +411,10 @@ def test_real_data_runner_rejects_naive_assembly_timestamp_before_adapter_calls(
 
 def test_real_data_runner_has_no_ledger_parameter() -> None:
     signature = inspect.signature(real_data.run_real_data_research_route)
+    report_signature = inspect.signature(real_data.run_real_data_research_route_with_snapshot)
 
     assert "ledger" not in signature.parameters
+    assert "ledger" not in report_signature.parameters
 
 
 def test_real_data_runner_does_not_import_paper_live_or_execution_modules() -> None:

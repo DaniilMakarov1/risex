@@ -111,8 +111,8 @@ Any non-terminal Capture may transition to `FAILED`. Capture states with possibl
 - Route decisions happen only in `core/pipeline/evaluate.py`.
 - Offline route-candidate orchestration happens only in `core/pipeline/offline_scan.py`.
 - Broad Scan and Focused Refresh orchestration happens only in `core/pipeline/scan_refresh.py`.
-- One-route real-data research orchestration happens only in `apps/research_runner/real_data.py`.
-- Manual one-route real-data CLI input validation and output formatting happen only in `apps/cli/main.py`.
+- One-route real-data research orchestration and app-layer snapshot retention for reporting happen only in `apps/research_runner/real_data.py`.
+- Manual one-route real-data CLI input validation, output formatting, and public readiness report formatting happen only in `apps/cli/main.py`.
 - Non-sending execution planning happens only in `core/execution/planning.py`.
 - Guarded live runner readiness without orders happens only in `apps/live_runner/guarded.py`.
 - Explicit approval-gated order placement boundaries happen only in `core/execution/orders.py`.
@@ -321,6 +321,15 @@ RX-038 adds one manual real-data CLI entry point:
 5. Route snapshot creation still flows through the RX-025 runner and RX-024 adapter handoff, and route decisions still flow through `evaluate_route()` only through the runner.
 6. Output is deterministic and preserves missing `DecisionResult` economics as `None` rather than zero.
 7. It does not discover routes, rank routes, poll, loop, write ledger events, start paper lifecycle, verify funding settlement, reconcile ledgers, plan execution, run guarded live readiness, call approval-boundary execution, use private/account/auth endpoints, use credentials, read account state, construct sendable requests or order payloads, place orders, enable live trading, add route statuses, add reject reasons, or create a second decision, snapshot, verifier, ledger-write, replay, economics, execution-planning, or live execution path.
+
+RX-045 adds one manual public readiness report:
+
+1. `apps/cli/main.py` owns the opt-in `--public-readiness-report` formatting on the existing `real-data-route` command.
+2. The report accepts exactly the same explicit one-route inputs as the default real-data CLI and still constructs public adapters only after input validation.
+3. `apps/research_runner/real_data.py` owns a narrow app-layer helper that returns the existing `DecisionResult` plus the already-assembled `VenueSnapshot` for display; it still delegates through `assemble_route_snapshot_from_adapters()` and `evaluate_route(route, snapshot, mode)`.
+4. The report displays source-aware public funding, fee, and Entry EV evidence already produced by the existing owner paths, plus deterministic `UNKNOWN` components and a display-only public-readiness conclusion.
+5. Missing adapter/snapshot evidence fails closed as the existing `REJECTED` decision with `REQUIRED_LIVE_DATA_MISSING` and no retained snapshot; unknown fee, funding, or Entry EV values remain `UNKNOWN` or `None` in display.
+6. The readiness conclusion is operator context only. It does not add route statuses, reject reasons, eligibility, Capture state, ledger state, live gates, execution planning, approval-boundary behavior, order payloads, sendable exchange requests, or live trading.
 
 RX-039 adds public one-route economics source completion:
 
