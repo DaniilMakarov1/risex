@@ -6,7 +6,7 @@ RX-069 - Local Paper Session End-To-End Operator Display Smoke Fixture Coverage
 
 ## Objective
 
-After RX-068 reviewer acceptance and finalization, add focused deterministic local smoke fixture coverage proving that the accepted local operator package, serial paper-session runtime, explicit report export, display payload, display preview, command-text preview/parser, and payload-backed report renderer can operate as one end-to-end fake-money operator display path.
+After RX-068 finalization, add focused deterministic local smoke fixture coverage proving that the accepted local operator package, serial paper-session runtime, explicit report export, display payload, display preview, command-text preview/parser, and payload-backed report renderer can operate as one end-to-end fake-money operator display path.
 
 This is testability coverage only. It must use existing accepted commands and deterministic public-adapter doubles, stay local/manual/fake-money, make no external network calls, and add no production behavior unless a tiny bug fix is strictly required by the smoke and stays inside the accepted owner path.
 
