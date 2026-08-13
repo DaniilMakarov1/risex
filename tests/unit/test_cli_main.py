@@ -1265,6 +1265,12 @@ def test_paper_trade_session_runs_finite_routes_serially_with_deterministic_summ
         "decision_status.PAPER_ELIGIBLE=1\n"
         "decision_status.LIVE_ELIGIBLE=0\n"
         "decision_status.REJECTED=1\n"
+        "entry_ev_known=1\n"
+        "entry_ev_unknown=1\n"
+        "paper_expected_funding_known=1\n"
+        "paper_expected_funding_unknown=1\n"
+        "paper_total_fees_known=1\n"
+        "paper_total_fees_unknown=1\n"
         "decision_net_profit_known=1\n"
         "decision_net_profit_unknown=1\n"
         "paper_net_profit_known=1\n"
@@ -1321,8 +1327,18 @@ def test_paper_trade_session_handles_missing_snapshot_without_paper_events(
     assert "routes_without_snapshot=1\n" in output
     assert "paper_started=0\n" in output
     assert "paper_not_started=1\n" in output
+    assert "entry_ev_known=0\n" in output
+    assert "entry_ev_unknown=1\n" in output
+    assert "paper_expected_funding_known=0\n" in output
+    assert "paper_expected_funding_unknown=1\n" in output
+    assert "paper_total_fees_known=0\n" in output
+    assert "paper_total_fees_unknown=1\n" in output
+    assert "decision_net_profit_unknown=1\n" in output
     assert "paper_net_profit_unknown=1\n" in output
     assert "aggregate_paper_net_profit_usd=None\n" in output
+    assert "entry_ev_known=1" not in output
+    assert "paper_expected_funding_known=1" not in output
+    assert "paper_total_fees_known=1" not in output
     assert "paper.net_profit_usd=0" not in output
 
 
@@ -1475,6 +1491,46 @@ def test_paper_trade_session_rejects_invalid_json_before_adapter_calls(
 
     with pytest.raises(SystemExit) as exc_info:
         cli.main(["paper-trade-session", "--routes-json-path", str(routes_path)])
+
+    assert exc_info.value.code == 2
+    assert calls == []
+
+
+def test_paper_trade_session_rejects_over_limit_route_list_before_adapter_calls(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+) -> None:
+    calls: list[str] = []
+
+    class ForbiddenRiseXAdapter:
+        name = "RiseX"
+
+        def __init__(self) -> None:
+            calls.append("risex_adapter")
+            raise AssertionError("RiseX adapter must not be constructed")
+
+    class ForbiddenHyperliquidAdapter:
+        name = "Hyperliquid"
+
+        def __init__(self) -> None:
+            calls.append("hedge_adapter")
+            raise AssertionError("Hyperliquid adapter must not be constructed")
+
+    def forbidden_report_runner(**_kwargs: object) -> tuple[DecisionResult, object]:
+        calls.append("report_runner")
+        raise AssertionError("report runner must not be called")
+
+    monkeypatch.setattr(cli, "RiseXObservationAdapter", ForbiddenRiseXAdapter)
+    monkeypatch.setattr(cli, "HyperliquidObservationAdapter", ForbiddenHyperliquidAdapter)
+    monkeypatch.setattr(cli, "run_real_data_research_route_with_snapshot", forbidden_report_runner)
+
+    routes_payload = [
+        _paper_session_route(route_id=f"session-route-{index}")
+        for index in range(cli._MAX_PAPER_SESSION_ROUTES + 1)
+    ]
+
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main(_paper_session_args(tmp_path, routes_payload))
 
     assert exc_info.value.code == 2
     assert calls == []

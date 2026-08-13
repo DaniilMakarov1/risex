@@ -720,13 +720,13 @@ After RX-054 reviewer acceptance and finalization, RX-055 should add one manual,
 
 RX-055 implementation notes:
 
-- The runner must consume only a finite operator-supplied list of explicit routes. It must not discover, rank, watchlist, poll, schedule, alert, loop in the background, or auto-refresh routes.
+- The runner must consume only a finite operator-supplied list of explicit routes, capped at 25 routes as an operator input safety bound. It must not discover, rank, truncate, skip, auto-batch, watchlist, poll, schedule, alert, loop in the background, silently accept partial lists, or auto-refresh routes.
 - Each route must reuse the existing manual public route input requirements and public read-only adapter construction boundaries.
 - Each route decision must flow through `run_real_data_research_route_with_snapshot()` and the single shared `evaluate_route(route, snapshot, mode)` path in `EvaluationMode.ENTRY`.
 - Fake paper behavior must delegate to `run_paper_lifecycle()` when a public snapshot is available.
 - Fake paper ledger writes must stay inside `core/accounting/ledger.py`; optional local persistence must use only the existing `storage/sqlite/ledger.py` contract through an explicit operator-supplied local SQLite path.
 - The runner must print deterministic per-route and session-level summary stdout for strategy testing.
-- Missing public snapshot, Entry EV, funding, fee, decision net profit, or paper PnL values must remain `None`/unknown in route output and session summaries; aggregates must not turn unknown values into zero, success, or profitability.
+- Missing public snapshot, Entry EV, funding, fee, decision net profit, or paper PnL values must remain `None`/unknown in route output and session summaries; count-only known/unknown fields must cover Entry EV, paper expected funding, paper total fees, decision net profit, and paper net profit, and aggregates must not turn unknown values into zero, success, or profitability.
 - Telegram remains out of scope. Bot-ready command parsing may be a later non-network task; actual Telegram transport, bot tokens, credentials, webhooks, external network behavior, alerts, and messaging require an explicit future credentials/network gate.
 - Focused tests must cover started and non-started routes, deterministic session summary output, finite explicit route list handling, optional SQLite behavior if implemented, malformed input failing before adapter construction, unknown-as-missing preservation, and absence of live/order/private/account/Telegram behavior.
 
@@ -735,11 +735,11 @@ RX-055 must not add live trading, real exchange order placement, order cancellat
 RX-055 branch outcome:
 
 - Adds one explicit `paper-trade-session` command for one operator-supplied local JSON route-list file.
-- The route-list schema is a non-empty finite JSON array of exact route objects only. Missing, empty, malformed, extra-field, discovery-style, ranking-style, watchlist-style, polling-style, non-ENTRY, wrong-venue, same-side, non-finite-notional, or timezone-naive inputs fail before adapter construction.
+- The route-list schema is a non-empty finite JSON array of at most 25 exact route objects only. Missing, empty, over-limit, malformed, extra-field, discovery-style, ranking-style, watchlist-style, polling-style, non-ENTRY, wrong-venue, same-side, non-finite-notional, or timezone-naive inputs fail before adapter construction.
 - Each route reuses `RouteCandidate`, `run_real_data_research_route_with_snapshot()`, and the shared `evaluate_route(route, snapshot, mode)` path in `EvaluationMode.ENTRY`.
 - Each route delegates fake paper handling to `run_paper_lifecycle()` when a public snapshot is available. Missing snapshots remain `UNKNOWN`, do not invent funding settlement timestamps, and do not write paper lifecycle events.
 - The command uses `InMemoryLedger` by default and optional explicit local `SQLiteLedger` persistence only through `--ledger-sqlite-path`.
-- Per-route output remains deterministic and copies existing decision and paper lifecycle values. Session summary output reports counts, known/unknown counts, ledger event sequences/types, and `aggregate_paper_net_profit_usd=None` rather than aggregating PnL.
+- Per-route output remains deterministic and copies existing decision and paper lifecycle values. Session summary output reports counts, Entry EV known/unknown, paper expected funding known/unknown, paper total fees known/unknown, decision net profit known/unknown, paper net profit known/unknown, ledger event sequences/types, and `aggregate_paper_net_profit_usd=None` rather than aggregating PnL.
 - Existing no-argument fake CLI behavior, `real-data-route`, public-readiness text/JSON output, and `paper-trade-route` behavior are preserved unless `paper-trade-session` is explicitly invoked.
 - RX-055 does not add Telegram behavior, live trading, orders, private/account endpoints, credentials, account state, sendable requests, order payloads, execution planning, discovery/ranking/polling/watchlists, new route statuses/reject reasons, economics changes, ledger reconciliation/replay changes, storage migrations, route eligibility mutation, Capture transition changes, or second owner paths.
 

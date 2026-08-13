@@ -49,6 +49,7 @@ _PAPER_SESSION_ROUTE_FIELDS = frozenset(
         "assembled_at",
     )
 )
+_MAX_PAPER_SESSION_ROUTES = 25
 
 
 def _print_decisions(label: str, decisions: tuple[DecisionResult, ...]) -> None:
@@ -656,6 +657,11 @@ def _paper_session_routes_from_json_path(
         )
     if not raw_routes:
         raise argparse.ArgumentTypeError("routes-json-path route array must be non-empty")
+    if len(raw_routes) > _MAX_PAPER_SESSION_ROUTES:
+        raise argparse.ArgumentTypeError(
+            "routes-json-path route array must contain at most "
+            f"{_MAX_PAPER_SESSION_ROUTES} explicit routes"
+        )
 
     route_inputs: list[tuple[RouteCandidate, datetime]] = []
     for route_index, raw_route in enumerate(raw_routes, start=1):
@@ -760,6 +766,20 @@ def _print_paper_session_summary(
     decision_net_profit_known = sum(
         1 for decision in decisions if decision.net_profit_usd is not None
     )
+    entry_ev_known = sum(1 for decision in decisions if decision.entry_ev is not None)
+    paper_expected_funding_known = sum(
+        1
+        for paper_result in paper_results
+        if (
+            paper_result is not None
+            and paper_result.explanation.expected_funding_usd is not None
+        )
+    )
+    paper_total_fees_known = sum(
+        1
+        for paper_result in paper_results
+        if paper_result is not None and paper_result.explanation.total_fees_usd is not None
+    )
     paper_net_profit_known = sum(
         1
         for paper_result in paper_results
@@ -777,6 +797,12 @@ def _print_paper_session_summary(
     print(f"paper_not_started={route_count - paper_started}")
     for status in RouteStatus:
         print(f"decision_status.{status.value}={status_counts[status]}")
+    print(f"entry_ev_known={entry_ev_known}")
+    print(f"entry_ev_unknown={route_count - entry_ev_known}")
+    print(f"paper_expected_funding_known={paper_expected_funding_known}")
+    print(f"paper_expected_funding_unknown={route_count - paper_expected_funding_known}")
+    print(f"paper_total_fees_known={paper_total_fees_known}")
+    print(f"paper_total_fees_unknown={route_count - paper_total_fees_known}")
     print(f"decision_net_profit_known={decision_net_profit_known}")
     print(f"decision_net_profit_unknown={route_count - decision_net_profit_known}")
     print(f"paper_net_profit_known={paper_net_profit_known}")

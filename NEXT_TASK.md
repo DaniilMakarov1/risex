@@ -6,7 +6,7 @@ RX-056 - Post-Serial Paper Session Handoff Clarification
 
 ## Objective
 
-After RX-055 reviewer acceptance and finalization, inspect the accepted manual serial paper session runner outcome and current source-of-truth docs to identify exactly one next non-dangerous fake-money paper-trader handoff if one is clearly grounded. If no such handoff is grounded, record the no-grounded-handoff conclusion and prepare one narrow Product Owner clarification gate.
+After RX-055 reviewer acceptance and finalization, inspect the accepted manual serial paper session runner outcome and current source-of-truth docs to identify exactly one next non-dangerous fake-money paper-trader handoff if one is clearly grounded. Include the accepted RX-055 constraints that `paper-trade-session` route-list input is capped at 25 explicit routes and session summaries preserve Entry EV, paper expected funding, paper total fees, decision net profit, and paper net profit as count-only known/unknown fields without numeric aggregation. If no such handoff is grounded, record the no-grounded-handoff conclusion and prepare one narrow Product Owner clarification gate.
 
 RX-056 is governance/source-of-truth only. It must not implement product/runtime behavior, CLI output behavior, Telegram transport, credentials, route discovery, polling, execution automation, live trading, orders, private/account endpoints, account-state behavior, ledger replay/reconciliation changes, storage migrations, or later roadmap stages.
 

@@ -814,8 +814,10 @@
 - Date: 2026-08-13
 - Decision: RX-055 adds one explicit manual `paper-trade-session` command as the finite serial fake-money paper session runner.
 - Reason: RX-054 grounded the next fake-money paper-trader step as manual serial strategy testing, and the accepted code already had the one-route public ENTRY decision helper, fake paper lifecycle, ledger ownership, and optional explicit SQLite ledger persistence needed for that step.
-- Decision: The session input is a required local JSON file supplied with `--routes-json-path`; the file must contain a non-empty finite JSON array of exact route objects.
+- Decision: The session input is a required local JSON file supplied with `--routes-json-path`; the file must contain a non-empty finite JSON array of at most 25 exact route objects.
 - Reason: A closed top-level array keeps operator input explicit and finite without adding discovery, ranking, watchlist, polling, background-loop, or automation semantics.
+- Decision: Over-limit route lists fail closed before route iteration and adapter construction. The limit is an operator input safety bound and does not rank, truncate, skip, auto-batch, or partially accept routes.
+- Reason: RX-055 must reject unbounded operator input instead of silently processing arbitrary-length route lists or inventing strategy semantics.
 - Decision: Every route object must include exactly route id, capture id, exact RiseX and Hyperliquid venues, symbols, opposing entry sides, positive finite target notional, `ENTRY` mode, and a timezone-aware assembly timestamp. Missing, empty, malformed, extra-field, non-ENTRY, wrong-venue, same-side, non-finite-notional, and timezone-naive inputs fail before adapter construction.
 - Reason: RX-055 must preserve the accepted RX-053 public route boundary and fail closed before any public adapter calls when operator input is malformed.
 - Decision: Each route reuses `run_real_data_research_route_with_snapshot()` and therefore the existing public adapter handoff plus the single `evaluate_route(route, snapshot, mode)` path in `EvaluationMode.ENTRY`.
@@ -824,7 +826,7 @@
 - Reason: A missing public snapshot cannot identify one funding settlement opportunity. Missing snapshot evidence must remain missing rather than becoming zero, success, profitability, or a default timestamp.
 - Decision: Session ledger writes remain inside `core/accounting/ledger.py`; optional local persistence is available only through explicit `--ledger-sqlite-path` using the existing `storage/sqlite/ledger.py` contract.
 - Reason: RX-055 needs session-level fake paper history without adding a second ledger-write path, storage layer, migration, replay change, or reconciliation change.
-- Decision: Session stdout reports deterministic per-route outcomes plus summary counts, known/unknown counts, and ledger event sequences/types. It prints `aggregate_paper_net_profit_usd=None` rather than aggregating paper PnL.
+- Decision: Session stdout reports deterministic per-route outcomes plus summary counts, Entry EV known/unknown, paper expected funding known/unknown, paper total fees known/unknown, decision net profit known/unknown, paper net profit known/unknown, and ledger event sequences/types. It prints `aggregate_paper_net_profit_usd=None` rather than aggregating paper PnL.
 - Reason: Summary output is for strategy testing counts only. Unknown decision and paper PnL values must never become zero, success, profitability, or aggregate PnL.
 - Decision: The next handoff is RX-056 Post-Serial Paper Session Handoff Clarification.
 - Reason: After RX-055, the next safe fake-money paper-trader step should be selected from accepted branch evidence and current source-of-truth docs after reviewer acceptance, rather than inferring Telegram, discovery, ranking, polling, execution automation, private/account endpoint work, orders, ledger replay/reconciliation, storage migrations, or live trading.
