@@ -1,9 +1,11 @@
 # Status
 
-- Current branch: `task/rx-031-review-directed-follow-up-after-rx-030`.
-- Current task: RX-031 — Review-Directed Follow-up After RX-030.
+- Current branch: `main`.
+- Current task: RX-031 — Review-Directed Follow-up After RX-030 finalization.
 - RX-031 starting baseline: `917da9e241862f9c744e78fbc795f732f0f92f5f`
-- RX-031 review state: metadata-only implementation complete on task branch; pending reviewer acceptance.
+- RX-031 review state: reviewer-accepted and finalized on `main`.
+- Accepted RX-031 implementation HEAD: `39931ba1bee85faba939741cc2545cdf9009e874`
+- RX-031 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
 - RX-031 disposition: local repo/git evidence and the GitHub connector exposed no additional explicit actionable reviewer feedback after RX-030 finalization, so no dashboard or product code was changed.
 - RX-030 starting baseline: `c91e7190b122de621fd035c38ed4943fac618bab`
 - RX-030 review state: reviewer-accepted and finalized on `main`.
@@ -76,7 +78,7 @@
 - Accepted baseline branch: `main`
 - Current accepted `main` governance task: RX-Q004.
 - Current accepted `main` product task: RX-030.
-- Current RX task state: RX-031 is a metadata-only review-directed follow-up on `task/rx-031-review-directed-follow-up-after-rx-030`; latest accepted product task remains RX-030 and `NEXT_TASK.md` is prepared for RX-032.
+- Current RX task state: RX-031 is reviewer-accepted and finalized on `main`; latest accepted product task remains RX-030 and `NEXT_TASK.md` is prepared for RX-032.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
@@ -100,8 +102,8 @@ RX-013 remains the previous accepted product baseline before RX-014.
 RX-012 remains the previous accepted product baseline before RX-013.
 RX-Q001 remains the previous accepted governance baseline before RX-Q002.
 RX-011 remains the previous accepted product implementation baseline before RX-012.
-`NEXT_TASK.md` is prepared for RX-032 after RX-031 metadata-only follow-up.
-RX-031 found no additional explicit actionable reviewer feedback in local repo/git evidence or GitHub connector context after RX-030 finalization. RX-031 does not change dashboard or product code.
+`NEXT_TASK.md` is prepared for RX-032 after RX-031 finalization.
+RX-031 found no additional explicit actionable reviewer feedback in local repo/git evidence or GitHub connector context after RX-030 finalization. RX-031 is accepted metadata-only follow-up work and does not change dashboard or product code.
 RX-030 remains the latest accepted product task and adds one read-only dashboard renderer for already-derived deterministic fixture evidence only. It does not add route discovery, polling, adapters, route evaluation, snapshot assembly, funding verification, ledger reconciliation, live-gate bundle checking, execution planning, guarded live execution, approval-boundary execution, ledger writes, network I/O, or orders.
 
 ## Completed accepted tasks
@@ -140,6 +142,7 @@ RX-030 remains the latest accepted product task and adds one read-only dashboard
 - RX-028 — Guarded Live Runner Without Orders
 - RX-029 — Explicit Approval-Gated Order Placement Boundary
 - RX-030 — Read-Only Monitoring Dashboard Without Decisions Or Orders
+- RX-031 — Review-Directed Follow-up After RX-030
 
 ## Current architecture status
 
@@ -224,8 +227,18 @@ RX-030 remains the latest accepted product task and adds one read-only dashboard
 - RX-028 is reviewer-accepted and finalized on `main`.
 - RX-029 is reviewer-accepted and finalized on `main`.
 - RX-030 is reviewer-accepted and finalized on `main`.
+- RX-031 is reviewer-accepted and finalized on `main`.
 - The next recommended task is RX-032 Product Owner roadmap authorization gate.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized.
+
+## Tests last reported for RX-031 finalization on main
+
+- `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
+- `python3 -m pytest tests/invariant`: `37 passed in 0.27s`
+- `python3 -m pytest`: `560 passed in 0.86s`
+- `python3 -m compileall apps core storage tests scripts`: exit 0
+- `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
+- `git diff --check`: exit 0
 
 ## Tests last reported for RX-031 branch
 
