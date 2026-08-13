@@ -127,7 +127,7 @@ RX-065 - Local Paper Session Display Command Text Parser is reviewer-accepted an
 
 ## Next Task
 
-`NEXT_TASK.md` is prepared for RX-069 Post-RX-068 Fake-Money Paper Trader Handoff Clarification after RX-068 reviewer acceptance and finalization.
+`NEXT_TASK.md` is prepared for RX-069 Local Paper Session End-To-End Operator Display Smoke Fixture Coverage after RX-068 reviewer acceptance and finalization.
 
 ## Previous Product Baseline
 
@@ -185,7 +185,7 @@ RX-068 is implementation-complete on the task branch and pending reviewer accept
 
 Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. RX-068 implements exactly one local/manual/fake-money package-to-runtime smoke coverage handoff on the task branch and does not authorize any additional production behavior, trading, execution automation, execution planning, polling, ranking, discovery, ledger/storage/replay change, Telegram transport, credentials, messaging, alerts, webhooks, or live-order roadmap stage.
 
-1. RX-069 Post-RX-068 Fake-Money Paper Trader Handoff Clarification.
+1. RX-069 Local Paper Session End-To-End Operator Display Smoke Fixture Coverage.
 
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
@@ -1126,10 +1126,22 @@ RX-068 branch outcome:
 - The smoke validates deterministic package preview/manifest values, accepted route-list output shape, explicit local package artifacts, the generated route-list-to-runtime handoff, existing fake paper lifecycle handling, existing ledger ownership through SQLite event replay, deterministic runtime stdout, explicit local report export, and accepted report display rendering.
 - The fixture uses one grounded public-economics route that starts fake paper lifecycle and one valid unknown-economics route that rejects through the existing lifecycle/ledger path.
 - RX-068 does not change production code, add commands, alter CLI output behavior, call networks, add Telegram transport, enter live/order/private/account scope, calculate aggregate PnL, turn unknowns into zero, or create second owner paths.
-- RX-068 prepares RX-069 Post-RX-068 Fake-Money Paper Trader Handoff Clarification as exactly one next governance/source-of-truth handoff after reviewer acceptance and finalization.
+- RX-068 prepares RX-069 Local Paper Session End-To-End Operator Display Smoke Fixture Coverage as exactly one next test-only/local/manual/fake-money handoff after reviewer acceptance and finalization.
+
+## RX-069 — Local Paper Session End-To-End Operator Display Smoke Fixture Coverage
+
+After RX-068 reviewer acceptance and finalization, RX-069 should add focused deterministic local smoke fixture coverage proving that the accepted operator/display artifact chain can run end-to-end without production behavior changes.
+
+RX-069 implementation notes:
+
+- The smoke should start with an explicit local command payload fixture and use `build-paper-session-package` to produce the route-list artifact plus package preview/manifest.
+- The generated route-list artifact should feed `paper-trade-session --routes-json-path ... --session-report-json-path ...` under injected deterministic public-adapter doubles with an explicit local SQLite ledger path.
+- The produced report should feed `build-paper-session-display-payload`, `build-paper-session-display-command-preview`, `build-paper-session-display-command-text-preview`, `parse-paper-session-display-command-text`, and `render-paper-session-report-from-payload` through their accepted local command paths.
+- The smoke should exercise at least two explicit valid `ENTRY` routes and verify explicit local artifacts, deterministic previews/manifests/stdout, accepted route-list shape, existing fake paper lifecycle handling, existing ledger ownership, string-or-null economics, known/unknown count semantics, `aggregate_paper_net_profit_usd=null`, no aggregate paper PnL calculation, and no unknown-to-zero behavior.
+- It must add no new commands, production behavior, parser weakening, external network calls, Telegram transport, credentials, live/order/private/account scope, discovery/ranking/watchlist/poll/schedule, execution automation/planning, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
 
 ## Next Sequence
 
-1. RX-069 Post-RX-068 Fake-Money Paper Trader Handoff Clarification.
+1. RX-069 Local Paper Session End-To-End Operator Display Smoke Fixture Coverage.
 
 Do not promote execution automation, background loops, ranking, order placement, polling, alerts, auto-refresh, Telegram transport, bot tokens, private endpoints, credentials, account-state access, destructive reset, financially dangerous actions, or later roadmap stages into the current handoff unless that exact future task is explicitly user-approved for hard-stop scope or explicitly directed by the Product Owner, autonomously selected by Control Tower under RX-033 for non-dangerous scope, and passes the repository's hard approval gates.
