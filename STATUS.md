@@ -1,7 +1,11 @@
 # Status
 
-- Current branch: `main`.
-- Current task: RX-033 — Control Tower Autonomous Task Selection Governance finalization.
+- Current branch: `task/rx-034-control-tower-roadmap-selection-audit-gate`.
+- Current task: RX-034 — Control Tower Roadmap Selection Audit Gate.
+- RX-034 starting baseline: `e4e7c940d17b83d08f78671f92ec5c18f4d71749`
+- RX-034 review state: implementation-complete on task branch; not reviewer-accepted.
+- RX-034 disposition: source-of-truth docs were inspected after RX-033 reviewer acceptance. They do not clearly ground a concrete post-RX-034 product/runtime task, so the RX-034 fallback path prepared one metadata-only RX-035 handoff cleanup instead of inventing product scope.
+- RX-034 branch-discipline steer: after an initial branch switch in `/Users/daniilmakarov/Desktop/risex-main`, Control Tower directed RX-034 work to continue only in the clean executor worktree `/Users/daniilmakarov/.codex/worktrees/69f5/risex-main`. No files were edited in the Desktop checkout; implementation edits are limited to the clean executor worktree.
 - RX-033 starting baseline: `ff27045e0f1dccbccc21aec1d41eb4ad91549e8c`
 - RX-033 review state: reviewer-accepted and finalized on `main`.
 - Accepted RX-033 implementation HEAD: `9efc39fbf0e882d47259e1180eaa30189368dfdf`
@@ -88,7 +92,7 @@
 - Accepted baseline branch: `main`
 - Current accepted `main` metadata/governance task: RX-033.
 - Current accepted `main` product task: RX-030.
-- Current RX task state: RX-033 is reviewer-accepted and finalized on `main`; latest accepted product task remains RX-030 and latest accepted metadata/governance follow-up is RX-033.
+- Current RX task state: RX-034 is implementation-complete on `task/rx-034-control-tower-roadmap-selection-audit-gate`; latest accepted product task remains RX-030 and latest accepted metadata/governance follow-up is RX-033 until explicit reviewer acceptance.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
@@ -112,7 +116,7 @@ RX-013 remains the previous accepted product baseline before RX-014.
 RX-012 remains the previous accepted product baseline before RX-013.
 RX-Q001 remains the previous accepted governance baseline before RX-Q002.
 RX-011 remains the previous accepted product implementation baseline before RX-012.
-`NEXT_TASK.md` is prepared for RX-034 after RX-033 finalization on `main`.
+`NEXT_TASK.md` is prepared for RX-035 after the RX-034 roadmap selection audit branch.
 RX-031 found no additional explicit actionable reviewer feedback in local repo/git evidence or GitHub connector context after RX-030 finalization. RX-031 is accepted metadata-only follow-up work and does not change dashboard or product code.
 RX-030 remains the latest accepted product task and adds one read-only dashboard renderer for already-derived deterministic fixture evidence only. It does not add route discovery, polling, adapters, route evaluation, snapshot assembly, funding verification, ledger reconciliation, live-gate bundle checking, execution planning, guarded live execution, approval-boundary execution, ledger writes, network I/O, or orders.
 
@@ -245,10 +249,22 @@ RX-030 remains the latest accepted product task and adds one read-only dashboard
 - RX-031 is reviewer-accepted and finalized on `main`.
 - RX-032 is reviewer-accepted and finalized on `main`.
 - RX-033 is reviewer-accepted and finalized on `main`.
-- The next recommended task is RX-034 Control Tower Roadmap Selection Audit Gate.
+- RX-034 is in progress on its task branch and is not reviewer-accepted.
+- The next recommended task is RX-035 Post-RX-034 Roadmap Handoff Cleanup.
 - The RX-032 authorization does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - RX-033 autonomy does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized and accepted.
+
+## Tests last reported for RX-034 branch
+
+- `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
+- `python3 -m pytest tests/invariant`: `37 passed in 0.25s`
+- `python3 -m pytest`: `560 passed in 0.85s`
+- `python3 -m compileall apps core storage tests scripts`: exit 0
+- `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
+- `git diff --check`: exit 0
+- `git diff --cached --check`: exit 0
+- `git status --short`: `M DECISIONS.md`; `M IMPLEMENTATION_PLAN.md`; `M NEXT_TASK.md`; `M STATUS.md`
 
 ## Tests last reported for RX-032 branch
 
@@ -611,7 +627,8 @@ RX-030 remains the latest accepted product task and adds one read-only dashboard
 - Paper result attribution and PnL explanation are deterministic fake offline reporting only; they copy existing `DecisionResult` economics and do not verify realized PnL.
 - RX-031 did not discover any external reviewer feedback beyond local repo/git evidence and the GitHub connector's available PR/commit context. Any out-of-band reviewer direction must be supplied explicitly in a future handoff.
 - RX-033 is governance/docs-only. It changes repository task-selection workflow after reviewer acceptance, but it does not change product/runtime behavior, remove reviewer acceptance, or weaken hard approval gates.
+- RX-034 is governance/docs-only. It selects no product/runtime implementation task because the source-of-truth docs do not clearly ground one after RX-034; it prepares a metadata-only RX-035 cleanup handoff instead.
 
 ## Next recommended task
 
-RX-034 — Control Tower Roadmap Selection Audit Gate.
+RX-035 — Post-RX-034 Roadmap Handoff Cleanup.
