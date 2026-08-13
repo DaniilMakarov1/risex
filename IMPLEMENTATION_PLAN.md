@@ -51,7 +51,7 @@ RX-069 is reviewer-accepted and finalized on `main` after a same-branch document
 
 RX-070 is reviewer-accepted and finalized on `main`. It adds focused deterministic local smoke fixture coverage proving malformed or unsafe local operator/display fixtures fail closed across accepted package, display payload, display preview, command-text preview/parser, and payload-backed render command paths before unintended artifacts, runtime/session execution, adapters, ledgers, report rendering/mutation, Telegram/network/credential behavior, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
 
-RX-071 is implementation-complete on its task branch and pending reviewer acceptance. It is governance/source-of-truth only. It records that the accepted local package/runtime/report/display command chain plus RX-070 fail-closed coverage ground exactly one next non-dangerous local/manual/fake-money handoff: RX-072 Local Paper Session Run Command Text Preview Builder. RX-071 does not change product/runtime code, tests, CLI behavior, parser behavior, Telegram/network/credential behavior, live/order/private/account scope, aggregate PnL behavior, unknown handling, or owner paths.
+RX-071 is reviewer-accepted and finalized on `main`. It is governance/source-of-truth only. It records that the accepted local package/runtime/report/display command chain plus RX-070 fail-closed coverage ground exactly one next non-dangerous local/manual/fake-money handoff: RX-072 Local Paper Session Run Command Text Preview Builder. RX-071 does not change product/runtime code, tests, CLI behavior, parser behavior, Telegram/network/credential behavior, live/order/private/account scope, aggregate PnL behavior, unknown handling, or owner paths.
 
 ## Completed Accepted Work
 
@@ -110,6 +110,7 @@ RX-071 is implementation-complete on its task branch and pending reviewer accept
 - RX-068 added test-only deterministic package-to-runtime smoke coverage proving accepted `build-paper-session-package` output can feed accepted `paper-trade-session` runtime/report/display paths with injected public-adapter doubles, explicit local package artifacts, explicit SQLite ledger path, deterministic stdout, explicit local report export, accepted display rendering, string-or-null economics, known/unknown counts, `aggregate_paper_net_profit_usd=null`, no aggregate PnL calculation, and no unknown-to-zero behavior.
 - RX-069 added test-only deterministic end-to-end operator display smoke coverage proving accepted package, serial runtime, report export, display payload, display preview, command-text preview/parser, and payload-backed renderer work as one generated local artifact chain under injected public-adapter doubles, without production behavior changes.
 - RX-070 added test-only deterministic fail-closed smoke coverage proving malformed or unsafe local operator/display fixtures fail before unintended artifacts, runtime/session execution, report rendering, adapters, ledgers, Telegram/live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
+- RX-071 recorded the post-RX-070 governance/source-of-truth clarification that exactly one next non-dangerous local/manual/fake-money testing-support handoff is grounded: RX-072 Local Paper Session Run Command Text Preview Builder.
 - RX-Q001 and RX-Q002 added repository workflow, handoff validation, and supervised-worker governance.
 
 ## Accepted Offline Safety-Hardening Detour
@@ -124,7 +125,7 @@ RX-070 - Local Paper Session Operator Display Fail-Closed Smoke Fixture Coverage
 
 ## Current Task Branch
 
-No active product task branch. `NEXT_TASK.md` is prepared for RX-071 after RX-070 finalization.
+No active product task branch. `NEXT_TASK.md` is prepared for RX-072 after RX-071 finalization.
 
 ## Previous Product Task
 
@@ -136,7 +137,7 @@ RX-068 - Local Paper Session Package-To-Runtime Smoke Fixture Coverage is review
 
 ## Next Task
 
-`NEXT_TASK.md` is prepared for RX-071 Post-Local Operator Display Fail-Closed Handoff Clarification after RX-070 finalization.
+`NEXT_TASK.md` is prepared for RX-072 Local Paper Session Run Command Text Preview Builder after RX-071 finalization.
 
 ## Previous Product Baseline
 
@@ -194,11 +195,11 @@ RX-069 is reviewer-accepted and finalized on `main`. It adds only test-local det
 
 RX-070 is reviewer-accepted and finalized on `main`. It adds only test-local deterministic fail-closed smoke coverage proving malformed or unsafe local operator/display fixtures fail before unintended artifacts, runtime/session execution, report rendering, adapters, ledgers, Telegram/live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
 
-## Remaining Gated Roadmap After RX-070 Finalization
+## Remaining Gated Roadmap After RX-071 Finalization
 
-Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. RX-070 implemented exactly one local/manual/fake-money fail-closed smoke fixture coverage handoff and does not authorize any additional production behavior, trading, execution automation, execution planning, polling, ranking, discovery, ledger/storage/replay change, Telegram transport, credentials, messaging, alerts, webhooks, or live-order roadmap stage.
+Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. RX-071 finalized exactly one governance/source-of-truth clarification handoff and does not authorize any additional product/runtime behavior, trading, execution automation, execution planning, polling, ranking, discovery, ledger/storage/replay change, Telegram transport, credentials, messaging, alerts, webhooks, or live-order roadmap stage.
 
-RX-071 is the current governance/source-of-truth task branch until reviewer acceptance. If accepted and finalized, the next prepared handoff is:
+The next prepared handoff is:
 
 1. RX-072 Local Paper Session Run Command Text Preview Builder.
 
@@ -1207,7 +1208,7 @@ RX-071 branch outcome:
 
 ## RX-072 — Local Paper Session Run Command Text Preview Builder
 
-After RX-071 reviewer acceptance and finalization, RX-072 should add one local-only, manually invoked run command-text preview builder for later Telegram-style operator testing without Telegram transport or credentials.
+After RX-071 finalization, RX-072 should add one local-only, manually invoked run command-text preview builder for later Telegram-style operator testing without Telegram transport or credentials.
 
 RX-072 implementation notes:
 
