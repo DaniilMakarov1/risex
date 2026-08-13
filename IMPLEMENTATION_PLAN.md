@@ -35,6 +35,7 @@ The original product direction remains hedged funding capture on RiseX with hedg
 - RX-033 defined Control Tower autonomous task selection for future non-dangerous RX tasks from source-of-truth repository docs without changing product behavior or removing hard approval gates.
 - RX-034 recorded the roadmap selection audit outcome and prepared a metadata-only RX-035 cleanup handoff without changing product behavior or removing hard approval gates.
 - RX-035 recorded the post-audit handoff cleanup outcome and prepared a metadata-only RX-036 clarification gate without changing product behavior or removing hard approval gates.
+- RX-036 recorded the roadmap source-of-truth clarification outcome and prepared a Product Owner roadmap direction gate before product/runtime scope resumes, without changing product behavior or removing hard approval gates.
 - RX-Q001 and RX-Q002 added repository workflow, handoff validation, and supervised-worker governance.
 
 ## Accepted Offline Safety-Hardening Detour
@@ -49,7 +50,7 @@ RX-030 — Read-Only Monitoring Dashboard Without Decisions Or Orders is reviewe
 
 ## Current Product Branch Progress
 
-No product branch is active after RX-035 finalization. RX-036 is a governance/docs-only roadmap source-of-truth clarification branch. It re-confirms that the source-of-truth docs still do not clearly ground a concrete non-dangerous post-RX-035 product/runtime task, so it prepares a Product Owner roadmap direction gate before product/runtime scope resumes instead of inventing product scope or creating another vague metadata-cleanup loop.
+No product branch is active after RX-036 finalization. RX-036 was a governance/docs-only roadmap source-of-truth clarification branch. It re-confirmed that the source-of-truth docs still do not clearly ground a concrete non-dangerous post-RX-035 product/runtime task, so it prepared a Product Owner roadmap direction gate before product/runtime scope resumes instead of inventing product scope or creating another vague metadata-cleanup loop.
 
 ## Current Product Handoff
 

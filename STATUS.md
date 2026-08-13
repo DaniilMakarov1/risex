@@ -1,9 +1,11 @@
 # Status
 
-- Current branch: `task/rx-036-roadmap-source-of-truth-clarification-gate`.
-- Current task: RX-036 — Roadmap Source-of-Truth Clarification Gate implementation branch.
+- Current branch: `main`.
+- Current task: RX-036 — Roadmap Source-of-Truth Clarification Gate finalization.
 - RX-036 starting baseline: `edec217fd180be2e45b1607c9cedf03984b53b08`
-- RX-036 review state: implementation branch in progress; not reviewer-accepted.
+- RX-036 review state: reviewer-accepted and finalized on `main`.
+- Accepted RX-036 implementation HEAD: `fcea86fcebc772200cf142cd1699daf4623a6502`
+- RX-036 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
 - RX-036 disposition: source-of-truth docs were re-inspected after RX-035 reviewer acceptance. They still do not clearly ground a concrete non-dangerous product/runtime task, so RX-036 remains metadata-only and prepares one RX-037 Product Owner roadmap direction handoff instead of inventing product scope or creating another vague cleanup loop.
 - RX-036 branch-discipline steer: Control Tower stopped work before implementation edits after detecting an initial branch switch in `/Users/daniilmakarov/Desktop/risex-main`. No files were edited there. RX-036 implementation edits are limited to the clean executor worktree `/Users/daniilmakarov/.codex/worktrees/95af/risex-main`.
 - RX-035 starting baseline: `4c3532bb38860be815f65683f3f771865d3ed1ee`
@@ -102,9 +104,9 @@
 - Previous accepted product task before RX-012: RX-011 — Offline Execution Capability Gate Design and Fake Replay Coverage
 - Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
-- Current accepted `main` metadata/governance task: RX-035.
+- Current accepted `main` metadata/governance task: RX-036.
 - Current accepted `main` product task: RX-030.
-- Current RX task state: RX-036 is active on its task branch and is not reviewer-accepted; latest accepted product task remains RX-030 and latest accepted metadata/governance follow-up is RX-035.
+- Current RX task state: RX-036 is reviewer-accepted and finalized on `main`; latest accepted product task remains RX-030 and latest accepted metadata/governance follow-up is RX-036.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
@@ -173,6 +175,7 @@ RX-030 remains the latest accepted product task and adds one read-only dashboard
 - RX-033 — Control Tower Autonomous Task Selection Governance
 - RX-034 — Control Tower Roadmap Selection Audit Gate
 - RX-035 — Post-RX-034 Roadmap Handoff Cleanup
+- RX-036 — Roadmap Source-of-Truth Clarification Gate
 
 ## Current architecture status
 
@@ -265,7 +268,7 @@ RX-030 remains the latest accepted product task and adds one read-only dashboard
 - RX-033 is reviewer-accepted and finalized on `main`.
 - RX-034 is reviewer-accepted and finalized on `main`.
 - RX-035 is reviewer-accepted and finalized on `main`.
-- RX-036 is the active metadata-only roadmap source-of-truth clarification branch and is not reviewer-accepted.
+- RX-036 is reviewer-accepted and finalized on `main`.
 - The next recommended task is RX-037 Product Owner Roadmap Direction Gate.
 - The RX-032 authorization does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - RX-033 autonomy does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
@@ -281,6 +284,16 @@ RX-030 remains the latest accepted product task and adds one read-only dashboard
 - `git diff --check`: exit 0
 - `git diff --cached --check`: exit 0
 - `git status --short`: `M DECISIONS.md`; `M IMPLEMENTATION_PLAN.md`; `M NEXT_TASK.md`; `M STATUS.md`
+
+## Tests last reported for RX-036 finalization on main
+
+- `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
+- `python3 -m pytest tests/invariant`: `37 passed`
+- `python3 -m pytest`: `560 passed`
+- `python3 -m compileall apps core storage tests scripts`: exit 0
+- `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
+- `git diff --check`: exit 0
+- `git diff --cached --check`: exit 0
 
 ## Tests last reported for RX-035 branch
 
