@@ -19,6 +19,25 @@ from core.domain.contracts import (
 )
 from core.domain.enums import ValueSource
 
+_PUBLIC_FEE_RATE_FIELDS = (
+    ("maker_fee_bps", "public_fee_maker_bps"),
+    ("makerFeeBps", "public_fee_maker_bps"),
+    ("taker_fee_bps", "public_fee_taker_bps"),
+    ("takerFeeBps", "public_fee_taker_bps"),
+    ("maker_fee_rate", "public_fee_maker_rate"),
+    ("makerFeeRate", "public_fee_maker_rate"),
+    ("taker_fee_rate", "public_fee_taker_rate"),
+    ("takerFeeRate", "public_fee_taker_rate"),
+)
+_PUBLIC_ACCOUNT_TIER_FEE_FIELDS = (
+    "fee_tiers",
+    "feeTiers",
+    "vip_fee_tiers",
+    "vipFeeTiers",
+    "account_fee_tiers",
+    "accountFeeTiers",
+)
+
 
 class HyperliquidObservationAdapter:
     """Fetch and normalize one read-only Hyperliquid venue observation."""
@@ -38,7 +57,7 @@ class HyperliquidObservationAdapter:
         """Fetch and normalize one Hyperliquid observation for one requested symbol."""
 
         requested_symbol = _normalize_requested_symbol(symbol)
-        coin = _select_coin(
+        coin, fee_metadata = _select_coin(
             self._post_info({"type": "metaAndAssetCtxs"}),
             requested_symbol,
         )
@@ -74,9 +93,10 @@ class HyperliquidObservationAdapter:
                             value=None,
                             source=ValueSource.UNKNOWN,
                             description=(
-                                "Hyperliquid fees are schedule and account-tier based, "
-                                "not a per-observation USD cash value."
+                                "Hyperliquid public fee metadata is not a grounded "
+                                "per-observation USD cash value."
                             ),
+                            metadata=fee_metadata,
                         ),
                     ),
                 )
@@ -110,7 +130,7 @@ def _coin_candidates(symbol: str) -> tuple[str, ...]:
     return tuple(dict.fromkeys(candidates))
 
 
-def _select_coin(payload: Any, requested_symbol: str) -> str:
+def _select_coin(payload: Any, requested_symbol: str) -> tuple[str, dict[str, str]]:
     if not isinstance(payload, list) or len(payload) != 2:
         raise ValueError("Hyperliquid metaAndAssetCtxs response requires [meta, asset_contexts]")
 
@@ -126,7 +146,7 @@ def _select_coin(payload: Any, requested_symbol: str) -> str:
         raise ValueError("Hyperliquid asset contexts must align with universe")
 
     candidates = set(_coin_candidates(requested_symbol))
-    matches: list[str] = []
+    matches: list[tuple[str, dict[str, str]]] = []
     for index, market in enumerate(universe):
         if not isinstance(market, Mapping):
             raise ValueError("Hyperliquid universe contains a malformed market")
@@ -140,7 +160,7 @@ def _select_coin(payload: Any, requested_symbol: str) -> str:
         if coin in candidates:
             if market.get("isDelisted") is True:
                 raise ValueError("Hyperliquid market is delisted")
-            matches.append(coin)
+            matches.append((coin, _public_fee_metadata(market, context)))
 
     if not matches:
         raise ValueError(f"Hyperliquid market not found for symbol {requested_symbol}")
@@ -187,6 +207,49 @@ def _parse_finite_decimal(raw_value: Any) -> Decimal | None:
     if not value.is_finite():
         return None
     return value
+
+
+def _public_fee_metadata(
+    market: Mapping[str, Any],
+    context: Mapping[str, Any],
+) -> dict[str, str]:
+    containers = (("market", market), ("asset_context", context))
+
+    metadata: dict[str, str] = {}
+    for container_name, container in containers:
+        for field_name, metadata_key in _PUBLIC_FEE_RATE_FIELDS:
+            if field_name not in container:
+                continue
+            fee_rate = _parse_finite_decimal(container.get(field_name))
+            if fee_rate is None:
+                return {}
+            if metadata_key in metadata:
+                continue
+            metadata[metadata_key] = str(fee_rate)
+            metadata[f"{metadata_key}_field"] = field_name
+            metadata[f"{metadata_key}_container"] = container_name
+
+    if metadata:
+        metadata["public_fee_metadata_source"] = ValueSource.OBSERVED.value
+        metadata["public_fee_metadata_kind"] = "fee_rate_fields"
+        metadata["public_fee_account_scope"] = "account_independent"
+        return metadata
+
+    for container_name, container in containers:
+        for field_name in _PUBLIC_ACCOUNT_TIER_FEE_FIELDS:
+            if field_name not in container:
+                continue
+            fee_schedule = container.get(field_name)
+            if not isinstance(fee_schedule, (Mapping, list, tuple)) or not fee_schedule:
+                return {}
+            return {
+                "public_fee_metadata_source": ValueSource.OBSERVED.value,
+                "public_fee_metadata_kind": "account_tier_schedule",
+                "public_fee_account_scope": "account_tier_dependent",
+                "public_fee_schedule_field": field_name,
+                "public_fee_schedule_container": container_name,
+            }
+    return {}
 
 
 def _parse_levels(raw_levels: Any, side: str) -> tuple[OrderBookLevel, ...]:

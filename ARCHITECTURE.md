@@ -332,6 +332,15 @@ RX-039 adds public one-route economics source completion:
 6. Account-tier-dependent fee cash remains unknown; RX-039 does not invent user fee tiers or convert fee schedules to zero.
 7. It does not add route discovery, ranking, polling, loops, private/account/auth endpoints, credentials, account state, order placement, sendable exchange request construction, execution automation, ledger writes, storage migrations, replay changes, paper lifecycle changes, route statuses, reject reasons, live trading by default, or any second route model, decision path, snapshot path, EV path, VWAP path, ledger-write path, replay path, execution-planning path, or live execution path.
 
+RX-040 adds public one-route fee source metadata preservation:
+
+1. RiseX and Hyperliquid adapters may preserve explicit public fee-rate fields or public account-tier fee-source fields from their existing public market-data responses on the existing unknown `FeeComponent.amount_usd.metadata`.
+2. The preserved metadata is source-aware inspection data only: `FeeComponent.amount_usd.value` remains `None` and `source` remains `ValueSource.UNKNOWN`.
+3. Missing, malformed, non-finite, non-public, account-state-dependent, account-tier-dependent, or ungrounded fee inputs do not become zero, defaults, or USD cash values.
+4. The existing `assemble_route_snapshot()` path already concatenates the source-aware fee components from both observations; RX-040 does not add a second snapshot, fee, EV, runner, decision, or CLI output path.
+5. `core/economics/fees.py` still owns fee cash validation and calculation, and unknown fee metadata still fails closed through existing missing-economics handling.
+6. It does not add route discovery, ranking, polling, loops, private/account/auth endpoints, credentials, account state, order placement, sendable exchange request construction, execution automation, ledger writes, storage migrations, replay changes, paper lifecycle changes, funding settlement verification, ledger reconciliation, route statuses, reject reasons, live trading by default, or any second route model, decision path, snapshot path, EV path, VWAP path, ledger-write path, replay path, execution-planning path, or live execution path.
+
 RX-005 adds deterministic offline orchestration over multiple fake route candidates:
 
 1. `core/pipeline/offline_scan.py` owns the route-candidate iteration layer.
@@ -459,7 +468,7 @@ Spread, price impact, basis, slippage, and fees are not independent arbitrary re
 
 ## Unknown values
 
-Unknown values must not silently become zero. `EstimatedValue` requires `source=UNKNOWN` values to carry no numeric value, and callers must use source-aware handling before a value can participate in economics. Fee defaults must use `USER_CONFIGURED`; last-observed funding estimates must use `ESTIMATED_FROM_LAST_VALUE`. Public funding-rate metadata may become observed USD funding cash only when the existing one-route snapshot path has explicit route notional and leg side; missing, malformed, or ungrounded metadata remains unknown.
+Unknown values must not silently become zero. `EstimatedValue` requires `source=UNKNOWN` values to carry no numeric value, and callers must use source-aware handling before a value can participate in economics. Fee defaults must use `USER_CONFIGURED`; last-observed funding estimates must use `ESTIMATED_FROM_LAST_VALUE`. Public funding-rate metadata may become observed USD funding cash only when the existing one-route snapshot path has explicit route notional and leg side; missing, malformed, or ungrounded metadata remains unknown. Public fee metadata may be preserved for inspection on unknown fee values, but it remains unknown cash unless a future exact task provides explicit public, account-tier-independent, route-notional-aware, mathematically grounded fee cash completion.
 
 ## Entry and exit economics
 

@@ -361,6 +361,69 @@ def test_valid_observations_assemble_route_aligned_snapshot_from_vwap_logic() ->
     )
 
 
+def test_assembly_preserves_public_fee_metadata_without_completing_cash() -> None:
+    route = _route()
+    risex_fee_metadata = {
+        "public_fee_maker_bps": "1.25",
+        "public_fee_metadata_source": "OBSERVED",
+    }
+    hedge_fee_metadata = {
+        "public_fee_schedule_field": "feeTiers",
+        "public_fee_metadata_source": "OBSERVED",
+    }
+    risex_observation = _observation(
+        venue="RiseX",
+        symbol="BTC-PERP",
+        observed_at=RISEX_OBSERVED_AT,
+        settlement_at=RISEX_SETTLEMENT_AT,
+        funding=EstimatedValue(value=Decimal("3"), source=ValueSource.OBSERVED),
+        fees=FeeModel(
+            components=(
+                FeeComponent(
+                    name="risex_fee_cash_flow_unknown",
+                    amount_usd=EstimatedValue(
+                        value=None,
+                        source=ValueSource.UNKNOWN,
+                        metadata=risex_fee_metadata,
+                    ),
+                ),
+            )
+        ),
+    )
+    hedge_observation = _observation(
+        venue="Hyperliquid",
+        symbol="BTC",
+        observed_at=HEDGE_OBSERVED_AT,
+        settlement_at=HEDGE_SETTLEMENT_AT,
+        funding=EstimatedValue(value=Decimal("-0.5"), source=ValueSource.OBSERVED),
+        fees=FeeModel(
+            components=(
+                FeeComponent(
+                    name="hyperliquid_fee_cash_flow_unknown",
+                    amount_usd=EstimatedValue(
+                        value=None,
+                        source=ValueSource.UNKNOWN,
+                        metadata=hedge_fee_metadata,
+                    ),
+                ),
+            )
+        ),
+    )
+
+    snapshot = assemble_route_snapshot(
+        route=route,
+        observations=_observation_mapping(risex_observation, hedge_observation),
+        assembled_at=ASSEMBLED_AT,
+    )
+
+    assert snapshot.fees.components[0].amount_usd.value is None
+    assert snapshot.fees.components[0].amount_usd.source is ValueSource.UNKNOWN
+    assert snapshot.fees.components[0].amount_usd.metadata == risex_fee_metadata
+    assert snapshot.fees.components[1].amount_usd.value is None
+    assert snapshot.fees.components[1].amount_usd.source is ValueSource.UNKNOWN
+    assert snapshot.fees.components[1].amount_usd.metadata == hedge_fee_metadata
+
+
 def test_assembly_completes_public_funding_rate_metadata_from_route_notional() -> None:
     route = _route()
     risex_observation = _observation(

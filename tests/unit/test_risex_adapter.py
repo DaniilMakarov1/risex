@@ -114,6 +114,7 @@ def test_fetch_observation_normalizes_public_risex_market_data_only() -> None:
     assert len(observation.fees.components) == 1
     assert observation.fees.components[0].amount_usd.value is None
     assert observation.fees.components[0].amount_usd.source is ValueSource.UNKNOWN
+    assert observation.fees.components[0].amount_usd.metadata == {}
 
 
 def test_fetch_observation_preserves_exact_risex_api_symbol_when_requested() -> None:
@@ -170,6 +171,93 @@ def test_fetch_observation_keeps_malformed_risex_funding_rate_unknown(
     assert observation.expected_funding_usd.value is None
     assert observation.expected_funding_usd.source is ValueSource.UNKNOWN
     assert observation.expected_funding_usd.metadata == {}
+
+
+def test_fetch_observation_preserves_public_risex_fee_metadata_without_cash() -> None:
+    markets_payload = _markets_payload()
+    market = markets_payload["data"]["markets"][0]
+    market["maker_fee_bps"] = "1.25"
+    market["taker_fee_bps"] = "3.5"
+    fake_api = FakeRiseXAPI(markets_payload=markets_payload)
+
+    observation = _adapter(fake_api).fetch_observation("BTC-PERP")
+    fee_amount = observation.fees.components[0].amount_usd
+
+    assert fee_amount.value is None
+    assert fee_amount.source is ValueSource.UNKNOWN
+    assert fee_amount.metadata == {
+        "public_fee_maker_bps": "1.25",
+        "public_fee_maker_bps_field": "maker_fee_bps",
+        "public_fee_maker_bps_container": "market",
+        "public_fee_taker_bps": "3.5",
+        "public_fee_taker_bps_field": "taker_fee_bps",
+        "public_fee_taker_bps_container": "market",
+        "public_fee_metadata_source": "OBSERVED",
+        "public_fee_metadata_kind": "fee_rate_fields",
+        "public_fee_account_scope": "account_independent",
+    }
+
+
+def test_fetch_observation_preserves_config_public_fee_metadata_without_cash() -> None:
+    markets_payload = _markets_payload()
+    config = markets_payload["data"]["markets"][0]["config"]
+    config["makerFeeRate"] = "0.00015"
+    config["takerFeeRate"] = "0.00045"
+    fake_api = FakeRiseXAPI(markets_payload=markets_payload)
+
+    observation = _adapter(fake_api).fetch_observation("BTC-PERP")
+    fee_amount = observation.fees.components[0].amount_usd
+
+    assert fee_amount.value is None
+    assert fee_amount.source is ValueSource.UNKNOWN
+    assert fee_amount.metadata == {
+        "public_fee_maker_rate": "0.00015",
+        "public_fee_maker_rate_field": "makerFeeRate",
+        "public_fee_maker_rate_container": "config",
+        "public_fee_taker_rate": "0.00045",
+        "public_fee_taker_rate_field": "takerFeeRate",
+        "public_fee_taker_rate_container": "config",
+        "public_fee_metadata_source": "OBSERVED",
+        "public_fee_metadata_kind": "fee_rate_fields",
+        "public_fee_account_scope": "account_independent",
+    }
+
+
+def test_fetch_observation_preserves_account_tier_fee_source_without_cash() -> None:
+    markets_payload = _markets_payload()
+    markets_payload["data"]["markets"][0]["config"]["feeTiers"] = [
+        {"tier": "public-tier", "makerFeeBps": "1", "takerFeeBps": "2"}
+    ]
+    fake_api = FakeRiseXAPI(markets_payload=markets_payload)
+
+    observation = _adapter(fake_api).fetch_observation("BTC-PERP")
+    fee_amount = observation.fees.components[0].amount_usd
+
+    assert fee_amount.value is None
+    assert fee_amount.source is ValueSource.UNKNOWN
+    assert fee_amount.metadata == {
+        "public_fee_metadata_source": "OBSERVED",
+        "public_fee_metadata_kind": "account_tier_schedule",
+        "public_fee_account_scope": "account_tier_dependent",
+        "public_fee_schedule_field": "feeTiers",
+        "public_fee_schedule_container": "config",
+    }
+
+
+@pytest.mark.parametrize("fee_rate", ("not-a-fee", "NaN", "Infinity"))
+def test_fetch_observation_keeps_malformed_risex_fee_metadata_unknown(
+    fee_rate: str,
+) -> None:
+    markets_payload = _markets_payload()
+    markets_payload["data"]["markets"][0]["makerFeeBps"] = fee_rate
+    fake_api = FakeRiseXAPI(markets_payload=markets_payload)
+
+    observation = _adapter(fake_api).fetch_observation("BTC-PERP")
+    fee_amount = observation.fees.components[0].amount_usd
+
+    assert fee_amount.value is None
+    assert fee_amount.source is ValueSource.UNKNOWN
+    assert fee_amount.metadata == {}
 
 
 def test_fetch_observation_fails_closed_when_market_is_missing() -> None:

@@ -51,6 +51,27 @@ def test_unknown_fee_cannot_participate_as_zero() -> None:
         calculate_total_fees_usd(fee_model)
 
 
+def test_unknown_public_fee_metadata_cannot_participate_as_zero() -> None:
+    fee_model = FeeModel(
+        components=(
+            FeeComponent(
+                name="unknown_public_fee_metadata",
+                amount_usd=EstimatedValue(
+                    value=None,
+                    source=ValueSource.UNKNOWN,
+                    metadata={
+                        "public_fee_maker_bps": "1.25",
+                        "public_fee_metadata_source": "OBSERVED",
+                    },
+                ),
+            ),
+        )
+    )
+
+    with pytest.raises(EconomicsInputError, match="UNKNOWN"):
+        calculate_total_fees_usd(fee_model)
+
+
 def test_empty_fee_model_cannot_mean_zero_fees() -> None:
     with pytest.raises(EconomicsInputError, match="source-aware"):
         calculate_total_fees_usd(FeeModel(components=()))

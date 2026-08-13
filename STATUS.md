@@ -1,7 +1,12 @@
 # Status
 
-- Current branch: `main`.
-- Current task: RX-039 - Public One-Route Economics Source Completion finalization.
+- Current branch: `task/rx-040-public-one-route-fee-source-metadata-preservation`.
+- Current task: RX-040 - Public One-Route Fee Source Metadata Preservation implementation.
+- RX-040 starting baseline: `24a000cf6c7230bb5f5b7137c86d4ffc76fe10a6`
+- RX-040 review state: implementation-complete on task branch; reviewer acceptance pending.
+- RX-040 disposition: preserves explicit public fee-rate and account-tier fee-source metadata from existing read-only RiseX and Hyperliquid public adapter payloads on unknown `FeeComponent.amount_usd` metadata. Fee cash remains `ValueSource.UNKNOWN` with `value=None`; missing, malformed, non-finite, non-public, account-tier-dependent, account-state-dependent, or ungrounded fee inputs remain unknown and cannot become zero.
+- RX-040 next handoff: `NEXT_TASK.md` is prepared for exactly one next non-dangerous product/runtime task, RX-041 Public One-Route Account-Independent Fee Cash Completion, scoped as source-aware, public-data-only, one-route-at-a-time, read-only, fail-closed, and non-trading.
+- RX-040 worker usage: one supervised worker was used for design support before implementation edits; Parent approved the metadata-only adapter preservation direction with no fee cash conversion and no CLI output change.
 - RX-039 starting baseline: `2dfc3c264199ca76345527f2f5fa89fc66d644d5`
 - RX-039 review state: reviewer-accepted and finalized on `main`.
 - Accepted RX-039 implementation HEAD: `37a885b0f706119d73479e419f09881606303026`
@@ -157,7 +162,7 @@ RX-013 remains the previous accepted product baseline before RX-014.
 RX-012 remains the previous accepted product baseline before RX-013.
 RX-Q001 remains the previous accepted governance baseline before RX-Q002.
 RX-011 remains the previous accepted product implementation baseline before RX-012.
-`NEXT_TASK.md` is prepared for RX-040 after RX-039 finalization.
+`NEXT_TASK.md` is prepared for RX-041 after RX-040 branch implementation.
 RX-031 found no additional explicit actionable reviewer feedback in local repo/git evidence or GitHub connector context after RX-030 finalization. RX-031 is accepted metadata-only follow-up work and does not change dashboard or product code.
 RX-039 is the latest accepted product task and completes public funding-rate metadata into route-notional USD funding cash only inside the existing one-route snapshot path. It does not add route discovery, ranking, polling, private endpoints, credentials, account balances/state, execution automation, order placement, sendable exchange request construction, ledger writes, fee-cash defaults, or live trading by default.
 
@@ -260,6 +265,7 @@ RX-039 is the latest accepted product task and completes public funding-rate met
 - One real-data research runner exists in `apps/research_runner/real_data.py` and evaluates one explicit existing route at a time through the existing adapter handoff and `evaluate_route()` path.
 - One manual real-data CLI entry point exists in `apps/cli/main.py` as `real-data-route`; it validates one explicit RiseX plus Hyperliquid route before adapter construction, instantiates only the existing public read-only adapters, delegates to `run_real_data_research_route()`, and prints deterministic one-decision output without converting missing economics to zero.
 - RX-039 accepted behavior: explicit public funding-rate metadata from RiseX and Hyperliquid observations can be completed into route-notional USD funding cash by `core/economics/funding.py` inside the existing `assemble_route_snapshot()` path. Missing, malformed, non-finite, non-public, or ungrounded funding-rate metadata remains unknown, and account-tier fee cash remains unknown.
+- RX-040 branch behavior: explicit public fee-rate metadata from RiseX and Hyperliquid observations can be preserved on unknown fee cash values for source-aware inspection. Public account-tier fee-source fields can be marked as account-tier-dependent metadata. Missing, malformed, non-finite, non-public, account-tier-dependent, account-state-dependent, or ungrounded fee inputs remain unknown cash and do not become zero or default economics.
 - One approval-gated funding settlement verification workflow exists in `core/monitoring/funding_settlement.py`; it records explicit caller-supplied observed settlement evidence through the existing ledger helper and does not call `evaluate_route()`, assemble snapshots, calculate profitability, reconcile ledgers, plan execution, place orders, or enable live trading.
 - One non-sending execution planning workflow exists in `core/execution/planning.py`; it consumes existing Capture, RouteCandidate, route decision, funding verification, ledger reconciliation, CapturePlan freshness, and execution-capability evidence and returns evidence-only intended entry/unwind actions without ledger writes, adapters, live runner behavior, sendable API requests, orders, route eligibility mutation, or live trading.
 - One guarded no-order live runner workflow exists in `apps/live_runner/guarded.py`; it consumes existing Capture, RouteCandidate, funding verification, ledger reconciliation, live-gate bundle, and non-sending execution-plan evidence and returns only blocked or no-order readiness without ledger writes, adapters, order placement imports, sendable API requests, route eligibility mutation, or live trading by default.
@@ -304,10 +310,22 @@ RX-039 is the latest accepted product task and completes public funding-rate met
 - RX-037 is reviewer-accepted and finalized on `main`.
 - RX-038 is reviewer-accepted and finalized on `main`.
 - RX-039 is reviewer-accepted and finalized on `main`.
-- The next recommended task is RX-040 Public One-Route Fee Source Metadata Preservation.
+- The next recommended task is RX-041 Public One-Route Account-Independent Fee Cash Completion.
 - The RX-032 authorization does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - RX-033 autonomy does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized and accepted.
+
+## Tests last reported for RX-040 branch
+
+- `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
+- `python3 -m pytest tests/unit/test_risex_adapter.py tests/unit/test_hyperliquid_adapter.py tests/unit/test_fees.py tests/unit/test_snapshot_assembly.py`: `117 passed in 0.10s`
+- `python3 -m pytest tests/invariant`: `37 passed in 0.27s`
+- `python3 -m pytest`: `615 passed in 1.12s`
+- `python3 -m compileall apps core storage tests scripts`: exit 0
+- `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
+- `git diff --check`: exit 0
+- `git diff --cached --check`: exit 0
+- `git status --short`: empty after branch commit.
 
 ## Tests last reported for RX-039 branch
 
@@ -784,7 +802,7 @@ RX-039 is the latest accepted product task and completes public funding-rate met
 - RiseX adapter is read-only public market data only and is wired only through the one-route real-data research runner when a caller explicitly supplies it.
 - Hyperliquid adapter is read-only public market data only and is wired only through the one-route real-data research runner when a caller explicitly supplies it.
 - The manual real-data CLI is one-route-at-a-time only. It has no route discovery, ranking, watchlist, polling, loop, scheduler, alerting, ledger-write, paper lifecycle, execution planning, order placement, private endpoint, credential, account-state, or live-trading behavior.
-- Current public real adapters still return `UNKNOWN` funding and fee cash-flow values from `fetch_observation(symbol)`. RX-039 accepted behavior can complete explicit public funding-rate metadata into route-notional USD funding cash only inside the existing one-route snapshot path; account-tier fee cash remains unknown, so real public-adapter research decisions can still fail closed as missing live data.
+- Current public real adapters still return `UNKNOWN` fee cash-flow values from `fetch_observation(symbol)`. RX-039 accepted behavior can complete explicit public funding-rate metadata into route-notional USD funding cash only inside the existing one-route snapshot path. RX-040 branch behavior preserves explicit public fee-source metadata for inspection only; fee cash remains unknown, so real public-adapter research decisions can still fail closed as missing live data.
 - Offline fake runners still perform no network calls.
 - Existing no-argument fake CLI behavior is unchanged.
 - No real exchange order submission.
@@ -808,7 +826,8 @@ RX-039 is the latest accepted product task and completes public funding-rate met
 - RX-037 is governance/docs-only. It records explicit Product Owner roadmap direction and prepares the RX-038 manual one-route real-data CLI handoff, but it does not implement the CLI or change product/runtime behavior.
 - RX-038 adds the manual one-route real-data CLI only. It is reviewer-accepted and finalized on `main`, remains non-trading, public-data-only, read-only, and fail-closed, and does not authorize live/order/private/account-state scope.
 - RX-039 completes public funding-rate metadata into route-notional USD funding cash only inside the existing one-route snapshot path. It is reviewer-accepted and finalized on `main`, remains non-trading, public-data-only, read-only, one-route-at-a-time, and does not authorize live/order/private/account-state scope.
+- RX-040 preserves public fee-source metadata only. It is implementation-complete on the task branch but not reviewer-accepted, remains non-trading, public-data-only, read-only, one-route-at-a-time, and does not authorize live/order/private/account-state scope.
 
 ## Next recommended task
 
-RX-040 - Public One-Route Fee Source Metadata Preservation.
+RX-041 - Public One-Route Account-Independent Fee Cash Completion.

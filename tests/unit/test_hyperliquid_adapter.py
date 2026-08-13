@@ -152,6 +152,7 @@ def test_fetch_observation_normalizes_public_hyperliquid_market_data_only() -> N
     assert len(observation.fees.components) == 1
     assert observation.fees.components[0].amount_usd.value is None
     assert observation.fees.components[0].amount_usd.source is ValueSource.UNKNOWN
+    assert observation.fees.components[0].amount_usd.metadata == {}
 
 
 def test_fetch_observation_accepts_perp_suffix_when_hyperliquid_coin_matches_base() -> None:
@@ -241,6 +242,73 @@ def test_fetch_observation_keeps_malformed_hyperliquid_funding_rate_unknown(
     assert observation.expected_funding_usd.value is None
     assert observation.expected_funding_usd.source is ValueSource.UNKNOWN
     assert observation.expected_funding_usd.metadata == {}
+
+
+def test_fetch_observation_preserves_public_hyperliquid_fee_metadata_without_cash() -> None:
+    market = _market()
+    market["makerFeeBps"] = "0.8"
+    market["takerFeeBps"] = "2.5"
+    fake_api = FakeHyperliquidInfoAPI(
+        meta_payload=_meta_payload(universe=[market], asset_contexts=[_asset_context()])
+    )
+
+    observation = _adapter(fake_api).fetch_observation("BTC")
+    fee_amount = observation.fees.components[0].amount_usd
+
+    assert fee_amount.value is None
+    assert fee_amount.source is ValueSource.UNKNOWN
+    assert fee_amount.metadata == {
+        "public_fee_maker_bps": "0.8",
+        "public_fee_maker_bps_field": "makerFeeBps",
+        "public_fee_maker_bps_container": "market",
+        "public_fee_taker_bps": "2.5",
+        "public_fee_taker_bps_field": "takerFeeBps",
+        "public_fee_taker_bps_container": "market",
+        "public_fee_metadata_source": "OBSERVED",
+        "public_fee_metadata_kind": "fee_rate_fields",
+        "public_fee_account_scope": "account_independent",
+    }
+
+
+def test_fetch_observation_preserves_hyperliquid_account_tier_fee_source_without_cash() -> None:
+    asset_context = _asset_context()
+    asset_context["feeTiers"] = [
+        {"tier": "public-tier", "makerFeeBps": "1", "takerFeeBps": "2"}
+    ]
+    fake_api = FakeHyperliquidInfoAPI(
+        meta_payload=_meta_payload(universe=[_market()], asset_contexts=[asset_context])
+    )
+
+    observation = _adapter(fake_api).fetch_observation("BTC")
+    fee_amount = observation.fees.components[0].amount_usd
+
+    assert fee_amount.value is None
+    assert fee_amount.source is ValueSource.UNKNOWN
+    assert fee_amount.metadata == {
+        "public_fee_metadata_source": "OBSERVED",
+        "public_fee_metadata_kind": "account_tier_schedule",
+        "public_fee_account_scope": "account_tier_dependent",
+        "public_fee_schedule_field": "feeTiers",
+        "public_fee_schedule_container": "asset_context",
+    }
+
+
+@pytest.mark.parametrize("fee_rate", ("not-a-fee", "NaN", "Infinity"))
+def test_fetch_observation_keeps_malformed_hyperliquid_fee_metadata_unknown(
+    fee_rate: str,
+) -> None:
+    market = _market()
+    market["makerFeeBps"] = fee_rate
+    fake_api = FakeHyperliquidInfoAPI(
+        meta_payload=_meta_payload(universe=[market], asset_contexts=[_asset_context()])
+    )
+
+    observation = _adapter(fake_api).fetch_observation("BTC")
+    fee_amount = observation.fees.components[0].amount_usd
+
+    assert fee_amount.value is None
+    assert fee_amount.source is ValueSource.UNKNOWN
+    assert fee_amount.metadata == {}
 
 
 @pytest.mark.parametrize(

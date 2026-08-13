@@ -28,6 +28,24 @@ _PUBLIC_FUNDING_RATE_FIELDS = (
     "predicted_funding_rate",
     "predictedFundingRate",
 )
+_PUBLIC_FEE_RATE_FIELDS = (
+    ("maker_fee_bps", "public_fee_maker_bps"),
+    ("makerFeeBps", "public_fee_maker_bps"),
+    ("taker_fee_bps", "public_fee_taker_bps"),
+    ("takerFeeBps", "public_fee_taker_bps"),
+    ("maker_fee_rate", "public_fee_maker_rate"),
+    ("makerFeeRate", "public_fee_maker_rate"),
+    ("taker_fee_rate", "public_fee_taker_rate"),
+    ("takerFeeRate", "public_fee_taker_rate"),
+)
+_PUBLIC_ACCOUNT_TIER_FEE_FIELDS = (
+    "fee_tiers",
+    "feeTiers",
+    "vip_fee_tiers",
+    "vipFeeTiers",
+    "account_fee_tiers",
+    "accountFeeTiers",
+)
 
 
 class RiseXObservationAdapter:
@@ -62,6 +80,7 @@ class RiseXObservationAdapter:
             "next_funding_time",
         )
         funding_metadata = _public_funding_rate_metadata(market)
+        fee_metadata = _public_fee_metadata(market)
 
         orderbook_payload = self._get_json(
             "/v1/orderbook",
@@ -96,9 +115,10 @@ class RiseXObservationAdapter:
                             value=None,
                             source=ValueSource.UNKNOWN,
                             description=(
-                                "RISEx fee schedule is bps/account-tier based, "
-                                "not a per-observation USD cash value."
+                                "RISEx public fee metadata is not a grounded "
+                                "per-observation USD cash value."
                             ),
+                            metadata=fee_metadata,
                         ),
                     ),
                 )
@@ -234,6 +254,51 @@ def _public_funding_rate_metadata(market: Mapping[str, Any]) -> dict[str, str]:
                 "public_funding_rate": str(funding_rate),
                 "public_funding_rate_field": field_name,
                 "public_funding_rate_source": ValueSource.OBSERVED.value,
+            }
+    return {}
+
+
+def _public_fee_metadata(market: Mapping[str, Any]) -> dict[str, str]:
+    config = market.get("config")
+    containers: tuple[tuple[str, Mapping[str, Any]], ...]
+    if isinstance(config, Mapping):
+        containers = (("market", market), ("config", config))
+    else:
+        containers = (("market", market),)
+
+    metadata: dict[str, str] = {}
+    for container_name, container in containers:
+        for field_name, metadata_key in _PUBLIC_FEE_RATE_FIELDS:
+            if field_name not in container:
+                continue
+            fee_rate = _parse_finite_decimal(container.get(field_name))
+            if fee_rate is None:
+                return {}
+            if metadata_key in metadata:
+                continue
+            metadata[metadata_key] = str(fee_rate)
+            metadata[f"{metadata_key}_field"] = field_name
+            metadata[f"{metadata_key}_container"] = container_name
+
+    if metadata:
+        metadata["public_fee_metadata_source"] = ValueSource.OBSERVED.value
+        metadata["public_fee_metadata_kind"] = "fee_rate_fields"
+        metadata["public_fee_account_scope"] = "account_independent"
+        return metadata
+
+    for container_name, container in containers:
+        for field_name in _PUBLIC_ACCOUNT_TIER_FEE_FIELDS:
+            if field_name not in container:
+                continue
+            fee_schedule = container.get(field_name)
+            if not isinstance(fee_schedule, (Mapping, list, tuple)) or not fee_schedule:
+                return {}
+            return {
+                "public_fee_metadata_source": ValueSource.OBSERVED.value,
+                "public_fee_metadata_kind": "account_tier_schedule",
+                "public_fee_account_scope": "account_tier_dependent",
+                "public_fee_schedule_field": field_name,
+                "public_fee_schedule_container": container_name,
             }
     return {}
 
