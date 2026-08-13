@@ -57,6 +57,8 @@ RX-072 is reviewer-accepted after same-branch fix and finalized on `main`. It ad
 
 RX-073 is reviewer-accepted and finalized on `main`. It adds one local/manual `parse-paper-session-run-command-text` command that reuses the accepted RX-072 command-text parser helper, validates the referenced payload through the accepted RX-058 boundary, rejects normalized local path collisions before payload reads or artifact writes, and writes only the accepted RX-060 route-list and package-preview artifacts.
 
+RX-074 is implementation-complete on `task/rx-074-local-paper-session-run-command-text-parser-to-runtime-smoke-fixture-coverage` and pending reviewer acceptance. It adds test-only deterministic smoke coverage proving accepted `parse-paper-session-run-command-text` output can feed accepted `paper-trade-session` runtime/report/display paths under injected public-adapter doubles, explicit local package artifacts, explicit SQLite ledger path, deterministic stdout, explicit local report export, accepted display rendering, string-or-null economics, known/unknown counts, `aggregate_paper_net_profit_usd=null`, no aggregate PnL calculation, and no unknown-to-zero behavior. RX-074 adds no production code, new commands, CLI behavior changes, parser weakening, network calls, credentials, Telegram transport, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
+
 ## Completed Accepted Work
 
 - RX-000 through RX-007 established the project constitution, domain contracts, product rules, economics, per-venue observations, offline scan/refresh orchestration, fake paper lifecycle, and append-only ledger persistence scaffolding.
@@ -131,7 +133,7 @@ RX-073 - Local Paper Session Run Command Text Parser is reviewer-accepted and fi
 
 ## Current Main State
 
-RX-073 - Local Paper Session Run Command Text Parser is reviewer-accepted and finalized on `main`. `NEXT_TASK.md` is prepared for a test-only parser-to-runtime smoke handoff.
+RX-073 - Local Paper Session Run Command Text Parser is reviewer-accepted and finalized on `main`. The RX-074 task branch is implementation-complete and pending reviewer acceptance; `NEXT_TASK.md` is prepared for one next test-only preview-to-runtime smoke handoff after RX-074 finalization.
 
 ## Previous Product Task
 
@@ -143,7 +145,7 @@ RX-070 - Local Paper Session Operator Display Fail-Closed Smoke Fixture Coverage
 
 ## Next Task
 
-`NEXT_TASK.md` is prepared for RX-074 Local Paper Session Run Command Text Parser-To-Runtime Smoke Fixture Coverage after RX-073 reviewer acceptance and finalization.
+`NEXT_TASK.md` is prepared for RX-075 Local Paper Session Run Command Text Preview-To-Runtime Smoke Fixture Coverage after RX-074 reviewer acceptance and finalization.
 
 ## Previous Product Baseline
 
@@ -201,13 +203,13 @@ RX-069 is reviewer-accepted and finalized on `main`. It adds only test-local det
 
 RX-070 is reviewer-accepted and finalized on `main`. It adds only test-local deterministic fail-closed smoke coverage proving malformed or unsafe local operator/display fixtures fail before unintended artifacts, runtime/session execution, report rendering, adapters, ledgers, Telegram/live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
 
-## Remaining Gated Roadmap After RX-073 Finalization
+## Remaining Gated Roadmap After RX-074 Branch Completion
 
-Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. RX-073 implements exactly one local command-text parser handoff and does not authorize any additional product/runtime behavior, trading, execution automation, execution planning, polling, ranking, discovery, ledger/storage/replay change, Telegram transport, credentials, messaging, alerts, webhooks, or live-order roadmap stage.
+Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. RX-074 adds test-only parser-to-runtime smoke coverage and does not authorize any additional product/runtime behavior, trading, execution automation, execution planning, polling, ranking, discovery, ledger/storage/replay change, Telegram transport, credentials, messaging, alerts, webhooks, or live-order roadmap stage.
 
 The next prepared handoff is:
 
-1. RX-074 Local Paper Session Run Command Text Parser-To-Runtime Smoke Fixture Coverage.
+1. RX-075 Local Paper Session Run Command Text Preview-To-Runtime Smoke Fixture Coverage.
 
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
@@ -1256,19 +1258,20 @@ RX-073 branch outcome:
 
 ## RX-074 — Local Paper Session Run Command Text Parser-To-Runtime Smoke Fixture Coverage
 
-After RX-073 reviewer acceptance and finalization, RX-074 should add focused deterministic smoke coverage for the accepted `parse-paper-session-run-command-text` command output feeding the accepted `paper-trade-session` runtime/report/display path.
+After RX-073 reviewer acceptance and finalization, RX-074 adds focused deterministic smoke coverage for the accepted `parse-paper-session-run-command-text` command output feeding the accepted `paper-trade-session` runtime/report/display path.
 
-RX-074 implementation notes:
+RX-074 branch outcome:
 
-- RX-074 should be test-only and add no production code or new user-facing CLI behavior.
-- The smoke should start from an explicit local command payload fixture and exact local `paper-session-run ...` command text.
-- It should run `parse-paper-session-run-command-text` to write the accepted package route-list and package-preview artifacts, then feed only the generated route-list artifact into `paper-trade-session --routes-json-path ... --session-report-json-path ...` under injected deterministic public-adapter doubles and an explicit local SQLite ledger path.
-- It may validate the produced report through the accepted display path when useful, without duplicating display behavior or mutating reports.
-- It should assert deterministic parser/package/runtime/report/display artifacts or stdout where applicable, accepted route-list and package-preview shapes, no session-report write during parsing, existing fake paper lifecycle and ledger ownership during runtime only, string-or-null economics, known/unknown count semantics, `aggregate_paper_net_profit_usd=null`, no aggregate paper PnL calculation, and no unknown-to-zero behavior.
+- RX-074 is test-only and adds no production code or new user-facing CLI behavior.
+- The smoke starts from an explicit local command payload fixture and exact local `paper-session-run ...` command text.
+- It runs `parse-paper-session-run-command-text` to write the accepted package route-list and package-preview artifacts, then feeds only the generated route-list artifact into `paper-trade-session --routes-json-path ... --session-report-json-path ...` under injected deterministic public-adapter doubles and an explicit local SQLite ledger path.
+- It validates the produced report through the accepted `render-paper-session-report` display path without mutating reports.
+- It asserts deterministic parser/package/runtime/report/display artifacts or stdout where applicable, accepted route-list and package-preview shapes, no session-report write during parsing, existing fake paper lifecycle and ledger ownership during runtime only, string-or-null economics, known/unknown count semantics, `aggregate_paper_net_profit_usd=null`, no aggregate paper PnL calculation, and no unknown-to-zero behavior.
 - It must add no Telegram transport, bot tokens, webhooks, alerts, messaging/network behavior, credentials, live/order/private/account scope, discovery/ranking/watchlist/poll/schedule, execution automation/planning, adapter/economics/risk/ledger/replay/reconciliation/storage changes, statuses/reasons, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
+- The next grounded local/manual/fake-money handoff is test-only smoke coverage proving the accepted run-command-text preview artifact chain can feed the accepted parser/runtime/report/display path.
 
 ## Next Sequence
 
-1. RX-074 Local Paper Session Run Command Text Parser-To-Runtime Smoke Fixture Coverage.
+1. RX-075 Local Paper Session Run Command Text Preview-To-Runtime Smoke Fixture Coverage.
 
 Do not promote execution automation, background loops, ranking, order placement, polling, alerts, auto-refresh, Telegram transport, bot tokens, private endpoints, credentials, account-state access, destructive reset, financially dangerous actions, or later roadmap stages into the current handoff unless that exact future task is explicitly user-approved for hard-stop scope or explicitly directed by the Product Owner, autonomously selected by Control Tower under RX-033 for non-dangerous scope, and passes the repository's hard approval gates.

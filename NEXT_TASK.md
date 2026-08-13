@@ -2,27 +2,27 @@
 
 ## Task ID
 
-RX-074 - Local Paper Session Run Command Text Parser-To-Runtime Smoke Fixture Coverage
+RX-075 - Local Paper Session Run Command Text Preview-To-Runtime Smoke Fixture Coverage
 
 ## Objective
 
-Add focused deterministic smoke coverage after the RX-073 run-command-text parser is reviewer-accepted and finalized.
+Add focused deterministic smoke coverage after the parser-to-runtime smoke task is reviewer-accepted and finalized.
 
-The task should prove that exact local `paper-session-run ...` command text can be parsed through the accepted `parse-paper-session-run-command-text` command into the accepted package route-list and package-preview artifacts, and that the generated route-list can feed the accepted `paper-trade-session` runtime/report/display path under deterministic public-adapter doubles. It must be test-only and must not add production behavior, new commands, session automation, Telegram transport, credentials, external network behavior, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
+The task should prove that exact local `paper-session-run ...` command text can first be previewed through the accepted `build-paper-session-run-command-text-preview` command without writing package/runtime artifacts, then parsed through the accepted `parse-paper-session-run-command-text` command into the accepted package route-list and package-preview artifacts, and finally run through the accepted `paper-trade-session` runtime/report/display path under deterministic public-adapter doubles. It must be test-only and must not add production behavior, new commands, session automation, Telegram transport, credentials, external network behavior, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
 
 ## Starting baseline
 
-Start from reviewer-accepted `main` after the RX-073 finalization commit. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
+Start from reviewer-accepted `main` after the parser-to-runtime smoke task finalization commit. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
 
 ## Branch
 
-Create and work on `task/rx-074-local-paper-session-run-command-text-parser-to-runtime-smoke-fixture-coverage`. Do not implement on `main`.
+Create and work on `task/rx-075-local-paper-session-run-command-text-preview-to-runtime-smoke-fixture-coverage`. Do not implement on `main`.
 
 ## Before changing files
 
-Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, the remote is wrong, the branch is wrong, `origin/HEAD` is not `origin/main`, `HEAD` does not match the accepted starting baseline, RX-073 is not explicitly reviewer-accepted and finalized on `main`, or unrelated branch work would be mixed into this task.
+Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, the remote is wrong, the branch is wrong, `origin/HEAD` is not `origin/main`, `HEAD` does not match the accepted starting baseline, the parser-to-runtime smoke task is not explicitly reviewer-accepted and finalized on `main`, or unrelated branch work would be mixed into this task.
 
-If Control Tower selected this task autonomously, verify from the source-of-truth repository docs that the task is non-dangerous, test-only, local/manual/fake-money coverage grounded in the accepted paper-session operator/display chain and the RX-073 parser outcome. Stop before edits unless explicit user approval exists for any task involving live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, financially dangerous actions, Telegram transport, bot tokens, webhooks, alerts, messaging behavior, or external network behavior.
+If Control Tower selected this task autonomously, verify from the source-of-truth repository docs that the task is non-dangerous, test-only, local/manual/fake-money coverage grounded in the accepted paper-session operator/display chain, run-command-text preview builder, run-command-text parser, and parser-to-runtime smoke outcome. Stop before edits unless explicit user approval exists for any task involving live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, financially dangerous actions, Telegram transport, bot tokens, webhooks, alerts, messaging behavior, or external network behavior.
 
 Read:
 
@@ -39,10 +39,10 @@ Read:
 
 ## Allowed scope
 
-- Add focused deterministic smoke coverage for the accepted `parse-paper-session-run-command-text` command output feeding the accepted `paper-trade-session` runtime/report/display path.
+- Add focused deterministic smoke coverage for the accepted `build-paper-session-run-command-text-preview` command output feeding the accepted `parse-paper-session-run-command-text` parser output and the accepted `paper-trade-session` runtime/report/display path.
 - Use injected deterministic public-adapter doubles; do not construct real public adapters or call external networks in the new smoke.
-- Reuse accepted command paths only: `parse-paper-session-run-command-text`, `paper-trade-session`, and, if useful for report validation, accepted display/report commands.
-- Assert accepted route-list shape, accepted package-preview shape, deterministic stdout/artifacts, no session-report write during parsing, runtime-owned fake paper lifecycle/ledger behavior only during `paper-trade-session`, string-or-null economics, known/unknown count semantics, `aggregate_paper_net_profit_usd=null`, no aggregate paper PnL calculation, and no unknown-to-zero behavior.
+- Reuse accepted command paths only: `build-paper-session-run-command-text-preview`, `parse-paper-session-run-command-text`, `paper-trade-session`, and, if useful for report validation, accepted display/report commands.
+- Assert accepted run-command preview shape, accepted route-list shape, accepted package-preview shape, deterministic stdout/artifacts, no package route-list/package-preview/session-report/ledger/runtime writes during previewing, no session-report write during parsing, runtime-owned fake paper lifecycle/ledger behavior only during `paper-trade-session`, string-or-null economics, known/unknown count semantics, `aggregate_paper_net_profit_usd=null`, no aggregate paper PnL calculation, and no unknown-to-zero behavior.
 - Update source-of-truth docs for the completed task and the next handoff.
 - Keep `NEXT_TASK.md` to exactly one next task and keep `python3 scripts/validate_next_task.py` passing.
 
@@ -101,11 +101,13 @@ Read:
 
 ## Implementation requirements
 
-- Keep RX-074 test-only unless the accepted docs and reviewer direction explicitly require otherwise.
+- Keep this task test-only unless the accepted docs and reviewer direction explicitly require otherwise.
 - Add or update smoke coverage in `tests/unit/test_cli_paper_session_smoke.py`.
 - Start from an explicit local command payload fixture and exact local `paper-session-run ...` command text.
-- Use `parse-paper-session-run-command-text` to write the accepted package route-list and package-preview artifacts from the command text.
-- Verify parsing reads/writes only the accepted local artifacts for that command boundary and does not write the intended session-report path.
+- Use `build-paper-session-run-command-text-preview` to write the accepted run-command preview artifact from the command text.
+- Verify previewing reads/writes only the accepted local artifacts for that preview boundary and does not write the intended route-list path, package-preview path, session-report path, ledger path, display payload path, or runtime artifacts.
+- Use `parse-paper-session-run-command-text` to write the accepted package route-list and package-preview artifacts from the same command text.
+- Verify parsing reads/writes only the accepted local artifacts for that parser boundary and does not write the intended session-report path.
 - Feed only the generated route-list artifact into `paper-trade-session --routes-json-path ... --session-report-json-path ...` under deterministic public-adapter doubles and an explicit local SQLite ledger path.
 - Verify the runtime path still uses accepted decision, paper lifecycle, ledger, report, and optional display owner paths.
 - Preserve accepted unknown/null and no-aggregate-PnL semantics; do not add zero placeholders.

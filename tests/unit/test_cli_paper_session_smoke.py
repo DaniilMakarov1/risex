@@ -849,6 +849,412 @@ def test_paper_session_package_output_feeds_runtime_report_and_display_smoke(
     assert "route.2.paper_net_profit_usd=0" not in display_output
 
 
+def test_paper_session_run_command_text_parser_output_feeds_runtime_report_and_display_smoke(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path,
+) -> None:
+    routes_output_path = tmp_path / "parsed runtime routes.json"
+    package_preview_path = tmp_path / "parsed-runtime-package-preview.json"
+    report_path = tmp_path / "parsed runtime report.json"
+    ledger_path = tmp_path / "parsed-runtime-ledger.sqlite"
+    command_payload_path = tmp_path / "parsed-runtime-command-payload.json"
+    command_text_path = tmp_path / "parsed runtime command.txt"
+    adapter_calls = _install_deterministic_public_adapters(monkeypatch)
+
+    routes = [
+        _paper_session_route(
+            route_id="parsed-runtime-started",
+            capture_id="capture-parsed-runtime-started",
+        ),
+        _paper_session_route(
+            route_id="parsed-runtime-unknown",
+            capture_id="capture-parsed-runtime-unknown",
+            risex_symbol="ETH-PERP",
+            hedge_symbol="ETH",
+            assembled_at="2026-08-13T12:01:00+00:00",
+        ),
+    ]
+    command_payload_path.write_text(
+        json.dumps({"routes": routes}),
+        encoding="utf-8",
+    )
+    command_text = (
+        "paper-session-run --paper-session-command-payload-json-path "
+        f"{shlex.quote(str(command_payload_path))} --routes-json-output-path "
+        f"{shlex.quote(str(routes_output_path))} --preview-json-output-path "
+        f"{shlex.quote(str(package_preview_path))} --session-report-json-path "
+        f"{shlex.quote(str(report_path))}"
+    )
+    command_text_path.write_text(command_text, encoding="utf-8")
+    assert command_text_path.read_text(encoding="utf-8") == command_text
+
+    original_read_text = cli.Path.read_text
+    read_paths: list[str] = []
+
+    def recording_read_text(self, *args: object, **kwargs: object) -> str:
+        read_paths.append(str(self))
+        if str(self) in {
+            str(routes_output_path),
+            str(package_preview_path),
+            str(report_path),
+            str(ledger_path),
+        }:
+            raise AssertionError(
+                "run command text parser must not read package/runtime outputs"
+            )
+        return original_read_text(self, *args, **kwargs)
+
+    original_write_json_artifact = cli._write_json_artifact
+    write_paths: list[str] = []
+
+    def recording_write_json_artifact(path: str, payload: object) -> None:
+        write_paths.append(path)
+        if path == str(report_path):
+            raise AssertionError("run command text parser must not write reports")
+        original_write_json_artifact(path, payload)
+
+    with monkeypatch.context() as parser_boundary:
+        parser_boundary.setattr(cli.Path, "read_text", recording_read_text)
+        parser_boundary.setattr(
+            cli,
+            "_write_json_artifact",
+            recording_write_json_artifact,
+        )
+        assert (
+            cli.main(
+                [
+                    "parse-paper-session-run-command-text",
+                    "--paper-session-run-command-text-path",
+                    str(command_text_path),
+                ]
+            )
+            == 0
+        )
+
+    parser_output = capsys.readouterr().out
+    assert parser_output == (
+        "Paper Session Run Command Text Parser\n"
+        f"command_text_path={command_text_path}\n"
+        f"paper_session_command_payload_json_path={command_payload_path}\n"
+        "route_count=2\n"
+        "route_ids=parsed-runtime-started,parsed-runtime-unknown\n"
+        f"routes_json_path={routes_output_path}\n"
+        f"preview_json_path={package_preview_path}\n"
+        f"session_report_json_path={report_path}\n"
+    )
+    assert read_paths == [str(command_text_path), str(command_payload_path)]
+    assert write_paths == [str(routes_output_path), str(package_preview_path)]
+    assert adapter_calls == []
+    assert not report_path.exists()
+    assert not ledger_path.exists()
+
+    generated_routes = json.loads(routes_output_path.read_text(encoding="utf-8"))
+    assert generated_routes == routes
+    assert all(set(route) == set(BASE_SESSION_ROUTE) for route in generated_routes)
+    parsed_generated_routes = cli._paper_session_routes_from_json_path(
+        str(routes_output_path)
+    )
+    assert [route.route_id for route, _assembled_at in parsed_generated_routes] == [
+        "parsed-runtime-started",
+        "parsed-runtime-unknown",
+    ]
+
+    expected_package_command = [
+        "python3",
+        "-m",
+        "apps.cli.main",
+        "paper-trade-session",
+        "--routes-json-path",
+        str(routes_output_path),
+        "--session-report-json-path",
+        str(report_path),
+    ]
+    package_preview = json.loads(package_preview_path.read_text(encoding="utf-8"))
+    assert package_preview == {
+        "preview": "Paper Trade Session Operator Package",
+        "schema_version": 1,
+        "route_count": 2,
+        "route_ids": ["parsed-runtime-started", "parsed-runtime-unknown"],
+        "routes_json_path": str(routes_output_path),
+        "session_report_json_path": str(report_path),
+        "manual_command": {
+            "argv": expected_package_command,
+            "text": shlex.join(expected_package_command),
+        },
+    }
+    package_preview_text = json.dumps(package_preview, sort_keys=True)
+    assert "ledger_events" not in package_preview_text
+    assert "aggregate_paper_net_profit_usd" not in package_preview_text
+    assert "paper_net_profit_usd" not in package_preview_text
+
+    assert (
+        cli.main(
+            [
+                "paper-trade-session",
+                "--routes-json-path",
+                str(routes_output_path),
+                "--ledger-sqlite-path",
+                str(ledger_path),
+                "--session-report-json-path",
+                str(report_path),
+            ]
+        )
+        == 0
+    )
+    runtime_output = capsys.readouterr().out
+    assert runtime_output == (
+        "Paper Trade Session\n"
+        "route_count=2\n"
+        f"ledger_path={ledger_path}\n"
+        "session_route_index=1\n"
+        "Paper Trade Route\n"
+        "route_id=parsed-runtime-started\n"
+        "capture_id=capture-parsed-runtime-started\n"
+        "mode=ENTRY\n"
+        "status=PAPER_ELIGIBLE\n"
+        "reasons=LIVE_TRADING_DISABLED\n"
+        "decision.net_profit_usd=7.0000\n"
+        "snapshot=AVAILABLE\n"
+        "funding_settlement_at=2026-08-13T16:00:00+00:00\n"
+        "paper_started=True\n"
+        "paper_start_attribution=entry_paper_eligible_decision\n"
+        "paper_start_blockers=None\n"
+        "ledger_event_count=4\n"
+        "ledger_event_sequences=1,2,3,4\n"
+        "ledger_event_types=route_decision,paper_capture_opened,"
+        "paper_settlement_observed,paper_capture_closed\n"
+        "paper.expected_funding_usd=8.000\n"
+        "paper.total_fees_usd=1.0000\n"
+        "paper.simulated_roundtrip_cost_usd=0\n"
+        "paper.net_profit_usd=7.0000\n"
+        f"ledger_path={ledger_path}\n"
+        "session_route_index=2\n"
+        "Paper Trade Route\n"
+        "route_id=parsed-runtime-unknown\n"
+        "capture_id=capture-parsed-runtime-unknown\n"
+        "mode=ENTRY\n"
+        "status=REJECTED\n"
+        "reasons=REQUIRED_LIVE_DATA_MISSING\n"
+        "decision.net_profit_usd=None\n"
+        "snapshot=AVAILABLE\n"
+        "funding_settlement_at=2026-08-13T16:00:00+00:00\n"
+        "paper_started=False\n"
+        "paper_start_attribution=paper_start_blocked_by_decision\n"
+        "paper_start_blockers=decision_status_not_paper_eligible\n"
+        "ledger_event_count=2\n"
+        "ledger_event_sequences=5,6\n"
+        "ledger_event_types=route_decision,paper_rejection_recorded\n"
+        "paper.expected_funding_usd=None\n"
+        "paper.total_fees_usd=None\n"
+        "paper.simulated_roundtrip_cost_usd=None\n"
+        "paper.net_profit_usd=None\n"
+        f"ledger_path={ledger_path}\n"
+        "Paper Trade Session Summary\n"
+        "routes_total=2\n"
+        "routes_with_snapshot=2\n"
+        "routes_without_snapshot=0\n"
+        "paper_started=1\n"
+        "paper_not_started=1\n"
+        "decision_status.RESEARCH_ONLY=0\n"
+        "decision_status.PAPER_ELIGIBLE=1\n"
+        "decision_status.LIVE_ELIGIBLE=0\n"
+        "decision_status.REJECTED=1\n"
+        "entry_ev_known=1\n"
+        "entry_ev_unknown=1\n"
+        "paper_expected_funding_known=1\n"
+        "paper_expected_funding_unknown=1\n"
+        "paper_total_fees_known=1\n"
+        "paper_total_fees_unknown=1\n"
+        "decision_net_profit_known=1\n"
+        "decision_net_profit_unknown=1\n"
+        "paper_net_profit_known=1\n"
+        "paper_net_profit_unknown=1\n"
+        "ledger_event_count=6\n"
+        "ledger_event_sequences=1,2,3,4,5,6\n"
+        "ledger_event_types=route_decision,paper_capture_opened,"
+        "paper_settlement_observed,paper_capture_closed,route_decision,"
+        "paper_rejection_recorded\n"
+        "aggregate_paper_net_profit_usd=None\n"
+        f"ledger_path={ledger_path}\n"
+    )
+    assert "aggregate_paper_net_profit_usd=0" not in runtime_output
+    assert "paper.net_profit_usd=0" not in runtime_output
+    assert adapter_calls == [
+        ("RiseX", "__init__"),
+        ("Hyperliquid", "__init__"),
+        ("RiseX", "BTC-PERP"),
+        ("Hyperliquid", "BTC"),
+        ("RiseX", "__init__"),
+        ("Hyperliquid", "__init__"),
+        ("RiseX", "ETH-PERP"),
+        ("Hyperliquid", "ETH"),
+    ]
+
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    assert report["session"] == {
+        "ledger_path": str(ledger_path),
+        "route_count": 2,
+    }
+    assert report["summary"] == {
+        "aggregate_paper_net_profit_usd": None,
+        "decision_net_profit_known": 1,
+        "decision_net_profit_unknown": 1,
+        "decision_status": {
+            "LIVE_ELIGIBLE": 0,
+            "PAPER_ELIGIBLE": 1,
+            "REJECTED": 1,
+            "RESEARCH_ONLY": 0,
+        },
+        "entry_ev_known": 1,
+        "entry_ev_unknown": 1,
+        "ledger_event_count": 6,
+        "ledger_event_sequences": [1, 2, 3, 4, 5, 6],
+        "ledger_event_types": [
+            LedgerEventType.ROUTE_DECISION_RECORDED.value,
+            LedgerEventType.PAPER_CAPTURE_OPENED.value,
+            LedgerEventType.PAPER_SETTLEMENT_OBSERVED.value,
+            LedgerEventType.PAPER_CAPTURE_CLOSED.value,
+            LedgerEventType.ROUTE_DECISION_RECORDED.value,
+            LedgerEventType.PAPER_REJECTION_RECORDED.value,
+        ],
+        "ledger_path": str(ledger_path),
+        "paper_expected_funding_known": 1,
+        "paper_expected_funding_unknown": 1,
+        "paper_net_profit_known": 1,
+        "paper_net_profit_unknown": 1,
+        "paper_not_started": 1,
+        "paper_started": 1,
+        "paper_total_fees_known": 1,
+        "paper_total_fees_unknown": 1,
+        "routes_total": 2,
+        "routes_with_snapshot": 2,
+        "routes_without_snapshot": 0,
+    }
+    assert "aggregate_paper_pnl_usd" not in report["summary"]
+
+    started_route, unknown_route = report["routes"]
+    assert started_route["route"]["route_id"] == "parsed-runtime-started"
+    assert started_route["decision"]["status"] == "PAPER_ELIGIBLE"
+    assert started_route["decision"]["net_profit_usd"] == "7.0000"
+    assert started_route["decision"]["entry_ev"] == {
+        "expected_funding_usd": "8.000",
+        "net_profit_usd": "7.0000",
+        "simulated_roundtrip_cost_usd": "0",
+        "total_fees_usd": "1.0000",
+    }
+    assert started_route["paper"]["started"] is True
+    assert started_route["paper"]["net_profit_usd"] == "7.0000"
+    assert [event["event_type"] for event in started_route["ledger_events"]] == [
+        LedgerEventType.ROUTE_DECISION_RECORDED.value,
+        LedgerEventType.PAPER_CAPTURE_OPENED.value,
+        LedgerEventType.PAPER_SETTLEMENT_OBSERVED.value,
+        LedgerEventType.PAPER_CAPTURE_CLOSED.value,
+    ]
+
+    assert unknown_route["route"]["route_id"] == "parsed-runtime-unknown"
+    assert unknown_route["decision"]["status"] == "REJECTED"
+    assert unknown_route["decision"]["net_profit_usd"] is None
+    assert unknown_route["decision"]["entry_ev"] == {
+        "expected_funding_usd": None,
+        "net_profit_usd": None,
+        "simulated_roundtrip_cost_usd": None,
+        "total_fees_usd": None,
+    }
+    assert unknown_route["paper"] == {
+        "expected_funding_usd": None,
+        "net_profit_usd": None,
+        "simulated_roundtrip_cost_usd": None,
+        "start_attribution": "paper_start_blocked_by_decision",
+        "start_blockers": ["decision_status_not_paper_eligible"],
+        "started": False,
+        "total_fees_usd": None,
+    }
+    assert [event["event_type"] for event in unknown_route["ledger_events"]] == [
+        LedgerEventType.ROUTE_DECISION_RECORDED.value,
+        LedgerEventType.PAPER_REJECTION_RECORDED.value,
+    ]
+
+    for route_report in report["routes"]:
+        economics = (
+            route_report["decision"]["net_profit_usd"],
+            *route_report["decision"]["entry_ev"].values(),
+            route_report["paper"]["expected_funding_usd"],
+            route_report["paper"]["total_fees_usd"],
+            route_report["paper"]["simulated_roundtrip_cost_usd"],
+            route_report["paper"]["net_profit_usd"],
+        )
+        for value in economics:
+            _assert_string_or_none(value)
+
+    reopened = SQLiteLedger(ledger_path)
+    try:
+        assert [event.event_type for event in reopened.records()] == [
+            LedgerEventType.ROUTE_DECISION_RECORDED.value,
+            LedgerEventType.PAPER_CAPTURE_OPENED.value,
+            LedgerEventType.PAPER_SETTLEMENT_OBSERVED.value,
+            LedgerEventType.PAPER_CAPTURE_CLOSED.value,
+            LedgerEventType.ROUTE_DECISION_RECORDED.value,
+            LedgerEventType.PAPER_REJECTION_RECORDED.value,
+        ]
+    finally:
+        reopened.close()
+
+    assert (
+        cli.main(
+            [
+                "render-paper-session-report",
+                "--session-report-json-path",
+                str(report_path),
+            ]
+        )
+        == 0
+    )
+    display_output = capsys.readouterr().out
+    assert display_output == (
+        "Paper Session Report Display\n"
+        "route_count=2\n"
+        "route_ids=parsed-runtime-started,parsed-runtime-unknown\n"
+        "route.1.route_id=parsed-runtime-started\n"
+        "route.1.decision_status=PAPER_ELIGIBLE\n"
+        "route.1.paper_started=true\n"
+        "route.1.decision_net_profit_usd=7.0000\n"
+        "route.1.decision_entry_ev_expected_funding_usd=8.000\n"
+        "route.1.decision_entry_ev_total_fees_usd=1.0000\n"
+        "route.1.decision_entry_ev_simulated_roundtrip_cost_usd=0\n"
+        "route.1.decision_entry_ev_net_profit_usd=7.0000\n"
+        "route.1.paper_expected_funding_usd=8.000\n"
+        "route.1.paper_total_fees_usd=1.0000\n"
+        "route.1.paper_simulated_roundtrip_cost_usd=0\n"
+        "route.1.paper_net_profit_usd=7.0000\n"
+        "route.2.route_id=parsed-runtime-unknown\n"
+        "route.2.decision_status=REJECTED\n"
+        "route.2.paper_started=false\n"
+        "route.2.decision_net_profit_usd=null\n"
+        "route.2.decision_entry_ev_expected_funding_usd=null\n"
+        "route.2.decision_entry_ev_total_fees_usd=null\n"
+        "route.2.decision_entry_ev_simulated_roundtrip_cost_usd=null\n"
+        "route.2.decision_entry_ev_net_profit_usd=null\n"
+        "route.2.paper_expected_funding_usd=null\n"
+        "route.2.paper_total_fees_usd=null\n"
+        "route.2.paper_simulated_roundtrip_cost_usd=null\n"
+        "route.2.paper_net_profit_usd=null\n"
+        "summary.decision_net_profit_known=1\n"
+        "summary.decision_net_profit_unknown=1\n"
+        "summary.entry_ev_known=1\n"
+        "summary.entry_ev_unknown=1\n"
+        "summary.paper_expected_funding_known=1\n"
+        "summary.paper_expected_funding_unknown=1\n"
+        "summary.paper_net_profit_known=1\n"
+        "summary.paper_net_profit_unknown=1\n"
+        "summary.paper_total_fees_known=1\n"
+        "summary.paper_total_fees_unknown=1\n"
+        "summary.aggregate_paper_net_profit_usd=null\n"
+    )
+    assert "aggregate_paper_net_profit_usd=0" not in display_output
+    assert "route.2.paper_net_profit_usd=0" not in display_output
+
+
 def test_paper_session_operator_display_artifact_chain_end_to_end_smoke(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
