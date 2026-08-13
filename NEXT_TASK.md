@@ -2,19 +2,19 @@
 
 ## Task ID
 
-RX-032 — Product Owner Roadmap Authorization Gate
+RX-033 — Control Tower Autonomous Task Selection Governance
 
 ## Objective
 
-Require explicit Product Owner or Control Tower authorization before promoting any new product, execution, monitoring, adapter, or governance stage. If a concrete authorized next task is supplied, update repository handoff metadata only. If no concrete authorization is supplied, stop and report blocked without inventing a product stage.
+Update repository workflow/governance docs only so Control Tower may autonomously select, create, run, review, fix, and finalize future non-dangerous RX tasks from source-of-truth repository docs without asking the user to name each next task. Preserve explicit user approval gates for live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, and financially dangerous actions.
 
 ## Starting baseline
 
-Start from reviewer-accepted `main` after the RX-031 metadata-only follow-up is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
+Start from reviewer-accepted `main` after the Product Owner roadmap authorization gate is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
 
 ## Branch
 
-Create and work on `task/rx-032-product-owner-roadmap-authorization-gate`. Do not implement on `main`.
+Create and work on `task/rx-033-control-tower-autonomous-task-selection-governance`. Do not implement on `main`.
 
 ## Before changing files
 
@@ -35,10 +35,15 @@ Read:
 
 ## Allowed scope
 
-- Repository handoff metadata required to record explicit Product Owner or Control Tower authorization for exactly one next task.
-- `STATUS.md`, `IMPLEMENTATION_PLAN.md`, and `NEXT_TASK.md`.
-- `DECISIONS.md` only if the supplied authorization makes or changes an architectural or repository-governance decision.
-- Validation-only changes are not allowed unless required to keep the existing handoff validator passing after metadata edits.
+- Governance and workflow docs needed to define Control Tower autonomous task selection for future non-dangerous RX tasks.
+- `AGENTS.md`
+- `docs/WORKFLOW.md`
+- `docs/templates/`
+- `STATUS.md`
+- `IMPLEMENTATION_PLAN.md`
+- `DECISIONS.md`
+- `NEXT_TASK.md`
+- Other repository documentation only if strictly necessary to keep the workflow, authorization boundary, and hard-gate language consistent.
 
 ## Forbidden scope
 
@@ -52,24 +57,38 @@ Read:
 - No EV, fee, funding, VWAP/liquidity, basis, spread, price-impact, slippage, max-level, hidden-buffer, or safety-margin filters.
 - No new route statuses, reject reasons, canary architecture, hold-next-cycle logic, or live trading by default.
 - No new functions, classes, dataclasses, enums, modules, wrappers, config values, trace fields, future hooks, or contracts.
+- No weakening, bypassing, or removal of explicit user approval gates for live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, or financially dangerous actions.
+- No speculative product hooks, runtime hooks, placeholder live paths, or broad refactors.
 
 ## Implementation requirements
 
-- Treat explicit Product Owner or Control Tower authorization as the only source for promoting a new task.
-- Do not infer authorization from roadmap sequence, previous assistant reports, or the existence of a future-stage idea in documentation.
-- If authorization supplies a concrete next task, prepare exactly one `NEXT_TASK.md` handoff for that task and keep the branch metadata-only.
-- If authorization does not supply a concrete next task, stop and report blocked without editing product code or inventing a handoff.
-- Preserve RX-030 as the latest accepted product task unless reviewer-accepted `main` has changed.
-- Preserve RX-031 as a metadata-only review-directed follow-up unless reviewer acceptance says otherwise.
-- Worker policy: workers are optional because this is metadata-only control-gate work. Use a supervised worker only if the supplied authorization requires non-trivial repository-governance changes; if a worker becomes required and unavailable, stop before edits.
+- Define the autonomous selection rule narrowly: Control Tower may choose future non-dangerous RX tasks from the source-of-truth repository docs without asking the user to name each next task.
+- Define or document the hard-stop categories that still require explicit user approval: live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, and financially dangerous actions.
+- Preserve one RX task equals one clean executor task and one task branch.
+- Preserve `NEXT_TASK.md` as exactly one next task and require the handoff validator to pass.
+- Preserve source-of-truth repository docs as the basis for task selection, scope, branch discipline, validation, and final reports.
+- Preserve reviewer acceptance as the only way to mark a task accepted.
+- Preserve parent ownership of branch discipline, final diff review, validation, commit, push, and final report.
+- Preserve worker/subagent checkpoint requirements for non-trivial architecture-sensitive work.
+- Do not add product code, runtime code, tests for product behavior, or new abstractions.
+- Worker policy: one supervised worker required for design support because this is non-trivial repository-governance work.
+- The worker must stop at DESIGN CHECKPOINT before implementation edits and answer whether the proposed workflow wording preserves hard approval gates, one-task/one-branch discipline, source-of-truth docs, reviewer acceptance, and the exactly-one-task `NEXT_TASK.md` contract.
+- The worker must wait for Parent approval or steering after DESIGN CHECKPOINT before any implementation edits continue.
+- The worker must also stop at CODE CHECKPOINT, TEST CHECKPOINT, and VALIDATION CHECKPOINT if it continues beyond design support.
 - Parent owns steering, final diff review, validation, commit, push, and final report.
+- The worker must not commit, push, merge, approve work, or start unrelated scope.
+- Parent must stop before edits if the required worker is unavailable.
 
 ## Required files
 
+- Likely `AGENTS.md`
+- Likely `docs/WORKFLOW.md`
+- Likely `docs/templates/RX_TASK_TEMPLATE.md`
+- Likely `docs/templates/REVIEW_CHECKLIST.md`
 - Likely `STATUS.md`
 - Likely `IMPLEMENTATION_PLAN.md`
+- Likely `DECISIONS.md`
 - Likely `NEXT_TASK.md`
-- `DECISIONS.md` only if required by an explicit architecture or repository-governance decision
 - Do not touch product code.
 
 ## Required tests

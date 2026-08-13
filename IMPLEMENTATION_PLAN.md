@@ -49,13 +49,13 @@ No product branch is active after RX-031 finalization. RX-031 was metadata-only:
 
 ## Current Product Handoff
 
-`NEXT_TASK.md` is prepared for RX-032, a Product Owner roadmap authorization gate before any new product stage can be promoted.
+`NEXT_TASK.md` is prepared for RX-033, a governance/docs-only task to define how Control Tower may autonomously select and run future non-dangerous RX tasks from source-of-truth repository docs while preserving explicit user approval gates for dangerous actions.
 
 ## Remaining Gated Roadmap After RX-030
 
-Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030 or by the RX-031 no-additional-fix disposition.
+Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, or by the RX-032 Product Owner authorization record.
 
-1. RX-032 — Product Owner Roadmap Authorization Gate.
+1. RX-033 — Control Tower Autonomous Task Selection Governance.
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
 
@@ -268,8 +268,14 @@ RX-030 implementation notes:
 
 Apply only explicit reviewer-directed dashboard fixes or repository handoff metadata updates after RX-030 acceptance. In the absence of discoverable actionable reviewer feedback in local repo/git evidence or GitHub connector context, RX-031 remains metadata-only: it records the no-additional-fix disposition, leaves dashboard/product code unchanged, and prepares a Product Owner authorization gate for the next single handoff.
 
+## RX-032 — Product Owner Roadmap Authorization Gate
+
+Record the Product Owner authorization supplied through Control Tower as authorization for exactly one next governance/docs task. The authorization permits preparing a workflow change so Control Tower may autonomously select, create, run, review, fix, and finalize future non-dangerous RX tasks from source-of-truth repository docs without asking the user to name each next task.
+
+RX-032 does not itself change Control Tower autonomy rules. It does not authorize live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, or financially dangerous actions without explicit user approval.
+
 ## Next Sequence
 
-1. RX-032 — Product Owner Roadmap Authorization Gate.
+1. RX-033 — Control Tower Autonomous Task Selection Governance.
 
-Do not promote execution automation, background loops, ranking, order placement, polling, alerts, auto-refresh, or later roadmap stages into the current handoff unless that exact future task is explicitly authorized by the Product Owner or Control Tower.
+Do not promote execution automation, background loops, ranking, order placement, polling, alerts, auto-refresh, private endpoints, credentials, account-state access, destructive reset, financially dangerous actions, or later roadmap stages into the current handoff unless that exact future task is explicitly authorized by the Product Owner or Control Tower and passes the repository's hard approval gates.
