@@ -14,6 +14,7 @@ from pathlib import Path
 from apps.cli.paper_session_payloads import (
     MAX_PAPER_SESSION_ROUTES as _MAX_PAPER_SESSION_ROUTES,
     paper_session_display_command_payload_from_command_text as _paper_session_display_command_payload_from_command_text,
+    paper_session_package_command_paths_from_run_command_text as _paper_session_package_command_paths_from_run_command_text,
     paper_session_report_path_from_display_command_payload as _paper_session_report_path_from_display_command_payload,
     paper_session_route_list_from_command_payload as _paper_session_route_list_from_command_payload,
     paper_session_routes_from_json_path as _paper_session_routes_from_json_path,
@@ -283,6 +284,29 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Intended explicit local JSON report path for the manual session run.",
     )
     build_paper_session_package.set_defaults(handler=_run_build_paper_session_package)
+
+    build_paper_session_run_command_text_preview = subparsers.add_parser(
+        "build-paper-session-run-command-text-preview",
+        help=(
+            "Build a local preview artifact for a manual paper session run "
+            "command text package-builder plan."
+        ),
+    )
+    build_paper_session_run_command_text_preview.add_argument(
+        "--paper-session-run-command-text-path",
+        required=True,
+        type=_non_empty,
+        help="Explicit local paper session run command text fixture path.",
+    )
+    build_paper_session_run_command_text_preview.add_argument(
+        "--preview-json-output-path",
+        required=True,
+        type=_non_empty,
+        help="Explicit local JSON run-command-text preview artifact path to write.",
+    )
+    build_paper_session_run_command_text_preview.set_defaults(
+        handler=_run_build_paper_session_run_command_text_preview
+    )
 
     build_paper_session_display_payload = subparsers.add_parser(
         "build-paper-session-display-payload",
@@ -1203,6 +1227,46 @@ def _paper_session_display_command_text_preview_json(
     }
 
 
+def _paper_session_run_command_text_preview_json(
+    *,
+    command_text_path: str,
+    command_paths: Mapping[str, str],
+    route_list: Sequence[Mapping[str, str]],
+) -> dict[str, object]:
+    command_args = [
+        "python3",
+        "-m",
+        "apps.cli.main",
+        "build-paper-session-package",
+        "--paper-session-command-payload-json-path",
+        command_paths["paper_session_command_payload_json_path"],
+        "--routes-json-output-path",
+        command_paths["routes_json_output_path"],
+        "--preview-json-output-path",
+        command_paths["preview_json_output_path"],
+        "--session-report-json-path",
+        command_paths["session_report_json_path"],
+    ]
+    return {
+        "schema_version": 1,
+        "command_text_fixture_path": command_text_path,
+        "paper_session_command_payload_fixture_path": command_paths[
+            "paper_session_command_payload_json_path"
+        ],
+        "intended_routes_json_output_path": command_paths["routes_json_output_path"],
+        "intended_package_preview_json_output_path": command_paths[
+            "preview_json_output_path"
+        ],
+        "intended_session_report_json_path": command_paths["session_report_json_path"],
+        "route_count": len(route_list),
+        "route_ids": [route["route_id"] for route in route_list],
+        "manual_command": {
+            "argv": command_args,
+            "text": shlex.join(command_args),
+        },
+    }
+
+
 def _paper_report_mapping(value: object, field_name: str) -> Mapping[str, object]:
     if not isinstance(value, Mapping):
         raise argparse.ArgumentTypeError(f"{field_name} must be an object")
@@ -1580,6 +1644,85 @@ def _run_build_paper_session_package(
     print(f"routes_json_path={args.routes_json_output_path}")
     print(f"preview_json_path={args.preview_json_output_path}")
     print(f"session_report_json_path={args.session_report_json_path}")
+
+
+def _run_build_paper_session_run_command_text_preview(
+    args: argparse.Namespace,
+    parser: argparse.ArgumentParser,
+) -> None:
+    try:
+        run_preview_output_path = _normalized_local_output_path(
+            args.preview_json_output_path
+        )
+    except argparse.ArgumentTypeError as exc:
+        parser.error(str(exc))
+
+    try:
+        command_text = Path(args.paper_session_run_command_text_path).read_text(
+            encoding="utf-8"
+        )
+        command_paths = _paper_session_package_command_paths_from_run_command_text(
+            command_text
+        )
+    except OSError as exc:
+        parser.error(f"paper-session-run-command-text-path could not be read: {exc}")
+    except argparse.ArgumentTypeError as exc:
+        parser.error(str(exc))
+
+    try:
+        normalized_output_paths = {
+            "preview-json-output-path": run_preview_output_path,
+            "routes-json-output-path": _normalized_local_output_path(
+                command_paths["routes_json_output_path"]
+            ),
+            "package-preview-json-output-path": _normalized_local_output_path(
+                command_paths["preview_json_output_path"]
+            ),
+            "session-report-json-path": _normalized_local_output_path(
+                command_paths["session_report_json_path"]
+            ),
+        }
+    except argparse.ArgumentTypeError as exc:
+        parser.error(str(exc))
+
+    seen_output_paths: dict[Path, str] = {}
+    for path_name, normalized_path in normalized_output_paths.items():
+        existing_name = seen_output_paths.get(normalized_path)
+        if existing_name is not None:
+            parser.error(
+                f"{existing_name} and {path_name} must not resolve to the same "
+                "local output path"
+            )
+        seen_output_paths[normalized_path] = path_name
+
+    try:
+        payload_text = Path(
+            command_paths["paper_session_command_payload_json_path"]
+        ).read_text(encoding="utf-8")
+        route_list = _paper_session_route_list_from_command_payload(payload_text)
+    except OSError as exc:
+        parser.error(f"paper-session-command-payload-json-path could not be read: {exc}")
+    except argparse.ArgumentTypeError as exc:
+        parser.error(str(exc))
+
+    preview = _paper_session_run_command_text_preview_json(
+        command_text_path=args.paper_session_run_command_text_path,
+        command_paths=command_paths,
+        route_list=route_list,
+    )
+    _write_json_artifact(args.preview_json_output_path, preview)
+
+    print("Paper Session Run Command Text Preview")
+    print(f"command_text_path={args.paper_session_run_command_text_path}")
+    print(
+        "paper_session_command_payload_json_path="
+        f"{command_paths['paper_session_command_payload_json_path']}"
+    )
+    print(f"routes_json_output_path={command_paths['routes_json_output_path']}")
+    print(f"package_preview_json_output_path={command_paths['preview_json_output_path']}")
+    print(f"session_report_json_path={command_paths['session_report_json_path']}")
+    print(f"preview_json_path={args.preview_json_output_path}")
+    print(f"route_count={len(route_list)}")
 
 
 def _run_build_paper_session_display_payload(

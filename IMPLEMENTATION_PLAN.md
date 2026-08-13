@@ -53,6 +53,8 @@ RX-070 is reviewer-accepted and finalized on `main`. It adds focused determinist
 
 RX-071 is reviewer-accepted and finalized on `main`. It is governance/source-of-truth only. It records that the accepted local package/runtime/report/display command chain plus RX-070 fail-closed coverage ground exactly one next non-dangerous local/manual/fake-money handoff: RX-072 Local Paper Session Run Command Text Preview Builder. RX-071 does not change product/runtime code, tests, CLI behavior, parser behavior, Telegram/network/credential behavior, live/order/private/account scope, aggregate PnL behavior, unknown handling, or owner paths.
 
+RX-072 is implementation-complete on `task/rx-072-local-paper-session-run-command-text-preview-builder` and pending reviewer acceptance. It adds one local/manual run command-text parser helper and `build-paper-session-run-command-text-preview` command that writes only a descriptive preview/manifest for the accepted `build-paper-session-package` command plan after validating exact command text and the referenced command payload fixture. RX-072 is not reviewer-accepted until review explicitly accepts and finalizes it on `main`.
+
 ## Completed Accepted Work
 
 - RX-000 through RX-007 established the project constitution, domain contracts, product rules, economics, per-venue observations, offline scan/refresh orchestration, fake paper lifecycle, and append-only ledger persistence scaffolding.
@@ -125,7 +127,7 @@ RX-070 - Local Paper Session Operator Display Fail-Closed Smoke Fixture Coverage
 
 ## Current Task Branch
 
-No active product task branch. `NEXT_TASK.md` is prepared for RX-072 after RX-071 finalization.
+RX-072 - Local Paper Session Run Command Text Preview Builder is implementation-complete on `task/rx-072-local-paper-session-run-command-text-preview-builder` and pending reviewer acceptance. `NEXT_TASK.md` is prepared for the next local run command-text parser handoff after RX-072 finalization.
 
 ## Previous Product Task
 
@@ -137,7 +139,7 @@ RX-068 - Local Paper Session Package-To-Runtime Smoke Fixture Coverage is review
 
 ## Next Task
 
-`NEXT_TASK.md` is prepared for RX-072 Local Paper Session Run Command Text Preview Builder after RX-071 finalization.
+`NEXT_TASK.md` is prepared for RX-073 Local Paper Session Run Command Text Parser after RX-072 finalization.
 
 ## Previous Product Baseline
 
@@ -1208,24 +1210,32 @@ RX-071 branch outcome:
 
 ## RX-072 — Local Paper Session Run Command Text Preview Builder
 
-After RX-071 finalization, RX-072 should add one local-only, manually invoked run command-text preview builder for later Telegram-style operator testing without Telegram transport or credentials.
+After RX-071 finalization, RX-072 adds one local-only, manually invoked run command-text preview builder for later Telegram-style operator testing without Telegram transport or credentials.
 
 RX-072 implementation notes:
 
-- RX-072 should add one side-effect-free parser helper in the CLI app layer, likely `apps/cli/paper_session_payloads.py`, for exact local paper-session run command text.
-- The parser should accept exactly `paper-session-run --paper-session-command-payload-json-path <payload-json-path> --routes-json-output-path <routes-json-output-path> --preview-json-output-path <package-preview-json-output-path> --session-report-json-path <session-report-json-path>` using `shlex.split()`.
-- The parser should reject malformed shell quoting, missing arguments, extra arguments, reordered arguments, duplicate arguments, wrong command names, wrong flags, empty path values, flag-looking path values, transport/chat/user-like fields, inline route-list-like fields, economics-like fields, aggregate-PnL-like fields, execution/order-like fields, account/private fields, and credential/network fields.
-- The parser should return only the exact local path strings needed by the accepted `build-paper-session-package` command and must not read files, write files, normalize route data, create route candidates, calculate economics, run sessions, construct adapters, instantiate ledgers, render reports, or add transport fields.
-- RX-072 should add one local/manual CLI command named `build-paper-session-run-command-text-preview`.
-- The command should require explicit `--paper-session-run-command-text-path` and `--preview-json-output-path` for the new run-command-text preview artifact.
-- The command should read only the command text fixture and the referenced local paper-session command payload fixture, validate the referenced payload through the accepted `paper_session_route_list_from_command_payload()` boundary, and then write exactly one descriptive preview/manifest JSON artifact.
-- The command should not write the referenced route-list output path, referenced package-preview output path, referenced session-report path, display payloads, reports, ledgers, or any runtime artifacts.
-- The preview artifact should contain only descriptive local fields such as schema version, command text fixture path, paper-session command payload fixture path, intended route-list output path, intended package-preview output path, intended session report path, route count, route ids, and the exact manual `build-paper-session-package ...` command plan as argv plus `shlex.join()` text.
-- RX-072 must add focused tests for valid preview output, malformed command text, malformed referenced payload, explicit path requirements, collision/no-write behavior, forbidden runtime/transport/live/account/order scope, no aggregate PnL fields, and no unknown-to-zero placeholders.
-- RX-072 must not run sessions, write package route-list artifacts, write package preview artifacts, write session reports, render displays, construct adapters, instantiate ledgers, call networks, send messages, add Telegram transport, use credentials, automate execution, enter live/order/private/account scope, calculate aggregate PnL, turn unknowns into zero, or create second owner paths.
+- RX-072 adds one side-effect-free parser helper in the CLI app layer, `paper_session_package_command_paths_from_run_command_text()` in `apps/cli/paper_session_payloads.py`, for exact local paper-session run command text.
+- The parser accepts exactly `paper-session-run --paper-session-command-payload-json-path <payload-json-path> --routes-json-output-path <routes-json-output-path> --preview-json-output-path <package-preview-json-output-path> --session-report-json-path <session-report-json-path>` using `shlex.split()`.
+- The parser rejects malformed shell quoting, missing arguments, extra arguments, reordered arguments, duplicate arguments, wrong command names, wrong flags, empty path values, flag-looking path values, transport/chat/user-like fields, inline route-list-like fields, economics-like fields, aggregate-PnL-like fields, execution/order-like fields, account/private fields, and credential/network fields.
+- The parser returns only the exact local path strings needed by the accepted `build-paper-session-package` command and does not read files, write files, normalize route data, create route candidates, calculate economics, run sessions, construct adapters, instantiate ledgers, render reports, or add transport fields.
+- RX-072 adds one local/manual CLI command named `build-paper-session-run-command-text-preview`.
+- The command requires explicit `--paper-session-run-command-text-path` and `--preview-json-output-path` for the new run-command-text preview artifact.
+- The command reads only the command text fixture and the referenced local paper-session command payload fixture, validates the referenced payload through the accepted `paper_session_route_list_from_command_payload()` boundary, and then writes exactly one descriptive preview/manifest JSON artifact.
+- The command does not write the referenced route-list output path, referenced package-preview output path, referenced session-report path, display payloads, reports, ledgers, or any runtime artifacts.
+- The preview artifact contains only descriptive local fields: schema version, command text fixture path, paper-session command payload fixture path, intended route-list output path, intended package-preview output path, intended session report path, route count, route ids, and the exact manual `build-paper-session-package ...` command plan as argv plus `shlex.join()` text.
+- RX-072 adds focused tests for valid preview output, malformed command text, malformed referenced payload, explicit path requirements, collision/no-write behavior, forbidden runtime/transport/live/account/order scope, no aggregate PnL fields, and no unknown-to-zero placeholders.
+- RX-072 does not run sessions, write package route-list artifacts, write package preview artifacts, write session reports, render displays, construct adapters, instantiate ledgers, call networks, send messages, add Telegram transport, use credentials, automate execution, enter live/order/private/account scope, calculate aggregate PnL, turn unknowns into zero, or create second owner paths.
+
+RX-072 branch outcome:
+
+- RX-072 remains local/manual/fake-money testing-support and is pending reviewer acceptance on its task branch.
+- The new parser helper accepts only the fixed run command text grammar and returns only four path strings for the accepted package-builder command plan.
+- The new preview command validates the referenced payload fixture through the accepted RX-058 boundary before writing, rejects normalized local output collisions among the new preview output and referenced intended package/session output paths, and writes only the run-command-text preview artifact.
+- The new preview artifact omits decisions, paper outcomes, economics, summaries beyond route count/ids, ledger events, aggregate PnL fields, transport fields, credentials, network destinations, private/account data, sendable requests, order payloads, execution intent, and unknown-to-zero placeholders.
+- The next grounded local/manual/fake-money handoff after RX-072 finalization is a run command-text parser that may write the accepted package route-list and package-preview artifacts from exact local command text, while still stopping before session execution, session reports, display rendering, Telegram/network/credential behavior, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
 
 ## Next Sequence
 
-1. RX-072 Local Paper Session Run Command Text Preview Builder.
+1. RX-073 Local Paper Session Run Command Text Parser.
 
 Do not promote execution automation, background loops, ranking, order placement, polling, alerts, auto-refresh, Telegram transport, bot tokens, private endpoints, credentials, account-state access, destructive reset, financially dangerous actions, or later roadmap stages into the current handoff unless that exact future task is explicitly user-approved for hard-stop scope or explicitly directed by the Product Owner, autonomously selected by Control Tower under RX-033 for non-dangerous scope, and passes the repository's hard approval gates.

@@ -357,3 +357,67 @@ def paper_session_display_command_payload_from_command_text(
             "did not round-trip through display payload parser"
         )
     return payload
+
+
+def paper_session_package_command_paths_from_run_command_text(
+    command_text: str,
+) -> dict[str, str]:
+    try:
+        command_source = _non_empty(command_text)
+    except argparse.ArgumentTypeError as exc:
+        raise argparse.ArgumentTypeError(
+            f"paper-session-run-command-text: {exc}"
+        ) from exc
+
+    try:
+        command_args = shlex.split(command_source)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(
+            f"paper-session-run-command-text must be valid command text: {exc}"
+        ) from exc
+
+    expected_flags = (
+        "--paper-session-command-payload-json-path",
+        "--routes-json-output-path",
+        "--preview-json-output-path",
+        "--session-report-json-path",
+    )
+    if (
+        len(command_args) != 9
+        or command_args[0] != "paper-session-run"
+        or command_args[1] != expected_flags[0]
+        or command_args[3] != expected_flags[1]
+        or command_args[5] != expected_flags[2]
+        or command_args[7] != expected_flags[3]
+    ):
+        raise argparse.ArgumentTypeError(
+            "paper-session-run-command-text must be exactly "
+            "paper-session-run --paper-session-command-payload-json-path "
+            "<payload-json-path> --routes-json-output-path "
+            "<routes-json-output-path> --preview-json-output-path "
+            "<package-preview-json-output-path> --session-report-json-path "
+            "<session-report-json-path>"
+        )
+
+    fields = (
+        ("paper_session_command_payload_json_path", command_args[2]),
+        ("routes_json_output_path", command_args[4]),
+        ("preview_json_output_path", command_args[6]),
+        ("session_report_json_path", command_args[8]),
+    )
+    parsed_paths: dict[str, str] = {}
+    for field_name, raw_path in fields:
+        try:
+            path = _non_empty(raw_path)
+        except argparse.ArgumentTypeError as exc:
+            raise argparse.ArgumentTypeError(
+                f"paper-session-run-command-text {field_name}: {exc}"
+            ) from exc
+        if path.startswith("-"):
+            raise argparse.ArgumentTypeError(
+                f"paper-session-run-command-text {field_name} must not start "
+                "with '-'; prefix rare local filenames with ./"
+            )
+        parsed_paths[field_name] = path
+
+    return parsed_paths
