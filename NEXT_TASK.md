@@ -2,25 +2,27 @@
 
 ## Task ID
 
-RX-036 - Roadmap Source-of-Truth Clarification Gate
+RX-037 - Product Owner Roadmap Direction Gate
 
 ## Objective
 
-After `RX-035` reviewer acceptance, clarify the post-audit roadmap source of truth without inventing product or runtime scope. If the repository docs still do not clearly ground a concrete non-dangerous product task, keep the work metadata-only and prepare exactly one handoff that records the need for explicit Product Owner roadmap direction before product/runtime work resumes.
+After `RX-036` reviewer acceptance, record explicit Product Owner roadmap direction before product/runtime scope resumes. Keep the work metadata-only. If explicit Product Owner direction is absent, ambiguous, or does not clearly ground exactly one next safe task, stop before edits and request Product Owner direction instead of creating another vague cleanup or clarification handoff.
 
 ## Starting baseline
 
-Start from reviewer-accepted `main` after `RX-035` is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
+Start from reviewer-accepted `main` after `RX-036` is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
 
 ## Branch
 
-Create and work on `task/rx-036-roadmap-source-of-truth-clarification-gate`. Do not implement on `main`.
+Create and work on `task/rx-037-product-owner-roadmap-direction-gate`. Do not implement on `main`.
 
 ## Before changing files
 
 Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, remote is wrong, branch is wrong, `origin/HEAD` is not `origin/main`, `HEAD` does not match the accepted starting baseline, or unrelated branch work would be mixed into this task.
 
-If Control Tower selected this task autonomously, verify from the source-of-truth repository docs that the task is non-dangerous. Stop before edits unless explicit user approval exists for any task involving live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, or financially dangerous actions.
+Verify that the task prompt or Control Tower handoff supplies explicit Product Owner roadmap direction. If no explicit Product Owner direction is supplied, or if the direction is ambiguous or conflicts with repository source-of-truth docs, stop before edits and request Product Owner direction.
+
+If Control Tower selected this task autonomously, verify from the source-of-truth repository docs that the task is non-dangerous metadata-only gate work. Stop before edits unless explicit user approval exists for any task involving live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, or financially dangerous actions.
 
 Read:
 
@@ -37,7 +39,8 @@ Read:
 
 ## Allowed scope
 
-- Repository governance and handoff metadata needed to clarify the post-RX-035 roadmap source of truth.
+- Repository governance and handoff metadata needed to record explicit Product Owner roadmap direction.
+- Preparing exactly one next `NEXT_TASK.md` handoff if the Product Owner direction clearly grounds one safe non-dangerous task.
 - `STATUS.md`
 - `IMPLEMENTATION_PLAN.md`
 - `DECISIONS.md`
@@ -61,13 +64,13 @@ Read:
 
 ## Implementation requirements
 
-- Treat this as a governance/metadata-only roadmap source-of-truth clarification.
-- Use only source-of-truth repository docs for task selection and handoff cleanup: `NEXT_TASK.md`, `IMPLEMENTATION_PLAN.md`, `STATUS.md`, `DECISIONS.md`, `AGENTS.md`, `docs/WORKFLOW.md`, and required templates.
-- Control Tower may select this task autonomously under RX-033 because it is non-dangerous metadata-only work grounded in the RX-035 handoff.
-- Do not ask the user to name or authorize ordinary safe metadata-only clarification work.
-- Stop for explicit user approval before selecting, creating, running, fixing, or finalizing any task involving live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, or financially dangerous actions.
-- Ask the user only if candidate selection reaches a hard-stop category, unsafe scope, financially dangerous action, destructive reset, or genuine product/architecture fork that cannot be resolved from repository docs.
-- If source-of-truth docs still do not clearly ground a concrete non-dangerous product/runtime task, prepare exactly one non-product handoff that records the need for explicit Product Owner roadmap direction before product/runtime scope resumes.
+- Treat this as a governance/metadata-only Product Owner roadmap direction gate.
+- Use only explicit Product Owner direction supplied in the task prompt or Control Tower handoff plus the source-of-truth repository docs. Do not infer product/runtime priorities from chat memory, broad roadmap implication, or prior metadata fallbacks.
+- If explicit Product Owner direction is absent, ambiguous, contradictory, or too broad to reduce to one task, stop before edits and request Product Owner direction.
+- If explicit Product Owner direction clearly grounds one ordinary non-dangerous next task, prepare exactly that one next handoff in `NEXT_TASK.md`.
+- If explicit Product Owner direction reaches a hard-stop category, stop for explicit user approval before selecting, creating, running, fixing, or finalizing the hard-stop task.
+- Hard-stop categories include live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, and financially dangerous actions.
+- Preserve RX-033 Control Tower autonomy for ordinary non-dangerous tasks grounded in source-of-truth repository docs, but do not use autonomy to bypass the Product Owner roadmap direction required by this gate.
 - Preserve one RX task equals one clean executor task and one task branch.
 - Preserve `NEXT_TASK.md` as exactly one next task and require the handoff validator to pass.
 - Preserve reviewer acceptance as the only way to mark a task accepted.
@@ -75,7 +78,7 @@ Read:
 - Preserve worker/subagent checkpoint requirements for non-trivial architecture-sensitive work.
 - Do not add product code, runtime code, tests for product behavior, or new abstractions.
 - Worker policy: one supervised worker required for design support because this is repository-governance work.
-- The worker must stop at DESIGN CHECKPOINT before implementation edits and answer whether the planned clarification is source-of-truth grounded, non-dangerous or explicitly approval-gated, one-task/one-branch compliant, reviewer-acceptance compliant, Parent-owned, and exactly-one-task valid.
+- The worker must stop at DESIGN CHECKPOINT before implementation edits and answer whether the planned direction record is explicitly Product Owner supplied, source-of-truth grounded, non-dangerous or explicitly approval-gated, one-task/one-branch compliant, reviewer-acceptance compliant, Parent-owned, and exactly-one-task valid.
 - The worker must wait for Parent approval or steering after DESIGN CHECKPOINT before any implementation edits continue.
 - The worker must also stop at CODE CHECKPOINT, TEST CHECKPOINT, and VALIDATION CHECKPOINT if it continues beyond design support.
 - Parent owns steering, final diff review, validation, commit, push, and final report.

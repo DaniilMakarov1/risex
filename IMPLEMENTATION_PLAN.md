@@ -49,17 +49,17 @@ RX-030 — Read-Only Monitoring Dashboard Without Decisions Or Orders is reviewe
 
 ## Current Product Branch Progress
 
-No product branch is active after RX-035 finalization. RX-035 was a governance/docs-only post-audit handoff cleanup branch. It re-confirmed that the source-of-truth docs still do not clearly ground a concrete post-RX-034 product/runtime task, so it prepared a metadata-only RX-036 roadmap clarification handoff instead of inventing product scope.
+No product branch is active after RX-035 finalization. RX-036 is a governance/docs-only roadmap source-of-truth clarification branch. It re-confirms that the source-of-truth docs still do not clearly ground a concrete non-dangerous post-RX-035 product/runtime task, so it prepares a Product Owner roadmap direction gate before product/runtime scope resumes instead of inventing product scope or creating another vague metadata-cleanup loop.
 
 ## Current Product Handoff
 
-`NEXT_TASK.md` is prepared for RX-036, a metadata-only roadmap source-of-truth clarification gate that keeps future task selection grounded before any product/runtime scope resumes.
+`NEXT_TASK.md` is prepared for RX-037, a Product Owner roadmap direction gate that requires explicit Product Owner direction before product/runtime scope resumes.
 
 ## Remaining Gated Roadmap After RX-030
 
-Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, by RX-033 governance autonomy, by the RX-034 roadmap selection audit, or by the RX-035 post-audit handoff cleanup.
+Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, by RX-033 governance autonomy, by the RX-034 roadmap selection audit, by the RX-035 post-audit handoff cleanup, or by the RX-036 roadmap source-of-truth clarification.
 
-1. RX-036 — Roadmap Source-of-Truth Clarification Gate.
+1. RX-037 — Product Owner Roadmap Direction Gate.
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
 
@@ -298,8 +298,18 @@ Under the post-audit fallback path, RX-035 prepares RX-036 as one metadata-only 
 
 RX-035 does not change product behavior, dashboard behavior, route discovery, ranking, polling, adapters, market-data calls, private endpoints, credentials, account state, order placement, sendable exchange requests, execution automation, route evaluation, snapshot assembly, profitability calculation, funding verification, ledger reconciliation, live-gate checks, execution planning, guarded live runner execution, approval-boundary execution, ledger writes, replay behavior, route statuses, reject reasons, live trading by default, or any product/runtime abstraction.
 
+## RX-036 — Roadmap Source-of-Truth Clarification Gate
+
+After RX-035 reviewer acceptance, clarify the post-audit roadmap source of truth without inventing product or runtime scope. RX-036 re-inspects the source-of-truth docs and keeps the work metadata-only because they still do not clearly ground a concrete non-dangerous post-RX-035 product/runtime task.
+
+Under the clarification fallback path, RX-036 prepares RX-037 as one Product Owner roadmap direction gate. RX-037 must record explicit Product Owner roadmap direction before product/runtime scope resumes, while preserving RX-033 autonomy for ordinary non-dangerous repository work and preserving hard approval gates for live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, and financially dangerous actions.
+
+RX-036 preserves one RX task at a time, one clean executor task, one task branch, exactly-one-task `NEXT_TASK.md`, Parent ownership, worker checkpoint requirements, reviewer-only acceptance, and hard approval gates.
+
+RX-036 does not change product behavior, dashboard behavior, route discovery, ranking, polling, adapters, market-data calls, private endpoints, credentials, account state, order placement, sendable exchange requests, execution automation, route evaluation, snapshot assembly, profitability calculation, funding verification, ledger reconciliation, live-gate checks, execution planning, guarded live runner execution, approval-boundary execution, ledger writes, replay behavior, route statuses, reject reasons, live trading by default, or any product/runtime abstraction.
+
 ## Next Sequence
 
-1. RX-036 — Roadmap Source-of-Truth Clarification Gate.
+1. RX-037 — Product Owner Roadmap Direction Gate.
 
-Do not promote execution automation, background loops, ranking, order placement, polling, alerts, auto-refresh, private endpoints, credentials, account-state access, destructive reset, financially dangerous actions, or later roadmap stages into the current handoff unless that exact future task is explicitly user-approved for hard-stop scope or autonomously selected by Control Tower under RX-033 for non-dangerous scope and passes the repository's hard approval gates.
+Do not promote execution automation, background loops, ranking, order placement, polling, alerts, auto-refresh, private endpoints, credentials, account-state access, destructive reset, financially dangerous actions, or later roadmap stages into the current handoff unless that exact future task is explicitly user-approved for hard-stop scope or explicitly directed by the Product Owner, autonomously selected by Control Tower under RX-033 for non-dangerous scope, and passes the repository's hard approval gates.
