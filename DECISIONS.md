@@ -956,6 +956,8 @@
 ## 2026-08-13 - RX-062
 
 - Date: 2026-08-13
+- Decision: Control Tower reviewer accepted RX-062 and finalized it on `main`.
+- Reason: Review found the parser and wrapper are local/manual display-preparation only, validate payloads before report reads, delegate to the accepted RX-061 renderer, and add no hard-stop scope.
 - Decision: RX-062 adds `paper_session_report_path_from_display_command_payload()` in the CLI app-layer helper `apps/cli/paper_session_payloads.py`.
 - Reason: RX-061 grounded the next fake-money paper testing-support step as local/manual display command payload parsing for already-written RX-057 report artifacts. Keeping the parser beside the accepted paper-session payload helpers preserves app-layer ownership and side-effect-free payload normalization.
 - Decision: The display payload shape is minimal and exact: JSON object with exactly `schema_version=1` and `session_report_json_path`.

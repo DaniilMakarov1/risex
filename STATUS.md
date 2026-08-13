@@ -1,15 +1,17 @@
 # Status
 
-- Current branch: `task/rx-062-local-paper-session-display-command-payload-parser`.
-- Current task: RX-062 - Local Paper Session Display Command Payload Parser is implementation-complete on the task branch and pending reviewer acceptance.
-- Latest accepted product baseline: RX-061 reviewer-accepted and finalized on `main`.
+- Current branch: `main`.
+- Current task: RX-063 - Local Paper Session Display Payload Fixture Builder is prepared in `NEXT_TASK.md` and not started.
+- Latest accepted product baseline: RX-062 reviewer-accepted and finalized on `main`.
 - RX-062 starting baseline: `b8bf323ec296ea96190eccf1914c7968cd91b90a`
-- RX-062 review state: implementation-complete on branch; reviewer acceptance pending.
+- RX-062 review state: reviewer-accepted and finalized on `main`.
+- Accepted RX-062 implementation HEAD: `8509db1fb9d552f8a614c15c4c5d114967295735`
+- RX-062 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
 - RX-062 disposition: adds one local-only display command payload parser in `apps/cli/paper_session_payloads.py` and one explicit local/manual `render-paper-session-report-from-payload` CLI command. The parser accepts only JSON object payload fixtures with exactly `schema_version=1` and `session_report_json_path`, distinguishes missing/null/empty/non-string/extra/wrong-version values, and returns only the normalized local report path.
 - RX-062 display payload boundary: malformed payloads fail before report JSON is read or display output is printed. Valid payloads delegate to the accepted RX-061 renderer using the normalized `session_report_json_path`, preserving copied report values only, string-or-null economics, known/unknown summary counts, and `aggregate_paper_net_profit_usd=null`.
 - RX-062 safety boundaries: no session execution, adapter construction, ledger instantiation, ledger writes, session report/history writes or mutation, Telegram transport, bot token, credentials, webhooks, messaging, alerts, external network calls, live trading, real orders, private/account endpoints, account state/balances, sendable exchange requests, order payloads, execution automation/planning, discovery/ranking/watchlists/polling/background loops/scheduling, adapter endpoint changes, storage migrations, replay/reconciliation changes, route eligibility mutation, Capture state transition changes, new route statuses/reject reasons, second owner paths, aggregate PnL calculation, or unknown-to-zero behavior.
 - RX-062 worker usage: exactly one supervised worker was used for design support before implementation edits. The worker stopped at DESIGN CHECKPOINT and confirmed the proposed parser/command wrapper is source-grounded, non-dangerous, one-task/one-branch compliant, preserves accepted baseline versus pending review state, keeps `NEXT_TASK.md` to exactly one task, preserves reviewer-only acceptance, consumes only explicit local display payload fixtures and already-written session report JSON paths, avoids session execution, adapter construction, ledger writes, report/history writes or mutations, excludes Telegram token/network credentials and all hard-stop categories, avoids discovery/ranking/watchlists/polling/background loops/scheduling/alerts, execution automation/planning, live/order/private/account scope, ledger replay/reconciliation/storage migration, new statuses/reasons and second owner paths, preserves unknown-as-missing/no-aggregate-PnL behavior, and preserves Parent ownership. Parent approved the `render-paper-session-report-from-payload` direction and retained implementation, final diff review, validation, commit, push, and reporting ownership.
-- RX-062 next handoff: `NEXT_TASK.md` is prepared for exactly one next product/runtime testing-support task after RX-062 reviewer acceptance and finalization, RX-063 Local Paper Session Display Payload Fixture Builder, scoped to local/manual display payload fixture artifact creation without Telegram transport, messaging/network credentials, session execution, adapters, ledgers, report/result mutation, execution automation, discovery/ranking/polling, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
+- RX-062 next handoff: `NEXT_TASK.md` is prepared for exactly one next product/runtime testing-support task after RX-062 finalization, RX-063 Local Paper Session Display Payload Fixture Builder, scoped to local/manual display payload fixture artifact creation without Telegram transport, messaging/network credentials, session execution, adapters, ledgers, report/result mutation, execution automation, discovery/ranking/polling, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
 - RX-061 starting baseline: `d16cd9cff95f53620c0d583ab50132e4f635e872`
 - RX-061 review state: reviewer-accepted after fix-in-same-branch and finalized on `main`.
 - Accepted RX-061 implementation HEAD: `0efac333755291ec60d4ba1cde597f273c8a2e04`
@@ -90,9 +92,9 @@
 - RX-054 safety boundaries: no product/runtime code changes, CLI behavior changes, live trading, real orders, private/account endpoints, credentials, account state/balances, account-tier assumptions, sendable exchange requests, order payloads, execution automation, execution planning, guarded live runner execution, approval-boundary execution, polling, discovery, ranking, watchlists, Telegram transport, bot tokens, adapter endpoint changes, storage migrations, replay changes, ledger reconciliation changes, route eligibility mutation, Capture state transition changes, new route statuses/reject reasons, second owner paths, or unknown-to-zero behavior.
 - RX-054 worker usage: one supervised worker was used for design support before implementation edits. Parent approved the narrow docs-only handoff direction after the worker confirmed RX-055 is source-grounded only as a manual finite serial extension of RX-053, non-dangerous, one-task/one-branch compliant, preserves accepted baseline and reviewer-only acceptance, keeps `NEXT_TASK.md` to exactly one task, excludes hard-stop categories including Telegram token/network credentials, avoids discovery/ranking/watchlists/polling/background loops/scheduling/alerts, preserves unknown-as-missing behavior, avoids new statuses/reasons and second owner paths, and preserves Parent ownership.
 - RX-054 preflight: work occurred only in `/Users/daniilmakarov/.codex/worktrees/8ab5/risex-main` on `task/rx-054-post-manual-paper-bridge-handoff-clarification`; before edits, `HEAD`, `main`, `origin/main`, and the task branch matched `14e61bc790ea16d5e6cd489ade089abf2d228d6f`, `origin/HEAD` was `origin/main`, the remote was `https://github.com/DaniilMakarov1/risex.git`, and the worktree was clean.
-- RX-060 is the latest reviewer-accepted product/runtime testing-support task on `main`; RX-059 is the latest reviewer-accepted governance/source-of-truth task on `main`.
+- RX-062 is the latest reviewer-accepted product/runtime testing-support task on `main`; RX-059 is the latest reviewer-accepted governance/source-of-truth task on `main`.
 - Current accepted `main` metadata/governance task: RX-059.
-- Current accepted `main` product task: RX-060.
+- Current accepted `main` product task: RX-062.
 - Previous accepted task branch state follows for historical context.
 - RX-052 task branch: reviewer-accepted and finalized on `main`.
 - RX-052 starting baseline: `e125065a8b43b38ebd4031f66097eb736fc6a717`
@@ -327,8 +329,8 @@
 - Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
 - Current accepted `main` metadata/governance task: RX-059.
-- Current accepted `main` product task: RX-061.
-- Current RX task state: RX-062 is implementation-complete on `task/rx-062-local-paper-session-display-command-payload-parser` and pending reviewer acceptance; RX-061 is the latest accepted product/runtime testing-support baseline on `main`, and RX-059 is the latest accepted metadata/governance follow-up on `main`.
+- Current accepted `main` product task: RX-062.
+- Current RX task state: RX-063 is prepared in `NEXT_TASK.md` and not started; RX-062 is the latest accepted product/runtime testing-support baseline on `main`, and RX-059 is the latest accepted metadata/governance follow-up on `main`.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
@@ -375,7 +377,7 @@ RX-040 prepared `NEXT_TASK.md` for RX-041 after RX-040 finalization.
 RX-031 found no additional explicit actionable reviewer feedback in local repo/git evidence or GitHub connector context after RX-030 finalization. RX-031 is accepted metadata-only follow-up work and does not change dashboard or product code.
 RX-041 remains the accepted public account-independent fee-cash completion product task before the later RX-045/RX-048 reporting tasks and completes explicit public account-independent taker fee-rate metadata into entry plus immediate estimated-exit route-notional USD fee cash only inside the existing one-route snapshot path, while preserving fail-closed unknown handling and avoiding live/order/private/account-state scope.
 RX-040 remains the previous accepted product task and preserves public fee-source metadata on unknown fee cash values for source-aware inspection only. It does not add route discovery, ranking, polling, private endpoints, credentials, account balances/state, execution automation, order placement, sendable exchange request construction, ledger writes, fee-cash defaults, or live trading by default.
-`NEXT_TASK.md` is prepared for RX-063 Local Paper Session Display Payload Fixture Builder after RX-062 reviewer acceptance and finalization.
+`NEXT_TASK.md` is prepared for RX-063 Local Paper Session Display Payload Fixture Builder after RX-062 finalization.
 
 ## Completed accepted tasks
 
@@ -568,8 +570,8 @@ RX-040 remains the previous accepted product task and preserves public fee-sourc
 - RX-059 is reviewer-accepted and finalized on `main`.
 - RX-060 is reviewer-accepted and finalized on `main`.
 - RX-061 is reviewer-accepted and finalized on `main`.
-- RX-062 is implementation-complete on the task branch and pending reviewer acceptance.
-- The next recommended task is RX-063 Local Paper Session Display Payload Fixture Builder after RX-062 reviewer acceptance and finalization.
+- RX-062 is reviewer-accepted and finalized on `main`.
+- The next recommended task is RX-063 Local Paper Session Display Payload Fixture Builder after RX-062 finalization.
 - The RX-032 authorization does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - RX-033 autonomy does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized and accepted.
@@ -1280,8 +1282,8 @@ RX-040 remains the previous accepted product task and preserves public fee-sourc
 - RX-059 is governance/source-of-truth clarification only and reviewer-accepted on `main`. It records explicit Product Owner direction grounding RX-060 Local Paper Session Operator Package Builder as the next safe local/manual/fake-money testing-support handoff without changing product/runtime behavior in RX-059.
 - RX-060 is manual fake-money paper testing-support only and reviewer-accepted on `main`. It adds `build-paper-session-package` to produce explicit local route-list and preview/manifest artifacts through the RX-058 validation boundary, without running sessions, constructing adapters, writing ledgers or session reports, calling networks, adding Telegram/live/order/private/account scope, discovery/ranking/polling, replay/reconciliation/storage changes, aggregate PnL, unknown-to-zero behavior, or second owner paths.
 - RX-061 is manual fake-money paper display-only testing-support and reviewer-accepted on `main`. It adds `render-paper-session-report` for already-written RX-057 report JSON artifacts, preserves copied report values and `aggregate_paper_net_profit_usd=null`, and does not add Telegram/live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
-- RX-062 is manual fake-money paper display-payload testing-support on the task branch and pending reviewer acceptance. It adds one local display command payload parser and `render-paper-session-report-from-payload` wrapper for the RX-061 renderer, validates payloads before report reading, and does not add Telegram/live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
+- RX-062 is manual fake-money paper display-payload testing-support and reviewer-accepted on `main`. It adds one local display command payload parser and `render-paper-session-report-from-payload` wrapper for the RX-061 renderer, validates payloads before report reading, and does not add Telegram/live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
 
 ## Next recommended task
 
-RX-063 Local Paper Session Display Payload Fixture Builder after RX-062 reviewer acceptance and finalization.
+RX-063 Local Paper Session Display Payload Fixture Builder after RX-062 finalization.

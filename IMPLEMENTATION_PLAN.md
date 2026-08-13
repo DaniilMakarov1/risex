@@ -33,7 +33,7 @@ RX-060 is reviewer-accepted and finalized on `main` as local/manual fake-money p
 
 RX-061 is reviewer-accepted and finalized on `main` after a fix-in-same-branch review. It adds one explicit local/manual `render-paper-session-report` command that consumes an already-written RX-057 session report JSON path, validates the accepted report shape before printing, and emits deterministic stdout display lines copied from the report while preserving string-or-null economics and `aggregate_paper_net_profit_usd=null`. Missing displayed economics fields, numeric economics values, route-count mismatches, missing known/unknown summary counts, and non-null aggregate PnL fail before output.
 
-RX-062 is implementation-complete on the task branch and pending reviewer acceptance. It adds one explicit local/manual display command payload parser and `render-paper-session-report-from-payload` command that validate a minimal local payload fixture before report reading, normalize only `session_report_json_path`, and delegate display to the accepted RX-061 renderer without session execution, adapter construction, ledger writes, report mutation, Telegram/network/credential behavior, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
+RX-062 is reviewer-accepted and finalized on `main`. It adds one explicit local/manual display command payload parser and `render-paper-session-report-from-payload` command that validate a minimal local payload fixture before report reading, normalize only `session_report_json_path`, and delegate display to the accepted RX-061 renderer without session execution, adapter construction, ledger writes, report mutation, Telegram/network/credential behavior, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
 
 ## Completed Accepted Work
 
@@ -83,6 +83,7 @@ RX-062 is implementation-complete on the task branch and pending reviewer accept
 - RX-059 recorded the accepted fake-money paper-trader testing trail and explicit Product Owner direction, then prepared RX-060 as one local/manual operator-package builder handoff without changing runtime behavior.
 - RX-060 added one local-only `build-paper-session-package` command that validates local command payload fixtures through the RX-058 boundary and writes explicit route-list plus preview/manifest artifacts without running sessions or adding Telegram/live/order/private/account scope.
 - RX-061 added one local-only `render-paper-session-report` command that renders already-written RX-057 session report JSON to deterministic stdout-only display, rejects missing displayed economics fields, preserves `aggregate_paper_net_profit_usd=null`, and adds no Telegram/live/order/private/account scope.
+- RX-062 added one local-only display command payload parser and `render-paper-session-report-from-payload` wrapper that validates minimal display payload fixtures before report reading and delegates to the RX-061 renderer without adding Telegram/live/order/private/account scope.
 - RX-Q001 and RX-Q002 added repository workflow, handoff validation, and supervised-worker governance.
 
 ## Accepted Offline Safety-Hardening Detour
@@ -93,11 +94,11 @@ The detour's purpose is to keep future live-adjacent work honest: funding settle
 
 ## Latest Accepted Product Task
 
-RX-061 - Local Paper Session Report Display Renderer is reviewer-accepted and finalized on `main`. It adds one local-only `render-paper-session-report` command that consumes already-written RX-057 session report JSON, validates the accepted report shape before printing, and emits deterministic stdout-only display lines copied from the report without running sessions, constructing adapters, writing ledgers or session reports, calling networks, adding Telegram/live/order/private/account scope, calculating aggregate PnL, or converting unknowns to zero.
+RX-062 - Local Paper Session Display Command Payload Parser is reviewer-accepted and finalized on `main`. It adds one local-only `render-paper-session-report-from-payload` command and side-effect-free display payload parser that accepts only `schema_version=1` plus `session_report_json_path`, validates payloads before report reading, and delegates to the RX-061 renderer without running sessions, constructing adapters, writing ledgers or session reports, calling networks, adding Telegram/live/order/private/account scope, calculating aggregate PnL, or converting unknowns to zero.
 
 ## Previous Product Task
 
-RX-060 - Local Paper Session Operator Package Builder is reviewer-accepted and finalized on `main`. It adds one local-only `build-paper-session-package` command that consumes command payload fixtures through the RX-058 validation boundary and writes explicit local route-list plus preview/manifest artifacts without running sessions, constructing adapters, writing ledgers or session reports, calling networks, adding Telegram/live/order/private/account scope, calculating aggregate PnL, or converting unknowns to zero.
+RX-061 - Local Paper Session Report Display Renderer is reviewer-accepted and finalized on `main`. It adds one local-only `render-paper-session-report` command that consumes already-written RX-057 session report JSON, validates the accepted report shape before printing, and emits deterministic stdout-only display lines copied from the report without running sessions, constructing adapters, writing ledgers or session reports, calling networks, adding Telegram/live/order/private/account scope, calculating aggregate PnL, or converting unknowns to zero.
 
 ## Earlier Product Task
 
@@ -105,7 +106,7 @@ RX-055 - Manual Serial Paper Session Runner is reviewer-accepted and finalized o
 
 ## Current Next Task
 
-RX-063 Local Paper Session Display Payload Fixture Builder is prepared in `NEXT_TASK.md` for after RX-062 reviewer acceptance and finalization and is not started.
+RX-063 Local Paper Session Display Payload Fixture Builder is prepared in `NEXT_TASK.md` after RX-062 finalization and is not started.
 
 ## Previous Product Baseline
 
@@ -147,9 +148,9 @@ RX-060 is reviewer-accepted and finalized on `main` as the local operator-packag
 
 RX-061 is reviewer-accepted and finalized on `main` as the local paper-session report display renderer prepared by RX-060. It preserves copied report values only, rejects missing displayed economics fields instead of inventing `null`, keeps `aggregate_paper_net_profit_usd=null`, and keeps Telegram as later display/interface direction only without transport, credentials, messaging/network behavior, automation, live/order/private/account scope, or financially dangerous stages.
 
-RX-062 is implementation-complete on the task branch and pending reviewer acceptance as the local/manual display command payload parser/fixture helper after RX-061. It normalizes explicit local payload fixtures for the RX-061 renderer, validates payloads before report reading, and still avoids Telegram transport, credentials, messaging/network behavior, session execution, adapters, ledgers, report mutation, execution automation, discovery/ranking/polling, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, and second owner paths.
+RX-062 is reviewer-accepted and finalized on `main` as the local/manual display command payload parser/fixture helper after RX-061. It normalizes explicit local payload fixtures for the RX-061 renderer, validates payloads before report reading, and still avoids Telegram transport, credentials, messaging/network behavior, session execution, adapters, ledgers, report mutation, execution automation, discovery/ranking/polling, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, and second owner paths.
 
-## Remaining Gated Roadmap After RX-062 Review
+## Remaining Gated Roadmap After RX-062 Finalization
 
 Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. RX-062 implements exactly one local/manual/fake-money display payload parsing handoff and does not authorize any additional trading, execution automation, execution planning, polling, ranking, discovery, ledger/storage/replay change, Telegram transport, credentials, messaging, alerts, webhooks, or live-order roadmap stage.
 
