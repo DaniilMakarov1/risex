@@ -102,7 +102,6 @@ RX-068 is reviewer-accepted and finalized on `main` after a same-branch handoff 
 - RX-066 added one local-only display command text preview manifest builder that validates exact command text through RX-065 and RX-062 boundaries, writes only a descriptive parser-command preview/manifest, rejects normalized output path aliases before command text read/write, and avoids display payload writes, report reading/rendering, Telegram/live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, and second owner paths.
 - RX-067 added test-only deterministic smoke coverage for the existing `paper-trade-session` runtime path with injected public-adapter doubles, two explicit valid `ENTRY` routes, accepted decision/paper lifecycle/ledger/report owner paths, deterministic stdout, explicit local report export, string-or-null economics, known/unknown counts, `aggregate_paper_net_profit_usd=null`, no aggregate PnL calculation, and no unknown-to-zero behavior.
 - RX-068 added test-only deterministic package-to-runtime smoke coverage proving accepted `build-paper-session-package` output can feed accepted `paper-trade-session` runtime/report/display paths with injected public-adapter doubles, explicit local package artifacts, explicit SQLite ledger path, deterministic stdout, explicit local report export, accepted display rendering, string-or-null economics, known/unknown counts, `aggregate_paper_net_profit_usd=null`, no aggregate PnL calculation, and no unknown-to-zero behavior.
-- RX-069 task branch adds test-only deterministic end-to-end operator display smoke coverage proving the accepted package, serial runtime, report export, display payload, display preview, command-text preview/parser, and payload-backed renderer can operate as one generated local artifact chain under injected public-adapter doubles, without production behavior changes.
 - RX-Q001 and RX-Q002 added repository workflow, handoff validation, and supervised-worker governance.
 
 ## Accepted Offline Safety-Hardening Detour
@@ -129,7 +128,7 @@ RX-066 - Local Paper Session Display Command Text Preview Manifest is reviewer-a
 
 ## Next Task
 
-`NEXT_TASK.md` is prepared for RX-070 Local Paper Session Operator Display Fail-Closed Smoke Fixture Coverage after RX-069 review.
+`NEXT_TASK.md` is prepared for RX-070 Local Paper Session Operator Display Fail-Closed Smoke Fixture Coverage after RX-069 reviewer acceptance and finalization.
 
 ## Previous Product Baseline
 
@@ -183,11 +182,9 @@ RX-067 is reviewer-accepted and finalized on `main`. It adds only test-local det
 
 RX-068 is reviewer-accepted and finalized on `main`. It adds only test-local deterministic package-to-runtime smoke coverage proving the accepted `build-paper-session-package` route-list artifact can feed accepted `paper-trade-session` runtime/report/display paths through injected public-adapter doubles, explicit local package artifacts, explicit SQLite ledger path, deterministic stdout, explicit report export, accepted display rendering, string-or-null economics, known/unknown counts, `aggregate_paper_net_profit_usd=null`, no aggregate PnL calculation, and no unknown-to-zero behavior.
 
-RX-069 task branch adds only test-local deterministic end-to-end operator display smoke coverage proving the accepted package, serial runtime, report export, display payload, display preview, command-text preview/parser, and payload-backed renderer can operate as one generated local artifact chain under injected public-adapter doubles, without production behavior changes.
+## Remaining Gated Roadmap After RX-069 Reviewer Acceptance And Finalization
 
-## Remaining Gated Roadmap After RX-069 Review
-
-Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. RX-069 implemented exactly one local/manual/fake-money end-to-end operator display smoke coverage handoff and does not authorize any additional production behavior, trading, execution automation, execution planning, polling, ranking, discovery, ledger/storage/replay change, Telegram transport, credentials, messaging, alerts, webhooks, or live-order roadmap stage.
+Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. The current end-to-end operator display smoke coverage branch does not authorize any additional production behavior, trading, execution automation, execution planning, polling, ranking, discovery, ledger/storage/replay change, Telegram transport, credentials, messaging, alerts, webhooks, or live-order roadmap stage.
 
 1. RX-070 Local Paper Session Operator Display Fail-Closed Smoke Fixture Coverage.
 
@@ -1154,11 +1151,11 @@ RX-069 branch outcome:
 - The fixture uses one grounded known-economics route that starts the existing fake paper lifecycle and one valid unknown-economics route that rejects through the existing lifecycle/ledger path.
 - RX-069 verifies deterministic previews/manifests/stdout, accepted route-list shape, existing fake paper lifecycle handling, existing ledger ownership through SQLite event replay, string-or-null economics, known/unknown count semantics, `aggregate_paper_net_profit_usd=null`, no aggregate paper PnL calculation, and no unknown-to-zero behavior.
 - RX-069 does not change production code, add commands, alter CLI output behavior, weaken parsers, call networks, add Telegram transport, enter live/order/private/account scope, calculate aggregate PnL, turn unknowns into zero, or create second owner paths.
-- RX-069 prepares RX-070 Local Paper Session Operator Display Fail-Closed Smoke Fixture Coverage as exactly one next test-only/local/manual/fake-money handoff after review.
+- RX-069 prepares RX-070 Local Paper Session Operator Display Fail-Closed Smoke Fixture Coverage as exactly one next test-only/local/manual/fake-money handoff after RX-069 reviewer acceptance and finalization.
 
 ## RX-070 — Local Paper Session Operator Display Fail-Closed Smoke Fixture Coverage
 
-After RX-069 review, RX-070 should add focused deterministic local smoke fixture coverage proving that malformed or unsafe local operator/display fixtures fail closed across the accepted package, display payload, display preview, command-text preview/parser, and payload-backed render boundaries without production behavior changes.
+After RX-069 reviewer acceptance and finalization, RX-070 should add focused deterministic local smoke fixture coverage proving that malformed or unsafe local operator/display fixtures fail closed across the accepted package, display payload, display preview, command-text preview/parser, and payload-backed render boundaries without production behavior changes.
 
 RX-070 implementation notes:
 

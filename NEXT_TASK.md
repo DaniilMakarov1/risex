@@ -6,13 +6,13 @@ RX-070 - Local Paper Session Operator Display Fail-Closed Smoke Fixture Coverage
 
 ## Objective
 
-After RX-069 review, add focused deterministic local smoke fixture coverage proving that malformed or unsafe local operator/display fixtures fail closed across the accepted local fake-money paper-session operator display command chain.
+After RX-069 reviewer acceptance and finalization, add focused deterministic local smoke fixture coverage proving that malformed or unsafe local operator/display fixtures fail closed across the accepted local fake-money paper-session operator display command chain.
 
 This is testability coverage only. It must reuse existing accepted commands and local fixtures, make no external network calls, and add no production behavior unless a tiny owner-path bug fix is strictly required by the smoke and stays inside the accepted owner path.
 
 ## Starting baseline
 
-Start from reviewer-reviewed `main` after RX-069 is finalized if the reviewer accepts it. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
+Start from reviewer-accepted `main` after RX-069 finalization. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
 
 ## Branch
 
@@ -20,7 +20,7 @@ Create and work on `task/rx-070-local-paper-session-operator-display-fail-closed
 
 ## Before changing files
 
-Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, the remote is wrong, the branch is wrong, `origin/HEAD` is not `origin/main`, `HEAD` does not match the accepted starting baseline, RX-069 is not explicitly reviewed and finalized as accepted on `main`, or unrelated branch work would be mixed into this task.
+Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, the remote is wrong, the branch is wrong, `origin/HEAD` is not `origin/main`, `HEAD` does not match the accepted starting baseline, RX-069 is not explicitly reviewer-accepted and finalized on `main`, or unrelated branch work would be mixed into this task.
 
 If Control Tower selected this task autonomously, verify from the source-of-truth repository docs that the task is non-dangerous, test-only/local/manual/fake-money, and grounded in the accepted fake-money paper trader artifact chain. Stop before edits unless explicit user approval exists for any task involving live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, or financially dangerous actions.
 
