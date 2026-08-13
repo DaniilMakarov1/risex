@@ -55,7 +55,7 @@ RX-071 is reviewer-accepted and finalized on `main`. It is governance/source-of-
 
 RX-072 is reviewer-accepted after same-branch fix and finalized on `main`. It adds one local/manual run command-text parser helper and `build-paper-session-run-command-text-preview` command that writes only a descriptive preview/manifest for the accepted `build-paper-session-package` command plan after validating exact command text and the referenced command payload fixture.
 
-RX-073 is implementation-complete on `task/rx-073-local-paper-session-run-command-text-parser` and pending review. It adds one local/manual `parse-paper-session-run-command-text` command that reuses the accepted RX-072 command-text parser helper, validates the referenced payload through the accepted RX-058 boundary, rejects normalized local path collisions before payload reads or artifact writes, and writes only the accepted RX-060 route-list and package-preview artifacts.
+RX-073 is reviewer-accepted and finalized on `main`. It adds one local/manual `parse-paper-session-run-command-text` command that reuses the accepted RX-072 command-text parser helper, validates the referenced payload through the accepted RX-058 boundary, rejects normalized local path collisions before payload reads or artifact writes, and writes only the accepted RX-060 route-list and package-preview artifacts.
 
 ## Completed Accepted Work
 
@@ -116,7 +116,7 @@ RX-073 is implementation-complete on `task/rx-073-local-paper-session-run-comman
 - RX-070 added test-only deterministic fail-closed smoke coverage proving malformed or unsafe local operator/display fixtures fail before unintended artifacts, runtime/session execution, report rendering, adapters, ledgers, Telegram/live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
 - RX-071 recorded the post-RX-070 governance/source-of-truth clarification that exactly one next non-dangerous local/manual/fake-money testing-support handoff is grounded: RX-072 Local Paper Session Run Command Text Preview Builder.
 - RX-072 added one local/manual run command-text preview builder for the accepted package command plan, with all-local-path collision checks across input fixtures, preview output, and referenced intended package/session output paths before payload reads or artifact writes.
-- RX-073 task branch adds one local/manual run command-text parser that writes only accepted package route-list and package-preview artifacts from the same exact command text after RX-058 payload validation and all-local-path collision checks.
+- RX-073 adds one local/manual run command-text parser that writes only accepted package route-list and package-preview artifacts from the same exact command text after RX-058 payload validation and all-local-path collision checks.
 - RX-Q001 and RX-Q002 added repository workflow, handoff validation, and supervised-worker governance.
 
 ## Accepted Offline Safety-Hardening Detour
@@ -127,19 +127,19 @@ The detour's purpose is to keep future live-adjacent work honest: funding settle
 
 ## Latest Accepted Product Task
 
-RX-072 - Local Paper Session Run Command Text Preview Builder is reviewer-accepted after same-branch fix and finalized on `main`. It adds one local/manual run command-text parser helper and preview command that validates exact command text plus the referenced local command payload fixture, rejects all-local-path collisions before payload reads or artifact writes, and writes only one descriptive preview/manifest for the accepted `build-paper-session-package` command plan.
+RX-073 - Local Paper Session Run Command Text Parser is reviewer-accepted and finalized on `main`. It adds one local/manual parser command that validates exact run command text plus the referenced local command payload fixture, rejects all-local-path collisions before payload reads or artifact writes, and writes only the accepted route-list and package-preview artifacts described by that command text.
 
 ## Current Main State
 
-RX-072 - Local Paper Session Run Command Text Preview Builder is reviewer-accepted after same-branch fix and finalized on `main`. RX-073 is implementation-complete on its task branch and pending reviewer acceptance. `NEXT_TASK.md` is prepared for a test-only parser-to-runtime smoke handoff after RX-073 finalization.
+RX-073 - Local Paper Session Run Command Text Parser is reviewer-accepted and finalized on `main`. `NEXT_TASK.md` is prepared for a test-only parser-to-runtime smoke handoff.
 
 ## Previous Product Task
 
-RX-070 - Local Paper Session Operator Display Fail-Closed Smoke Fixture Coverage is reviewer-accepted and finalized on `main`. It adds test-only deterministic fail-closed smoke coverage proving malformed or unsafe local operator/display fixtures fail before unintended artifacts, runtime/session execution, report rendering, adapters, ledgers, Telegram/live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
+RX-072 - Local Paper Session Run Command Text Preview Builder is reviewer-accepted after same-branch fix and finalized on `main`. It adds one local/manual run command-text parser helper and preview command that validates exact command text plus the referenced local command payload fixture, rejects all-local-path collisions before payload reads or artifact writes, and writes only one descriptive preview/manifest for the accepted `build-paper-session-package` command plan.
 
 ## Earlier Product Task
 
-RX-069 - Local Paper Session End-To-End Operator Display Smoke Fixture Coverage is reviewer-accepted and finalized on `main`. It adds test-only deterministic end-to-end operator display smoke coverage proving accepted package, serial runtime, report export, display payload, display preview, command-text preview/parser, and payload-backed renderer work as one generated local artifact chain under injected public-adapter doubles, without production behavior changes.
+RX-070 - Local Paper Session Operator Display Fail-Closed Smoke Fixture Coverage is reviewer-accepted and finalized on `main`. It adds test-only deterministic fail-closed smoke coverage proving malformed or unsafe local operator/display fixtures fail before unintended artifacts, runtime/session execution, report rendering, adapters, ledgers, Telegram/live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
 
 ## Next Task
 
