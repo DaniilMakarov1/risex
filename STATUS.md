@@ -1,7 +1,18 @@
 # Status
 
-- Current branch: `main`.
-- Current task: RX-050 - Product Owner Post-RX-048 Public Runtime Direction Gate reviewer-accepted and finalized on `main`.
+- Current branch: `task/rx-051-repository-instruction-hygiene-stale-cross-project-reference-audit`.
+- Current task: RX-051 - Repository Instruction Hygiene And Stale Cross-Project Reference Audit is implementation-complete on the task branch and pending reviewer acceptance.
+- RX-051 starting baseline: `ad71df376b244273206034917e71dcaa9e47f19e`
+- RX-051 review state: implementation-complete on task branch; pending reviewer acceptance.
+- RX-051 disposition: repository instruction/source-of-truth hygiene audit inspected tracked and hidden non-.git files for stale cross-project workflow references, repo-local instruction directories, and stale generated artifacts. The audit found one historical stale literal cross-project workflow name in `STATUS.md` and reworded it to generic RiseX-safe language. It found no repo-local `.codex` instruction directory, no tracked cross-project instruction files; the only tracked instruction file found by filename audit was the RiseX `AGENTS.md`; and no tracked stale generated artifacts.
+- RX-051 next handoff: `NEXT_TASK.md` is prepared for exactly one next non-dangerous governance/source-of-truth clarification task, RX-052 Product Owner Concrete Post-RX-048 Public Runtime Handoff Clarification, rather than inferred route discovery, ranking, polling, adapter endpoint changes, private/account endpoints, credentials, account state, orders, sendable exchange request construction, execution automation, execution planning, ledger/storage/replay changes, or live trading.
+- RX-051 generated artifact note: no tracked stale generated artifacts were found in the repository. Ignored/generated local Python artifacts, including validation-created compile caches, are cleanup candidates only and were not deleted or committed by RX-051.
+- RX-051 worker usage: one supervised worker was used for design support before implementation edits. Parent approved the docs-only hygiene direction after the worker confirmed the plan is source-grounded, non-dangerous, one-task/one-branch compliant, preserves accepted baseline versus pending review state, keeps `NEXT_TASK.md` to exactly one task, preserves reviewer-only acceptance, excludes all hard-stop categories, avoids invented runtime scope, preserves Parent ownership, and avoids adding new cross-project references.
+- RX-051 preflight: work occurred only in `/Users/daniilmakarov/.codex/worktrees/118a/risex-main` on `task/rx-051-repository-instruction-hygiene-stale-cross-project-reference-audit`; before edits, `HEAD`, `main`, and `origin/main` matched `ad71df376b244273206034917e71dcaa9e47f19e`, `origin/HEAD` was `origin/main`, the remote was `https://github.com/DaniilMakarov1/risex.git`, and the worktree was clean.
+- RX-048 remains the latest reviewer-accepted product/reporting task on `main`; RX-050 remains the latest reviewer-accepted governance/source-of-truth task on `main`.
+- Current accepted `main` metadata/governance task: RX-050.
+- Current accepted `main` product task: RX-048.
+- RX-050 task branch: reviewer-accepted and finalized on `main`.
 - RX-050 starting baseline: `acb8abbf710e4cc02ccecf8c7960730f9ee84d56`
 - RX-050 review state: reviewer-accepted and finalized on `main`.
 - Accepted RX-050 implementation HEAD: `a0848ec226bd863e34a18ffdce08a87714603053`
@@ -28,7 +39,7 @@
 - RX-048 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
 - RX-048 disposition: adds one opt-in structured JSON stdout format for the existing `real-data-route --public-readiness-report` path. JSON is produced only with `--public-readiness-report --public-readiness-report-format json`; the default `real-data-route` one-decision text output and existing text public-readiness report remain unchanged. A JSON format selector without the report flag fails before adapter construction. The JSON serializes the same route identity, decision status/reasons, Entry EV fields, retained snapshot funding and fee evidence, deterministic `UNKNOWN` components, display-only public-readiness conclusion, and later fail-closed blockers already available to the RX-045 report.
 - RX-048 next handoff: `NEXT_TASK.md` is prepared for exactly one next non-dangerous governance/source-of-truth clarification task, RX-049 Post-RX-048 Public Live-Readiness Handoff Clarification, rather than inferred route discovery, ranking, polling, adapter endpoint changes, private/account endpoints, credentials, account state, orders, sendable exchange request construction, execution automation, or live trading.
-- RX-048 worker usage: one supervised worker was used for design support before implementation edits. Parent approved the JSON stdout reporting direction after the worker confirmed the plan is opt-in, stdout-only, public/read-only, one-route-only, source-grounded in the accepted manual report, downstream of existing report evidence, preserves existing text output, keeps unknowns from becoming zero/success, keeps `NEXT_TASK.md` to exactly one task, preserves reviewer-only acceptance, excludes all hard-stop categories, avoids invented runtime scope, preserves Parent ownership, and uses no Radar workflow or assumptions.
+- RX-048 worker usage: one supervised worker was used for design support before implementation edits. Parent approved the JSON stdout reporting direction after the worker confirmed the plan is opt-in, stdout-only, public/read-only, one-route-only, source-grounded in the accepted manual report, downstream of existing report evidence, preserves existing text output, keeps unknowns from becoming zero/success, keeps `NEXT_TASK.md` to exactly one task, preserves reviewer-only acceptance, excludes all hard-stop categories, avoids invented runtime scope, preserves Parent ownership, and uses no cross-project workflow or assumptions.
 - RX-047 starting baseline: `4111554044d0c5afd0f85655233f141ad906c45d`
 - RX-047 review state: reviewer-accepted and finalized on `main`.
 - Accepted RX-047 implementation HEAD: `0a785078dfd0cb7cac780a5eaf51b878a48039d5`
@@ -213,7 +224,7 @@
 - Accepted baseline branch: `main`
 - Current accepted `main` metadata/governance task: RX-050.
 - Current accepted `main` product task: RX-048.
-- Current RX task state: RX-050 is reviewer-accepted and finalized on `main`; RX-048 remains the latest accepted product baseline on `main`, RX-050 is the latest accepted metadata/governance follow-up on `main`, and `NEXT_TASK.md` is prepared for RX-051.
+- Current RX task state: RX-051 is implementation-complete on the task branch and pending reviewer acceptance; RX-048 remains the latest accepted product baseline on `main`, RX-050 is the latest accepted metadata/governance follow-up on `main`, and `NEXT_TASK.md` is prepared for RX-052.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
@@ -255,7 +266,7 @@ RX-040 prepared `NEXT_TASK.md` for RX-041 after RX-040 finalization.
 RX-031 found no additional explicit actionable reviewer feedback in local repo/git evidence or GitHub connector context after RX-030 finalization. RX-031 is accepted metadata-only follow-up work and does not change dashboard or product code.
 RX-041 remains the accepted public account-independent fee-cash completion product task before the later RX-045/RX-048 reporting tasks and completes explicit public account-independent taker fee-rate metadata into entry plus immediate estimated-exit route-notional USD fee cash only inside the existing one-route snapshot path, while preserving fail-closed unknown handling and avoiding live/order/private/account-state scope.
 RX-040 remains the previous accepted product task and preserves public fee-source metadata on unknown fee cash values for source-aware inspection only. It does not add route discovery, ranking, polling, private endpoints, credentials, account balances/state, execution automation, order placement, sendable exchange request construction, ledger writes, fee-cash defaults, or live trading by default.
-`NEXT_TASK.md` is prepared for RX-051 after RX-050 finalization.
+`NEXT_TASK.md` is prepared for RX-052 after RX-051 branch completion.
 
 ## Completed accepted tasks
 
@@ -427,7 +438,7 @@ RX-040 remains the previous accepted product task and preserves public fee-sourc
 - RX-048 is reviewer-accepted and finalized on `main`.
 - RX-049 is reviewer-accepted and finalized on `main`.
 - RX-050 is reviewer-accepted and finalized on `main`.
-- The next recommended task is RX-051 Product Owner Concrete Post-RX-048 Public Runtime Handoff Clarification.
+- The next recommended task is RX-052 Product Owner Concrete Post-RX-048 Public Runtime Handoff Clarification.
 - The RX-032 authorization does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - RX-033 autonomy does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized and accepted.
@@ -1087,7 +1098,8 @@ RX-040 remains the previous accepted product task and preserves public fee-sourc
 - RX-048 adds one opt-in structured JSON stdout format for the existing manual public readiness report only. It is reviewer-accepted and finalized on `main`; it does not add file output, file writes, route discovery, ranking, polling, adapter endpoint changes, private/account endpoints, credentials, account state, orders, sendable exchange requests, execution automation, execution planning, ledger writes, live runner changes, route status/reason mutations, or live trading.
 - RX-049 is governance/docs-only and reviewer-accepted on `main`. It records that no concrete safe post-RX-048 public/read-only/non-trading runtime handoff is clearly grounded in the current source-of-truth docs, prepares a narrow Product Owner direction gate, and does not change product/runtime behavior.
 - RX-050 is governance/docs-only and reviewer-accepted on `main`. It records that explicit Product Owner/Control Tower direction supplied for RX-050 remains broad live-capable product direction only, does not authorize hard-stop scope, and still does not clearly ground one concrete safe public/read-only/non-trading runtime handoff after RX-048. It prepares a narrow concrete clarification handoff and does not change product/runtime behavior.
+- RX-051 is repository-governance/source-of-truth hygiene only and pending reviewer acceptance. It audits stale cross-project workflow references, removes the one tracked stale literal reference by rewording historical status text generically, confirms no repo-local `.codex` instruction directory, confirms no tracked stale generated artifacts, prepares RX-052 as the single next clarification handoff, and does not change product/runtime behavior.
 
 ## Next recommended task
 
-RX-051 - Product Owner Concrete Post-RX-048 Public Runtime Handoff Clarification.
+RX-052 - Product Owner Concrete Post-RX-048 Public Runtime Handoff Clarification.
