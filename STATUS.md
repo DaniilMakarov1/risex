@@ -1,9 +1,18 @@
 # Status
 
-- Current branch: `main`.
+- Current branch: `task/rx-073-local-paper-session-run-command-text-parser`.
 - Current accepted `main` product task: RX-072 - Local Paper Session Run Command Text Preview Builder.
 - Latest accepted product baseline: RX-072 reviewer-accepted after same-branch fix and finalized on `main`.
 - Latest accepted governance/source-of-truth task: RX-071 reviewer-accepted and finalized on `main`.
+- RX-073 starting baseline: `19ccfff43448a309882e224e5bb932689e01e301`
+- RX-073 task branch: `task/rx-073-local-paper-session-run-command-text-parser`
+- RX-073 implementation HEAD: task branch final commit; use git history for the exact commit.
+- RX-073 review state: implementation-complete on task branch and pending reviewer acceptance; not finalized on `main`.
+- RX-073 disposition: adds one local-only, manually invoked `parse-paper-session-run-command-text` CLI command. The command reads only the explicit command text fixture and referenced local paper-session command payload fixture, parses the same exact `paper-session-run ...` grammar accepted by RX-072, rejects normalized local path collisions across the command text fixture, referenced payload fixture, referenced route-list output, referenced package-preview output, and intended session-report path before reading the payload fixture or writing artifacts, validates the referenced payload through the accepted RX-058 boundary, and writes only the accepted RX-060 route-list and package-preview artifacts.
+- RX-073 artifact boundary: route-list output contains only exact route-list dictionaries returned by the payload parser. Package-preview output preserves the accepted `build-paper-session-package` preview shape and manual `paper-trade-session --routes-json-path ... --session-report-json-path ...` command plan. The parser writes no session report/history, no display payload, no run-command preview artifact, no ledger, and no runtime artifact.
+- RX-073 safety boundaries: no session execution, no session report/history writes, no report rendering, no display payload writes, no production route/decision/snapshot/economics/paper lifecycle/ledger/replay/reconciliation/funding verification/storage/adapter/execution/live-runner/approval-boundary/order path changes, no parser weakening, no broad free-form command parsing, no inline route-list command text grammar, no new route statuses/reject reasons, no Telegram transport, bot token, credentials, webhooks, messaging/network behavior, live trading, real orders, private/account endpoints, account state/balances, sendable exchange requests, order payloads, execution automation/planning, discovery/ranking/watchlists/polling/background loops/scheduling, adapter endpoint changes, aggregate PnL calculation, unknown-to-zero behavior, canary architecture, hold-next-cycle logic, or second owner paths.
+- RX-073 worker usage: exactly one supervised worker was used for design support before implementation edits. The worker stopped at DESIGN CHECKPOINT and confirmed the parser command is grounded in the accepted RX-072 preview-builder outcome, accepted package artifact writes can remain local-only and non-dangerous, no hard-stop category requires explicit user approval while scoped as RX-073, and duplication risk is avoided by reusing accepted RX-072, RX-058, and RX-060 helper boundaries. Parent approved the direction, retained implementation, final diff review, validation, commit, push, and reporting ownership, and did not continue the worker beyond design support.
+- RX-073 next handoff: `NEXT_TASK.md` is prepared for exactly one next test-only/local/manual/fake-money task after RX-073 finalization, RX-074 Local Paper Session Run Command Text Parser-To-Runtime Smoke Fixture Coverage.
 - RX-072 starting baseline: `20ec1b841753024cd03b43cd2198a83c6d6e4df4`
 - RX-072 task branch: `task/rx-072-local-paper-session-run-command-text-preview-builder`
 - Accepted RX-072 implementation HEAD: `fb20615ae2a98a4c78476cc94698c58bcdd673bf`
@@ -431,8 +440,8 @@
 - Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
 - Current accepted `main` metadata/governance task: RX-071.
-- Current accepted `main` product task: RX-070.
-- Current RX task state: RX-071 is reviewer-accepted and finalized on `main`; `NEXT_TASK.md` is prepared for RX-072 as the next local run-command text preview-builder handoff after RX-071 finalization.
+- Current accepted `main` local/manual/fake-money testing-support task: RX-072.
+- Current RX task state: RX-073 is implementation-complete on `task/rx-073-local-paper-session-run-command-text-parser` and pending reviewer acceptance; `NEXT_TASK.md` is prepared for RX-074 as the next test-only parser-to-runtime smoke fixture handoff after RX-073 finalization.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
@@ -479,7 +488,7 @@ RX-040 prepared `NEXT_TASK.md` for RX-041 after RX-040 finalization.
 RX-031 found no additional explicit actionable reviewer feedback in local repo/git evidence or GitHub connector context after RX-030 finalization. RX-031 is accepted metadata-only follow-up work and does not change dashboard or product code.
 RX-041 remains the accepted public account-independent fee-cash completion product task before the later RX-045/RX-048 reporting tasks and completes explicit public account-independent taker fee-rate metadata into entry plus immediate estimated-exit route-notional USD fee cash only inside the existing one-route snapshot path, while preserving fail-closed unknown handling and avoiding live/order/private/account-state scope.
 RX-040 remains the previous accepted product task and preserves public fee-source metadata on unknown fee cash values for source-aware inspection only. It does not add route discovery, ranking, polling, private endpoints, credentials, account balances/state, execution automation, order placement, sendable exchange request construction, ledger writes, fee-cash defaults, or live trading by default.
-`NEXT_TASK.md` is prepared for RX-072 Local Paper Session Run Command Text Preview Builder after RX-071 finalization.
+`NEXT_TASK.md` is prepared for RX-074 Local Paper Session Run Command Text Parser-To-Runtime Smoke Fixture Coverage after RX-073 finalization.
 
 ## Completed accepted tasks
 
@@ -682,7 +691,7 @@ RX-040 remains the previous accepted product task and preserves public fee-sourc
 - RX-069 is reviewer-accepted and finalized on `main`.
 - RX-070 is reviewer-accepted and finalized on `main`.
 - RX-071 is reviewer-accepted and finalized on `main`.
-- The next recommended task is RX-072 Local Paper Session Run Command Text Preview Builder after RX-071 finalization.
+- The next recommended task is RX-074 Local Paper Session Run Command Text Parser-To-Runtime Smoke Fixture Coverage after RX-073 finalization.
 - The RX-032 authorization does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - RX-033 autonomy does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized and accepted.
@@ -1441,4 +1450,4 @@ RX-040 remains the previous accepted product task and preserves public fee-sourc
 
 ## Next recommended task
 
-RX-072 Local Paper Session Run Command Text Preview Builder after RX-071 finalization.
+RX-074 Local Paper Session Run Command Text Parser-To-Runtime Smoke Fixture Coverage after RX-073 reviewer acceptance and finalization.
