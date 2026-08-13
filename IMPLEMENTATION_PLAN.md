@@ -63,13 +63,13 @@ RX-040 — Public One-Route Fee Source Metadata Preservation remains the previou
 
 ## Current Repository Handoff
 
-RX-043 is reviewer-accepted and finalized on `main` as a governance/source-of-truth clarification task after RX-042. RX-041 remains the latest accepted product baseline. RX-043 records that the explicit Product Owner direction supplied through Control Tower confirms the long-term live-capable goal but still does not clearly identify one concrete safe public/read-only/non-trading runtime task. `NEXT_TASK.md` is therefore prepared for RX-044, a narrow Product Owner concrete public runtime handoff clarification, rather than inferred route discovery, polling, private endpoints, credentials, account state, orders, execution automation, or live trading.
+RX-043 is reviewer-accepted and finalized on `main` as a governance/source-of-truth clarification task after RX-042. RX-041 remains the latest accepted product baseline. RX-044 is the current governance/source-of-truth task branch after accepted RX-043 finalization. Product Owner clarification supplied through Control Tower selects option A, Manual One-Route Public Readiness Report. RX-044 records that option A clearly grounds one concrete safe later runtime reporting task when scoped as manual, one-route, public/read-only, non-trading, fail-closed, and built on the existing one-route public adapter, snapshot, runner, fee/funding completion, and evaluation paths.
 
-## Remaining Gated Roadmap After RX-043 Finalization
+## Remaining Gated Roadmap After RX-044 Branch
 
-Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, by RX-033 governance autonomy, by the RX-034 roadmap selection audit, by the RX-035 post-audit handoff cleanup, by the RX-036 roadmap source-of-truth clarification, by the RX-037 roadmap direction record, by RX-038 one-route real-data CLI finalization, by RX-039 public one-route economics source completion, by RX-040 public fee-source metadata preservation, by RX-041 public one-route account-independent fee cash completion, RX-042 finalization, or RX-043 finalization.
+Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, by RX-033 governance autonomy, by the RX-034 roadmap selection audit, by the RX-035 post-audit handoff cleanup, by the RX-036 roadmap source-of-truth clarification, by the RX-037 roadmap direction record, by RX-038 one-route real-data CLI finalization, by RX-039 public one-route economics source completion, by RX-040 public fee-source metadata preservation, by RX-041 public one-route account-independent fee cash completion, RX-042 finalization, RX-043 finalization, or RX-044 branch completion.
 
-1. RX-044 - Product Owner Concrete Public Runtime Handoff Clarification.
+1. RX-045 - Manual One-Route Public Readiness Report.
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
 
@@ -442,10 +442,31 @@ RX-044 implementation notes:
 - Preserve RX-041 as the latest accepted product baseline unless a later reviewer-accepted product task exists.
 - Preserve RX-043 as pending or accepted according to explicit reviewer evidence.
 
+RX-044 branch outcome:
+
+- RX-043 is reviewer-accepted and finalized on `main`; RX-041 remains the latest accepted product baseline.
+- Product Owner clarification supplied through Control Tower selects option A, Manual One-Route Public Readiness Report.
+- Option A clearly grounds exactly one later safe public/read-only/non-trading runtime reporting task when constrained to one explicitly supplied route, existing public read-only RiseX and Hyperliquid adapters, the existing one-route adapter handoff, the existing route snapshot assembly and evaluation paths, existing source-aware public fee/funding completion, and fail-closed unknown handling.
+- RX-044 records the clarification and prepares RX-045 as that one next handoff. RX-044 itself remains docs/governance-only and does not implement report behavior, product/runtime behavior, adapter changes, private/account endpoint access, credentials, account state, orders, sendable exchange requests, execution automation, or live trading.
+
 RX-044 must not add product/runtime behavior, route discovery, ranking, watchlists, background loops, polling, scheduling, alerts, automatic refresh, adapters, private endpoints, credentials, account balances/state, orders, sendable exchange request or order payload construction, execution automation, ledger writes, storage migrations, replay changes, paper lifecycle changes, funding settlement verification, ledger reconciliation, execution planning, guarded live runner execution, approval-boundary execution, live trading by default, route statuses, reject reasons, artificial filters, canary architecture, hold-next-cycle logic, or any second route model, decision path, snapshot path, EV path, VWAP path, ledger-write path, replay path, execution-planning path, or live execution path.
+
+## RX-045 — Manual One-Route Public Readiness Report
+
+After RX-044 reviewer acceptance, RX-045 should add one manual, one-route, public/read-only, non-trading readiness report for an explicitly supplied RiseX plus Hyperliquid route.
+
+RX-045 implementation notes:
+
+- Expand the existing one-route CLI/reporting surface so an operator can request a deterministic public readiness report for one explicitly supplied route.
+- Preserve existing input requirements from the manual one-route real-data CLI: route id, capture id, exact RiseX and Hyperliquid venues, symbols, opposing entry sides, positive finite target notional, evaluation mode, and timezone-aware assembly timestamp.
+- Use the existing read-only public RiseX and Hyperliquid adapters, existing one-route adapter handoff, existing `assemble_route_snapshot()` path, existing source-aware public fee/funding completion, and existing `evaluate_route(route, snapshot, mode)` path.
+- Report which public funding, fee, and economics evidence was applied, which components remain `UNKNOWN`, the existing decision status/reasons, existing Entry EV fields, and a report-only explanation of why the route is or is not ready for later fail-closed live-readiness stages.
+- Keep the readiness conclusion display-only. It must not add or mutate route statuses, reject reasons, route eligibility, Capture state, ledger state, live gates, or execution state.
+
+RX-045 must not add route discovery, ranking, watchlists, background loops, polling, scheduling, alerts, automatic refresh, adapters or adapter endpoint changes, private/account endpoints, credentials, API keys, account balances/state, account-tier assumptions, order placement, order cancellation, order status fetching, sendable exchange request construction, order payload construction, execution automation, execution planning, guarded live runner execution, approval-boundary execution, ledger writes, storage migrations, replay changes, paper lifecycle changes, funding settlement verification, ledger reconciliation, route eligibility mutation, Capture state transitions, route statuses, reject reasons, fee/funding/VWAP/liquidity/basis/spread/price-impact/slippage/max-level/hidden-buffer/safety-margin rule changes, canary architecture, hold-next-cycle logic, live trading by default, or any second route model, decision path, snapshot path, EV path, VWAP path, ledger-write path, replay path, execution-planning path, or live execution path.
 
 ## Next Sequence
 
-1. RX-044 - Product Owner Concrete Public Runtime Handoff Clarification.
+1. RX-045 - Manual One-Route Public Readiness Report.
 
 Do not promote execution automation, background loops, ranking, order placement, polling, alerts, auto-refresh, private endpoints, credentials, account-state access, destructive reset, financially dangerous actions, or later roadmap stages into the current handoff unless that exact future task is explicitly user-approved for hard-stop scope or explicitly directed by the Product Owner, autonomously selected by Control Tower under RX-033 for non-dangerous scope, and passes the repository's hard approval gates.
