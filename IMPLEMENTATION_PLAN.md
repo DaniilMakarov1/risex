@@ -46,11 +46,11 @@ RX-030 — Read-Only Monitoring Dashboard Without Decisions Or Orders is reviewe
 
 ## Current Product Branch Progress
 
-No product branch is active after RX-032 finalization. RX-033 is a governance/docs-only task branch that defines Control Tower autonomous task selection for future non-dangerous RX tasks without changing product behavior or removing hard approval gates.
+No product branch is active after RX-033 finalization. RX-033 was governance/docs-only and defines Control Tower autonomous task selection for future non-dangerous RX tasks without changing product behavior or removing hard approval gates.
 
 ## Current Product Handoff
 
-`NEXT_TASK.md` is prepared on this branch for RX-034, a Control Tower roadmap selection audit gate that may autonomously inspect source-of-truth docs and select the next non-dangerous RX task where the docs support one.
+`NEXT_TASK.md` is prepared on `main` for RX-034, a Control Tower roadmap selection audit gate that may autonomously inspect source-of-truth docs and select the next non-dangerous RX task where the docs support one.
 
 ## Remaining Gated Roadmap After RX-030
 
