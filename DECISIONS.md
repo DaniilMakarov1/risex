@@ -1058,8 +1058,10 @@
 - Reason: RX-066 must not weaken or bypass either accepted display command boundary, must not write the intended display payload artifact, and must not read or render the referenced report JSON.
 - Decision: The written preview/manifest shape is descriptive only: `schema_version=1`, `command_text_fixture_path`, `intended_display_payload_json_path`, `normalized_session_report_json_path`, and the exact manual `parse-paper-session-display-command-text --paper-session-display-command-text-path ... --display-payload-json-path ...` command plan as argv plus `shlex.join()` text.
 - Reason: The artifact exists only to preview the later explicit local parser command; it must not include route lists, decisions, paper outcomes, economics, summaries, ledger events, transport fields, credentials, execution intent, aggregate PnL, or unknown placeholders.
-- Decision: The builder rejects identical intended display payload and preview output paths before reading or writing.
-- Reason: A path collision would make the preview write land at the intended display payload destination, violating the RX-066 display-payload-no-write boundary.
+- Decision: The builder rejects intended display payload and preview output paths that normalize to the same local path before reading or writing.
+- Reason: A normalized path collision, including aliases such as `payload.json` versus `nested/../payload.json`, would make the preview write land at the intended display payload destination, violating the RX-066 display-payload-no-write boundary.
+- Decision: Same-branch RX-066 review fix uses `Path(...).expanduser().resolve(strict=False)` for local output collision comparison before command text is read.
+- Reason: Exact string comparison is insufficient for a preview-only command because local path aliases can reference the same artifact destination.
 - Decision: RX-066 implementation work occurs only in the clean executor worktree `/Users/daniilmakarov/.codex/worktrees/5212/risex-main` on `task/rx-066-local-paper-session-display-command-text-preview-manifest` from accepted baseline `a132c4069903a910b90035ae188153571ae90f79`.
 - Reason: The repository workflow requires one RX task, one clean executor task, one task branch, and no work in the Desktop checkout.
 - Decision: RX-066 used exactly one supervised worker for design support before implementation edits.

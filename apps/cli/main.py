@@ -1113,6 +1113,15 @@ def _write_json_artifact(path: str, payload: object) -> None:
     )
 
 
+def _normalized_local_output_path(path: str) -> Path:
+    try:
+        return Path(path).expanduser().resolve(strict=False)
+    except (OSError, RuntimeError) as exc:
+        raise argparse.ArgumentTypeError(
+            f"local output path could not be normalized: {exc}"
+        ) from exc
+
+
 def _paper_session_package_preview_json(
     *,
     route_list: Sequence[Mapping[str, str]],
@@ -1674,8 +1683,19 @@ def _run_build_paper_session_display_command_text_preview(
     args: argparse.Namespace,
     parser: argparse.ArgumentParser,
 ) -> None:
-    if args.display_payload_json_path == args.preview_json_output_path:
-        parser.error("display-payload-json-path and preview-json-output-path must differ")
+    try:
+        display_payload_output_path = _normalized_local_output_path(
+            args.display_payload_json_path
+        )
+        preview_output_path = _normalized_local_output_path(args.preview_json_output_path)
+    except argparse.ArgumentTypeError as exc:
+        parser.error(str(exc))
+
+    if display_payload_output_path == preview_output_path:
+        parser.error(
+            "display-payload-json-path and preview-json-output-path must not "
+            "resolve to the same local path"
+        )
 
     try:
         command_text = Path(

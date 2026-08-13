@@ -3483,9 +3483,11 @@ def test_build_paper_session_display_command_text_preview_requires_explicit_path
     assert calls == []
 
 
+@pytest.mark.parametrize("preview_alias", ("same-path", "parent-collapse"))
 def test_build_paper_session_display_command_text_preview_rejects_payload_path_collision(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path,
+    preview_alias: str,
 ) -> None:
     calls: list[str] = []
 
@@ -3500,7 +3502,14 @@ def test_build_paper_session_display_command_text_preview_rejects_payload_path_c
     monkeypatch.setattr(cli.Path, "read_text", forbidden_read_text)
     monkeypatch.setattr(cli, "_write_json_artifact", forbidden_artifact_write)
 
-    output_path = tmp_path / "colliding-display-payload-and-preview.json"
+    output_path = tmp_path / "payload.json"
+    if preview_alias == "same-path":
+        preview_output_path = output_path
+    else:
+        nested = tmp_path / "nested"
+        nested.mkdir()
+        preview_output_path = nested / ".." / "payload.json"
+
     args = [
         "build-paper-session-display-command-text-preview",
         "--paper-session-display-command-text-path",
@@ -3508,7 +3517,7 @@ def test_build_paper_session_display_command_text_preview_rejects_payload_path_c
         "--display-payload-json-path",
         str(output_path),
         "--preview-json-output-path",
-        str(output_path),
+        str(preview_output_path),
     ]
 
     with pytest.raises(SystemExit) as exc_info:
@@ -3517,6 +3526,7 @@ def test_build_paper_session_display_command_text_preview_rejects_payload_path_c
     assert exc_info.value.code == 2
     assert calls == []
     assert not output_path.exists()
+    assert not preview_output_path.exists()
 
 
 def test_build_paper_session_display_command_text_preview_has_no_forbidden_runtime_behavior() -> None:
