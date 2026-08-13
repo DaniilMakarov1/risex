@@ -113,7 +113,7 @@ Any non-terminal Capture may transition to `FAILED`. Capture states with possibl
 - Broad Scan and Focused Refresh orchestration happens only in `core/pipeline/scan_refresh.py`.
 - One-route real-data research orchestration and app-layer snapshot retention for reporting happen only in `apps/research_runner/real_data.py`.
 - Manual one-route real-data CLI input validation, output formatting, public readiness report formatting, and any later opt-in structured public-readiness stdout formatting happen only in `apps/cli/main.py`.
-- A later manual fake-money public paper-trader bridge must stay in an app-layer runner or explicit operator CLI command, consume the existing one-route public real-data runner decision in `EvaluationMode.ENTRY`, and delegate fake paper execution to `apps/paper_runner/lifecycle.py` plus ledger writes through `core/accounting/ledger.py`.
+- Manual fake-money public paper-trader bridges and later serial paper session runners must stay in an app-layer runner or explicit operator CLI command, consume the existing one-route public real-data runner decision path in `EvaluationMode.ENTRY`, and delegate fake paper execution to `apps/paper_runner/lifecycle.py` plus ledger writes through `core/accounting/ledger.py`.
 - Non-sending execution planning happens only in `core/execution/planning.py`.
 - Guarded live runner readiness without orders happens only in `apps/live_runner/guarded.py`.
 - Explicit approval-gated order placement boundaries happen only in `core/execution/orders.py`.
@@ -148,6 +148,10 @@ Future roadmap stages are gates. A later roadmap item is not permission to imple
 RX-052 records Product Owner clarification that the next product path is paper-trading readiness with fake money before any live trading work is considered. In this repository, paper trader means existing fake paper lifecycle and append-only ledger behavior only. It does not mean live exchange execution, private/account endpoint access, credentials, account balances/state, sendable exchange requests, order payload construction, execution planning, guarded live runner execution, approval-boundary execution, or live trading.
 
 RX-053 adds one explicit manual `paper-trade-route` CLI bridge. It connects one public one-route real-data `EvaluationMode.ENTRY` decision to `run_paper_lifecycle()` and the existing ledger contract. It reuses the existing manual route input validation pattern, public read-only RiseX and Hyperliquid adapter construction after validation, `run_real_data_research_route_with_snapshot()`, and the single shared `evaluate_route(route, snapshot, mode)` path. It must not create a second route model, decision path, snapshot assembly path, EV path, VWAP path, ledger-write path, execution-planning path, or live execution path, and it must not turn unknown public economics into zero or success.
+
+RX-054 records Product Owner clarification that the fake-money paper trader path should continue toward serial strategy testing. The next grounded runtime handoff is a manual finite serial paper session runner that consumes only operator-supplied explicit routes, reuses the existing public one-route `EvaluationMode.ENTRY` decision path, delegates fake paper handling to `run_paper_lifecycle()`, keeps ledger writes behind `core/accounting/ledger.py`, and may use only explicit local SQLite persistence through the existing storage contract.
+
+Telegram is later interface direction only. Current architecture does not authorize Telegram credentials, bot tokens, external Telegram network transport, webhooks, alerts, messaging behavior, private/account endpoints, account state, live trading, real orders, sendable exchange requests, or order payloads. Bot-ready command parsing may be a later non-network task; actual Telegram transport and token handling require an explicit future credentials/network gate.
 
 ## Product rules
 

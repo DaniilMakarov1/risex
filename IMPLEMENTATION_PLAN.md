@@ -17,6 +17,8 @@ RX-037 records explicit Product Owner roadmap direction supplied through Control
 
 RX-052 records explicit Product Owner clarification supplied through Control Tower after RX-051: continue autonomously toward a working fake-money paper trader system before any live trading work is considered. This clarification shifts the next concrete product path from research-only reporting to paper-trading readiness, but only through existing fake paper lifecycle and ledger behavior. It does not authorize live trading, real order placement, private/account endpoints, credentials, account balances/state, sendable exchange request construction, order payload construction, execution automation, execution planning, guarded live runner execution, approval-boundary execution, or financially dangerous action.
 
+RX-054 records explicit Product Owner clarification supplied through Control Tower after RX-053: continue beyond the manual one-route bridge toward a full fake-money paper trader system for serial strategy testing. Product Owner plans to test through a Telegram bot later, but Telegram is product direction only for now. RX-054 and RX-055 do not authorize Telegram credentials, bot tokens, external Telegram network transport, webhooks, alerts, messaging behavior, live trading, private/account endpoints, account balances/state, real orders, sendable exchange requests, order payload construction, execution automation, execution planning, guarded live runner execution, approval-boundary execution, or financially dangerous action.
+
 ## Completed Accepted Work
 
 - RX-000 through RX-007 established the project constitution, domain contracts, product rules, economics, per-venue observations, offline scan/refresh orchestration, fake paper lifecycle, and append-only ledger persistence scaffolding.
@@ -55,6 +57,8 @@ RX-052 records explicit Product Owner clarification supplied through Control Tow
 - RX-049 recorded that no concrete safe post-RX-048 public/read-only/non-trading runtime handoff was clearly grounded in the accepted docs, prepared RX-050 as a narrow Product Owner direction gate, and did not change product/runtime behavior.
 - RX-050 recorded that explicit Product Owner/Control Tower direction remained broad live-capable product direction only, prepared RX-051 as a narrow concrete clarification handoff, and did not change product/runtime behavior.
 - RX-051 audited repository instruction/source-of-truth hygiene, removed the one stale tracked cross-project wording by rephrasing it generically, prepared RX-052 as the single next clarification handoff, and did not change product/runtime behavior.
+- RX-052 recorded Product Owner clarification that the next concrete product path is a working fake-money paper trader system before live trading work, prepared RX-053 as one manual fake-money paper bridge, and did not change product/runtime behavior.
+- RX-053 added one manual `paper-trade-route` fake-money bridge from one public one-route ENTRY decision into the existing fake paper lifecycle and append-only ledger.
 - RX-Q001 and RX-Q002 added repository workflow, handoff validation, and supervised-worker governance.
 
 ## Accepted Offline Safety-Hardening Detour
@@ -65,11 +69,11 @@ The detour's purpose is to keep future live-adjacent work honest: funding settle
 
 ## Latest Accepted Product Task
 
-RX-048 — Structured JSON Stdout Public Readiness Report Output is reviewer-accepted and finalized on `main`. It adds one opt-in `real-data-route --public-readiness-report --public-readiness-report-format json` stdout format for exactly one explicit public route, reusing the accepted RX-045 manual public-readiness report evidence. It preserves the default one-decision text output and the default text public-readiness report, fails closed when the JSON format selector is supplied without `--public-readiness-report`, preserves unknown values as `null`/`UNKNOWN` with context, and does not change decisions, routes, adapters, economics rules, ledger state, execution, live gates, orders, private/account endpoints, credentials, account state, or live trading.
+RX-053 - Manual One-Route Public Paper Trader Bridge is reviewer-accepted and finalized on `main`. It adds one explicit `paper-trade-route` command for one public RiseX plus Hyperliquid route, requires `EvaluationMode.ENTRY`, reuses the existing one-route real-data runner and shared `evaluate_route(route, snapshot, mode)` path, delegates fake paper behavior to `run_paper_lifecycle()`, writes fake paper ledger events only through the existing accounting ledger ownership, and optionally persists them only through an explicit local SQLite ledger path.
 
 ## Previous Product Baseline
 
-RX-045 — Manual One-Route Public Readiness Report remains the previous accepted product baseline before RX-048. It adds one opt-in `real-data-route --public-readiness-report` output path for exactly one explicit public route, plus an app-layer helper that retains the existing assembled snapshot for display. It reports existing decision, Entry EV, source-aware fee/funding evidence, deterministic `UNKNOWN` components, and display-only public-readiness context without changing decisions, routes, adapters, economics rules, ledger state, execution, live gates, orders, private/account endpoints, credentials, or live trading.
+RX-048 - Structured JSON Stdout Public Readiness Report Output remains the previous accepted product/reporting baseline before RX-053. It adds one opt-in `real-data-route --public-readiness-report --public-readiness-report-format json` stdout format for exactly one explicit public route, reusing the accepted RX-045 manual public-readiness report evidence. It preserves the default one-decision text output and the default text public-readiness report, fails closed when the JSON format selector is supplied without `--public-readiness-report`, preserves unknown values as `null`/`UNKNOWN` with context, and does not change decisions, routes, adapters, economics rules, ledger state, execution, live gates, orders, private/account endpoints, credentials, account state, or live trading.
 
 ## Current Repository Handoff
 
@@ -87,11 +91,13 @@ RX-052 is reviewer-accepted and finalized on `main` as the latest accepted gover
 
 RX-053 is reviewer-accepted and finalized on `main` as the latest accepted product/runtime task. It adds one explicit manual `paper-trade-route` command that validates one public RiseX plus Hyperliquid route, requires `EvaluationMode.ENTRY`, reuses the existing one-route real-data runner and shared `evaluate_route(route, snapshot, mode)` path, delegates fake paper behavior to `run_paper_lifecycle()`, writes fake paper ledger events only through the existing accounting ledger ownership, and optionally persists them only through an explicit local SQLite ledger path.
 
-## Remaining Gated Roadmap After RX-053 Finalization
+RX-054 is implementation-complete on `task/rx-054-post-manual-paper-bridge-handoff-clarification` and pending reviewer acceptance. It inspects the accepted RX-053 bridge outcome, records Product Owner clarification to continue toward serial fake-money paper strategy testing, records Telegram as later interface direction only, and prepares RX-055 Manual Serial Paper Session Runner as exactly one next non-dangerous handoff. RX-054 changes no product/runtime behavior.
 
-Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, execution planning, polling, ranking, discovery, ledger/storage/replay change, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, by RX-033 governance autonomy, by the RX-034 roadmap selection audit, by the RX-035 post-audit handoff cleanup, by the RX-036 roadmap source-of-truth clarification, by the RX-037 roadmap direction record, by RX-038 one-route real-data CLI finalization, by RX-039 public one-route economics source completion, by RX-040 public fee-source metadata preservation, by RX-041 public one-route account-independent fee cash completion, RX-042 finalization, RX-043 finalization, RX-044 finalization, RX-045 finalization, RX-046 finalization, RX-047 finalization, RX-048 finalization, RX-049 finalization, RX-050 finalization, RX-051 finalization, RX-052 finalization, or RX-053 finalization.
+## Remaining Gated Roadmap After RX-054 Finalization
 
-1. RX-054 - Post-Manual Paper Bridge Handoff Clarification.
+Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, execution planning, polling, ranking, discovery, ledger/storage/replay change, Telegram transport, credentials, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, by RX-033 governance autonomy, by the RX-034 roadmap selection audit, by the RX-035 post-audit handoff cleanup, by the RX-036 roadmap source-of-truth clarification, by the RX-037 roadmap direction record, by RX-038 one-route real-data CLI finalization, by RX-039 public one-route economics source completion, by RX-040 public fee-source metadata preservation, by RX-041 public one-route account-independent fee cash completion, RX-042 finalization, RX-043 finalization, RX-044 finalization, RX-045 finalization, RX-046 finalization, RX-047 finalization, RX-048 finalization, RX-049 finalization, RX-050 finalization, RX-051 finalization, RX-052 finalization, RX-053 finalization, or RX-054 implementation-complete branch work.
+
+1. RX-055 - Manual Serial Paper Session Runner.
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
 
@@ -696,8 +702,35 @@ RX-054 implementation notes:
 
 RX-054 must not add product/runtime behavior, CLI output behavior, route discovery, ranking, watchlists, background loops, polling, scheduling, alerts, auto-refresh, adapters, adapter endpoint changes, private/account endpoints, credentials, API keys, account balances/state, account-tier assumptions, order placement, order cancellation, order status fetching, sendable exchange request construction, order payload construction, execution automation, execution planning, guarded live runner execution, approval-boundary execution, ledger writes, storage migrations, replay changes, paper lifecycle changes, funding settlement verification, ledger reconciliation, route eligibility mutation, Capture state transitions, route statuses, reject reasons, fee/funding/VWAP/liquidity/basis/spread/price-impact/slippage/max-level/hidden-buffer/safety-margin rule changes, canary architecture, hold-next-cycle logic, live trading by default, or any second route model, decision path, snapshot path, EV path, VWAP path, ledger-write path, replay path, execution-planning path, or live execution path.
 
+RX-054 branch outcome:
+
+- RX-053 is reviewer-accepted and finalized on `main`; RX-053 remains the latest accepted product/runtime baseline.
+- Product Owner clarification supplied through Control Tower directs continued work beyond the one-route manual bridge toward a full fake-money paper trader system for serial strategy testing.
+- Telegram is recorded as later interface direction only. RX-054 does not authorize Telegram bot tokens, credentials, external Telegram network transport, webhooks, alerts, messaging behavior, live trading, real orders, private/account endpoints, account state, sendable exchange requests, order payloads, execution automation, execution planning, guarded live runner execution, approval-boundary execution, or financially dangerous actions.
+- The accepted RX-053 bridge plus RX-052 paper-trader clarification ground one next non-dangerous runtime handoff when scoped as a manual, explicitly invoked serial paper session runner for a finite operator-supplied list of explicit routes.
+- RX-054 prepares RX-055 Manual Serial Paper Session Runner as exactly one next task in `NEXT_TASK.md`.
+- RX-054 remains governance/source-of-truth only and changes no product/runtime behavior.
+
+## RX-055 — Manual Serial Paper Session Runner
+
+After RX-054 reviewer acceptance and finalization, RX-055 should add one manual, explicitly invoked serial fake-money paper testing runner or command for a finite operator-supplied list of explicit RiseX plus Hyperliquid routes.
+
+RX-055 implementation notes:
+
+- The runner must consume only a finite operator-supplied list of explicit routes. It must not discover, rank, watchlist, poll, schedule, alert, loop in the background, or auto-refresh routes.
+- Each route must reuse the existing manual public route input requirements and public read-only adapter construction boundaries.
+- Each route decision must flow through `run_real_data_research_route_with_snapshot()` and the single shared `evaluate_route(route, snapshot, mode)` path in `EvaluationMode.ENTRY`.
+- Fake paper behavior must delegate to `run_paper_lifecycle()` when a public snapshot is available.
+- Fake paper ledger writes must stay inside `core/accounting/ledger.py`; optional local persistence must use only the existing `storage/sqlite/ledger.py` contract through an explicit operator-supplied local SQLite path.
+- The runner must print deterministic per-route and session-level summary stdout for strategy testing.
+- Missing public snapshot, Entry EV, funding, fee, decision net profit, or paper PnL values must remain `None`/unknown in route output and session summaries; aggregates must not turn unknown values into zero, success, or profitability.
+- Telegram remains out of scope. Bot-ready command parsing may be a later non-network task; actual Telegram transport, bot tokens, credentials, webhooks, external network behavior, alerts, and messaging require an explicit future credentials/network gate.
+- Focused tests must cover started and non-started routes, deterministic session summary output, finite explicit route list handling, optional SQLite behavior if implemented, malformed input failing before adapter construction, unknown-as-missing preservation, and absence of live/order/private/account/Telegram behavior.
+
+RX-055 must not add live trading, real exchange order placement, order cancellation, order status fetching, private/account endpoints, credentials, API keys, Telegram bot tokens, Telegram transport, external Telegram network calls, webhooks, alerts, messaging behavior, exchange account state, account balances, account-tier assumptions, sendable exchange request construction, order payload construction, automatic polling, background loops, scheduling, auto-refresh, route discovery, route ranking, watchlists, execution automation, execution planning, guarded live runner execution, approval-boundary execution, funding settlement verification changes, ledger reconciliation changes, replay changes, storage migrations, route eligibility mutation, Capture state transition changes, route statuses, reject reasons, unknown-to-zero behavior, artificial filters, canary architecture, hold-next-cycle logic, or any second route model, decision path, snapshot assembly path, EV path, VWAP path, ledger-write path, replay path, execution-planning path, or live execution path.
+
 ## Next Sequence
 
-1. RX-054 - Post-Manual Paper Bridge Handoff Clarification.
+1. RX-055 - Manual Serial Paper Session Runner.
 
-Do not promote execution automation, background loops, ranking, order placement, polling, alerts, auto-refresh, private endpoints, credentials, account-state access, destructive reset, financially dangerous actions, or later roadmap stages into the current handoff unless that exact future task is explicitly user-approved for hard-stop scope or explicitly directed by the Product Owner, autonomously selected by Control Tower under RX-033 for non-dangerous scope, and passes the repository's hard approval gates.
+Do not promote execution automation, background loops, ranking, order placement, polling, alerts, auto-refresh, Telegram transport, bot tokens, private endpoints, credentials, account-state access, destructive reset, financially dangerous actions, or later roadmap stages into the current handoff unless that exact future task is explicitly user-approved for hard-stop scope or explicitly directed by the Product Owner, autonomously selected by Control Tower under RX-033 for non-dangerous scope, and passes the repository's hard approval gates.
