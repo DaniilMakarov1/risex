@@ -1050,6 +1050,8 @@
 ## 2026-08-13 - RX-066
 
 - Date: 2026-08-13
+- Decision: Control Tower reviewer accepted RX-066 after the same-branch normalized output collision guard fix and finalized it on `main`.
+- Reason: Independent review found the exact string collision check insufficient, the executor fixed it in the same branch with local normalized path comparison before command text read/write, and focused plus full validation passed without broadening scope.
 - Decision: RX-066 adds one explicit CLI-layer `build-paper-session-display-command-text-preview` command for local paper-session display command text preview/manifest generation.
 - Reason: RX-065 grounded the next fake-money paper testing-support step as a local/manual manifest builder for an exact command text fixture path and intended parser command, without adding Telegram transport, automation, or trading behavior.
 - Decision: The builder requires explicit `--paper-session-display-command-text-path`, `--display-payload-json-path`, and `--preview-json-output-path`; it does not infer destinations.
