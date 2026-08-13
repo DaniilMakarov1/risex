@@ -1688,6 +1688,8 @@ def test_render_paper_session_report_outputs_deterministic_stdout_only_display(
         "empty_routes",
         "route_count_mismatch",
         "numeric_economics",
+        "missing_paper_net_profit",
+        "missing_entry_ev_expected_funding",
         "missing_aggregate",
         "non_null_aggregate",
         "missing_summary_count",
@@ -1719,9 +1721,21 @@ def test_render_paper_session_report_rejects_malformed_input_before_output(
         calls.append("runner")
         raise AssertionError("renderer must not run sessions")
 
+    class ForbiddenLedger:
+        def __init__(self, *_args: object, **_kwargs: object) -> None:
+            calls.append("ledger")
+            raise AssertionError("renderer must not instantiate ledgers")
+
+    def forbidden_lifecycle(**_kwargs: object) -> object:
+        calls.append("paper_lifecycle")
+        raise AssertionError("renderer must not call paper lifecycle")
+
     monkeypatch.setattr(cli, "RiseXObservationAdapter", ForbiddenRiseXAdapter)
     monkeypatch.setattr(cli, "HyperliquidObservationAdapter", ForbiddenHyperliquidAdapter)
+    monkeypatch.setattr(cli, "InMemoryLedger", ForbiddenLedger)
+    monkeypatch.setattr(cli, "SQLiteLedger", ForbiddenLedger)
     monkeypatch.setattr(cli, "run_real_data_research_route_with_snapshot", forbidden_runner)
+    monkeypatch.setattr(cli, "run_paper_lifecycle", forbidden_lifecycle)
 
     if case == "top_level_array":
         malformed_payload: object = []
@@ -1735,6 +1749,12 @@ def test_render_paper_session_report_rejects_malformed_input_before_output(
             malformed_payload["session"]["route_count"] = 1
         elif case == "numeric_economics":
             malformed_payload["routes"][1]["paper"]["net_profit_usd"] = 0
+        elif case == "missing_paper_net_profit":
+            del malformed_payload["routes"][0]["paper"]["net_profit_usd"]
+        elif case == "missing_entry_ev_expected_funding":
+            del malformed_payload["routes"][0]["decision"]["entry_ev"][
+                "expected_funding_usd"
+            ]
         elif case == "missing_aggregate":
             del malformed_payload["summary"]["aggregate_paper_net_profit_usd"]
         elif case == "non_null_aggregate":
@@ -1760,7 +1780,15 @@ def test_render_paper_session_report_rejects_malformed_input_before_output(
     assert exc_info.value.code == 2
     assert calls == []
     assert report_path.read_text(encoding="utf-8") == original_text
-    assert capsys.readouterr().out == ""
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    if case == "missing_paper_net_profit":
+        assert "routes[1].paper.net_profit_usd must be present" in captured.err
+    if case == "missing_entry_ev_expected_funding":
+        assert (
+            "routes[1].decision.entry_ev.expected_funding_usd must be present"
+            in captured.err
+        )
 
 
 def test_render_paper_session_report_rejects_invalid_json_before_output(
@@ -1796,6 +1824,7 @@ def test_render_paper_session_report_renderer_has_no_forbidden_runtime_behavior(
             "_paper_report_string",
             "_paper_report_bool",
             "_paper_report_economics_value",
+            "_paper_report_economics_field",
         )
     )
     lowered = renderer_source.lower()

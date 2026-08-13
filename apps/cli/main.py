@@ -1064,6 +1064,18 @@ def _paper_report_economics_value(value: object, field_name: str) -> str:
     return value
 
 
+def _paper_report_economics_field(
+    mapping: Mapping[str, object],
+    key: str,
+    field_name: str,
+) -> str:
+    if key not in mapping:
+        raise argparse.ArgumentTypeError(
+            f"{field_name} must be present as a string or null"
+        )
+    return _paper_report_economics_value(mapping[key], field_name)
+
+
 def _paper_report_bool_display(value: bool) -> str:
     return "true" if value else "false"
 
@@ -1123,51 +1135,60 @@ def _validated_paper_session_report_display_values(
                     paper.get("started"),
                     f"routes[{index}].paper.started",
                 ),
-                "decision_net_profit_usd": _paper_report_economics_value(
-                    decision.get("net_profit_usd"),
+                "decision_net_profit_usd": _paper_report_economics_field(
+                    decision,
+                    "net_profit_usd",
                     f"routes[{index}].decision.net_profit_usd",
                 ),
                 "decision_entry_ev_expected_funding_usd": (
-                    _paper_report_economics_value(
-                        entry_ev.get("expected_funding_usd"),
+                    _paper_report_economics_field(
+                        entry_ev,
+                        "expected_funding_usd",
                         f"routes[{index}].decision.entry_ev.expected_funding_usd",
                     )
                 ),
                 "decision_entry_ev_total_fees_usd": (
-                    _paper_report_economics_value(
-                        entry_ev.get("total_fees_usd"),
+                    _paper_report_economics_field(
+                        entry_ev,
+                        "total_fees_usd",
                         f"routes[{index}].decision.entry_ev.total_fees_usd",
                     )
                 ),
                 "decision_entry_ev_simulated_roundtrip_cost_usd": (
-                    _paper_report_economics_value(
-                        entry_ev.get("simulated_roundtrip_cost_usd"),
+                    _paper_report_economics_field(
+                        entry_ev,
+                        "simulated_roundtrip_cost_usd",
                         "routes"
                         f"[{index}].decision.entry_ev.simulated_roundtrip_cost_usd",
                     )
                 ),
                 "decision_entry_ev_net_profit_usd": (
-                    _paper_report_economics_value(
-                        entry_ev.get("net_profit_usd"),
+                    _paper_report_economics_field(
+                        entry_ev,
+                        "net_profit_usd",
                         f"routes[{index}].decision.entry_ev.net_profit_usd",
                     )
                 ),
-                "paper_expected_funding_usd": _paper_report_economics_value(
-                    paper.get("expected_funding_usd"),
+                "paper_expected_funding_usd": _paper_report_economics_field(
+                    paper,
+                    "expected_funding_usd",
                     f"routes[{index}].paper.expected_funding_usd",
                 ),
-                "paper_total_fees_usd": _paper_report_economics_value(
-                    paper.get("total_fees_usd"),
+                "paper_total_fees_usd": _paper_report_economics_field(
+                    paper,
+                    "total_fees_usd",
                     f"routes[{index}].paper.total_fees_usd",
                 ),
                 "paper_simulated_roundtrip_cost_usd": (
-                    _paper_report_economics_value(
-                        paper.get("simulated_roundtrip_cost_usd"),
+                    _paper_report_economics_field(
+                        paper,
+                        "simulated_roundtrip_cost_usd",
                         f"routes[{index}].paper.simulated_roundtrip_cost_usd",
                     )
                 ),
-                "paper_net_profit_usd": _paper_report_economics_value(
-                    paper.get("net_profit_usd"),
+                "paper_net_profit_usd": _paper_report_economics_field(
+                    paper,
+                    "net_profit_usd",
                     f"routes[{index}].paper.net_profit_usd",
                 ),
             }
