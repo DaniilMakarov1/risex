@@ -13,6 +13,8 @@ The original product direction remains hedged funding capture on RiseX with hedg
 - one owner module per business logic area;
 - no canary architecture, hold-next-cycle logic, artificial filters, hidden buffers, or speculative live architecture.
 
+RX-037 records explicit Product Owner roadmap direction supplied through Control Tower: the intended long-term end goal is a live-capable hedged funding capture system on RiseX with hedge venue support, initially Hyperliquid. The current implementation remains non-trading and fail-closed. Future work must advance toward live readiness through explicit, reviewable, fail-closed stages, and no live trading, private/account endpoint, credential, order, sendable exchange request, automation, or financially dangerous scope is authorized until an exact future task and explicit approval gate authorize it.
+
 ## Completed Accepted Work
 
 - RX-000 through RX-007 established the project constitution, domain contracts, product rules, economics, per-venue observations, offline scan/refresh orchestration, fake paper lifecycle, and append-only ledger persistence scaffolding.
@@ -50,17 +52,17 @@ RX-030 — Read-Only Monitoring Dashboard Without Decisions Or Orders is reviewe
 
 ## Current Product Branch Progress
 
-No product branch is active after RX-036 finalization. RX-036 was a governance/docs-only roadmap source-of-truth clarification branch. It re-confirmed that the source-of-truth docs still do not clearly ground a concrete non-dangerous post-RX-035 product/runtime task, so it prepared a Product Owner roadmap direction gate before product/runtime scope resumes instead of inventing product scope or creating another vague metadata-cleanup loop.
+RX-037 is the current governance/docs-only branch after RX-036 finalization. It records explicit Product Owner roadmap direction supplied through Control Tower and prepares exactly one next product/runtime handoff without changing product behavior, runtime code, dashboard behavior, adapters, market-data behavior, route evaluation, snapshot assembly, accounting, execution, or live trading.
 
 ## Current Product Handoff
 
-`NEXT_TASK.md` is prepared for RX-037, a Product Owner roadmap direction gate that requires explicit Product Owner direction before product/runtime scope resumes.
+`NEXT_TASK.md` is prepared for RX-038, a manual one-route real-data CLI task that uses existing read-only public RiseX and Hyperliquid adapters, the existing one-route real-data snapshot handoff, and the existing one-route real-data research runner/evaluate path. RX-038 is not live trading and must remain read-only, public-data-only, one-route-at-a-time, manual, fail-closed, and non-trading.
 
 ## Remaining Gated Roadmap After RX-030
 
 Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, by RX-033 governance autonomy, by the RX-034 roadmap selection audit, by the RX-035 post-audit handoff cleanup, or by the RX-036 roadmap source-of-truth clarification.
 
-1. RX-037 — Product Owner Roadmap Direction Gate.
+1. RX-038 - One-Route Real Data CLI Toward Live Readiness.
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
 
@@ -309,8 +311,20 @@ RX-036 preserves one RX task at a time, one clean executor task, one task branch
 
 RX-036 does not change product behavior, dashboard behavior, route discovery, ranking, polling, adapters, market-data calls, private endpoints, credentials, account state, order placement, sendable exchange requests, execution automation, route evaluation, snapshot assembly, profitability calculation, funding verification, ledger reconciliation, live-gate checks, execution planning, guarded live runner execution, approval-boundary execution, ledger writes, replay behavior, route statuses, reject reasons, live trading by default, or any product/runtime abstraction.
 
+## RX-037 — Product Owner Roadmap Direction Gate
+
+After RX-036 reviewer acceptance, RX-037 records explicit Product Owner roadmap direction supplied through Control Tower before product/runtime scope resumes.
+
+The recorded direction is that RiseX Points Farmer is intended to become a live-capable hedged funding capture system on RiseX with hedge venue support, initially Hyperliquid. The current implementation remains non-trading and fail-closed, and future work must advance toward live readiness through explicit, reviewable, fail-closed stages without enabling live trading by default.
+
+Under this direction, RX-037 prepares exactly one next task: RX-038, a manual one-route real-data CLI toward live readiness. RX-038 must use existing read-only public RiseX and Hyperliquid adapters, the existing one-route real-data snapshot handoff, and the existing one-route real-data research runner/evaluate path. It must not add route discovery, ranking, watchlists, polling, background loops, automatic refresh, private endpoints, credentials, account balances/state, orders, sendable exchange request or order payload construction, execution automation, ledger writes, paper lifecycle changes, funding settlement verification, ledger reconciliation, execution planning, guarded live runner execution, approval-boundary execution, or live trading by default.
+
+RX-037 preserves RX-033 autonomy for ordinary non-dangerous tasks grounded in source-of-truth docs, one RX task at a time, one clean executor task, one task branch, exactly-one-task `NEXT_TASK.md`, Parent ownership, worker checkpoint requirements, reviewer-only acceptance, and hard approval gates.
+
+RX-037 does not change product behavior, dashboard behavior, route discovery, ranking, polling, adapters, market-data behavior, private endpoints, credentials, account state, order placement, sendable exchange requests, execution automation, route evaluation, snapshot assembly, profitability calculation, funding verification, ledger reconciliation, live-gate checks, execution planning, guarded live runner execution, approval-boundary execution, ledger writes, replay behavior, route statuses, reject reasons, live trading by default, or any product/runtime abstraction.
+
 ## Next Sequence
 
-1. RX-037 — Product Owner Roadmap Direction Gate.
+1. RX-038 - One-Route Real Data CLI Toward Live Readiness.
 
 Do not promote execution automation, background loops, ranking, order placement, polling, alerts, auto-refresh, private endpoints, credentials, account-state access, destructive reset, financially dangerous actions, or later roadmap stages into the current handoff unless that exact future task is explicitly user-approved for hard-stop scope or explicitly directed by the Product Owner, autonomously selected by Control Tower under RX-033 for non-dangerous scope, and passes the repository's hard approval gates.
