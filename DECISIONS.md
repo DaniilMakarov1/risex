@@ -1033,6 +1033,8 @@
 - Reason: The command provides one manually invoked local fixture path input and one explicit local display payload output path, writes only the minimal RX-062 payload shape, and leaves report rendering to later explicit RX-061/RX-062 render commands.
 - Decision: The generated display payload is validated through `paper_session_report_path_from_display_command_payload()` before artifact write.
 - Reason: RX-065 must not weaken or bypass the accepted RX-062 payload shape and must not read or render the referenced report JSON.
+- Decision: Same-branch RX-065 review fix rejects any parsed `session_report_json_path` value that starts with `-`.
+- Reason: Flag-looking values in the report-path position, such as `--chat-id`, `--net-profit-usd`, or `--display-payload-json-path`, are malformed command text rather than local report paths for this exact Telegram-style command boundary. Rare local filenames beginning with `-` must be supplied with a `./` prefix.
 - Decision: RX-065 implementation work occurs only in the clean executor worktree `/Users/daniilmakarov/.codex/worktrees/e3c0/risex-main` on `task/rx-065-local-paper-session-display-command-text-parser` from accepted baseline `19e4266e6b2115b5e0b0dca08515097ebb754abe`.
 - Reason: The repository workflow requires one RX task, one clean executor task, one task branch, and no work in the Desktop checkout.
 - Decision: RX-065 used exactly one supervised worker for design support before implementation edits.

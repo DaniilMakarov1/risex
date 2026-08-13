@@ -338,6 +338,11 @@ def paper_session_display_command_payload_from_command_text(
         raise argparse.ArgumentTypeError(
             f"paper-session-display-command-text session_report_json_path: {exc}"
         ) from exc
+    if session_report_json_path.startswith("-"):
+        raise argparse.ArgumentTypeError(
+            "paper-session-display-command-text session_report_json_path must not "
+            "start with '-'; prefix rare local filenames with ./"
+        )
 
     payload: dict[str, object] = {
         "schema_version": 1,

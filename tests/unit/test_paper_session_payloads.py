@@ -255,6 +255,23 @@ def test_paper_session_display_command_text_rejects_validator_mismatch(
 
 
 @pytest.mark.parametrize(
+    "flag_like_report_path",
+    ("--chat-id", "--net-profit-usd", "--display-payload-json-path"),
+)
+def test_paper_session_display_command_text_rejects_flag_like_report_path(
+    flag_like_report_path: str,
+) -> None:
+    with pytest.raises(argparse.ArgumentTypeError) as exc_info:
+        payloads.paper_session_display_command_payload_from_command_text(
+            "paper-session-report-display --session-report-json-path "
+            f"{flag_like_report_path}"
+        )
+
+    assert "must not start with '-'" in str(exc_info.value)
+    assert "prefix rare local filenames with ./" in str(exc_info.value)
+
+
+@pytest.mark.parametrize(
     "command_text",
     (
         "",
@@ -262,6 +279,9 @@ def test_paper_session_display_command_text_rejects_validator_mismatch(
         "paper-session-report-display --session-report-json-path",
         "paper-session-report-display --session-report-json-path ''",
         "paper-session-report-display --session-report-json-path   ",
+        "paper-session-report-display --session-report-json-path --chat-id",
+        "paper-session-report-display --session-report-json-path --net-profit-usd",
+        "paper-session-report-display --session-report-json-path --display-payload-json-path",
         "paper-session-report-display --session-report-json-path=/tmp/report.json",
         "--session-report-json-path /tmp/report.json",
         "paper-session-report-display /tmp/report.json --session-report-json-path",
