@@ -9,6 +9,7 @@ from collections.abc import Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
+from apps.paper_runner.lifecycle import PaperRunResult, run_paper_lifecycle
 from apps.research_runner.real_data import (
     run_real_data_research_route,
     run_real_data_research_route_with_snapshot,
@@ -17,6 +18,7 @@ from apps.research_runner.fake_data import (
     build_fake_focused_refresh_observations,
     build_fake_route_candidates_and_observations,
 )
+from core.accounting.ledger import InMemoryLedger, LedgerEvent
 from core.domain.contracts import (
     DecisionResult,
     EstimatedValue,
@@ -29,6 +31,7 @@ from core.domain.enums import EvaluationMode, RouteStatus, ValueSource
 from core.pipeline.scan_refresh import run_broad_scan, run_focused_refresh
 from core.venues.hyperliquid import HyperliquidObservationAdapter
 from core.venues.risex import RiseXObservationAdapter
+from storage.sqlite.ledger import SQLiteLedger
 
 
 def _print_decisions(label: str, decisions: tuple[DecisionResult, ...]) -> None:
@@ -152,6 +155,60 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Select stdout format for --public-readiness-report.",
     )
     real_data_route.set_defaults(handler=_run_real_data_route)
+
+    paper_trade_route = subparsers.add_parser(
+        "paper-trade-route",
+        help=(
+            "Evaluate one explicit public ENTRY route and run the fake paper "
+            "lifecycle."
+        ),
+    )
+    paper_trade_route.add_argument("--route-id", required=True, type=_non_empty)
+    paper_trade_route.add_argument("--capture-id", required=True, type=_non_empty)
+    paper_trade_route.add_argument(
+        "--risex-venue",
+        required=True,
+        choices=(RiseXObservationAdapter.name,),
+    )
+    paper_trade_route.add_argument("--risex-symbol", required=True, type=_non_empty)
+    paper_trade_route.add_argument(
+        "--risex-side",
+        required=True,
+        choices=tuple(sorted(VALID_ORDER_SIDES)),
+    )
+    paper_trade_route.add_argument(
+        "--hedge-venue",
+        required=True,
+        choices=(HyperliquidObservationAdapter.name,),
+    )
+    paper_trade_route.add_argument("--hedge-symbol", required=True, type=_non_empty)
+    paper_trade_route.add_argument(
+        "--hedge-side",
+        required=True,
+        choices=tuple(sorted(VALID_ORDER_SIDES)),
+    )
+    paper_trade_route.add_argument(
+        "--target-notional-usd",
+        required=True,
+        type=_positive_finite_decimal,
+    )
+    paper_trade_route.add_argument(
+        "--mode",
+        required=True,
+        choices=(EvaluationMode.ENTRY.value,),
+    )
+    paper_trade_route.add_argument(
+        "--assembled-at",
+        required=True,
+        type=_timezone_aware_datetime,
+    )
+    paper_trade_route.add_argument(
+        "--ledger-sqlite-path",
+        default=None,
+        type=_non_empty,
+        help="Optional explicit local SQLite ledger path for fake paper events.",
+    )
+    paper_trade_route.set_defaults(handler=_run_paper_trade_route)
 
     return parser
 
@@ -457,6 +514,72 @@ def _print_public_readiness_report_json(
     )
 
 
+def _print_paper_trade_summary(
+    *,
+    route: RouteCandidate,
+    decision: DecisionResult,
+    snapshot: VenueSnapshot | None,
+    paper_result: PaperRunResult | None,
+    ledger_events: Sequence[LedgerEvent],
+    ledger_path: str | None,
+) -> None:
+    reasons = tuple(reason.value for reason in decision.reasons)
+    if paper_result is None:
+        paper_started = False
+        paper_start_attribution = "None"
+        paper_start_blockers = ("public_snapshot_unavailable",)
+        expected_funding_usd = None
+        total_fees_usd = None
+        simulated_roundtrip_cost_usd = None
+        paper_net_profit_usd = None
+    else:
+        explanation = paper_result.explanation
+        paper_started = paper_result.started
+        paper_start_attribution = explanation.paper_start_attribution
+        paper_start_blockers = explanation.paper_start_blockers
+        expected_funding_usd = explanation.expected_funding_usd
+        total_fees_usd = explanation.total_fees_usd
+        simulated_roundtrip_cost_usd = explanation.simulated_roundtrip_cost_usd
+        paper_net_profit_usd = explanation.net_profit_usd
+
+    print("Paper Trade Route")
+    print(f"route_id={route.route_id}")
+    print(f"capture_id={route.capture_id}")
+    print(f"mode={decision.mode.value}")
+    print(f"status={decision.status.value}")
+    print(f"reasons={_join_or_none(reasons)}")
+    print(f"decision.net_profit_usd={_decimal_or_none(decision.net_profit_usd)}")
+    if snapshot is None:
+        print("snapshot=UNKNOWN")
+        print("funding_settlement_at=None")
+    else:
+        print("snapshot=AVAILABLE")
+        print(
+            "funding_settlement_at="
+            f"{snapshot.risex_funding_settlement_at.isoformat()}"
+        )
+    print(f"paper_started={paper_started}")
+    print(f"paper_start_attribution={paper_start_attribution}")
+    print(f"paper_start_blockers={_join_or_none(paper_start_blockers)}")
+    print(f"ledger_event_count={len(ledger_events)}")
+    print(
+        "ledger_event_sequences="
+        f"{_join_or_none(tuple(str(event.sequence) for event in ledger_events))}"
+    )
+    print(
+        "ledger_event_types="
+        f"{_join_or_none(tuple(event.event_type for event in ledger_events))}"
+    )
+    print(f"paper.expected_funding_usd={_decimal_or_none(expected_funding_usd)}")
+    print(f"paper.total_fees_usd={_decimal_or_none(total_fees_usd)}")
+    print(
+        "paper.simulated_roundtrip_cost_usd="
+        f"{_decimal_or_none(simulated_roundtrip_cost_usd)}"
+    )
+    print(f"paper.net_profit_usd={_decimal_or_none(paper_net_profit_usd)}")
+    print(f"ledger_path={ledger_path or 'None'}")
+
+
 def _run_real_data_route(
     args: argparse.Namespace,
     parser: argparse.ArgumentParser,
@@ -507,6 +630,65 @@ def _run_real_data_route(
         mode=mode,
     )
     _print_real_data_decision(decision)
+
+
+def _run_paper_trade_route(
+    args: argparse.Namespace,
+    parser: argparse.ArgumentParser,
+) -> None:
+    try:
+        route = RouteCandidate(
+            route_id=args.route_id,
+            capture_id=args.capture_id,
+            risex_venue=args.risex_venue,
+            risex_symbol=args.risex_symbol,
+            risex_entry_side=args.risex_side,
+            hedge_venue=args.hedge_venue,
+            hedge_symbol=args.hedge_symbol,
+            hedge_entry_side=args.hedge_side,
+            target_notional_usd=args.target_notional_usd,
+        )
+    except ValueError as exc:
+        parser.error(str(exc))
+
+    ledger = (
+        SQLiteLedger(args.ledger_sqlite_path)
+        if args.ledger_sqlite_path is not None
+        else InMemoryLedger()
+    )
+    try:
+        risex_adapter = RiseXObservationAdapter()
+        hedge_adapter = HyperliquidObservationAdapter()
+        decision, snapshot = run_real_data_research_route_with_snapshot(
+            route=route,
+            risex_adapter=risex_adapter,
+            hedge_adapter=hedge_adapter,
+            assembled_at=args.assembled_at,
+            mode=EvaluationMode.ENTRY,
+        )
+        paper_result = (
+            None
+            if snapshot is None
+            else run_paper_lifecycle(
+                route=route,
+                decision=decision,
+                funding_settlement_at=snapshot.risex_funding_settlement_at,
+                ledger=ledger,
+            )
+        )
+        ledger_events = ledger.records()
+        _print_paper_trade_summary(
+            route=route,
+            decision=decision,
+            snapshot=snapshot,
+            paper_result=paper_result,
+            ledger_events=ledger_events,
+            ledger_path=args.ledger_sqlite_path,
+        )
+    finally:
+        close = getattr(ledger, "close", None)
+        if close is not None:
+            close()
 
 
 def main(argv: Sequence[str] | None = None) -> int:

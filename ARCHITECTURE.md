@@ -147,7 +147,7 @@ Future roadmap stages are gates. A later roadmap item is not permission to imple
 
 RX-052 records Product Owner clarification that the next product path is paper-trading readiness with fake money before any live trading work is considered. In this repository, paper trader means existing fake paper lifecycle and append-only ledger behavior only. It does not mean live exchange execution, private/account endpoint access, credentials, account balances/state, sendable exchange requests, order payload construction, execution planning, guarded live runner execution, approval-boundary execution, or live trading.
 
-The prepared RX-053 bridge may connect one explicit manual public one-route real-data ENTRY decision to `run_paper_lifecycle()` and the existing ledger contract. It must not create a second route model, decision path, snapshot assembly path, EV path, VWAP path, ledger-write path, execution-planning path, or live execution path, and it must not turn unknown public economics into zero or success.
+RX-053 adds one explicit manual `paper-trade-route` CLI bridge. It connects one public one-route real-data `EvaluationMode.ENTRY` decision to `run_paper_lifecycle()` and the existing ledger contract. It reuses the existing manual route input validation pattern, public read-only RiseX and Hyperliquid adapter construction after validation, `run_real_data_research_route_with_snapshot()`, and the single shared `evaluate_route(route, snapshot, mode)` path. It must not create a second route model, decision path, snapshot assembly path, EV path, VWAP path, ledger-write path, execution-planning path, or live execution path, and it must not turn unknown public economics into zero or success.
 
 ## Product rules
 
