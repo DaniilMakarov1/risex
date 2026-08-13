@@ -109,6 +109,43 @@ def _public_rate_funding(rate: str) -> EstimatedValue:
     )
 
 
+def _public_taker_fee(name: str, metadata: dict[str, str]) -> FeeModel:
+    return FeeModel(
+        components=(
+            FeeComponent(
+                name=name,
+                amount_usd=EstimatedValue(
+                    value=None,
+                    source=ValueSource.UNKNOWN,
+                    metadata=metadata,
+                ),
+            ),
+        )
+    )
+
+
+def _public_taker_bps_metadata(rate: str) -> dict[str, str]:
+    return {
+        "public_fee_taker_bps": rate,
+        "public_fee_taker_bps_field": "taker_fee_bps",
+        "public_fee_taker_bps_container": "market",
+        "public_fee_metadata_source": "OBSERVED",
+        "public_fee_metadata_kind": "fee_rate_fields",
+        "public_fee_account_scope": "account_independent",
+    }
+
+
+def _public_taker_rate_metadata(rate: str) -> dict[str, str]:
+    return {
+        "public_fee_taker_rate": rate,
+        "public_fee_taker_rate_field": "takerFeeRate",
+        "public_fee_taker_rate_container": "asset_context",
+        "public_fee_metadata_source": "OBSERVED",
+        "public_fee_metadata_kind": "fee_rate_fields",
+        "public_fee_account_scope": "account_independent",
+    }
+
+
 def _observations() -> tuple[VenueObservation, VenueObservation]:
     risex_observation = _observation(
         venue="RiseX",
@@ -365,11 +402,18 @@ def test_assembly_preserves_public_fee_metadata_without_completing_cash() -> Non
     route = _route()
     risex_fee_metadata = {
         "public_fee_maker_bps": "1.25",
+        "public_fee_maker_bps_field": "maker_fee_bps",
+        "public_fee_maker_bps_container": "market",
         "public_fee_metadata_source": "OBSERVED",
+        "public_fee_metadata_kind": "fee_rate_fields",
+        "public_fee_account_scope": "account_independent",
     }
     hedge_fee_metadata = {
-        "public_fee_schedule_field": "feeTiers",
         "public_fee_metadata_source": "OBSERVED",
+        "public_fee_metadata_kind": "account_tier_schedule",
+        "public_fee_account_scope": "account_tier_dependent",
+        "public_fee_schedule_field": "feeTiers",
+        "public_fee_schedule_container": "asset_context",
     }
     risex_observation = _observation(
         venue="RiseX",
@@ -422,6 +466,87 @@ def test_assembly_preserves_public_fee_metadata_without_completing_cash() -> Non
     assert snapshot.fees.components[1].amount_usd.value is None
     assert snapshot.fees.components[1].amount_usd.source is ValueSource.UNKNOWN
     assert snapshot.fees.components[1].amount_usd.metadata == hedge_fee_metadata
+
+
+def test_assembly_completes_public_taker_fee_metadata_from_route_notional() -> None:
+    route = _route()
+    risex_observation = _observation(
+        venue="RiseX",
+        symbol="BTC-PERP",
+        observed_at=RISEX_OBSERVED_AT,
+        settlement_at=RISEX_SETTLEMENT_AT,
+        funding=EstimatedValue(value=Decimal("10"), source=ValueSource.OBSERVED),
+        fees=_public_taker_fee(
+            "risex_fee_cash_flow_unknown",
+            _public_taker_bps_metadata("3.5"),
+        ),
+    )
+    hedge_observation = _observation(
+        venue="Hyperliquid",
+        symbol="BTC",
+        observed_at=HEDGE_OBSERVED_AT,
+        settlement_at=HEDGE_SETTLEMENT_AT,
+        funding=EstimatedValue(value=Decimal("0"), source=ValueSource.OBSERVED),
+        fees=_public_taker_fee(
+            "hyperliquid_fee_cash_flow_unknown",
+            _public_taker_rate_metadata("0.00045"),
+        ),
+    )
+
+    snapshot = assemble_route_snapshot(
+        route=route,
+        observations=_observation_mapping(risex_observation, hedge_observation),
+        assembled_at=ASSEMBLED_AT,
+    )
+
+    assert snapshot.fees.components[0].amount_usd.value == Decimal("0.35000")
+    assert snapshot.fees.components[0].amount_usd.source is ValueSource.OBSERVED
+    assert snapshot.fees.components[0].amount_usd.metadata["public_fee_completed_fills"] == (
+        "entry+estimated_exit"
+    )
+    assert snapshot.fees.components[0].amount_usd.metadata["public_fee_fill_count"] == "2"
+    assert snapshot.fees.components[0].amount_usd.metadata["target_notional_usd"] == "500"
+    assert snapshot.fees.components[1].amount_usd.value == Decimal("0.45000")
+    assert snapshot.fees.components[1].amount_usd.source is ValueSource.OBSERVED
+    assert snapshot.fees.components[1].amount_usd.metadata["public_fee_rate_metadata_key"] == (
+        "public_fee_taker_rate"
+    )
+
+    decision = evaluate_route(route, snapshot, EvaluationMode.ENTRY)
+
+    assert decision.status is RouteStatus.PAPER_ELIGIBLE
+    assert decision.entry_ev is not None
+    assert decision.entry_ev.total_fees_usd == Decimal("0.80000")
+
+
+def test_assembly_preserves_malformed_public_taker_fee_metadata_as_unknown() -> None:
+    route = _route()
+    _, hedge_observation = _observations()
+    risex_observation = _observation(
+        venue="RiseX",
+        symbol="BTC-PERP",
+        observed_at=RISEX_OBSERVED_AT,
+        settlement_at=RISEX_SETTLEMENT_AT,
+        funding=EstimatedValue(value=Decimal("10"), source=ValueSource.OBSERVED),
+        fees=_public_taker_fee(
+            "risex_fee_cash_flow_unknown",
+            _public_taker_bps_metadata("not-a-fee"),
+        ),
+    )
+
+    snapshot = assemble_route_snapshot(
+        route=route,
+        observations=_observation_mapping(risex_observation, hedge_observation),
+        assembled_at=ASSEMBLED_AT,
+    )
+
+    assert snapshot.fees.components[0].amount_usd.value is None
+    assert snapshot.fees.components[0].amount_usd.source is ValueSource.UNKNOWN
+
+    decision = evaluate_route(route, snapshot, EvaluationMode.ENTRY)
+
+    assert decision.status is RouteStatus.REJECTED
+    assert decision.reasons == (RejectReason.REQUIRED_LIVE_DATA_MISSING,)
 
 
 def test_assembly_completes_public_funding_rate_metadata_from_route_notional() -> None:

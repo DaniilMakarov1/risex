@@ -341,6 +341,15 @@ RX-040 adds public one-route fee source metadata preservation:
 5. `core/economics/fees.py` still owns fee cash validation and calculation, and unknown fee metadata still fails closed through existing missing-economics handling.
 6. It does not add route discovery, ranking, polling, loops, private/account/auth endpoints, credentials, account state, order placement, sendable exchange request construction, execution automation, ledger writes, storage migrations, replay changes, paper lifecycle changes, funding settlement verification, ledger reconciliation, route statuses, reject reasons, live trading by default, or any second route model, decision path, snapshot path, EV path, VWAP path, ledger-write path, replay path, execution-planning path, or live execution path.
 
+RX-041 adds public one-route account-independent fee cash completion:
+
+1. `core/economics/fees.py` owns `complete_public_taker_fee_component_cash()`, which converts only explicit public account-independent taker fee-rate metadata into USD fee cash.
+2. The helper requires `public_fee_metadata_source=OBSERVED`, `public_fee_metadata_kind=fee_rate_fields`, `public_fee_account_scope=account_independent`, exactly one selected taker rate field (`public_fee_taker_bps` or `public_fee_taker_rate`), and non-empty RX-040 provenance for that selected rate's public field and container.
+3. The completed value represents the current entry plus immediate estimated-exit taker fills for that venue, grounded by the existing order-book-taker quote model and `RouteCandidate.target_notional_usd`: `taker_rate * target_notional_usd * 2`.
+4. The existing `assemble_route_snapshot()` path calls the fee-owned helper while building the existing `FeeModel`; `assemble_route_snapshot_from_adapters()`, `run_real_data_research_route()`, `evaluate_route()`, and manual CLI output remain unchanged.
+5. Missing, malformed, non-finite, non-public, maker-only, ambiguous, missing-provenance, account-tier-dependent, account-state-dependent, or ungrounded fee inputs stay `ValueSource.UNKNOWN` and fail closed through existing economics handling.
+6. It does not add route discovery, ranking, polling, loops, private/account/auth endpoints, credentials, account state, order placement, sendable exchange request construction, execution automation, ledger writes, storage migrations, replay changes, paper lifecycle changes, funding settlement verification, ledger reconciliation, route statuses, reject reasons, live trading by default, or any second route model, decision path, snapshot path, EV path, VWAP path, ledger-write path, replay path, execution-planning path, or live execution path.
+
 RX-005 adds deterministic offline orchestration over multiple fake route candidates:
 
 1. `core/pipeline/offline_scan.py` owns the route-candidate iteration layer.
@@ -468,7 +477,7 @@ Spread, price impact, basis, slippage, and fees are not independent arbitrary re
 
 ## Unknown values
 
-Unknown values must not silently become zero. `EstimatedValue` requires `source=UNKNOWN` values to carry no numeric value, and callers must use source-aware handling before a value can participate in economics. Fee defaults must use `USER_CONFIGURED`; last-observed funding estimates must use `ESTIMATED_FROM_LAST_VALUE`. Public funding-rate metadata may become observed USD funding cash only when the existing one-route snapshot path has explicit route notional and leg side; missing, malformed, or ungrounded metadata remains unknown. Public fee metadata may be preserved for inspection on unknown fee values, but it remains unknown cash unless a future exact task provides explicit public, account-tier-independent, route-notional-aware, mathematically grounded fee cash completion.
+Unknown values must not silently become zero. `EstimatedValue` requires `source=UNKNOWN` values to carry no numeric value, and callers must use source-aware handling before a value can participate in economics. Fee defaults must use `USER_CONFIGURED`; last-observed funding estimates must use `ESTIMATED_FROM_LAST_VALUE`. Public funding-rate metadata may become observed USD funding cash only when the existing one-route snapshot path has explicit route notional and leg side; missing, malformed, or ungrounded metadata remains unknown. Public fee metadata may become observed USD fee cash only when the existing one-route snapshot path has explicit route notional plus public account-independent taker-rate metadata with RX-040 field/container provenance; the completed venue component covers entry plus immediate estimated-exit taker fills. Missing, malformed, maker-only, ambiguous, account-tier-dependent, account-state-dependent, missing-provenance, or ungrounded fee metadata remains unknown.
 
 ## Entry and exit economics
 

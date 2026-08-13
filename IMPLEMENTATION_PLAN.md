@@ -53,19 +53,23 @@ The detour's purpose is to keep future live-adjacent work honest: funding settle
 
 RX-040 — Public One-Route Fee Source Metadata Preservation is reviewer-accepted and finalized on `main`. It preserves explicit public fee-rate and account-tier fee-source metadata on unknown fee cash values in the existing read-only public RiseX and Hyperliquid adapters. Fee cash remains `ValueSource.UNKNOWN` with `value=None`; missing, malformed, non-finite, non-public, account-tier-dependent, account-state-dependent, or ungrounded fee inputs remain unknown and cannot become zero. RX-040 does not add route discovery, ranking, polling, private endpoints, credentials, account state, orders, execution automation, ledger writes, fee-cash defaults, fee cash completion, or live trading by default.
 
+## Current Product Task Branch
+
+RX-041 — Public One-Route Account-Independent Fee Cash Completion is implemented on the current task branch and remains pending reviewer acceptance. The branch completes only explicit public account-independent taker fee-rate metadata with RX-040 field/container provenance into entry plus immediate estimated-exit route-notional USD fee cash through `core/economics/fees.py` and the existing one-route `assemble_route_snapshot()` path. Missing, malformed, non-finite, non-public, maker-only, ambiguous, missing-provenance, account-tier-dependent, account-state-dependent, or ungrounded fee inputs remain unknown and cannot become zero or partial fee cash. RX-041 does not add route discovery, ranking, polling, private endpoints, credentials, account state, orders, execution automation, ledger writes, route evaluation changes, fee defaults, or live trading by default.
+
 ## Previous Product Baseline
 
 RX-039 — Public One-Route Economics Source Completion remains the previous accepted product baseline before RX-040. It completes explicit public funding-rate metadata into route-notional USD funding cash only inside the existing one-route `assemble_route_snapshot()` path where route notional and leg side are known. RiseX and Hyperliquid adapters remain read-only public observation adapters and still return unknown USD cash from `fetch_observation(symbol)`; account-tier fee cash remains unknown.
 
 ## Current Product Handoff
 
-`NEXT_TASK.md` is prepared for RX-041, a public-data-only one-route account-independent fee cash completion task for explicit public fee-rate metadata preserved by RX-040. RX-041 must remain source-aware, one-route-at-a-time, read-only, non-trading, and fail-closed, with no private endpoints, credentials, account state, orders, automation, ledger writes, route discovery/ranking/polling, live trading, account-tier assumptions, or unknown-to-zero conversion.
+`NEXT_TASK.md` is prepared for RX-042, a governance/source-of-truth clarification task after RX-041 because the current docs do not clearly ground a concrete next public/read-only runtime live-readiness step. RX-042 must inspect the accepted RX-041 outcome and source-of-truth docs, then prepare exactly one next safe handoff without inventing route discovery, polling, private endpoints, credentials, account state, orders, execution automation, or live trading.
 
-## Remaining Gated Roadmap After RX-040
+## Remaining Gated Roadmap After RX-041
 
-Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, by RX-033 governance autonomy, by the RX-034 roadmap selection audit, by the RX-035 post-audit handoff cleanup, by the RX-036 roadmap source-of-truth clarification, by the RX-037 roadmap direction record, by RX-038 one-route real-data CLI finalization, by RX-039 public one-route economics source completion, or by RX-040 public fee-source metadata preservation.
+Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, by RX-033 governance autonomy, by the RX-034 roadmap selection audit, by the RX-035 post-audit handoff cleanup, by the RX-036 roadmap source-of-truth clarification, by the RX-037 roadmap direction record, by RX-038 one-route real-data CLI finalization, by RX-039 public one-route economics source completion, by RX-040 public fee-source metadata preservation, or by RX-041 public one-route account-independent fee cash completion.
 
-1. RX-041 - Public One-Route Account-Independent Fee Cash Completion.
+1. RX-042 - Post-RX-041 Public Live-Readiness Handoff Clarification.
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
 
@@ -379,14 +383,28 @@ After RX-040 reviewer acceptance and finalization, RX-041 should add the smalles
 RX-041 implementation notes:
 
 - `core/economics/fees.py` should own any fee cash completion helper and continue to own fee validation/calculation.
-- Completion may use only explicit RX-040 metadata that is public, finite, `account_independent`, not account-tier schedule metadata, and grounded by the existing one-route `RouteCandidate.target_notional_usd`.
-- Fee cash must remain unknown for missing, malformed, non-finite, non-public, account-tier-dependent, account-state-dependent, or ungrounded metadata.
-- The existing `assemble_route_snapshot()` path may call the fee-owned helper if needed; the adapter handoff, one-route real-data runner, route decision pipeline, and manual CLI output path must remain the same.
+- Completion may use only explicit RX-040 metadata that is public, finite, `account_independent`, not account-tier schedule metadata, taker-role metadata, backed by selected public field/container provenance, and grounded by the existing one-route `RouteCandidate.target_notional_usd`.
+- Completed fee cash represents the current entry plus immediate estimated-exit taker fills for that venue: `taker_rate * target_notional_usd * 2`.
+- Fee cash must remain unknown for missing, malformed, non-finite, non-public, maker-only, ambiguous, missing-provenance, account-tier-dependent, account-state-dependent, or ungrounded metadata.
+- The existing `assemble_route_snapshot()` path calls the fee-owned helper while building the existing `FeeModel`; the adapter handoff, one-route real-data runner, route decision pipeline, and manual CLI output path remain the same.
 
 RX-041 must not add route discovery, ranking, watchlists, background loops, polling, scheduling, alerts, automatic refresh, private endpoints, credentials, account balances/state, orders, sendable exchange request or order payload construction, execution automation, ledger writes, storage migrations, replay changes, paper lifecycle changes, funding settlement verification, ledger reconciliation, execution planning, guarded live runner execution, approval-boundary execution, live trading by default, route statuses, reject reasons, artificial filters, canary architecture, hold-next-cycle logic, or any second route model, decision path, snapshot path, EV path, VWAP path, ledger-write path, replay path, execution-planning path, or live execution path.
 
+## RX-042 — Post-RX-041 Public Live-Readiness Handoff Clarification
+
+After RX-041 reviewer acceptance, RX-042 should inspect the source-of-truth docs and the accepted RX-041 outcome to identify exactly one next non-dangerous public/read-only live-readiness handoff if one is clearly grounded.
+
+RX-042 implementation notes:
+
+- If a concrete safe next public/read-only product/runtime task is clearly grounded in `NEXT_TASK.md`, `IMPLEMENTATION_PLAN.md`, `STATUS.md`, `DECISIONS.md`, Product Owner direction, and repository invariants, prepare that exact one task in `NEXT_TASK.md`.
+- If no such task is clearly grounded, record that no concrete post-RX-041 runtime step is source-grounded yet and prepare a narrow clarification handoff instead of inventing scope.
+- Preserve RX-041 as pending or accepted according to explicit reviewer evidence; do not treat implementation completion as reviewer acceptance.
+- Keep RX-042 docs/governance-only unless a clearly grounded non-dangerous handoff is selected for later work.
+
+RX-042 must not add product/runtime behavior, route discovery, ranking, watchlists, background loops, polling, scheduling, alerts, automatic refresh, adapters, private endpoints, credentials, account balances/state, orders, sendable exchange request or order payload construction, execution automation, ledger writes, storage migrations, replay changes, paper lifecycle changes, funding settlement verification, ledger reconciliation, execution planning, guarded live runner execution, approval-boundary execution, live trading by default, route statuses, reject reasons, artificial filters, canary architecture, hold-next-cycle logic, or any second route model, decision path, snapshot path, EV path, VWAP path, ledger-write path, replay path, execution-planning path, or live execution path.
+
 ## Next Sequence
 
-1. RX-041 - Public One-Route Account-Independent Fee Cash Completion.
+1. RX-042 - Post-RX-041 Public Live-Readiness Handoff Clarification.
 
 Do not promote execution automation, background loops, ranking, order placement, polling, alerts, auto-refresh, private endpoints, credentials, account-state access, destructive reset, financially dangerous actions, or later roadmap stages into the current handoff unless that exact future task is explicitly user-approved for hard-stop scope or explicitly directed by the Product Owner, autonomously selected by Control Tower under RX-033 for non-dangerous scope, and passes the repository's hard approval gates.

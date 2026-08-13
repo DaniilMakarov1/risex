@@ -14,6 +14,7 @@ from core.domain.contracts import (
     VenueSnapshot,
     validate_timezone_aware_datetime,
 )
+from core.economics.fees import complete_public_taker_fee_component_cash
 from core.economics.funding import complete_public_funding_cash_flow
 from core.economics.liquidity import calculate_executable_quote
 from core.venues.base import VenueAdapter
@@ -151,7 +152,15 @@ def assemble_route_snapshot(
             ),
         ),
         fees=FeeModel(
-            components=risex_observation.fees.components + hedge_observation.fees.components
+            components=tuple(
+                complete_public_taker_fee_component_cash(
+                    component,
+                    target_notional_usd=route.target_notional_usd,
+                )
+                for component in (
+                    risex_observation.fees.components + hedge_observation.fees.components
+                )
+            )
         ),
     )
 
