@@ -1002,6 +1002,8 @@
 ## 2026-08-13 - RX-064
 
 - Date: 2026-08-13
+- Decision: Control Tower reviewer accepted RX-064 and finalized it on `main`.
+- Reason: Review found the builder is local/manual display-command-preparation only, validates the RX-062 display payload fixture before writing, does not read or render reports, writes only the descriptive command-preview manifest, and adds no hard-stop scope.
 - Decision: RX-064 adds one explicit CLI-layer `build-paper-session-display-command-preview` command for local paper-session display command preview/manifest generation.
 - Reason: RX-063 grounded the next fake-money paper testing-support step as a local/manual preview builder for the exact accepted RX-062 display wrapper command, without adding Telegram transport, automation, or trading behavior.
 - Decision: The builder requires explicit `--paper-session-display-command-payload-json-path` and `--preview-json-output-path`; it does not infer output destinations.
