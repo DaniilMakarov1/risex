@@ -62,13 +62,13 @@ RX-040 — Public One-Route Fee Source Metadata Preservation remains the previou
 
 ## Current Repository Handoff
 
-RX-042 is reviewer-accepted and finalized on `main` as a governance/source-of-truth clarification task after RX-041. RX-041 remains the latest accepted product baseline. RX-042 inspected the accepted RX-041 outcome and current source-of-truth docs and found no clearly grounded concrete next public/read-only runtime live-readiness step. `NEXT_TASK.md` is therefore prepared for RX-043, a narrow Product Owner direction gate, rather than inferred route discovery, polling, private endpoints, credentials, account state, orders, execution automation, or live trading.
+RX-042 is reviewer-accepted and finalized on `main` as a governance/source-of-truth clarification task after RX-041. RX-041 remains the latest accepted product baseline. RX-043 is implementation-complete on its task branch and pending reviewer acceptance; it records that the explicit Product Owner direction supplied through Control Tower confirms the long-term live-capable goal but still does not clearly identify one concrete safe public/read-only/non-trading runtime task. `NEXT_TASK.md` is therefore prepared for RX-044, a narrow Product Owner concrete public runtime handoff clarification, rather than inferred route discovery, polling, private endpoints, credentials, account state, orders, execution automation, or live trading.
 
-## Remaining Gated Roadmap After RX-042 Finalization
+## Remaining Gated Roadmap Prepared By RX-043 Branch
 
 Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, by RX-033 governance autonomy, by the RX-034 roadmap selection audit, by the RX-035 post-audit handoff cleanup, by the RX-036 roadmap source-of-truth clarification, by the RX-037 roadmap direction record, by RX-038 one-route real-data CLI finalization, by RX-039 public one-route economics source completion, by RX-040 public fee-source metadata preservation, by RX-041 public one-route account-independent fee cash completion, or by RX-042 finalization.
 
-1. RX-043 - Product Owner Public Live-Readiness Handoff Direction Gate.
+1. RX-044 - Product Owner Concrete Public Runtime Handoff Clarification.
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
 
@@ -420,10 +420,31 @@ RX-043 implementation notes:
 - Preserve RX-041 as the latest accepted product baseline unless a later reviewer-accepted product task exists.
 - Preserve RX-042 as pending or accepted according to explicit reviewer evidence.
 
+RX-043 branch outcome:
+
+- RX-042 is reviewer-accepted and finalized on `main`; RX-041 remains the latest accepted product baseline.
+- The explicit Product Owner direction supplied through Control Tower confirms the long-term goal of a live-capable hedged funding capture/trading system on RiseX with Hyperliquid hedge support.
+- That direction remains broad product direction only. It is not authorization for live trading, private/account endpoints, credentials, account balances/state, orders, sendable exchange requests, execution automation, destructive actions, unsafe scope, or financially dangerous actions.
+- The docs plus explicit Product Owner direction still do not clearly identify one concrete safe public/read-only/non-trading runtime handoff. RX-043 therefore records the no-clarified-runtime-handoff conclusion and prepares RX-044 as one narrow Product Owner concrete public runtime handoff clarification instead of inventing route discovery, polling, adapter changes, private endpoint, account-state, order, execution automation, or live-trading scope.
+
 RX-043 must not add product/runtime behavior, route discovery, ranking, watchlists, background loops, polling, scheduling, alerts, automatic refresh, adapters, private endpoints, credentials, account balances/state, orders, sendable exchange request or order payload construction, execution automation, ledger writes, storage migrations, replay changes, paper lifecycle changes, funding settlement verification, ledger reconciliation, execution planning, guarded live runner execution, approval-boundary execution, live trading by default, route statuses, reject reasons, artificial filters, canary architecture, hold-next-cycle logic, or any second route model, decision path, snapshot path, EV path, VWAP path, ledger-write path, replay path, execution-planning path, or live execution path.
+
+## RX-044 — Product Owner Concrete Public Runtime Handoff Clarification
+
+After RX-043 reviewer acceptance, RX-044 should inspect the accepted RX-043 conclusion, current source-of-truth docs, and any explicit Product Owner clarification supplied through Control Tower for exactly one concrete safe public/read-only/non-trading runtime handoff.
+
+RX-044 implementation notes:
+
+- Treat RX-044 as governance/source-of-truth only unless explicit Product Owner clarification clearly identifies one concrete safe public/read-only/non-trading runtime task.
+- If one concrete safe runtime task is clearly grounded, prepare exactly that one later task in `NEXT_TASK.md`.
+- If Product Owner clarification is absent, ambiguous, unsafe, or reaches a hard-stop category, record that no clarified runtime handoff is available and do not invent product/runtime scope.
+- Preserve RX-041 as the latest accepted product baseline unless a later reviewer-accepted product task exists.
+- Preserve RX-043 as pending or accepted according to explicit reviewer evidence.
+
+RX-044 must not add product/runtime behavior, route discovery, ranking, watchlists, background loops, polling, scheduling, alerts, automatic refresh, adapters, private endpoints, credentials, account balances/state, orders, sendable exchange request or order payload construction, execution automation, ledger writes, storage migrations, replay changes, paper lifecycle changes, funding settlement verification, ledger reconciliation, execution planning, guarded live runner execution, approval-boundary execution, live trading by default, route statuses, reject reasons, artificial filters, canary architecture, hold-next-cycle logic, or any second route model, decision path, snapshot path, EV path, VWAP path, ledger-write path, replay path, execution-planning path, or live execution path.
 
 ## Next Sequence
 
-1. RX-043 - Product Owner Public Live-Readiness Handoff Direction Gate.
+1. RX-044 - Product Owner Concrete Public Runtime Handoff Clarification.
 
 Do not promote execution automation, background loops, ranking, order placement, polling, alerts, auto-refresh, private endpoints, credentials, account-state access, destructive reset, financially dangerous actions, or later roadmap stages into the current handoff unless that exact future task is explicitly user-approved for hard-stop scope or explicitly directed by the Product Owner, autonomously selected by Control Tower under RX-033 for non-dangerous scope, and passes the repository's hard approval gates.
