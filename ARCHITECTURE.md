@@ -112,7 +112,7 @@ Any non-terminal Capture may transition to `FAILED`. Capture states with possibl
 - Offline route-candidate orchestration happens only in `core/pipeline/offline_scan.py`.
 - Broad Scan and Focused Refresh orchestration happens only in `core/pipeline/scan_refresh.py`.
 - One-route real-data research orchestration and app-layer snapshot retention for reporting happen only in `apps/research_runner/real_data.py`.
-- Manual one-route real-data CLI input validation, output formatting, and public readiness report formatting happen only in `apps/cli/main.py`.
+- Manual one-route real-data CLI input validation, output formatting, public readiness report formatting, and any later opt-in structured public-readiness stdout formatting happen only in `apps/cli/main.py`.
 - Non-sending execution planning happens only in `core/execution/planning.py`.
 - Guarded live runner readiness without orders happens only in `apps/live_runner/guarded.py`.
 - Explicit approval-gated order placement boundaries happen only in `core/execution/orders.py`.
@@ -330,6 +330,13 @@ RX-045 adds one manual public readiness report:
 4. The report displays source-aware public funding, fee, and Entry EV evidence already produced by the existing owner paths, plus deterministic `UNKNOWN` components and a display-only public-readiness conclusion.
 5. Missing adapter/snapshot evidence fails closed as the existing `REJECTED` decision with `REQUIRED_LIVE_DATA_MISSING` and no retained snapshot; unknown fee, funding, or Entry EV values remain `UNKNOWN` or `None` in display.
 6. The readiness conclusion is operator context only. It does not add route statuses, reject reasons, eligibility, Capture state, ledger state, live gates, execution planning, approval-boundary behavior, order payloads, sendable exchange requests, or live trading.
+
+RX-047 prepares one later structured report-output handoff:
+
+1. RX-047 is governance/source-of-truth only and records Product Owner and Control Tower direction for RX-048.
+2. The prepared RX-048 handoff may add an opt-in machine-readable JSON stdout form of the existing RX-045 manual public readiness report.
+3. That later output must stay inside the existing manual one-route CLI/reporting boundary, reuse the existing public adapter handoff, retained snapshot/report helper, source-aware fee/funding completion, and `evaluate_route(route, snapshot, mode)` path, and preserve the existing text report unless the JSON mode is explicitly requested.
+4. RX-048 must not add file writes, ledger writes, storage migrations, adapter endpoint changes, private/account endpoints, credentials, account balances/state, order placement/cancel/status, sendable exchange request or order payload construction, execution planning, live runner changes, route statuses, reject reasons, eligibility mutation, discovery, ranking, watchlists, polling, scheduling, alerts, automatic refresh, or live trading.
 
 RX-039 adds public one-route economics source completion:
 

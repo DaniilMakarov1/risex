@@ -47,6 +47,7 @@ RX-037 records explicit Product Owner roadmap direction supplied through Control
 - RX-043 recorded that explicit Product Owner direction remains broad live-capable product direction only, does not authorize hard-stop scope, and still does not clearly ground one concrete safe public/read-only/non-trading runtime handoff.
 - RX-044 recorded explicit Product Owner clarification selecting option A, Manual One-Route Public Readiness Report, prepared RX-045 as that one safe later runtime reporting task, and did not change product/runtime behavior.
 - RX-045 added one opt-in manual public readiness report for one explicitly supplied RiseX plus Hyperliquid route, preserving existing public read-only adapter, snapshot, runner, fee/funding completion, and evaluation paths while keeping the conclusion display-only and non-trading.
+- RX-046 recorded that no concrete safe post-RX-045 public/read-only/non-trading runtime handoff was clearly grounded in the accepted docs, prepared RX-047 as a narrow Product Owner direction gate, and did not change product/runtime behavior.
 - RX-Q001 and RX-Q002 added repository workflow, handoff validation, and supervised-worker governance.
 
 ## Accepted Offline Safety-Hardening Detour
@@ -65,13 +66,13 @@ RX-041 — Public One-Route Account-Independent Fee Cash Completion remains the 
 
 ## Current Repository Handoff
 
-RX-046 is reviewer-accepted and finalized on `main` as a governance/source-of-truth clarification task after RX-045. RX-045 remains the latest accepted product baseline. RX-046 is the latest accepted governance/source-of-truth task. The accepted RX-045 outcome and current source-of-truth docs do not clearly ground a concrete next public/read-only/non-trading runtime handoff, so `NEXT_TASK.md` is prepared for RX-047 as one narrow Product Owner direction gate instead of inferred runtime scope.
+RX-046 is reviewer-accepted and finalized on `main` as a governance/source-of-truth clarification task after RX-045. RX-045 remains the latest accepted product baseline. RX-046 is the latest accepted governance/source-of-truth task. RX-047 is current task-branch work, not accepted or finalized. Product Owner and Control Tower direction supplied for RX-047 identifies one concrete safe next handoff: RX-048, an opt-in structured JSON stdout output for the existing RX-045 manual one-route public readiness report, scoped to reuse the existing public read-only one-route adapter handoff, retained snapshot/report helper, source-aware fee/funding completion, and `evaluate_route()` path without changing runtime behavior in RX-047.
 
 ## Remaining Gated Roadmap After RX-045 Finalization
 
-Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, by RX-033 governance autonomy, by the RX-034 roadmap selection audit, by the RX-035 post-audit handoff cleanup, by the RX-036 roadmap source-of-truth clarification, by the RX-037 roadmap direction record, by RX-038 one-route real-data CLI finalization, by RX-039 public one-route economics source completion, by RX-040 public fee-source metadata preservation, by RX-041 public one-route account-independent fee cash completion, RX-042 finalization, RX-043 finalization, RX-044 finalization, RX-045 finalization, or RX-046 finalization.
+Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, by RX-033 governance autonomy, by the RX-034 roadmap selection audit, by the RX-035 post-audit handoff cleanup, by the RX-036 roadmap source-of-truth clarification, by the RX-037 roadmap direction record, by RX-038 one-route real-data CLI finalization, by RX-039 public one-route economics source completion, by RX-040 public fee-source metadata preservation, by RX-041 public one-route account-independent fee cash completion, RX-042 finalization, RX-043 finalization, RX-044 finalization, RX-045 finalization, RX-046 finalization, or the RX-047 task branch.
 
-1. RX-047 - Product Owner Post-RX-045 Public Runtime Direction Gate.
+1. RX-048 - Structured JSON Stdout Public Readiness Report Output.
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
 
@@ -509,10 +510,32 @@ RX-047 implementation notes:
 - Preserve RX-045 as the latest accepted product baseline unless a later reviewer-accepted product task exists.
 - Preserve RX-046 as pending or accepted according to explicit reviewer evidence.
 
+RX-047 branch outcome:
+
+- RX-046 is reviewer-accepted and finalized on `main`; RX-045 remains the latest accepted product baseline.
+- Product Owner and Control Tower direction for RX-047 confirms the long-term goal of live-capable hedged funding capture/trading on RiseX with Hyperliquid hedge support while preserving all hard-stop gates.
+- The supplied direction identifies exactly one concrete safe later handoff: RX-048, an opt-in structured JSON stdout output for the existing RX-045 manual one-route public readiness report.
+- RX-048 is safe and source-grounded only when scoped to one manually supplied explicit RiseX plus Hyperliquid route, existing public/read-only adapters, the existing one-route adapter handoff, retained snapshot/report helper, source-aware fee/funding completion, and `evaluate_route(route, snapshot, mode)`.
+- RX-047 remains governance/source-of-truth only and changes no product/runtime behavior.
+
 RX-047 must not add product/runtime behavior, route discovery, ranking, watchlists, background loops, polling, scheduling, alerts, automatic refresh, adapters, adapter endpoint changes, private/account endpoints, credentials, API keys, account balances/state, account-tier assumptions, order placement, order cancellation, order status fetching, sendable exchange request construction, order payload construction, execution automation, execution planning, guarded live runner execution, approval-boundary execution, ledger writes, storage migrations, replay changes, paper lifecycle changes, funding settlement verification, ledger reconciliation, route eligibility mutation, Capture state transitions, route statuses, reject reasons, fee/funding/VWAP/liquidity/basis/spread/price-impact/slippage/max-level/hidden-buffer/safety-margin rule changes, canary architecture, hold-next-cycle logic, live trading by default, or any second route model, decision path, snapshot path, EV path, VWAP path, ledger-write path, replay path, execution-planning path, or live execution path.
+
+## RX-048 — Structured JSON Stdout Public Readiness Report Output
+
+After RX-047 reviewer acceptance, RX-048 should add one opt-in structured JSON stdout output mode for the existing RX-045 manual public readiness report on the existing `real-data-route` command.
+
+RX-048 implementation notes:
+
+- Add an explicit opt-in JSON stdout mode for one manually supplied RiseX plus Hyperliquid route while preserving the existing default one-decision CLI output and existing `--public-readiness-report` text output.
+- Reuse the existing public read-only `RiseXObservationAdapter` and `HyperliquidObservationAdapter`, existing one-route adapter handoff, existing retained snapshot/report helper, existing source-aware public fee/funding completion, and existing `evaluate_route(route, snapshot, mode)` path.
+- Serialize only existing report evidence already available to the RX-045 report: route identity, decision status/reasons, Entry EV fields, source-aware public funding and fee evidence, deterministic `UNKNOWN` components, and display-only public-readiness conclusion.
+- Preserve unknown values as unknown/null with their sources or metadata, never as zero or success.
+- Emit JSON to stdout only. Do not write files, ledgers, storage records, migrations, or replay evidence.
+
+RX-048 must not add route discovery, ranking, watchlists, background loops, polling, scheduling, alerts, automatic refresh, adapters or adapter endpoint changes, private/account endpoints, credentials, API keys, account balances/state, account-tier assumptions, order placement, order cancellation, order status fetching, sendable exchange request construction, order payload construction, execution automation, execution planning, guarded live runner execution, approval-boundary execution, ledger writes, storage migrations, replay changes, paper lifecycle changes, funding settlement verification, ledger reconciliation, route eligibility mutation, Capture state transitions, route statuses, reject reasons, fee/funding/VWAP/liquidity/basis/spread/price-impact/slippage/max-level/hidden-buffer/safety-margin rule changes, canary architecture, hold-next-cycle logic, live trading by default, or any second route model, decision path, snapshot path, EV path, VWAP path, ledger-write path, replay path, execution-planning path, or live execution path.
 
 ## Next Sequence
 
-1. RX-047 - Product Owner Post-RX-045 Public Runtime Direction Gate.
+1. RX-048 - Structured JSON Stdout Public Readiness Report Output.
 
 Do not promote execution automation, background loops, ranking, order placement, polling, alerts, auto-refresh, private endpoints, credentials, account-state access, destructive reset, financially dangerous actions, or later roadmap stages into the current handoff unless that exact future task is explicitly user-approved for hard-stop scope or explicitly directed by the Product Owner, autonomously selected by Control Tower under RX-033 for non-dangerous scope, and passes the repository's hard approval gates.

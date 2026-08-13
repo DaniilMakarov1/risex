@@ -2,25 +2,25 @@
 
 ## Task ID
 
-RX-047 - Product Owner Post-RX-045 Public Runtime Direction Gate
+RX-048 - Structured JSON Stdout Public Readiness Report Output
 
 ## Objective
 
-After RX-046 is reviewer-accepted, record explicit Product Owner direction supplied through Control Tower or source-of-truth repository docs for exactly one next non-dangerous public/read-only/non-trading live-readiness handoff after the accepted RX-045 manual public readiness report. If explicit direction is absent, ambiguous, unsafe, or reaches hard-stop scope, record that no clarified runtime handoff is available and prepare one narrow clarification handoff instead of inventing route discovery, polling, adapter endpoint changes, private/account endpoints, credentials, account state, orders, sendable exchange request construction, execution automation, or live trading.
+Add one opt-in structured JSON stdout output mode for the existing manual one-route public readiness report on the existing `real-data-route` CLI flow. The JSON mode must serialize the same public/read-only report evidence already available to the accepted manual report for one explicitly supplied RiseX plus Hyperliquid route, while preserving existing text output and without adding file writes, ledger writes, storage, route discovery, polling, adapter endpoint changes, private/account endpoints, credentials, account state, orders, sendable exchange request construction, execution automation, or live trading.
 
 ## Starting baseline
 
-Start from reviewer-accepted `main` after RX-046 is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
+Start from reviewer-accepted `main` after RX-047 is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
 
 ## Branch
 
-Create and work on `task/rx-047-product-owner-post-rx-045-public-runtime-direction-gate`. Do not implement on `main`.
+Create and work on `task/rx-048-structured-json-stdout-public-readiness-report-output`. Do not implement on `main`.
 
 ## Before changing files
 
-Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, remote is wrong, branch is wrong, `origin/HEAD` is not `origin/main`, `HEAD` does not match the accepted starting baseline, RX-046 is not explicitly reviewer-accepted and finalized on `main`, or unrelated branch work would be mixed into this task.
+Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, remote is wrong, branch is wrong, `origin/HEAD` is not `origin/main`, `HEAD` does not match the accepted starting baseline, RX-047 is not explicitly reviewer-accepted and finalized on `main`, or unrelated branch work would be mixed into this task.
 
-If Control Tower selected this task autonomously, verify from the source-of-truth repository docs that the task is non-dangerous: source-of-truth clarification only, with no live trading, private/account endpoints, credentials, orders, sendable exchange request construction, automation, account-state access, destructive reset, unsafe scope, or financially dangerous action. Stop before edits unless explicit user approval exists for any hard-stop category.
+If Control Tower selected this task autonomously, verify from the source-of-truth repository docs that the task is non-dangerous: opt-in public/read-only stdout formatting only, with no live trading, private/account endpoints, credentials, orders, sendable exchange request construction, execution automation, account-state access, destructive reset, unsafe scope, or financially dangerous action. Stop before edits unless explicit user approval exists for any hard-stop category.
 
 Read:
 
@@ -37,15 +37,19 @@ Read:
 
 ## Allowed scope
 
-- Inspect the accepted RX-046 outcome, accepted RX-045 public readiness report outcome, current source-of-truth docs, and any explicit Product Owner direction supplied through Control Tower or source-of-truth docs.
-- Update only source-of-truth docs needed to record whether exactly one concrete safe public/read-only/non-trading live-readiness handoff is clarified.
-- If explicit Product Owner direction clearly identifies one concrete safe later task, prepare exactly that one later task in `NEXT_TASK.md`.
-- If Product Owner direction is absent, ambiguous, unsafe, or reaches hard-stop scope, record that conclusion and prepare exactly one narrow clarification handoff in `NEXT_TASK.md`.
-- Preserve the latest accepted product baseline separately from pending or current branch work.
+- Inspect the accepted manual public readiness report outcome, current source-of-truth docs, and explicit Product Owner and Control Tower direction recorded by RX-047.
+- Add one opt-in JSON stdout mode for the existing `real-data-route` manual public readiness report path, using the existing explicit one-route CLI inputs.
+- Preserve the existing default `real-data-route` one-decision text output and existing `--public-readiness-report` text output unless JSON output is explicitly requested.
+- Reuse the existing public read-only `RiseXObservationAdapter` and `HyperliquidObservationAdapter`, existing one-route adapter handoff, existing retained snapshot/report helper, existing source-aware public fee/funding completion, and existing `evaluate_route(route, snapshot, mode)` path.
+- Serialize only existing report evidence already available to the manual report: route identity, decision status/reasons, Entry EV fields, source-aware public funding and fee evidence, deterministic unknown components, and the display-only public-readiness conclusion.
+- Preserve unknown values as unknown or null with source/metadata context; do not convert unknown fee, funding, or Entry EV values into zero or success.
+- Add focused tests for the JSON output mode and preservation of existing text output.
+- Update source-of-truth docs and `NEXT_TASK.md` for the next single task after completion.
 
 ## Forbidden scope
 
-- No product/runtime behavior changes.
+- No file writes from the report output.
+- No product decision changes.
 - No route discovery.
 - No route ranking.
 - No watchlists.
@@ -90,18 +94,20 @@ Read:
 
 ## Implementation requirements
 
-- Treat this as a source-of-truth clarification task, not as authorization for live trading, private/account endpoints, credentials, account state, orders, sendable exchange requests, execution automation, or financially dangerous actions.
-- Use repository docs and explicit Product Owner or reviewer evidence only; do not rely on chat memory or broad roadmap implication.
+- Treat this as a narrow public/read-only reporting-output task, not as authorization for live trading, private/account endpoints, credentials, account state, orders, sendable exchange requests, execution automation, or financially dangerous actions.
+- Use repository docs, accepted code paths, and explicit Product Owner or reviewer evidence only; do not rely on chat memory or broad roadmap implication.
+- Keep JSON output downstream of existing report evidence and existing `DecisionResult`/retained snapshot values.
+- Keep JSON deterministic enough for tests, including stable keys and deterministic serialization of decimals, timestamps, enums/statuses/reasons, unknown values, and metadata.
+- Emit JSON to stdout only. Do not create files, write ledgers, persist storage state, or mutate domain/runtime state.
 - Preserve reviewer-only acceptance. Do not mark this task or any later task accepted unless explicit reviewer acceptance exists.
-- Preserve RX-045 as the latest accepted product baseline unless a later reviewer-accepted product task exists.
-- Preserve RX-046 as pending or accepted according to explicit reviewer evidence.
+- Preserve the latest accepted product baseline separately from current branch work.
 - Keep `NEXT_TASK.md` as exactly one next task and require the handoff validator to pass.
 - Preserve Control Tower autonomy for ordinary non-dangerous tasks grounded in source-of-truth repository docs.
 - Preserve one RX task equals one clean executor task and one task branch.
 - Preserve Parent ownership of branch discipline, final diff review, validation, commit, push, and final report.
-- Worker policy: one supervised worker required because this is repository-governance/source-of-truth work.
+- Worker policy: one supervised worker required because this task touches a live-readiness reporting boundary and must preserve one-route/report ownership.
 - The worker is required for design support before implementation edits and may continue only if Parent explicitly asks for implementation support.
-- At DESIGN CHECKPOINT, the worker must answer whether the planned clarification is docs/source-of-truth only, non-dangerous, source-grounded, one-task/one-branch compliant, preserves accepted baseline versus pending review state, keeps `NEXT_TASK.md` to exactly one task, preserves reviewer acceptance, excludes all hard-stop categories, avoids invented runtime scope, and preserves Parent ownership.
+- At DESIGN CHECKPOINT, the worker must answer whether the planned JSON output is opt-in, stdout-only, public/read-only, one-route-only, source-grounded in the accepted manual report, downstream of existing report evidence, preserves existing text output, keeps unknowns from becoming zero/success, keeps `NEXT_TASK.md` to exactly one task, preserves reviewer acceptance, excludes all hard-stop categories, avoids invented runtime scope, and preserves Parent ownership.
 - The worker must stop at DESIGN CHECKPOINT before implementation edits and wait for Parent approval or steering before continuing.
 - The worker must also stop at CODE CHECKPOINT, TEST CHECKPOINT, and VALIDATION CHECKPOINT if it continues beyond design support.
 - Parent owns steering, final diff review, validation, commit, push, and final report.
@@ -110,6 +116,8 @@ Read:
 
 ## Required files
 
+- Likely `apps/cli/main.py`
+- Likely `tests/unit/test_cli_main.py`
 - Likely `README.md`
 - Likely `ARCHITECTURE.md`
 - Likely `PRODUCT_INVARIANTS.md`
@@ -121,6 +129,7 @@ Read:
 ## Required tests
 
 - `python3 scripts/validate_next_task.py`
+- `python3 -m pytest tests/unit/test_cli_main.py`
 - `python3 -m pytest tests/invariant`
 - `python3 -m pytest`
 - `python3 -m compileall apps core storage tests scripts`
