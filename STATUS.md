@@ -1,9 +1,9 @@
 # Status
 
-- Current branch: `task/rx-042-post-rx-041-public-live-readiness-handoff-clarification`.
-- Current task: RX-042 - Post-RX-041 Public Live-Readiness Handoff Clarification implementation complete on task branch; pending reviewer acceptance.
+- Current branch: `main`.
+- Current task: RX-042 - Post-RX-041 Public Live-Readiness Handoff Clarification reviewer-accepted and finalized on `main`.
 - RX-042 starting baseline: `6df877279812f6adee2ffc1a7a20d2cbc372beae`
-- RX-042 review state: implementation-complete on task branch; not reviewer-accepted yet.
+- RX-042 review state: reviewer-accepted and finalized on `main`.
 - RX-042 disposition: source-of-truth docs and the accepted RX-041 outcome were inspected. They do not clearly ground a concrete next public/read-only/non-trading runtime live-readiness task after RX-041, so RX-042 records the no-grounded-runtime-handoff conclusion and keeps product/runtime scope out of the branch.
 - RX-042 next handoff: `NEXT_TASK.md` is prepared for exactly one next non-dangerous governance/source-of-truth clarification task, RX-043 Product Owner Public Live-Readiness Handoff Direction Gate, rather than inferred route discovery, polling, private endpoint, account-state, order, execution automation, or live-trading scope.
 - RX-042 worker usage: one supervised worker was used for design support before implementation edits. Parent approved the docs/governance-only fallback direction after the worker confirmed no concrete safe runtime handoff is source-grounded.
@@ -17,6 +17,7 @@
 - RX-040 starting baseline: `24a000cf6c7230bb5f5b7137c86d4ffc76fe10a6`
 - RX-040 review state: reviewer-accepted and finalized on `main`.
 - Latest accepted product task: RX-041 — Public One-Route Account-Independent Fee Cash Completion.
+- Latest accepted metadata/governance task: RX-042 — Post-RX-041 Public Live-Readiness Handoff Clarification.
 - Accepted RX-040 implementation HEAD: `37804820e991d79fdfa2296652b23066978489bf`
 - RX-040 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
 - RX-040 disposition: preserves explicit public fee-rate and account-tier fee-source metadata from existing read-only RiseX and Hyperliquid public adapter payloads on unknown `FeeComponent.amount_usd` metadata. Fee cash remains `ValueSource.UNKNOWN` with `value=None`; missing, malformed, non-finite, non-public, account-tier-dependent, account-state-dependent, or ungrounded fee inputs remain unknown and cannot become zero.
@@ -149,9 +150,9 @@
 - Previous accepted product task before RX-012: RX-011 — Offline Execution Capability Gate Design and Fake Replay Coverage
 - Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
-- Current accepted `main` metadata/governance task: RX-037.
+- Current accepted `main` metadata/governance task: RX-042.
 - Current accepted `main` product task: RX-041.
-- Current RX task state: RX-042 is implementation-complete on task branch and pending reviewer acceptance; RX-041 remains the latest accepted product baseline on `main`, latest accepted metadata/governance follow-up remains RX-037, and `NEXT_TASK.md` is prepared for RX-043.
+- Current RX task state: RX-042 is reviewer-accepted and finalized on `main`; RX-041 remains the latest accepted product baseline on `main`, latest accepted metadata/governance follow-up is RX-042, and `NEXT_TASK.md` is prepared for RX-043.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
@@ -179,13 +180,13 @@ RX-013 remains the previous accepted product baseline before RX-014.
 RX-012 remains the previous accepted product baseline before RX-013.
 RX-Q001 remains the previous accepted governance baseline before RX-Q002.
 RX-011 remains the previous accepted product implementation baseline before RX-012.
-RX-042 prepares `NEXT_TASK.md` for RX-043 after inspecting the accepted RX-041 outcome and finding no clearly grounded concrete next public/read-only runtime live-readiness handoff.
+RX-042 is the accepted metadata/governance follow-up on `main`. It prepares `NEXT_TASK.md` for RX-043 after inspecting the accepted RX-041 outcome and finding no clearly grounded concrete next public/read-only runtime live-readiness handoff.
 RX-041 prepared `NEXT_TASK.md` for RX-042 after RX-041 finalization.
 RX-040 prepared `NEXT_TASK.md` for RX-041 after RX-040 finalization.
 RX-031 found no additional explicit actionable reviewer feedback in local repo/git evidence or GitHub connector context after RX-030 finalization. RX-031 is accepted metadata-only follow-up work and does not change dashboard or product code.
 RX-041 is the latest accepted product task and completes explicit public account-independent taker fee-rate metadata into entry plus immediate estimated-exit route-notional USD fee cash only inside the existing one-route snapshot path, while preserving fail-closed unknown handling and avoiding live/order/private/account-state scope.
 RX-040 remains the previous accepted product task and preserves public fee-source metadata on unknown fee cash values for source-aware inspection only. It does not add route discovery, ranking, polling, private endpoints, credentials, account balances/state, execution automation, order placement, sendable exchange request construction, ledger writes, fee-cash defaults, or live trading by default.
-`NEXT_TASK.md` is prepared for RX-043 after the RX-042 branch conclusion.
+`NEXT_TASK.md` is prepared for RX-043 after RX-042 finalization.
 
 ## Completed accepted tasks
 
@@ -234,6 +235,7 @@ RX-040 remains the previous accepted product task and preserves public fee-sourc
 - RX-039 — Public One-Route Economics Source Completion
 - RX-040 — Public One-Route Fee Source Metadata Preservation
 - RX-041 — Public One-Route Account-Independent Fee Cash Completion
+- RX-042 — Post-RX-041 Public Live-Readiness Handoff Clarification
 
 ## Current architecture status
 
@@ -336,10 +338,22 @@ RX-040 remains the previous accepted product task and preserves public fee-sourc
 - RX-039 is reviewer-accepted and finalized on `main`.
 - RX-040 is reviewer-accepted and finalized on `main`.
 - RX-041 is reviewer-accepted and finalized on `main`.
-- The next recommended task is RX-042 Post-RX-041 Public Live-Readiness Handoff Clarification.
+- RX-042 is reviewer-accepted and finalized on `main`.
+- The next recommended task is RX-043 Product Owner Public Live-Readiness Handoff Direction Gate.
 - The RX-032 authorization does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - RX-033 autonomy does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized and accepted.
+
+## Tests last reported for RX-042 finalization
+
+- `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
+- `python3 -m pytest tests/invariant`: `37 passed in 0.24s`
+- `python3 -m pytest`: `639 passed in 0.80s`
+- `python3 -m compileall apps core storage tests scripts`: exit 0
+- `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
+- `git diff --check`: exit 0
+- `git diff --cached --check`: exit 0
+- `git status --short`: `M IMPLEMENTATION_PLAN.md`; `M STATUS.md`
 
 ## Tests last reported for RX-042 branch
 

@@ -43,6 +43,7 @@ RX-037 records explicit Product Owner roadmap direction supplied through Control
 - RX-039 completed explicit public funding-rate metadata into route-notional USD funding cash inside the existing one-route snapshot path, while keeping adapters read-only/public-only, fee cash unknown, and all live/order/private/account-state gates intact.
 - RX-040 preserved explicit public fee-rate and account-tier fee-source metadata from existing read-only RiseX and Hyperliquid public adapter payloads on unknown fee cash values, while keeping adapter fee cash unknown and all live/order/private/account-state gates intact.
 - RX-041 completed explicit public account-independent taker fee-rate metadata with selected RX-040 field/container provenance into entry plus immediate estimated-exit route-notional USD fee cash inside the existing one-route snapshot path, while keeping unsafe fee inputs unknown and all live/order/private/account-state gates intact.
+- RX-042 recorded that no concrete safe post-RX-041 public/read-only runtime live-readiness handoff is clearly grounded in the current source-of-truth docs, prepared RX-043 as a narrow Product Owner direction gate, and did not change product/runtime behavior.
 - RX-Q001 and RX-Q002 added repository workflow, handoff validation, and supervised-worker governance.
 
 ## Accepted Offline Safety-Hardening Detour
@@ -61,11 +62,11 @@ RX-040 — Public One-Route Fee Source Metadata Preservation remains the previou
 
 ## Current Repository Handoff
 
-RX-042 is implemented on the current task branch as a governance/source-of-truth clarification task after RX-041 and remains pending reviewer acceptance. RX-042 inspected the accepted RX-041 outcome and current source-of-truth docs and found no clearly grounded concrete next public/read-only runtime live-readiness step. `NEXT_TASK.md` is therefore prepared for RX-043, a narrow Product Owner direction gate, rather than inferred route discovery, polling, private endpoints, credentials, account state, orders, execution automation, or live trading.
+RX-042 is reviewer-accepted and finalized on `main` as a governance/source-of-truth clarification task after RX-041. RX-041 remains the latest accepted product baseline. RX-042 inspected the accepted RX-041 outcome and current source-of-truth docs and found no clearly grounded concrete next public/read-only runtime live-readiness step. `NEXT_TASK.md` is therefore prepared for RX-043, a narrow Product Owner direction gate, rather than inferred route discovery, polling, private endpoints, credentials, account state, orders, execution automation, or live trading.
 
-## Remaining Gated Roadmap After RX-042 Branch Clarification
+## Remaining Gated Roadmap After RX-042 Finalization
 
-Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, by RX-033 governance autonomy, by the RX-034 roadmap selection audit, by the RX-035 post-audit handoff cleanup, by the RX-036 roadmap source-of-truth clarification, by the RX-037 roadmap direction record, by RX-038 one-route real-data CLI finalization, by RX-039 public one-route economics source completion, by RX-040 public fee-source metadata preservation, by RX-041 public one-route account-independent fee cash completion, or by the RX-042 branch clarification.
+Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, by RX-033 governance autonomy, by the RX-034 roadmap selection audit, by the RX-035 post-audit handoff cleanup, by the RX-036 roadmap source-of-truth clarification, by the RX-037 roadmap direction record, by RX-038 one-route real-data CLI finalization, by RX-039 public one-route economics source completion, by RX-040 public fee-source metadata preservation, by RX-041 public one-route account-independent fee cash completion, or by RX-042 finalization.
 
 1. RX-043 - Product Owner Public Live-Readiness Handoff Direction Gate.
 
