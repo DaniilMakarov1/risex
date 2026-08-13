@@ -12,6 +12,7 @@ from pathlib import Path
 
 from apps.cli.paper_session_payloads import (
     MAX_PAPER_SESSION_ROUTES as _MAX_PAPER_SESSION_ROUTES,
+    paper_session_route_list_from_command_payload as _paper_session_route_list_from_command_payload,
     paper_session_routes_from_json_path as _paper_session_routes_from_json_path,
 )
 from apps.paper_runner.lifecycle import PaperRunResult, run_paper_lifecycle
@@ -246,6 +247,39 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Optional explicit local JSON path for the paper session report/history export.",
     )
     paper_trade_session.set_defaults(handler=_run_paper_trade_session)
+
+    build_paper_session_package = subparsers.add_parser(
+        "build-paper-session-package",
+        help=(
+            "Build local route-list and preview artifacts for a manual paper "
+            "trade session."
+        ),
+    )
+    build_paper_session_package.add_argument(
+        "--paper-session-command-payload-json-path",
+        required=True,
+        type=_non_empty,
+        help="Explicit local JSON command payload fixture path.",
+    )
+    build_paper_session_package.add_argument(
+        "--routes-json-output-path",
+        required=True,
+        type=_non_empty,
+        help="Explicit local JSON route-list artifact path to write.",
+    )
+    build_paper_session_package.add_argument(
+        "--preview-json-output-path",
+        required=True,
+        type=_non_empty,
+        help="Explicit local JSON preview/manifest artifact path to write.",
+    )
+    build_paper_session_package.add_argument(
+        "--session-report-json-path",
+        required=True,
+        type=_non_empty,
+        help="Intended explicit local JSON report path for the manual session run.",
+    )
+    build_paper_session_package.set_defaults(handler=_run_build_paper_session_package)
 
     return parser
 
@@ -940,6 +974,43 @@ def _write_paper_session_report_json(
     )
 
 
+def _write_json_artifact(path: str, payload: object) -> None:
+    Path(path).write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
+def _paper_session_package_preview_json(
+    *,
+    route_list: Sequence[Mapping[str, str]],
+    routes_json_output_path: str,
+    session_report_json_path: str,
+) -> dict[str, object]:
+    command_args = [
+        "python3",
+        "-m",
+        "apps.cli.main",
+        "paper-trade-session",
+        "--routes-json-path",
+        routes_json_output_path,
+        "--session-report-json-path",
+        session_report_json_path,
+    ]
+    return {
+        "preview": "Paper Trade Session Operator Package",
+        "schema_version": 1,
+        "route_count": len(route_list),
+        "route_ids": [route["route_id"] for route in route_list],
+        "routes_json_path": routes_json_output_path,
+        "session_report_json_path": session_report_json_path,
+        "manual_command": {
+            "argv": command_args,
+            "text": " ".join(command_args),
+        },
+    }
+
+
 def _run_real_data_route(
     args: argparse.Namespace,
     parser: argparse.ArgumentParser,
@@ -990,6 +1061,39 @@ def _run_real_data_route(
         mode=mode,
     )
     _print_real_data_decision(decision)
+
+
+def _run_build_paper_session_package(
+    args: argparse.Namespace,
+    parser: argparse.ArgumentParser,
+) -> None:
+    try:
+        payload_text = Path(args.paper_session_command_payload_json_path).read_text(
+            encoding="utf-8"
+        )
+        route_list = _paper_session_route_list_from_command_payload(payload_text)
+    except OSError as exc:
+        parser.error(f"paper-session-command-payload-json-path could not be read: {exc}")
+    except argparse.ArgumentTypeError as exc:
+        parser.error(str(exc))
+
+    preview = _paper_session_package_preview_json(
+        route_list=route_list,
+        routes_json_output_path=args.routes_json_output_path,
+        session_report_json_path=args.session_report_json_path,
+    )
+    _write_json_artifact(args.routes_json_output_path, route_list)
+    _write_json_artifact(args.preview_json_output_path, preview)
+
+    print("Paper Session Operator Package")
+    print(f"route_count={len(route_list)}")
+    print(
+        "route_ids="
+        f"{_join_or_none(tuple(str(route['route_id']) for route in route_list))}"
+    )
+    print(f"routes_json_path={args.routes_json_output_path}")
+    print(f"preview_json_path={args.preview_json_output_path}")
+    print(f"session_report_json_path={args.session_report_json_path}")
 
 
 def _run_paper_trade_route(

@@ -29,6 +29,8 @@ RX-058 is reviewer-accepted and finalized on `main` as the local paper session c
 
 RX-059 is reviewer-accepted and finalized on `main` as governance/source-of-truth only. It records explicit Product Owner direction supplied through Control Tower that the needed next step toward a fuller fake-money paper trader system for serial strategy testing is RX-060 Local Paper Session Operator Package Builder. RX-059 prepares RX-060 as one local/manual/fake-money testing-support handoff while preserving all hard-stop gates and avoiding runtime changes in RX-059 itself.
 
+RX-060 is implementation-complete on `task/rx-060-local-paper-session-operator-package-builder` and pending reviewer acceptance. It adds one explicit local/manual `build-paper-session-package` command that consumes local command payload fixtures through the RX-058 parser/validation boundary, writes one validated route-list JSON artifact and one descriptive preview/manifest JSON artifact, and stops before session execution, adapter construction, ledger writes, session report/history result writes, Telegram/network/credential behavior, live/order/private/account scope, discovery/ranking/polling, replay/reconciliation/storage changes, aggregate PnL invention, unknown-to-zero behavior, or second owner paths.
+
 ## Completed Accepted Work
 
 - RX-000 through RX-007 established the project constitution, domain contracts, product rules, economics, per-venue observations, offline scan/refresh orchestration, fake paper lifecycle, and append-only ledger persistence scaffolding.
@@ -94,9 +96,9 @@ RX-057 - Manual Paper Session Report History Export is reviewer-accepted and fin
 
 RX-055 - Manual Serial Paper Session Runner is reviewer-accepted and finalized on `main`. It adds one explicit `paper-trade-session` command for an operator-supplied local JSON route-list file capped at 25 exact explicit RiseX plus Hyperliquid ENTRY routes. It validates the whole list before adapter construction, runs each route serially through `run_real_data_research_route_with_snapshot()` and the shared `evaluate_route(route, snapshot, mode)` path, delegates fake paper behavior to `run_paper_lifecycle()` when a public snapshot is available, writes fake paper events only through existing accounting ledger ownership, optionally persists through explicit local SQLite only, and prints deterministic per-route output plus count-only session summaries without aggregating PnL or turning unknowns into zero.
 
-## Current Next Task
+## Current Task Branch
 
-RX-060 Local Paper Session Operator Package Builder is prepared in `NEXT_TASK.md` after RX-059 finalization and is not started.
+RX-060 Local Paper Session Operator Package Builder is implementation-complete on its task branch and pending reviewer acceptance. Implementation completion is not acceptance; RX-058 remains the latest accepted product/runtime baseline on `main`, and RX-059 remains the latest accepted governance/source-of-truth baseline on `main` until reviewer acceptance and finalization.
 
 ## Previous Product Baseline
 
@@ -134,11 +136,13 @@ RX-058 is reviewer-accepted and finalized on `main` as the latest accepted produ
 
 RX-059 is reviewer-accepted and finalized on `main` as governance/source-of-truth only. It inspects the accepted RX-058 local payload parser outcome, the accepted RX-055 through RX-057 fake-money paper-trader testing trail, current source-of-truth docs, the supervised worker design checkpoint, and latest explicit Product Owner direction supplied through Control Tower. That direction grounds exactly one next safe local/manual/fake-money testing-support handoff: RX-060 Local Paper Session Operator Package Builder.
 
-## Remaining Gated Roadmap After RX-059 Finalization
+RX-060 is implementation-complete on its task branch as the local operator-package builder prepared by RX-059. Explicit Product Owner direction continues to ground implementation of needed fake-money paper trader testing-support steps. The next concrete non-dangerous handoff is RX-061 Local Paper Session Report Display Renderer, a local/manual display layer for already-written RX-057 session report JSON artifacts suitable for later Telegram display adaptation without Telegram transport, messaging/network credentials, execution automation, route discovery/ranking/polling, live/order/private/account scope, replay/reconciliation/storage changes, or financially dangerous stages.
 
-Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. RX-059 prepares exactly one next local/manual/fake-money testing-support handoff and does not authorize any additional trading, execution automation, execution planning, polling, ranking, discovery, ledger/storage/replay change, Telegram transport, credentials, messaging, alerts, webhooks, or live-order roadmap stage.
+## Remaining Gated Roadmap After RX-060 Implementation
 
-1. RX-060 Local Paper Session Operator Package Builder.
+Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. RX-060 implements exactly one local/manual/fake-money testing-support handoff and does not authorize any additional trading, execution automation, execution planning, polling, ranking, discovery, ledger/storage/replay change, Telegram transport, credentials, messaging, alerts, webhooks, or live-order roadmap stage.
+
+1. RX-061 Local Paper Session Report Display Renderer.
 
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
@@ -887,8 +891,33 @@ RX-060 implementation notes:
 
 RX-060 must not add Telegram transport, Telegram bot tokens, webhooks, external network calls, alerts, messaging behavior, credentials, API keys, live trading, order placement/cancel/status behavior, private/account endpoints, account state, account balances, account-tier assumptions, sendable exchange requests, order payload construction, execution automation, execution planning, guarded live runner execution, approval-boundary execution, route discovery, ranking, watchlists, polling, background loops, scheduling, auto-refresh, adapter endpoint changes, fee/funding/VWAP/liquidity/basis/economics rule changes, funding settlement verification changes, ledger reconciliation changes, replay changes, storage migrations, route eligibility mutation, Capture state transition changes, route statuses, reject reasons, canary architecture, hold-next-cycle logic, unknown-to-zero behavior, aggregate PnL invention, or second route/session/decision/snapshot/economics/paper lifecycle/ledger-write/replay/reconciliation/execution/live paths.
 
+RX-060 branch outcome:
+
+- RX-060 adds `build-paper-session-package` in the CLI app layer.
+- The command reads an explicit local command payload fixture path and validates the full payload through `paper_session_route_list_from_command_payload()` before writing any artifact.
+- The route-list artifact contains only exact route-list dictionaries accepted by `paper-trade-session --routes-json-path`.
+- The preview/manifest artifact is descriptive only: route count, route ids, route-list artifact path, intended session report path, and exact manual command plan.
+- RX-060 does not run sessions, construct adapters, instantiate ledgers, write report/history results, write ledger events, call networks, add Telegram transport, add live/order/private/account behavior, discover/rank/poll, replay/reconcile ledgers, migrate storage, add statuses/reasons, invent aggregate PnL, or create second owner paths.
+- RX-060 prepares RX-061 Local Paper Session Report Display Renderer as exactly one next product/runtime testing-support handoff pending reviewer acceptance.
+
+## RX-061 — Local Paper Session Report Display Renderer
+
+After RX-060 reviewer acceptance and finalization, RX-061 should add one local-only, manually invoked display/preview renderer for already-written RX-057 `paper-trade-session --session-report-json-path` JSON reports.
+
+RX-061 implementation notes:
+
+- The renderer must consume an explicit local session report JSON path.
+- It may optionally consume an explicit local RX-060 operator package preview/manifest path only if report-only context is insufficient; keep the first implementation report-only if sufficient.
+- It must produce deterministic local display output suitable for later Telegram display adaptation, either stdout only or stdout plus one explicit local display artifact.
+- It may display route count, route ids, per-route decision and paper statuses already present in the report, known/unknown summary counts, string-or-null economics exactly as represented in the report, and `aggregate_paper_net_profit_usd` preserved as null/unknown.
+- It must validate malformed report input before any optional display artifact write.
+- It must not execute sessions, construct adapters, write ledger events, write or mutate session report/history results, send messages, call networks, add Telegram transport, or add live/order/private/account scope.
+- It must not recompute decisions, paper outcomes, economics, summary counts, ledger events, or aggregate PnL.
+
+RX-061 must not add Telegram transport, Telegram bot tokens, webhooks, external network calls, alerts, messaging behavior, credentials, API keys, live trading, order placement/cancel/status behavior, private/account endpoints, account state, account balances, account-tier assumptions, sendable exchange requests, order payload construction, execution automation, execution planning, guarded live runner execution, approval-boundary execution, route discovery, ranking, watchlists, polling, background loops, scheduling, auto-refresh, adapter endpoint changes, fee/funding/VWAP/liquidity/basis/economics rule changes, funding settlement verification changes, ledger reconciliation changes, replay changes, storage migrations, route eligibility mutation, Capture state transition changes, route statuses, reject reasons, canary architecture, hold-next-cycle logic, unknown-to-zero behavior, aggregate PnL invention/calculation, or second route/session/decision/snapshot/economics/paper lifecycle/ledger-write/report/replay/reconciliation/execution/live paths.
+
 ## Next Sequence
 
-1. RX-060 Local Paper Session Operator Package Builder.
+1. RX-061 Local Paper Session Report Display Renderer.
 
 Do not promote execution automation, background loops, ranking, order placement, polling, alerts, auto-refresh, Telegram transport, bot tokens, private endpoints, credentials, account-state access, destructive reset, financially dangerous actions, or later roadmap stages into the current handoff unless that exact future task is explicitly user-approved for hard-stop scope or explicitly directed by the Product Owner, autonomously selected by Control Tower under RX-033 for non-dangerous scope, and passes the repository's hard approval gates.

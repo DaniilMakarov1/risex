@@ -136,6 +136,30 @@ def _paper_session_args(
     return args
 
 
+def _paper_session_package_args(
+    tmp_path,
+    command_payload: object,
+    *,
+    routes_json_output_path: object = OMIT,
+    preview_json_output_path: object = OMIT,
+    session_report_json_path: object = OMIT,
+) -> list[str]:
+    payload_path = tmp_path / "paper-session-command-payload.json"
+    payload_path.write_text(json.dumps(command_payload), encoding="utf-8")
+    args = [
+        "build-paper-session-package",
+        "--paper-session-command-payload-json-path",
+        str(payload_path),
+    ]
+    if routes_json_output_path is not OMIT:
+        args.extend(["--routes-json-output-path", str(routes_json_output_path)])
+    if preview_json_output_path is not OMIT:
+        args.extend(["--preview-json-output-path", str(preview_json_output_path)])
+    if session_report_json_path is not OMIT:
+        args.extend(["--session-report-json-path", str(session_report_json_path)])
+    return args
+
+
 def test_no_arg_cli_fake_scan_refresh_output_remains_unchanged(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -1413,6 +1437,307 @@ def test_paper_trade_session_writes_explicit_deterministic_report_history_json(
     assert '"net_profit_usd": 0' not in first_report_text
 
     capsys.readouterr()
+
+
+def test_build_paper_session_package_writes_deterministic_local_artifacts(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path,
+) -> None:
+    calls: list[str] = []
+
+    class ForbiddenRiseXAdapter:
+        name = "RiseX"
+
+        def __init__(self) -> None:
+            calls.append("risex_adapter")
+            raise AssertionError("builder must not construct adapters")
+
+    class ForbiddenHyperliquidAdapter:
+        name = "Hyperliquid"
+
+        def __init__(self) -> None:
+            calls.append("hedge_adapter")
+            raise AssertionError("builder must not construct adapters")
+
+    def forbidden_runner(**_kwargs: object) -> tuple[DecisionResult, object]:
+        calls.append("runner")
+        raise AssertionError("builder must not run paper sessions")
+
+    monkeypatch.setattr(cli, "RiseXObservationAdapter", ForbiddenRiseXAdapter)
+    monkeypatch.setattr(cli, "HyperliquidObservationAdapter", ForbiddenHyperliquidAdapter)
+    monkeypatch.setattr(cli, "run_real_data_research_route_with_snapshot", forbidden_runner)
+
+    routes = [
+        _paper_session_route(route_id="package-route-001", capture_id="package-cap-001"),
+        _paper_session_route(
+            route_id="package-route-002",
+            capture_id="package-cap-002",
+            assembled_at="2026-08-13T12:01:00+00:00",
+        ),
+    ]
+    routes_output_path = tmp_path / "operator-routes.json"
+    preview_output_path = tmp_path / "operator-preview.json"
+    intended_report_path = tmp_path / "operator-session-report.json"
+    args = _paper_session_package_args(
+        tmp_path,
+        {"routes": routes},
+        routes_json_output_path=routes_output_path,
+        preview_json_output_path=preview_output_path,
+        session_report_json_path=intended_report_path,
+    )
+
+    assert cli.main(args) == 0
+    first_route_artifact = routes_output_path.read_text(encoding="utf-8")
+    first_preview_artifact = preview_output_path.read_text(encoding="utf-8")
+    capsys.readouterr()
+    assert cli.main(args) == 0
+    assert routes_output_path.read_text(encoding="utf-8") == first_route_artifact
+    assert preview_output_path.read_text(encoding="utf-8") == first_preview_artifact
+
+    assert calls == []
+    assert not intended_report_path.exists()
+    assert json.loads(first_route_artifact) == routes
+    assert cli._paper_session_routes_from_json_path(str(routes_output_path))[0][
+        0
+    ].route_id == "package-route-001"
+
+    preview = json.loads(first_preview_artifact)
+    assert preview == {
+        "preview": "Paper Trade Session Operator Package",
+        "schema_version": 1,
+        "route_count": 2,
+        "route_ids": ["package-route-001", "package-route-002"],
+        "routes_json_path": str(routes_output_path),
+        "session_report_json_path": str(intended_report_path),
+        "manual_command": {
+            "argv": [
+                "python3",
+                "-m",
+                "apps.cli.main",
+                "paper-trade-session",
+                "--routes-json-path",
+                str(routes_output_path),
+                "--session-report-json-path",
+                str(intended_report_path),
+            ],
+            "text": (
+                "python3 -m apps.cli.main paper-trade-session "
+                f"--routes-json-path {routes_output_path} "
+                f"--session-report-json-path {intended_report_path}"
+            ),
+        },
+    }
+
+    sanitized_preview = dict(preview)
+    sanitized_preview["routes_json_path"] = "<operator-routes-path>"
+    sanitized_preview["session_report_json_path"] = "<operator-report-path>"
+    sanitized_preview["manual_command"] = {
+        "argv": [
+            "<python>",
+            "-m",
+            "apps.cli.main",
+            "paper-trade-session",
+            "--routes-json-path",
+            "<operator-routes-path>",
+            "--session-report-json-path",
+            "<operator-report-path>",
+        ],
+        "text": (
+            "python3 -m apps.cli.main paper-trade-session "
+            "--routes-json-path <operator-routes-path> "
+            "--session-report-json-path <operator-report-path>"
+        ),
+    }
+    combined_artifacts = (
+        json.dumps(json.loads(first_route_artifact), sort_keys=True)
+        + "\n"
+        + json.dumps(sanitized_preview, sort_keys=True)
+    )
+    forbidden_fields = (
+        "entry_ev",
+        "decision",
+        "summary",
+        "ledger",
+        "aggregate_paper_net_profit_usd",
+        "paper_net_profit_usd",
+        "telegram",
+        "webhook",
+        "token",
+        "credential",
+        "secret",
+        "api_key",
+        "private",
+        "account",
+        "balance",
+        "order_payload",
+        "sendable",
+        "live",
+        "pnl",
+        '"net_profit_usd": 0',
+        '"expected_funding_usd": 0',
+        '"total_fees_usd": 0',
+    )
+    lowered_artifacts = combined_artifacts.lower()
+    for forbidden_field in forbidden_fields:
+        assert forbidden_field not in lowered_artifacts
+
+    assert capsys.readouterr().out == (
+        "Paper Session Operator Package\n"
+        "route_count=2\n"
+        "route_ids=package-route-001,package-route-002\n"
+        f"routes_json_path={routes_output_path}\n"
+        f"preview_json_path={preview_output_path}\n"
+        f"session_report_json_path={intended_report_path}\n"
+    )
+
+
+@pytest.mark.parametrize(
+    "payload",
+    (
+        {"routes": []},
+        {"routes": [_paper_session_route(mode="DISCOVERY")]},
+        {"routes": [{**_paper_session_route(), "watchlist": "BTC"}]},
+        {"routes": [_paper_session_route(target_notional_usd="NaN")]},
+        {"routes": [_paper_session_route(assembled_at="2026-08-13T12:00:00")]},
+        {"command": "paper-trade-session", "routes": [_paper_session_route()]},
+        [
+            _paper_session_route(route_id=f"package-route-{index}")
+            for index in range(cli._MAX_PAPER_SESSION_ROUTES + 1)
+        ],
+    ),
+)
+def test_build_paper_session_package_rejects_malformed_payload_before_artifacts(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+    payload: object,
+) -> None:
+    calls: list[str] = []
+
+    class ForbiddenRiseXAdapter:
+        name = "RiseX"
+
+        def __init__(self) -> None:
+            calls.append("risex_adapter")
+            raise AssertionError("builder must not construct adapters")
+
+    class ForbiddenHyperliquidAdapter:
+        name = "Hyperliquid"
+
+        def __init__(self) -> None:
+            calls.append("hedge_adapter")
+            raise AssertionError("builder must not construct adapters")
+
+    def forbidden_report_runner(**_kwargs: object) -> tuple[DecisionResult, object]:
+        calls.append("report_runner")
+        raise AssertionError("builder must not run sessions")
+
+    monkeypatch.setattr(cli, "RiseXObservationAdapter", ForbiddenRiseXAdapter)
+    monkeypatch.setattr(cli, "HyperliquidObservationAdapter", ForbiddenHyperliquidAdapter)
+    monkeypatch.setattr(cli, "run_real_data_research_route_with_snapshot", forbidden_report_runner)
+
+    routes_output_path = tmp_path / "operator-routes.json"
+    preview_output_path = tmp_path / "operator-preview.json"
+    intended_report_path = tmp_path / "operator-session-report.json"
+
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main(
+            _paper_session_package_args(
+                tmp_path,
+                payload,
+                routes_json_output_path=routes_output_path,
+                preview_json_output_path=preview_output_path,
+                session_report_json_path=intended_report_path,
+            )
+        )
+
+    assert exc_info.value.code == 2
+    assert calls == []
+    assert not routes_output_path.exists()
+    assert not preview_output_path.exists()
+    assert not intended_report_path.exists()
+
+
+@pytest.mark.parametrize(
+    "omitted",
+    (
+        "routes_json_output_path",
+        "preview_json_output_path",
+        "session_report_json_path",
+    ),
+)
+def test_build_paper_session_package_requires_explicit_output_paths(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+    omitted: str,
+) -> None:
+    calls: list[str] = []
+
+    def forbidden_parser(_payload_text: str) -> list[dict[str, str]]:
+        calls.append("parser")
+        raise AssertionError("payload must not be parsed when required paths are absent")
+
+    monkeypatch.setattr(cli, "_paper_session_route_list_from_command_payload", forbidden_parser)
+
+    kwargs = {
+        "routes_json_output_path": tmp_path / "operator-routes.json",
+        "preview_json_output_path": tmp_path / "operator-preview.json",
+        "session_report_json_path": tmp_path / "operator-session-report.json",
+    }
+    kwargs[omitted] = OMIT
+
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main(
+            _paper_session_package_args(
+                tmp_path,
+                {"routes": [_paper_session_route()]},
+                **kwargs,
+            )
+        )
+
+    assert exc_info.value.code == 2
+    assert calls == []
+
+
+def test_build_paper_session_package_builder_has_no_forbidden_runtime_behavior() -> None:
+    package_source = (
+        inspect.getsource(cli._run_build_paper_session_package)
+        + inspect.getsource(cli._paper_session_package_preview_json)
+    )
+    lowered = package_source.lower()
+
+    assert "_paper_session_route_list_from_command_payload" in package_source
+    assert "run_real_data_research_route" not in package_source
+    assert "run_paper_lifecycle" not in package_source
+    assert "InMemoryLedger" not in package_source
+    assert "SQLiteLedger" not in package_source
+    assert "RiseXObservationAdapter" not in package_source
+    assert "HyperliquidObservationAdapter" not in package_source
+    assert "paper_session_report_json" not in package_source
+    assert "apps.live_runner" not in package_source
+    assert "core.execution" not in package_source
+    assert "reconciliation" not in lowered
+    assert "replay" not in lowered
+    assert "telegram" not in lowered
+    assert "webhook" not in lowered
+    assert "token" not in lowered
+    assert "credential" not in lowered
+    assert "secret" not in lowered
+    assert "api_key" not in lowered
+    assert "requests" not in lowered
+    assert "httpx" not in lowered
+    assert "urllib" not in lowered
+    assert "socket" not in lowered
+    assert "private" not in lowered
+    assert "account" not in lowered
+    assert "balance" not in lowered
+    assert "watchlist" not in lowered
+    assert "poll" not in lowered
+    assert "schedule" not in lowered
+    assert "alert" not in lowered
+    assert "ranking" not in lowered
+    assert "aggregate" not in lowered
+    assert "pnl" not in lowered
 
 
 def test_paper_trade_session_handles_missing_snapshot_without_paper_events(
