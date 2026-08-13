@@ -979,6 +979,8 @@
 ## 2026-08-13 - RX-063
 
 - Date: 2026-08-13
+- Decision: Control Tower reviewer accepted RX-063 and finalized it on `main`.
+- Reason: Review found the builder is local/manual display-preparation only, validates reports and generated payloads before artifact writes, writes only the accepted RX-062 fixture shape, and adds no hard-stop scope.
 - Decision: RX-063 adds one explicit CLI-layer `build-paper-session-display-payload` command for local paper-session display payload fixture generation.
 - Reason: RX-062 grounded the next fake-money paper testing-support step as a local/manual builder that writes the accepted display payload shape for explicit already-written RX-057 report paths, without adding Telegram transport, automation, or trading behavior.
 - Decision: The builder requires explicit `--session-report-json-path` and `--display-payload-json-path`; it does not infer output destinations.

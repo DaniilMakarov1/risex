@@ -35,7 +35,7 @@ RX-061 is reviewer-accepted and finalized on `main` after a fix-in-same-branch r
 
 RX-062 is reviewer-accepted and finalized on `main`. It adds one explicit local/manual display command payload parser and `render-paper-session-report-from-payload` command that validate a minimal local payload fixture before report reading, normalize only `session_report_json_path`, and delegate display to the accepted RX-061 renderer without session execution, adapter construction, ledger writes, report mutation, Telegram/network/credential behavior, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
 
-RX-063 is implementation-complete on its task branch and pending reviewer acceptance. It adds one explicit local/manual `build-paper-session-display-payload` command that validates an already-written RX-057 session report through the accepted RX-061 display validation, validates the generated minimal payload through the accepted RX-062 parser, writes one local display payload fixture containing only `schema_version=1` and `session_report_json_path`, and stops before session execution, adapter construction, ledger writes, report mutation, Telegram/network/credential behavior, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
+RX-063 is reviewer-accepted and finalized on `main`. It adds one explicit local/manual `build-paper-session-display-payload` command that validates an already-written RX-057 session report through the accepted RX-061 display validation, validates the generated minimal payload through the accepted RX-062 parser, writes one local display payload fixture containing only `schema_version=1` and `session_report_json_path`, and stops before session execution, adapter construction, ledger writes, report mutation, Telegram/network/credential behavior, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
 
 ## Completed Accepted Work
 
@@ -108,7 +108,7 @@ RX-055 - Manual Serial Paper Session Runner is reviewer-accepted and finalized o
 
 ## Current Next Task
 
-RX-064 Local Paper Session Display Command Preview Builder is prepared in `NEXT_TASK.md` for after RX-063 reviewer acceptance and finalization. It remains local/manual/display-command-preparation-only and is not started.
+RX-064 Local Paper Session Display Command Preview Builder is prepared in `NEXT_TASK.md` after RX-063 finalization. It remains local/manual/display-command-preparation-only and is not started.
 
 ## Previous Product Baseline
 
@@ -152,7 +152,7 @@ RX-061 is reviewer-accepted and finalized on `main` as the local paper-session r
 
 RX-062 is reviewer-accepted and finalized on `main` as the local/manual display command payload parser/fixture helper after RX-061. It normalizes explicit local payload fixtures for the RX-061 renderer, validates payloads before report reading, and still avoids Telegram transport, credentials, messaging/network behavior, session execution, adapters, ledgers, report mutation, execution automation, discovery/ranking/polling, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, and second owner paths.
 
-RX-063 is implementation-complete on its task branch and pending reviewer acceptance as the local/manual display payload fixture builder after RX-062. It validates explicit already-written RX-057 report JSON through RX-061 display validation, validates the generated minimal fixture through the RX-062 parser, writes exactly one local display payload fixture, and still avoids Telegram transport, credentials, messaging/network behavior, session execution, adapters, ledgers, report mutation, execution automation, discovery/ranking/polling, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, and second owner paths.
+RX-063 is reviewer-accepted and finalized on `main` as the local/manual display payload fixture builder after RX-062. It validates explicit already-written RX-057 report JSON through RX-061 display validation, validates the generated minimal fixture through the RX-062 parser, writes exactly one local display payload fixture, and still avoids Telegram transport, credentials, messaging/network behavior, session execution, adapters, ledgers, report mutation, execution automation, discovery/ranking/polling, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, and second owner paths.
 
 ## Remaining Gated Roadmap After RX-063 Finalization
 
