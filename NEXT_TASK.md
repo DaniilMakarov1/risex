@@ -2,25 +2,25 @@
 
 ## Task ID
 
-RX-069 - Local Paper Session End-To-End Operator Display Smoke Fixture Coverage
+RX-070 - Local Paper Session Operator Display Fail-Closed Smoke Fixture Coverage
 
 ## Objective
 
-After RX-068 finalization, add focused deterministic local smoke fixture coverage proving that the accepted local operator package, serial paper-session runtime, explicit report export, display payload, display preview, command-text preview/parser, and payload-backed report renderer can operate as one end-to-end fake-money operator display path.
+After RX-069 review, add focused deterministic local smoke fixture coverage proving that malformed or unsafe local operator/display fixtures fail closed across the accepted local fake-money paper-session operator display command chain.
 
-This is testability coverage only. It must use existing accepted commands and deterministic public-adapter doubles, stay local/manual/fake-money, make no external network calls, and add no production behavior unless a tiny bug fix is strictly required by the smoke and stays inside the accepted owner path.
+This is testability coverage only. It must reuse existing accepted commands and local fixtures, make no external network calls, and add no production behavior unless a tiny owner-path bug fix is strictly required by the smoke and stays inside the accepted owner path.
 
 ## Starting baseline
 
-Start from reviewer-accepted `main` after RX-068 is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
+Start from reviewer-reviewed `main` after RX-069 is finalized if the reviewer accepts it. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
 
 ## Branch
 
-Create and work on `task/rx-069-local-paper-session-end-to-end-operator-display-smoke-fixture-coverage`. Do not implement on `main`.
+Create and work on `task/rx-070-local-paper-session-operator-display-fail-closed-smoke-fixture-coverage`. Do not implement on `main`.
 
 ## Before changing files
 
-Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, the remote is wrong, the branch is wrong, `origin/HEAD` is not `origin/main`, `HEAD` does not match the accepted starting baseline, RX-068 is not explicitly reviewer-accepted and finalized on `main`, or unrelated branch work would be mixed into this task.
+Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, the remote is wrong, the branch is wrong, `origin/HEAD` is not `origin/main`, `HEAD` does not match the accepted starting baseline, RX-069 is not explicitly reviewed and finalized as accepted on `main`, or unrelated branch work would be mixed into this task.
 
 If Control Tower selected this task autonomously, verify from the source-of-truth repository docs that the task is non-dangerous, test-only/local/manual/fake-money, and grounded in the accepted fake-money paper trader artifact chain. Stop before edits unless explicit user approval exists for any task involving live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, or financially dangerous actions.
 
@@ -39,21 +39,13 @@ Read:
 
 ## Allowed scope
 
-- Focused deterministic local smoke test coverage proving the accepted local operator/display artifact chain end-to-end.
-- Use the existing `build-paper-session-package` command path to create a route-list artifact and package preview/manifest from an explicit local command payload fixture.
-- Use the generated route-list artifact through the existing `paper-trade-session --routes-json-path ... --session-report-json-path ...` command path with an explicit local SQLite ledger path and injected deterministic public-adapter doubles.
-- Use the existing `build-paper-session-display-payload` command path to create the minimal display payload from the explicit report export.
-- Use the existing `build-paper-session-display-command-preview` command path to preview the accepted payload-backed display command.
-- Use a local command text fixture plus the existing `build-paper-session-display-command-text-preview` command path to preview the accepted parser command.
-- Use the existing `parse-paper-session-display-command-text` command path to create a display payload from exact local command text.
-- Use the existing `render-paper-session-report-from-payload` command path to render the report through the accepted payload-backed display path.
-- Exercise at least two explicit valid `ENTRY` routes through the generated route-list artifact and accepted serial session flow.
-- Cover explicit local package, route-list, preview/manifest, ledger, report, display-payload, display-preview, command-text, command-text-preview, parsed-payload, and payload-backed render artifacts or stdout where applicable.
-- Verify deterministic package preview/manifest values, accepted route-list output shape, existing fake paper lifecycle handling, existing ledger ownership, deterministic runtime stdout, and explicit local report export.
-- Verify string-or-null economics, known/unknown count semantics, and `aggregate_paper_net_profit_usd=null`.
-- Verify no aggregate paper PnL calculation and no unknown-to-zero behavior.
-- Test-only fixtures/helpers are allowed only when local to tests, necessary, immediately used, and not product abstractions.
-- Update source-of-truth docs for the RX-069 outcome and prepare `NEXT_TASK.md` with exactly one next task.
+- Focused deterministic local fail-closed smoke test coverage for accepted local operator/display fixture boundaries.
+- Prefer extending `tests/unit/test_cli_paper_session_smoke.py` or the nearest existing focused paper-session CLI smoke test file.
+- Use existing accepted command paths only, such as `build-paper-session-package`, `build-paper-session-display-payload`, `build-paper-session-display-command-preview`, `build-paper-session-display-command-text-preview`, `parse-paper-session-display-command-text`, and `render-paper-session-report-from-payload`.
+- Cover malformed or unsafe local command payload, display payload, display preview input, command text, command-text preview input, parsed payload, or payload-backed render input boundaries where they are relevant to later command-interface testing.
+- Assert failures happen before unintended artifact writes, session execution, adapter construction, ledger instantiation/writes, report rendering, report mutation, external network calls, Telegram transport, credentials, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
+- Test-local fixtures/helpers are allowed only when local to tests, necessary, immediately used, and not product abstractions.
+- Update source-of-truth docs for the task outcome and prepare `NEXT_TASK.md` with exactly one next task.
 - Keep `python3 scripts/validate_next_task.py` passing.
 
 ## Forbidden scope
@@ -111,23 +103,19 @@ Read:
 
 ## Implementation requirements
 
-- Reuse the existing accepted commands; do not manually write route lists, run a second session runner, duplicate display behavior, or add new command paths.
-- Keep all adapter behavior deterministic through injected public-adapter test doubles so the smoke makes no external network calls.
-- Start from an explicit command payload fixture, let `build-paper-session-package` produce the route-list artifact, and feed only that generated route-list artifact to `paper-trade-session`.
-- Run `paper-trade-session` with both `--routes-json-path` and `--session-report-json-path`, plus an explicit local SQLite ledger path.
-- Build the display payload from the produced report with `build-paper-session-display-payload`.
-- Preview the payload-backed display command with `build-paper-session-display-command-preview`.
-- Build a command-text preview from an exact local command text fixture with `build-paper-session-display-command-text-preview`.
-- Parse that same exact command text into a display payload with `parse-paper-session-display-command-text`.
-- Render through `render-paper-session-report-from-payload` using the parsed display payload.
-- Assert the generated artifacts and stdout are deterministic enough to prove the accepted operator/display path without locking tests to incidental formatting beyond the accepted command contracts.
+- Reuse existing accepted commands; do not manually implement a second fail-closed parser, package builder, session runner, display renderer, or command path.
+- Keep all adapter behavior forbidden or deterministic through test doubles so the smoke makes no external network calls.
+- For package-boundary cases, prove malformed local command payload fixtures fail before route-list or preview/manifest artifacts are written and before adapters, ledgers, sessions, or reports are touched.
+- For display-boundary cases, prove malformed local display payloads, command text fixtures, or payload-backed render inputs fail before unintended payload/preview artifacts, report rendering, adapters, ledgers, or sessions are touched.
+- Where command-text preview is covered, verify preview-only behavior still does not write the intended display payload artifact on failure.
+- Assert local artifacts/stdout/stderr enough to prove the fail-closed boundary without locking tests to incidental formatting beyond accepted command contracts.
 - Preserve the distinction between latest accepted baseline, current task branch state, and reviewer acceptance in docs.
-- Do not describe RX-069 implementation-complete work as reviewer-accepted.
+- Do not describe implementation-complete work as reviewer-accepted.
 - Keep `NEXT_TASK.md` to exactly one task and require `python3 scripts/validate_next_task.py` to pass.
 - Use `docs/WORKFLOW.md` and `docs/templates/` for the handoff and final report.
 - Control Tower autonomous selection is allowed only because this is non-dangerous test-only/local/manual/fake-money work grounded in repository docs.
 - Live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, and financially dangerous actions require explicit user approval before task selection, creation, execution, fixing, or finalization.
-- Worker policy: workers optional because this is focused testability coverage using accepted local command paths and deterministic doubles. Parent must classify worker usage before edits.
+- Worker policy: workers optional because this is focused testability coverage using accepted local command paths and deterministic/forbidden doubles. Parent must classify worker usage before edits.
 - Require one supervised worker/subagent if implementation unexpectedly becomes non-trivial architecture-sensitive work, including live-gate, accounting, reconciliation, execution-boundary, ledger contract, safety-critical, broad contract, owner-boundary, or repository-governance changes.
 - If a worker is used, the worker must stop at DESIGN CHECKPOINT before implementation edits and wait for Parent approval or steering before continuing.
 - If a worker is used, the worker must also stop at CODE CHECKPOINT, TEST CHECKPOINT, and VALIDATION CHECKPOINT before continuing to the next phase.
