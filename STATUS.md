@@ -1,12 +1,14 @@
 # Status
 
-- Current branch: `task/rx-074-local-paper-session-run-command-text-parser-to-runtime-smoke-fixture-coverage`.
-- Current accepted `main` product task: RX-073 - Local Paper Session Run Command Text Parser.
-- Latest accepted product baseline: RX-073 reviewer-accepted and finalized on `main`.
+- Current branch: `main`.
+- Current accepted `main` product task: RX-074 - Local Paper Session Run Command Text Parser-To-Runtime Smoke Fixture Coverage.
+- Latest accepted product baseline: RX-074 reviewer-accepted and finalized on `main`.
 - Latest accepted governance/source-of-truth task: RX-071 reviewer-accepted and finalized on `main`.
 - RX-074 starting baseline: `8797151decedaffda7e18fe15d419d77c63caff2`
 - RX-074 task branch: `task/rx-074-local-paper-session-run-command-text-parser-to-runtime-smoke-fixture-coverage`
-- RX-074 review state: implementation-complete on task branch and pending reviewer acceptance.
+- Accepted RX-074 implementation HEAD: `1fefa4156a371b711f8ece9b64466c9844f32901`
+- RX-074 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
+- RX-074 review state: reviewer-accepted and finalized on `main`.
 - RX-074 disposition: adds focused deterministic test-only smoke fixture coverage in `tests/unit/test_cli_paper_session_smoke.py` proving accepted `parse-paper-session-run-command-text` output can feed the accepted `paper-trade-session` runtime/report/display path under deterministic public-adapter doubles.
 - RX-074 coverage boundary: the new smoke starts from an explicit local command payload fixture and exact local `paper-session-run ...` command text, verifies parser reads/writes stay limited to the accepted command text fixture, payload fixture, route-list artifact, and package-preview artifact, confirms no session report or ledger is written during parsing, feeds only the generated route-list artifact into `paper-trade-session --routes-json-path ... --ledger-sqlite-path ... --session-report-json-path ...`, validates runtime-owned fake paper lifecycle and ledger behavior, verifies the explicit local report export, and validates the report through the accepted display command.
 - RX-074 safety boundaries: no production code changes, no new user-facing CLI command, no CLI behavior changes, no parser weakening, no report rendering or display payload writes outside accepted display/report commands, no session execution outside accepted `paper-trade-session` under deterministic test doubles, no session report/history writes outside the explicit runtime `--session-report-json-path`, no external network calls, no Telegram transport, bot tokens, credentials, webhooks, alerts, messaging behavior, live trading, real orders, private/account endpoints, account state/balances, sendable exchange requests, order payloads, execution automation/planning, discovery/ranking/watchlists/polling/background loops/scheduling, adapter/economics/risk/ledger/replay/reconciliation/storage changes, aggregate PnL calculation, unknown-to-zero behavior, canary architecture, hold-next-cycle logic, or second owner paths.
@@ -450,7 +452,7 @@
 - Accepted baseline branch: `main`
 - Current accepted `main` metadata/governance task: RX-071.
 - Current accepted `main` local/manual/fake-money testing-support task: RX-073.
-- Current RX task state: RX-074 is implementation-complete on `task/rx-074-local-paper-session-run-command-text-parser-to-runtime-smoke-fixture-coverage` and pending reviewer acceptance; accepted `main` remains RX-073 until review finalization; `NEXT_TASK.md` is prepared for RX-075 as the next test-only preview-to-runtime smoke fixture handoff after RX-074 finalization.
+- Current RX task state: RX-074 is reviewer-accepted and finalized on `main`; `NEXT_TASK.md` is prepared for RX-075 as the next test-only preview-to-runtime smoke fixture handoff.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
