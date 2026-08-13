@@ -1,8 +1,16 @@
 # Status
 
-- Current branch: `main`.
-- Current task: RX-069 - Local Paper Session End-To-End Operator Display Smoke Fixture Coverage is reviewer-accepted and finalized on `main`.
+- Current branch: `task/rx-070-local-paper-session-operator-display-fail-closed-smoke-fixture-coverage`.
+- Current task: RX-070 - Local Paper Session Operator Display Fail-Closed Smoke Fixture Coverage is implementation-complete on the task branch and pending reviewer acceptance.
 - Latest accepted product baseline: RX-069 reviewer-accepted and finalized on `main`.
+- RX-070 starting baseline: `3ed82a7feec9b35267f3ffea248bcfc9fb13bca2`
+- RX-070 task branch: `task/rx-070-local-paper-session-operator-display-fail-closed-smoke-fixture-coverage`
+- RX-070 review state: implementation-complete on the task branch; not reviewer-accepted.
+- RX-070 disposition: adds focused deterministic fail-closed smoke fixture coverage proving malformed or unsafe local operator/display fixtures fail before unintended artifacts, session execution, adapter construction, ledger instantiation/writes, report rendering, report mutation, external network calls, Telegram transport, credentials, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
+- RX-070 coverage boundary: the new smoke tests reuse accepted local command paths only: `build-paper-session-package`, `build-paper-session-display-payload`, `build-paper-session-display-command-preview`, `build-paper-session-display-command-text-preview`, `parse-paper-session-display-command-text`, and `render-paper-session-report-from-payload`. They cover unsafe operator command payload fields, malformed display payload fields, unsafe command text, command-text preview inputs, malformed parsed payload-backed render input, and non-null aggregate paper PnL report-display inputs.
+- RX-070 safety boundaries: no production code changes, no new user-facing CLI command, no CLI behavior changes, no parser weakening, no adapter endpoint changes, no external network calls in the new smoke coverage, no Telegram transport, bot token, credentials, webhooks, messaging, alerts, live trading, real orders, private/account endpoints, account state/balances, sendable exchange requests, order payloads, execution automation/planning, discovery/ranking/watchlists/polling/background loops/scheduling, storage migrations, replay/reconciliation changes, route eligibility mutation, Capture state transition changes, new route statuses/reject reasons, second owner paths, aggregate PnL calculation, or unknown-to-zero behavior.
+- RX-070 worker usage: no worker used. Worker policy was optional for RX-070 because the task was focused test-only smoke fixture coverage plus documentation updates and made no production, owner-boundary, ledger contract, replay, reconciliation, execution-boundary, live-gate, or governance-rule behavior changes. Parent retained scope, implementation, final diff review, validation, commit, push, and reporting ownership.
+- RX-070 next handoff: `NEXT_TASK.md` is prepared for exactly one next non-dangerous governance/source-of-truth clarification task after RX-070 finalization, RX-071 Post-Local Operator Display Fail-Closed Handoff Clarification.
 - RX-069 starting baseline: `724975a2cac5147cb420d8a012e6ae915441739d`
 - RX-069 task branch: `task/rx-069-local-paper-session-end-to-end-operator-display-smoke-fixture-coverage`
 - Accepted RX-069 implementation HEAD: `aabc93dee49c61e0b27c22c1b38bf7e443117699`
@@ -401,7 +409,7 @@
 - Accepted baseline branch: `main`
 - Current accepted `main` metadata/governance task: RX-059.
 - Current accepted `main` product task: RX-069.
-- Current RX task state: RX-069 is reviewer-accepted and finalized on `main`; `NEXT_TASK.md` is prepared for RX-070 as the next concrete local operator/display fail-closed smoke coverage task after RX-069 finalization.
+- Current RX task state: RX-070 is implementation-complete on `task/rx-070-local-paper-session-operator-display-fail-closed-smoke-fixture-coverage` and pending reviewer acceptance; `NEXT_TASK.md` is prepared for RX-071 as the next post-coverage clarification gate after RX-070 finalization.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
@@ -448,7 +456,7 @@ RX-040 prepared `NEXT_TASK.md` for RX-041 after RX-040 finalization.
 RX-031 found no additional explicit actionable reviewer feedback in local repo/git evidence or GitHub connector context after RX-030 finalization. RX-031 is accepted metadata-only follow-up work and does not change dashboard or product code.
 RX-041 remains the accepted public account-independent fee-cash completion product task before the later RX-045/RX-048 reporting tasks and completes explicit public account-independent taker fee-rate metadata into entry plus immediate estimated-exit route-notional USD fee cash only inside the existing one-route snapshot path, while preserving fail-closed unknown handling and avoiding live/order/private/account-state scope.
 RX-040 remains the previous accepted product task and preserves public fee-source metadata on unknown fee cash values for source-aware inspection only. It does not add route discovery, ranking, polling, private endpoints, credentials, account balances/state, execution automation, order placement, sendable exchange request construction, ledger writes, fee-cash defaults, or live trading by default.
-`NEXT_TASK.md` is prepared for RX-070 Local Paper Session Operator Display Fail-Closed Smoke Fixture Coverage after RX-069 finalization.
+`NEXT_TASK.md` is prepared for RX-071 Post-Local Operator Display Fail-Closed Handoff Clarification after RX-070 finalization.
 
 ## Completed accepted tasks
 
@@ -649,7 +657,7 @@ RX-040 remains the previous accepted product task and preserves public fee-sourc
 - RX-067 is reviewer-accepted and finalized on `main`.
 - RX-068 is reviewer-accepted and finalized on `main`.
 - RX-069 is reviewer-accepted and finalized on `main`.
-- The next recommended task is RX-070 Local Paper Session Operator Display Fail-Closed Smoke Fixture Coverage after RX-069 finalization.
+- The next recommended task is RX-071 Post-Local Operator Display Fail-Closed Handoff Clarification after RX-070 finalization.
 - The RX-032 authorization does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - RX-033 autonomy does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized and accepted.
@@ -1383,4 +1391,4 @@ RX-040 remains the previous accepted product task and preserves public fee-sourc
 
 ## Next recommended task
 
-RX-070 Local Paper Session Operator Display Fail-Closed Smoke Fixture Coverage after RX-069 finalization.
+RX-071 Post-Local Operator Display Fail-Closed Handoff Clarification after RX-070 finalization.

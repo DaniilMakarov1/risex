@@ -2,27 +2,27 @@
 
 ## Task ID
 
-RX-070 - Local Paper Session Operator Display Fail-Closed Smoke Fixture Coverage
+RX-071 - Post-Local Operator Display Fail-Closed Handoff Clarification
 
 ## Objective
 
-After RX-069 finalization, add focused deterministic local smoke fixture coverage proving that malformed or unsafe local operator/display fixtures fail closed across the accepted local fake-money paper-session operator display command chain.
+After RX-070 reviewer acceptance and finalization, inspect the accepted fake-money paper-session operator/display chain, the RX-070 fail-closed smoke coverage outcome, current source-of-truth docs, and Product Owner direction to determine the next safe handoff.
 
-This is testability coverage only. It must reuse existing accepted commands and local fixtures, make no external network calls, and add no production behavior unless a tiny owner-path bug fix is strictly required by the smoke and stays inside the accepted owner path.
+This is governance/source-of-truth only unless the accepted docs clearly ground exactly one non-dangerous local/manual/fake-money runtime or testability task. Do not infer Telegram transport, credentials, messaging/network behavior, execution automation, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths from the local smoke coverage.
 
 ## Starting baseline
 
-Start from reviewer-accepted `main` after RX-069 finalization. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
+Start from reviewer-accepted `main` after RX-070 finalization. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
 
 ## Branch
 
-Create and work on `task/rx-070-local-paper-session-operator-display-fail-closed-smoke-fixture-coverage`. Do not implement on `main`.
+Create and work on `task/rx-071-post-local-operator-display-fail-closed-handoff-clarification`. Do not implement on `main`.
 
 ## Before changing files
 
-Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, the remote is wrong, the branch is wrong, `origin/HEAD` is not `origin/main`, `HEAD` does not match the accepted starting baseline, RX-069 is not explicitly reviewer-accepted and finalized on `main`, or unrelated branch work would be mixed into this task.
+Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, the remote is wrong, the branch is wrong, `origin/HEAD` is not `origin/main`, `HEAD` does not match the accepted starting baseline, RX-070 is not explicitly reviewer-accepted and finalized on `main`, or unrelated branch work would be mixed into this task.
 
-If Control Tower selected this task autonomously, verify from the source-of-truth repository docs that the task is non-dangerous, test-only/local/manual/fake-money, and grounded in the accepted fake-money paper trader artifact chain. Stop before edits unless explicit user approval exists for any task involving live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, or financially dangerous actions.
+If Control Tower selected this task autonomously, verify from the source-of-truth repository docs that the task is non-dangerous, governance/source-of-truth only by default, and grounded in the accepted fake-money paper trader artifact chain. Stop before edits unless explicit user approval exists for any task involving live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, or financially dangerous actions.
 
 Read:
 
@@ -39,21 +39,20 @@ Read:
 
 ## Allowed scope
 
-- Focused deterministic local fail-closed smoke test coverage for accepted local operator/display fixture boundaries.
-- Prefer extending `tests/unit/test_cli_paper_session_smoke.py` or the nearest existing focused paper-session CLI smoke test file.
-- Use existing accepted command paths only, such as `build-paper-session-package`, `build-paper-session-display-payload`, `build-paper-session-display-command-preview`, `build-paper-session-display-command-text-preview`, `parse-paper-session-display-command-text`, and `render-paper-session-report-from-payload`.
-- Cover malformed or unsafe local command payload, display payload, display preview input, command text, command-text preview input, parsed payload, or payload-backed render input boundaries where they are relevant to later command-interface testing.
-- Assert failures happen before unintended artifact writes, session execution, adapter construction, ledger instantiation/writes, report rendering, report mutation, external network calls, Telegram transport, credentials, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
-- Test-local fixtures/helpers are allowed only when local to tests, necessary, immediately used, and not product abstractions.
-- Update source-of-truth docs for the task outcome and prepare `NEXT_TASK.md` with exactly one next task.
-- Keep `python3 scripts/validate_next_task.py` passing.
+- Source-of-truth inspection and documentation updates only by default.
+- Record whether a concrete safe next local/manual/fake-money runtime or testability handoff is clearly grounded after accepted RX-070 coverage.
+- If no concrete safe handoff is grounded, record that conclusion and prepare exactly one next clarification task.
+- If exactly one safe handoff is clearly grounded, prepare `NEXT_TASK.md` for that one task without implementing runtime or test code in RX-071.
+- Preserve the accepted baseline versus current task branch review-state distinction.
+- Keep `NEXT_TASK.md` to exactly one next task and keep `python3 scripts/validate_next_task.py` passing.
 
 ## Forbidden scope
 
+- No product/runtime implementation unless a tiny docs-consistency fix strictly requires touching wording only.
 - No new user-facing CLI command.
-- No behavior changes to existing CLI output outside tests.
-- No production route, session, decision, snapshot, economics, paper lifecycle, ledger, report, display, parser, or command path changes unless a tiny bug fix is strictly required by the smoke coverage and stays inside the accepted owner path.
-- No parser weakening for accepted boundaries.
+- No production route, session, decision, snapshot, economics, paper lifecycle, ledger, report, display, parser, or command path changes.
+- No parser weakening.
+- No test expansion unless needed only to validate documentation tooling.
 - No real Telegram transport.
 - No Telegram bot tokens.
 - No webhooks.
@@ -103,41 +102,37 @@ Read:
 
 ## Implementation requirements
 
-- Reuse existing accepted commands; do not manually implement a second fail-closed parser, package builder, session runner, display renderer, or command path.
-- Keep all adapter behavior forbidden or deterministic through test doubles so the smoke makes no external network calls.
-- For package-boundary cases, prove malformed local command payload fixtures fail before route-list or preview/manifest artifacts are written and before adapters, ledgers, sessions, or reports are touched.
-- For display-boundary cases, prove malformed local display payloads, command text fixtures, or payload-backed render inputs fail before unintended payload/preview artifacts, report rendering, adapters, ledgers, or sessions are touched.
-- Where command-text preview is covered, verify preview-only behavior still does not write the intended display payload artifact on failure.
-- Assert local artifacts/stdout/stderr enough to prove the fail-closed boundary without locking tests to incidental formatting beyond accepted command contracts.
-- Preserve the distinction between latest accepted baseline, current task branch state, and reviewer acceptance in docs.
-- Do not describe implementation-complete work as reviewer-accepted.
-- Keep `NEXT_TASK.md` to exactly one task and require `python3 scripts/validate_next_task.py` to pass.
+- Inspect accepted RX-070 outcome from git and docs after finalization, not from chat memory.
+- Inspect current source-of-truth docs for whether one concrete safe post-coverage handoff is grounded.
+- Treat Telegram as later interface direction only unless an exact future task is explicitly authorized; do not introduce Telegram transport, credentials, messaging/network behavior, webhooks, alerts, or bot tokens.
+- Do not implement any runtime, parser, display, session, adapter, ledger, or test behavior in this task.
+- Update `STATUS.md` so the latest accepted baseline remains separate from the current task branch and current task review state.
+- Update `DECISIONS.md` only for actual governance/source-of-truth decisions made by this task.
+- Prepare `NEXT_TASK.md` with exactly one next task.
 - Use `docs/WORKFLOW.md` and `docs/templates/` for the handoff and final report.
-- Control Tower autonomous selection is allowed only because this is non-dangerous test-only/local/manual/fake-money work grounded in repository docs.
+- Control Tower autonomous selection is allowed only because this is non-dangerous governance/source-of-truth work grounded in repository docs.
 - Live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, and financially dangerous actions require explicit user approval before task selection, creation, execution, fixing, or finalization.
-- Worker policy: workers optional because this is focused testability coverage using accepted local command paths and deterministic/forbidden doubles. Parent must classify worker usage before edits.
-- Require one supervised worker/subagent if implementation unexpectedly becomes non-trivial architecture-sensitive work, including live-gate, accounting, reconciliation, execution-boundary, ledger contract, safety-critical, broad contract, owner-boundary, or repository-governance changes.
-- If a worker is used, the worker must stop at DESIGN CHECKPOINT before implementation edits and wait for Parent approval or steering before continuing.
-- If a worker is used, the worker must also stop at CODE CHECKPOINT, TEST CHECKPOINT, and VALIDATION CHECKPOINT before continuing to the next phase.
+- Worker policy: one supervised worker/subagent required for design support because this is a repository-governance/source-of-truth handoff clarification task.
+- The worker must answer whether exactly one safe next handoff is grounded, whether the fallback should be another clarification task, and whether any hard-stop category would require explicit user approval.
+- The worker must stop at DESIGN CHECKPOINT before implementation edits and wait for Parent approval or steering before continuing.
+- If the worker continues beyond design support, it must also stop at CODE CHECKPOINT, TEST CHECKPOINT, and VALIDATION CHECKPOINT before continuing to the next phase.
 - Parent owns steering, final diff review, validation, commit, push, and final report.
 - The worker must not commit, push, merge, approve work, or start unrelated scope.
 - Parent must stop before edits if a required worker is unavailable.
 
 ## Required files
 
-- `tests/unit/test_cli_paper_session_smoke.py` or the nearest existing focused paper-session CLI smoke test file
-- `README.md`
-- `ARCHITECTURE.md`
-- `PRODUCT_INVARIANTS.md`
-- `IMPLEMENTATION_PLAN.md`
-- `STATUS.md`
-- `DECISIONS.md`
-- `NEXT_TASK.md`
+- README.md
+- ARCHITECTURE.md
+- PRODUCT_INVARIANTS.md
+- IMPLEMENTATION_PLAN.md
+- STATUS.md
+- DECISIONS.md
+- NEXT_TASK.md
 
 ## Required tests
 
 - `python3 scripts/validate_next_task.py`
-- Focused new smoke test(s)
 - `python3 -m pytest tests/invariant -q`
 - `python3 -m pytest -q`
 - `python3 -m compileall apps core storage tests scripts`

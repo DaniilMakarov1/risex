@@ -4,6 +4,7 @@ import json
 import shlex
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
@@ -152,6 +153,26 @@ def _observation(
 
 def _assert_string_or_none(value: object) -> None:
     assert value is None or isinstance(value, str)
+
+
+def _assert_cli_fails_closed(
+    argv: list[str],
+    *,
+    capsys: pytest.CaptureFixture[str],
+    expected_stderr: str,
+    missing_paths: tuple[Path, ...],
+    adapter_calls: list[tuple[str, str]],
+) -> None:
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main(argv)
+
+    assert exc_info.value.code == 2
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert expected_stderr in captured.err
+    for path in missing_paths:
+        assert not path.exists()
+    assert adapter_calls == []
 
 
 def _install_deterministic_public_adapters(
@@ -1303,3 +1324,223 @@ def test_paper_session_operator_display_artifact_chain_end_to_end_smoke(
     )
     assert "aggregate_paper_net_profit_usd=0" not in payload_backed_display_output
     assert "route.2.paper_net_profit_usd=0" not in payload_backed_display_output
+
+
+def test_paper_session_package_malformed_operator_fixture_fails_closed(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path,
+) -> None:
+    routes_output_path = tmp_path / "unsafe-routes.json"
+    preview_output_path = tmp_path / "unsafe-preview.json"
+    report_path = tmp_path / "unsafe-report.json"
+    ledger_path = tmp_path / "unsafe-ledger.sqlite"
+    command_payload_path = tmp_path / "unsafe-command-payload.json"
+    adapter_calls = _install_deterministic_public_adapters(monkeypatch)
+
+    unsafe_route = _paper_session_route()
+    unsafe_route["telegram_chat_id"] = "123"
+    unsafe_route["aggregate_paper_net_profit_usd"] = "0"
+    command_payload_path.write_text(
+        json.dumps({"routes": [unsafe_route]}),
+        encoding="utf-8",
+    )
+
+    _assert_cli_fails_closed(
+        [
+            "build-paper-session-package",
+            "--paper-session-command-payload-json-path",
+            str(command_payload_path),
+            "--routes-json-output-path",
+            str(routes_output_path),
+            "--preview-json-output-path",
+            str(preview_output_path),
+            "--session-report-json-path",
+            str(report_path),
+        ],
+        capsys=capsys,
+        expected_stderr="route 1 must contain exactly explicit route fields",
+        missing_paths=(routes_output_path, preview_output_path, report_path, ledger_path),
+        adapter_calls=adapter_calls,
+    )
+
+    assert command_payload_path.exists()
+    assert "telegram_chat_id" in command_payload_path.read_text(encoding="utf-8")
+
+
+def test_paper_session_display_malformed_fixtures_fail_closed_before_side_effects(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path,
+) -> None:
+    report_path = tmp_path / "unsafe-display-report.json"
+    display_payload_path = tmp_path / "unsafe-display-payload.json"
+    malformed_display_payload_path = tmp_path / "malformed-display-payload.json"
+    display_preview_path = tmp_path / "unsafe-display-preview.json"
+    command_text_path = tmp_path / "unsafe-display-command.txt"
+    intended_payload_path = tmp_path / "intended-display-payload.json"
+    command_text_preview_path = tmp_path / "unsafe-command-text-preview.json"
+    parsed_payload_path = tmp_path / "parsed-display-payload.json"
+    render_payload_path = tmp_path / "payload-backed-render-payload.json"
+    adapter_calls = _install_deterministic_public_adapters(monkeypatch)
+
+    unsafe_report = {
+        "report": "Paper Trade Session Report",
+        "schema_version": 1,
+        "session": {"route_count": 1},
+        "routes": [
+            {
+                "route": {"route_id": "unsafe-display-route"},
+                "decision": {
+                    "status": "PAPER_ELIGIBLE",
+                    "net_profit_usd": "1.0000",
+                    "entry_ev": {
+                        "expected_funding_usd": "2.0000",
+                        "total_fees_usd": "1.0000",
+                        "simulated_roundtrip_cost_usd": "0",
+                        "net_profit_usd": "1.0000",
+                    },
+                },
+                "paper": {
+                    "started": True,
+                    "expected_funding_usd": "2.0000",
+                    "total_fees_usd": "1.0000",
+                    "simulated_roundtrip_cost_usd": "0",
+                    "net_profit_usd": "1.0000",
+                },
+            }
+        ],
+        "summary": {
+            "entry_ev_known": 1,
+            "entry_ev_unknown": 0,
+            "paper_expected_funding_known": 1,
+            "paper_expected_funding_unknown": 0,
+            "paper_total_fees_known": 1,
+            "paper_total_fees_unknown": 0,
+            "decision_net_profit_known": 1,
+            "decision_net_profit_unknown": 0,
+            "paper_net_profit_known": 1,
+            "paper_net_profit_unknown": 0,
+            "aggregate_paper_net_profit_usd": "0",
+        },
+    }
+    unsafe_report_text = json.dumps(unsafe_report, sort_keys=True)
+    report_path.write_text(unsafe_report_text, encoding="utf-8")
+
+    _assert_cli_fails_closed(
+        [
+            "build-paper-session-display-payload",
+            "--session-report-json-path",
+            str(report_path),
+            "--display-payload-json-path",
+            str(display_payload_path),
+        ],
+        capsys=capsys,
+        expected_stderr="summary.aggregate_paper_net_profit_usd must be null",
+        missing_paths=(display_payload_path,),
+        adapter_calls=adapter_calls,
+    )
+    assert report_path.read_text(encoding="utf-8") == unsafe_report_text
+
+    malformed_display_payload_path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "session_report_json_path": str(report_path),
+                "telegram_chat_id": "123",
+                "aggregate_paper_net_profit_usd": "0",
+            }
+        ),
+        encoding="utf-8",
+    )
+    _assert_cli_fails_closed(
+        [
+            "build-paper-session-display-command-preview",
+            "--paper-session-display-command-payload-json-path",
+            str(malformed_display_payload_path),
+            "--preview-json-output-path",
+            str(display_preview_path),
+        ],
+        capsys=capsys,
+        expected_stderr=(
+            "paper-session-display-command-payload object must contain exactly "
+            "schema_version and session_report_json_path"
+        ),
+        missing_paths=(display_preview_path,),
+        adapter_calls=adapter_calls,
+    )
+    _assert_cli_fails_closed(
+        [
+            "render-paper-session-report-from-payload",
+            "--paper-session-display-command-payload-json-path",
+            str(malformed_display_payload_path),
+        ],
+        capsys=capsys,
+        expected_stderr=(
+            "paper-session-display-command-payload object must contain exactly "
+            "schema_version and session_report_json_path"
+        ),
+        missing_paths=(),
+        adapter_calls=adapter_calls,
+    )
+
+    command_text_path.write_text(
+        "paper-session-report-display --session-report-json-path --telegram-chat-id",
+        encoding="utf-8",
+    )
+    _assert_cli_fails_closed(
+        [
+            "build-paper-session-display-command-text-preview",
+            "--paper-session-display-command-text-path",
+            str(command_text_path),
+            "--display-payload-json-path",
+            str(intended_payload_path),
+            "--preview-json-output-path",
+            str(command_text_preview_path),
+        ],
+        capsys=capsys,
+        expected_stderr=(
+            "paper-session-display-command-text session_report_json_path must "
+            "not start with '-'"
+        ),
+        missing_paths=(intended_payload_path, command_text_preview_path),
+        adapter_calls=adapter_calls,
+    )
+    _assert_cli_fails_closed(
+        [
+            "parse-paper-session-display-command-text",
+            "--paper-session-display-command-text-path",
+            str(command_text_path),
+            "--display-payload-json-path",
+            str(parsed_payload_path),
+        ],
+        capsys=capsys,
+        expected_stderr=(
+            "paper-session-display-command-text session_report_json_path must "
+            "not start with '-'"
+        ),
+        missing_paths=(parsed_payload_path,),
+        adapter_calls=adapter_calls,
+    )
+
+    render_payload_path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "session_report_json_path": str(report_path),
+            }
+        ),
+        encoding="utf-8",
+    )
+    _assert_cli_fails_closed(
+        [
+            "render-paper-session-report-from-payload",
+            "--paper-session-display-command-payload-json-path",
+            str(render_payload_path),
+        ],
+        capsys=capsys,
+        expected_stderr="summary.aggregate_paper_net_profit_usd must be null",
+        missing_paths=(),
+        adapter_calls=adapter_calls,
+    )
+    assert report_path.read_text(encoding="utf-8") == unsafe_report_text

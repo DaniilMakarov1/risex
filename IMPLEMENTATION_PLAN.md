@@ -119,7 +119,7 @@ RX-069 - Local Paper Session End-To-End Operator Display Smoke Fixture Coverage 
 
 ## Current Task Branch
 
-No active product task branch. `NEXT_TASK.md` is prepared for RX-070 after RX-069 finalization.
+RX-070 - Local Paper Session Operator Display Fail-Closed Smoke Fixture Coverage is implementation-complete on `task/rx-070-local-paper-session-operator-display-fail-closed-smoke-fixture-coverage` and pending reviewer acceptance. Latest accepted product baseline remains RX-069 on `main`.
 
 ## Previous Product Task
 
@@ -131,7 +131,7 @@ RX-067 - Local Paper Session Runtime Smoke Fixture Coverage is reviewer-accepted
 
 ## Next Task
 
-`NEXT_TASK.md` is prepared for RX-070 Local Paper Session Operator Display Fail-Closed Smoke Fixture Coverage after RX-069 finalization.
+`NEXT_TASK.md` is prepared for RX-071 Post-Local Operator Display Fail-Closed Handoff Clarification after RX-070 reviewer acceptance and finalization.
 
 ## Previous Product Baseline
 
@@ -187,11 +187,11 @@ RX-068 is reviewer-accepted and finalized on `main`. It adds only test-local det
 
 RX-069 is reviewer-accepted and finalized on `main`. It adds only test-local deterministic end-to-end operator display smoke coverage proving accepted package, serial runtime, report export, display payload, display preview, command-text preview/parser, and payload-backed renderer work as one generated local artifact chain under injected public-adapter doubles, without production behavior changes.
 
-## Remaining Gated Roadmap After RX-069 Finalization
+## Remaining Gated Roadmap After RX-070 Task-Branch Implementation
 
-Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. RX-069 implemented exactly one local/manual/fake-money end-to-end operator display smoke coverage handoff and does not authorize any additional production behavior, trading, execution automation, execution planning, polling, ranking, discovery, ledger/storage/replay change, Telegram transport, credentials, messaging, alerts, webhooks, or live-order roadmap stage.
+Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. RX-070 implements exactly one local/manual/fake-money fail-closed smoke fixture coverage handoff on its task branch and does not authorize any additional production behavior, trading, execution automation, execution planning, polling, ranking, discovery, ledger/storage/replay change, Telegram transport, credentials, messaging, alerts, webhooks, or live-order roadmap stage.
 
-1. RX-070 Local Paper Session Operator Display Fail-Closed Smoke Fixture Coverage.
+1. RX-071 Post-Local Operator Display Fail-Closed Handoff Clarification.
 
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
@@ -1160,7 +1160,7 @@ RX-069 branch outcome:
 
 ## RX-070 — Local Paper Session Operator Display Fail-Closed Smoke Fixture Coverage
 
-After RX-069 finalization, RX-070 should add focused deterministic local smoke fixture coverage proving that malformed or unsafe local operator/display fixtures fail closed across the accepted package, display payload, display preview, command-text preview/parser, and payload-backed render boundaries without production behavior changes.
+After RX-069 finalization, RX-070 adds focused deterministic local smoke fixture coverage proving that malformed or unsafe local operator/display fixtures fail closed across the accepted package, display payload, display preview, command-text preview/parser, and payload-backed render boundaries without production behavior changes.
 
 RX-070 implementation notes:
 
@@ -1169,8 +1169,26 @@ RX-070 implementation notes:
 - It should assert failures occur before unintended artifact writes, session execution, adapter construction, ledger instantiation/writes, report rendering, report mutation, network calls, Telegram transport, credentials, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
 - It must add no new commands, production behavior, parser weakening, external network calls, Telegram transport, credentials, live/order/private/account scope, discovery/ranking/watchlist/poll/schedule, execution automation/planning, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
 
+RX-070 branch outcome:
+
+- RX-070 adds one package-boundary fail-closed smoke test for malformed local command payload fixtures with unsafe Telegram-like and aggregate-PnL-like fields.
+- RX-070 adds one display-boundary fail-closed smoke test covering malformed report display input, malformed display payload fixtures, unsafe command text for command-text preview and parser paths, malformed payload-backed render input, and payload-backed render over non-null aggregate paper PnL report data.
+- The tests assert nonzero parser exits, no stdout rendering, no unintended route-list, preview, display-payload, command-text-preview, report, ledger, or parsed-payload artifacts, unchanged report input where applicable, and no adapter construction under deterministic adapter doubles.
+- RX-070 does not change production code, add commands, alter CLI output behavior, weaken parsers, call networks, add Telegram transport, enter live/order/private/account scope, calculate aggregate PnL, turn unknowns into zero, or create second owner paths.
+- RX-070 prepares RX-071 Post-Local Operator Display Fail-Closed Handoff Clarification as exactly one next governance/source-of-truth handoff after finalization.
+
+## RX-071 — Post-Local Operator Display Fail-Closed Handoff Clarification
+
+After RX-070 finalization, RX-071 should inspect the accepted fake-money paper-session operator/display chain, RX-070 fail-closed coverage outcome, current source-of-truth docs, and Product Owner direction before selecting any further local command-interface work.
+
+RX-071 implementation notes:
+
+- It should be governance/source-of-truth only unless the accepted docs clearly ground exactly one non-dangerous next runtime/testability handoff.
+- It should record whether a concrete safe next handoff is grounded after RX-070, or record that no such handoff is grounded and prepare exactly one next clarification task.
+- It must not infer Telegram transport, bot tokens, credentials, webhooks, alerts, messaging/network behavior, execution automation, discovery/ranking/polling, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths from local command parsing or smoke coverage.
+
 ## Next Sequence
 
-1. RX-070 Local Paper Session Operator Display Fail-Closed Smoke Fixture Coverage.
+1. RX-071 Post-Local Operator Display Fail-Closed Handoff Clarification.
 
 Do not promote execution automation, background loops, ranking, order placement, polling, alerts, auto-refresh, Telegram transport, bot tokens, private endpoints, credentials, account-state access, destructive reset, financially dangerous actions, or later roadmap stages into the current handoff unless that exact future task is explicitly user-approved for hard-stop scope or explicitly directed by the Product Owner, autonomously selected by Control Tower under RX-033 for non-dangerous scope, and passes the repository's hard approval gates.
