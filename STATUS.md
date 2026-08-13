@@ -522,7 +522,7 @@ RX-040 remains the previous accepted product task and preserves public fee-sourc
 - RX-055 is reviewer-accepted and finalized on `main`.
 - RX-056 is reviewer-accepted and finalized on `main`.
 - RX-057 is reviewer-accepted and finalized on `main`.
-- The next recommended task is RX-058 Local Paper Session Command Payload Parser Fixtures.
+- The next recommended task is RX-059 Post-Local Paper Session Payload Parser Handoff Clarification.
 - The RX-032 authorization does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - RX-033 autonomy does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized and accepted.
