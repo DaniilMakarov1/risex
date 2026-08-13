@@ -13,6 +13,7 @@ from pathlib import Path
 
 from apps.cli.paper_session_payloads import (
     MAX_PAPER_SESSION_ROUTES as _MAX_PAPER_SESSION_ROUTES,
+    paper_session_report_path_from_display_command_payload as _paper_session_report_path_from_display_command_payload,
     paper_session_route_list_from_command_payload as _paper_session_route_list_from_command_payload,
     paper_session_routes_from_json_path as _paper_session_routes_from_json_path,
 )
@@ -294,6 +295,23 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     render_paper_session_report.set_defaults(
         handler=_run_render_paper_session_report
+    )
+
+    render_paper_session_report_from_payload = subparsers.add_parser(
+        "render-paper-session-report-from-payload",
+        help=(
+            "Render an already-written local paper session report selected by "
+            "a local display command payload fixture."
+        ),
+    )
+    render_paper_session_report_from_payload.add_argument(
+        "--paper-session-display-command-payload-json-path",
+        required=True,
+        type=_non_empty,
+        help="Explicit local JSON display command payload fixture path.",
+    )
+    render_paper_session_report_from_payload.set_defaults(
+        handler=_run_render_paper_session_report_from_payload
     )
 
     return parser
@@ -1293,6 +1311,31 @@ def _run_render_paper_session_report(
 
     for line in lines:
         print(line)
+
+
+def _run_render_paper_session_report_from_payload(
+    args: argparse.Namespace,
+    parser: argparse.ArgumentParser,
+) -> None:
+    try:
+        payload_text = Path(
+            args.paper_session_display_command_payload_json_path
+        ).read_text(encoding="utf-8")
+        session_report_json_path = (
+            _paper_session_report_path_from_display_command_payload(payload_text)
+        )
+    except OSError as exc:
+        parser.error(
+            "paper-session-display-command-payload-json-path could not be read: "
+            f"{exc}"
+        )
+    except argparse.ArgumentTypeError as exc:
+        parser.error(str(exc))
+
+    _run_render_paper_session_report(
+        argparse.Namespace(session_report_json_path=session_report_json_path),
+        parser,
+    )
 
 
 def _run_real_data_route(

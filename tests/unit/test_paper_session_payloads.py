@@ -163,6 +163,141 @@ def test_paper_session_command_payload_does_not_emit_economics_or_pnl_fields() -
     assert "aggregate_paper_net_profit_usd" not in route_payload
 
 
+def test_paper_session_display_command_payload_normalizes_report_path() -> None:
+    parsed = payloads.paper_session_report_path_from_display_command_payload(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "session_report_json_path": "  /tmp/paper-session-report.json  ",
+            }
+        )
+    )
+
+    assert parsed == "/tmp/paper-session-report.json"
+
+
+@pytest.mark.parametrize(
+    "payload",
+    (
+        "",
+        "{not-json",
+        json.dumps([]),
+        json.dumps({"schema_version": 1}),
+        json.dumps({"session_report_json_path": "/tmp/report.json"}),
+        json.dumps(
+            {
+                "schema_version": 1,
+                "session_report_json_path": "/tmp/report.json",
+                "routes": [],
+            }
+        ),
+        json.dumps(
+            {
+                "schema_version": 1,
+                "session_report_json_path": "/tmp/report.json",
+                "aggregate_paper_net_profit_usd": None,
+            }
+        ),
+        json.dumps(
+            {
+                "schema_version": None,
+                "session_report_json_path": "/tmp/report.json",
+            }
+        ),
+        json.dumps(
+            {
+                "schema_version": True,
+                "session_report_json_path": "/tmp/report.json",
+            }
+        ),
+        json.dumps(
+            {
+                "schema_version": "1",
+                "session_report_json_path": "/tmp/report.json",
+            }
+        ),
+        json.dumps(
+            {
+                "schema_version": 2,
+                "session_report_json_path": "/tmp/report.json",
+            }
+        ),
+        json.dumps({"schema_version": 1, "session_report_json_path": None}),
+        json.dumps({"schema_version": 1, "session_report_json_path": ""}),
+        json.dumps({"schema_version": 1, "session_report_json_path": "   "}),
+        json.dumps({"schema_version": 1, "session_report_json_path": 500}),
+    ),
+)
+def test_paper_session_display_command_payload_rejects_malformed_payloads(
+    monkeypatch: pytest.MonkeyPatch,
+    payload: str,
+) -> None:
+    constructed_adapters: list[str] = []
+
+    class ForbiddenRiseXAdapter:
+        name = "RiseX"
+
+        def __init__(self) -> None:
+            constructed_adapters.append("risex")
+            raise AssertionError("parser must not construct a RiseX adapter")
+
+    class ForbiddenHyperliquidAdapter:
+        name = "Hyperliquid"
+
+        def __init__(self) -> None:
+            constructed_adapters.append("hyperliquid")
+            raise AssertionError("parser must not construct a Hyperliquid adapter")
+
+    monkeypatch.setattr(payloads, "RiseXObservationAdapter", ForbiddenRiseXAdapter)
+    monkeypatch.setattr(
+        payloads,
+        "HyperliquidObservationAdapter",
+        ForbiddenHyperliquidAdapter,
+    )
+
+    with pytest.raises(argparse.ArgumentTypeError):
+        payloads.paper_session_report_path_from_display_command_payload(payload)
+
+    assert constructed_adapters == []
+
+
+def test_paper_session_display_command_payload_parser_has_no_side_effect_behavior() -> None:
+    source = inspect.getsource(
+        payloads.paper_session_report_path_from_display_command_payload
+    )
+    lowered = source.lower()
+
+    assert "json.loads" in source
+    assert "read_text" not in source
+    assert "write_text" not in source
+    assert "run_paper_lifecycle" not in source
+    assert "run_real_data_research_route" not in source
+    assert "InMemoryLedger" not in source
+    assert "SQLiteLedger" not in source
+    assert "RiseXObservationAdapter" not in source
+    assert "HyperliquidObservationAdapter" not in source
+    assert "aggregate" not in lowered
+    assert "pnl" not in lowered
+    assert "telegram" not in lowered
+    assert "webhook" not in lowered
+    assert "token" not in lowered
+    assert "credential" not in lowered
+    assert "secret" not in lowered
+    assert "api_key" not in lowered
+    assert "requests" not in lowered
+    assert "httpx" not in lowered
+    assert "urllib" not in lowered
+    assert "socket" not in lowered
+    assert "private" not in lowered
+    assert "account" not in lowered
+    assert "balance" not in lowered
+    assert "watchlist" not in lowered
+    assert "poll" not in lowered
+    assert "schedule" not in lowered
+    assert "alert" not in lowered
+    assert "ranking" not in lowered
+
+
 def test_paper_session_payload_layer_has_no_forbidden_runtime_behavior() -> None:
     source = inspect.getsource(payloads)
     lowered = source.lower()

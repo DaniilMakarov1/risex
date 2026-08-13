@@ -242,3 +242,62 @@ def paper_session_route_list_from_command_payload(
         payload_name="paper-session-command-payload",
     )
     return _route_list_shape_from_inputs(route_inputs)
+
+
+def paper_session_report_path_from_display_command_payload(
+    payload_text: str,
+) -> str:
+    try:
+        payload_source = _non_empty(payload_text)
+    except argparse.ArgumentTypeError as exc:
+        raise argparse.ArgumentTypeError(
+            f"paper-session-display-command-payload: {exc}"
+        ) from exc
+
+    try:
+        raw_payload = json.loads(payload_source)
+    except json.JSONDecodeError as exc:
+        raise argparse.ArgumentTypeError(
+            f"paper-session-display-command-payload must contain valid JSON: {exc.msg}"
+        ) from exc
+
+    if not isinstance(raw_payload, Mapping):
+        raise argparse.ArgumentTypeError(
+            "paper-session-display-command-payload must be an object"
+        )
+
+    expected_fields = {"schema_version", "session_report_json_path"}
+    payload_fields = set(raw_payload)
+    if payload_fields != expected_fields:
+        missing = sorted(expected_fields - payload_fields)
+        extra = sorted(payload_fields - expected_fields)
+        raise argparse.ArgumentTypeError(
+            "paper-session-display-command-payload object must contain exactly "
+            "schema_version and session_report_json_path; "
+            f"missing={_join_or_none(tuple(missing))} "
+            f"extra={_join_or_none(tuple(extra))}"
+        )
+
+    schema_version = raw_payload["schema_version"]
+    if (
+        not isinstance(schema_version, int)
+        or isinstance(schema_version, bool)
+        or schema_version != 1
+    ):
+        raise argparse.ArgumentTypeError(
+            "paper-session-display-command-payload schema_version must be 1"
+        )
+
+    session_report_json_path = raw_payload["session_report_json_path"]
+    if not isinstance(session_report_json_path, str):
+        raise argparse.ArgumentTypeError(
+            "paper-session-display-command-payload "
+            "session_report_json_path must be a string"
+        )
+    try:
+        return _non_empty(session_report_json_path)
+    except argparse.ArgumentTypeError as exc:
+        raise argparse.ArgumentTypeError(
+            "paper-session-display-command-payload "
+            f"session_report_json_path: {exc}"
+        ) from exc

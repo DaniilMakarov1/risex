@@ -305,6 +305,19 @@ def _render_paper_session_report_args(tmp_path, report_payload: object) -> list[
     ]
 
 
+def _render_paper_session_report_from_payload_args(
+    tmp_path,
+    display_payload: object,
+) -> list[str]:
+    payload_path = tmp_path / "paper-session-display-command-payload.json"
+    payload_path.write_text(json.dumps(display_payload), encoding="utf-8")
+    return [
+        "render-paper-session-report-from-payload",
+        "--paper-session-display-command-payload-json-path",
+        str(payload_path),
+    ]
+
+
 def test_no_arg_cli_fake_scan_refresh_output_remains_unchanged(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -1809,6 +1822,233 @@ def test_render_paper_session_report_rejects_invalid_json_before_output(
 
     assert exc_info.value.code == 2
     assert capsys.readouterr().out == ""
+
+
+def test_render_paper_session_report_from_payload_delegates_to_existing_renderer(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path,
+) -> None:
+    calls: list[str] = []
+
+    class ForbiddenRiseXAdapter:
+        name = "RiseX"
+
+        def __init__(self) -> None:
+            calls.append("risex_adapter")
+            raise AssertionError("display payload command must not construct adapters")
+
+    class ForbiddenHyperliquidAdapter:
+        name = "Hyperliquid"
+
+        def __init__(self) -> None:
+            calls.append("hedge_adapter")
+            raise AssertionError("display payload command must not construct adapters")
+
+    class ForbiddenLedger:
+        def __init__(self, *_args: object, **_kwargs: object) -> None:
+            calls.append("ledger")
+            raise AssertionError("display payload command must not instantiate ledgers")
+
+    def forbidden_runner(**_kwargs: object) -> DecisionResult:
+        calls.append("runner")
+        raise AssertionError("display payload command must not run sessions")
+
+    def forbidden_lifecycle(**_kwargs: object) -> object:
+        calls.append("paper_lifecycle")
+        raise AssertionError("display payload command must not call paper lifecycle")
+
+    monkeypatch.setattr(cli, "RiseXObservationAdapter", ForbiddenRiseXAdapter)
+    monkeypatch.setattr(cli, "HyperliquidObservationAdapter", ForbiddenHyperliquidAdapter)
+    monkeypatch.setattr(cli, "InMemoryLedger", ForbiddenLedger)
+    monkeypatch.setattr(cli, "SQLiteLedger", ForbiddenLedger)
+    monkeypatch.setattr(cli, "run_real_data_research_route", forbidden_runner)
+    monkeypatch.setattr(cli, "run_real_data_research_route_with_snapshot", forbidden_runner)
+    monkeypatch.setattr(cli, "run_paper_lifecycle", forbidden_lifecycle)
+
+    report_path = tmp_path / "paper session report with spaces.json"
+    report_path.write_text(
+        json.dumps(_paper_session_report_payload()),
+        encoding="utf-8",
+    )
+    report_text = report_path.read_text(encoding="utf-8")
+
+    assert (
+        cli.main(
+            [
+                "render-paper-session-report",
+                "--session-report-json-path",
+                str(report_path),
+            ]
+        )
+        == 0
+    )
+    direct_output = capsys.readouterr().out
+
+    args = _render_paper_session_report_from_payload_args(
+        tmp_path,
+        {
+            "schema_version": 1,
+            "session_report_json_path": f"  {report_path}  ",
+        },
+    )
+    assert cli.main(args) == 0
+
+    assert calls == []
+    assert report_path.read_text(encoding="utf-8") == report_text
+    assert capsys.readouterr().out == direct_output
+    assert "summary.aggregate_paper_net_profit_usd=null\n" in direct_output
+    assert "summary.aggregate_paper_net_profit_usd=0" not in direct_output
+    assert "paper_net_profit_usd=0" not in direct_output
+
+
+@pytest.mark.parametrize(
+    "payload",
+    (
+        {"schema_version": 1, "session_report_json_path": None},
+        {
+            "schema_version": 1,
+            "session_report_json_path": "paper-session-report.json",
+            "routes": [],
+        },
+        {"schema_version": 2, "session_report_json_path": "paper-session-report.json"},
+        {"schema_version": 1, "session_report_json_path": ""},
+        {"session_report_json_path": "paper-session-report.json"},
+    ),
+)
+def test_render_paper_session_report_from_payload_rejects_malformed_payload_before_report_read(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path,
+    payload: object,
+) -> None:
+    calls: list[str] = []
+
+    class ForbiddenRiseXAdapter:
+        name = "RiseX"
+
+        def __init__(self) -> None:
+            calls.append("risex_adapter")
+            raise AssertionError("display payload command must not construct adapters")
+
+    class ForbiddenHyperliquidAdapter:
+        name = "Hyperliquid"
+
+        def __init__(self) -> None:
+            calls.append("hedge_adapter")
+            raise AssertionError("display payload command must not construct adapters")
+
+    class ForbiddenLedger:
+        def __init__(self, *_args: object, **_kwargs: object) -> None:
+            calls.append("ledger")
+            raise AssertionError("display payload command must not instantiate ledgers")
+
+    def forbidden_runner(**_kwargs: object) -> DecisionResult:
+        calls.append("runner")
+        raise AssertionError("display payload command must not run sessions")
+
+    def forbidden_lifecycle(**_kwargs: object) -> object:
+        calls.append("paper_lifecycle")
+        raise AssertionError("display payload command must not call paper lifecycle")
+
+    monkeypatch.setattr(cli, "RiseXObservationAdapter", ForbiddenRiseXAdapter)
+    monkeypatch.setattr(cli, "HyperliquidObservationAdapter", ForbiddenHyperliquidAdapter)
+    monkeypatch.setattr(cli, "InMemoryLedger", ForbiddenLedger)
+    monkeypatch.setattr(cli, "SQLiteLedger", ForbiddenLedger)
+    monkeypatch.setattr(cli, "run_real_data_research_route_with_snapshot", forbidden_runner)
+    monkeypatch.setattr(cli, "run_paper_lifecycle", forbidden_lifecycle)
+
+    payload_path = tmp_path / "malformed-display-command-payload.json"
+    payload_path.write_text(json.dumps(payload), encoding="utf-8")
+    report_path = tmp_path / "paper-session-report.json"
+    report_path.write_text(json.dumps(_paper_session_report_payload()), encoding="utf-8")
+    report_text = report_path.read_text(encoding="utf-8")
+    read_paths: list[str] = []
+    original_read_text = cli.Path.read_text
+
+    def recording_read_text(self, *args: object, **kwargs: object) -> str:
+        read_paths.append(str(self))
+        return original_read_text(self, *args, **kwargs)
+
+    monkeypatch.setattr(cli.Path, "read_text", recording_read_text)
+
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main(
+            [
+                "render-paper-session-report-from-payload",
+                "--paper-session-display-command-payload-json-path",
+                str(payload_path),
+            ]
+        )
+
+    assert exc_info.value.code == 2
+    assert calls == []
+    assert read_paths == [str(payload_path)]
+    assert report_path.read_text(encoding="utf-8") == report_text
+    captured = capsys.readouterr()
+    assert captured.out == ""
+
+
+def test_render_paper_session_report_from_payload_requires_explicit_payload_path(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[str] = []
+
+    def forbidden_parser(_payload_text: str) -> str:
+        calls.append("parser")
+        raise AssertionError("payload must not be parsed when fixture path is absent")
+
+    monkeypatch.setattr(
+        cli,
+        "_paper_session_report_path_from_display_command_payload",
+        forbidden_parser,
+    )
+
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main(["render-paper-session-report-from-payload"])
+
+    assert exc_info.value.code == 2
+    assert calls == []
+
+
+def test_render_paper_session_report_from_payload_has_no_forbidden_runtime_behavior() -> None:
+    command_source = inspect.getsource(cli._run_render_paper_session_report_from_payload)
+    lowered = command_source.lower()
+
+    assert "_paper_session_report_path_from_display_command_payload" in command_source
+    assert "_run_render_paper_session_report" in command_source
+    assert "write_text" not in command_source
+    assert "run_real_data_research_route" not in command_source
+    assert "run_paper_lifecycle" not in command_source
+    assert "InMemoryLedger" not in command_source
+    assert "SQLiteLedger" not in command_source
+    assert "RiseXObservationAdapter" not in command_source
+    assert "HyperliquidObservationAdapter" not in command_source
+    assert "apps.live_runner" not in command_source
+    assert "core.execution" not in command_source
+    assert "reconciliation" not in lowered
+    assert "replay" not in lowered
+    assert "telegram" not in lowered
+    assert "webhook" not in lowered
+    assert "token" not in lowered
+    assert "credential" not in lowered
+    assert "secret" not in lowered
+    assert "api_key" not in lowered
+    assert "requests" not in lowered
+    assert "httpx" not in lowered
+    assert "urllib" not in lowered
+    assert "socket" not in lowered
+    assert "private" not in lowered
+    assert "account" not in lowered
+    assert "balance" not in lowered
+    assert "watchlist" not in lowered
+    assert "poll" not in lowered
+    assert "schedule" not in lowered
+    assert "alert" not in lowered
+    assert "ranking" not in lowered
+    assert "order_placement" not in lowered
+    assert "aggregate" not in lowered
+    assert "pnl" not in lowered
 
 
 def test_render_paper_session_report_renderer_has_no_forbidden_runtime_behavior() -> None:
