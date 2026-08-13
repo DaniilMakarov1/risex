@@ -338,6 +338,15 @@ RX-047 prepares one later structured report-output handoff:
 3. That later output must stay inside the existing manual one-route CLI/reporting boundary, reuse the existing public adapter handoff, retained snapshot/report helper, source-aware fee/funding completion, and `evaluate_route(route, snapshot, mode)` path, and preserve the existing text report unless the JSON mode is explicitly requested.
 4. RX-048 must not add file writes, ledger writes, storage migrations, adapter endpoint changes, private/account endpoints, credentials, account balances/state, order placement/cancel/status, sendable exchange request or order payload construction, execution planning, live runner changes, route statuses, reject reasons, eligibility mutation, discovery, ranking, watchlists, polling, scheduling, alerts, automatic refresh, or live trading.
 
+RX-048 adds the structured report-output handoff:
+
+1. `apps/cli/main.py` owns the explicit `--public-readiness-report-format json` selector on the existing `real-data-route` command.
+2. JSON output is produced only when the existing `--public-readiness-report` flag is also supplied. The default one-decision `real-data-route` text output and the default text public-readiness report remain unchanged.
+3. Supplying `--public-readiness-report-format json` without `--public-readiness-report` fails before adapter construction and does not silently switch ordinary one-decision output.
+4. The JSON serializer is downstream of the accepted RX-045 report evidence: route identity, decision status/reasons, Entry EV fields, retained snapshot funding and fee values/sources/metadata, deterministic `UNKNOWN` components, and the display-only public-readiness conclusion.
+5. Decimal values serialize deterministically as strings, timestamps as ISO 8601 strings, enums/statuses/reasons as their existing values, and unknown numeric values as `null` with source/metadata context.
+6. RX-048 does not recalculate EV, fees, funding, VWAP/liquidity, basis, spread, slippage, or profitability; it does not change decisions, routes, adapters, economics rules, ledger state, execution, live gates, orders, private/account endpoints, credentials, account state, or live trading.
+
 RX-039 adds public one-route economics source completion:
 
 1. RiseX and Hyperliquid adapters may preserve explicit public funding-rate metadata from their existing public market-data responses while still returning `ValueSource.UNKNOWN` USD funding cash because `fetch_observation(symbol)` has no selected route notional.

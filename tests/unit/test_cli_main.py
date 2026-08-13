@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import inspect
+import json
 from datetime import UTC, datetime
 from decimal import Decimal
 from types import SimpleNamespace
@@ -72,6 +73,14 @@ def _real_data_args(**overrides: object) -> list[str]:
 
 def _real_data_report_args(**overrides: object) -> list[str]:
     return [*_real_data_args(**overrides), "--public-readiness-report"]
+
+
+def _real_data_report_json_args(**overrides: object) -> list[str]:
+    return [
+        *_real_data_report_args(**overrides),
+        "--public-readiness-report-format",
+        "json",
+    ]
 
 
 def test_no_arg_cli_fake_scan_refresh_output_remains_unchanged(
@@ -340,6 +349,226 @@ def test_real_data_cli_public_readiness_report_outputs_public_evidence(
     )
 
 
+def test_real_data_cli_public_readiness_report_json_outputs_public_evidence(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    constructed_risex_adapters: list[object] = []
+    constructed_hedge_adapters: list[object] = []
+    report_calls: list[dict[str, object]] = []
+
+    class RecordingRiseXAdapter:
+        name = "RiseX"
+
+        def __init__(self) -> None:
+            constructed_risex_adapters.append(self)
+
+    class RecordingHyperliquidAdapter:
+        name = "Hyperliquid"
+
+        def __init__(self) -> None:
+            constructed_hedge_adapters.append(self)
+
+    def forbidden_runner(**_kwargs: object) -> DecisionResult:
+        raise AssertionError("default runner must not be called for JSON report")
+
+    def fake_report_runner(**kwargs: object) -> tuple[DecisionResult, object]:
+        report_calls.append(kwargs)
+        route = kwargs["route"]
+        assert isinstance(route, RouteCandidate)
+        snapshot = SimpleNamespace(
+            captured_at=kwargs["assembled_at"],
+            risex_observed_at=datetime(2026, 8, 13, 12, 0, 1, tzinfo=UTC),
+            hedge_observed_at=datetime(2026, 8, 13, 12, 0, 2, tzinfo=UTC),
+            risex_funding_settlement_at=datetime(2026, 8, 13, 16, 0, tzinfo=UTC),
+            hedge_funding_settlement_at=datetime(2026, 8, 13, 16, 0, tzinfo=UTC),
+            funding=SimpleNamespace(
+                risex_funding_usd=EstimatedValue(
+                    value=Decimal("-0.500"),
+                    source=ValueSource.OBSERVED,
+                    description="completed public RiseX funding",
+                    metadata={
+                        "public_funding_rate": "0.001",
+                        "public_funding_rate_source": "OBSERVED",
+                        "entry_side": "buy",
+                        "target_notional_usd": "500",
+                    },
+                ),
+                hedge_funding_usd=EstimatedValue(
+                    value=Decimal("0.2000"),
+                    source=ValueSource.OBSERVED,
+                    description="completed public hedge funding",
+                    metadata={
+                        "public_funding_rate": "0.0004",
+                        "public_funding_rate_source": "OBSERVED",
+                        "entry_side": "sell",
+                        "target_notional_usd": "500",
+                    },
+                ),
+            ),
+            fees=FeeModel(
+                components=(
+                    FeeComponent(
+                        name="risex_fee_cash_flow_unknown",
+                        amount_usd=EstimatedValue(
+                            value=Decimal("0.35000"),
+                            source=ValueSource.OBSERVED,
+                            description="completed public RiseX fees",
+                            metadata={
+                                "public_fee_metadata_source": "OBSERVED",
+                                "public_fee_completed_fills": "entry+estimated_exit",
+                                "target_notional_usd": "500",
+                            },
+                        ),
+                    ),
+                    FeeComponent(
+                        name="hyperliquid_fee_cash_flow_unknown",
+                        amount_usd=EstimatedValue(
+                            value=Decimal("0.45000"),
+                            source=ValueSource.OBSERVED,
+                            description="completed public hedge fees",
+                            metadata={
+                                "public_fee_metadata_source": "OBSERVED",
+                                "public_fee_completed_fills": "entry+estimated_exit",
+                                "target_notional_usd": "500",
+                            },
+                        ),
+                    ),
+                )
+            ),
+        )
+        return (
+            DecisionResult(
+                route_id=route.route_id,
+                mode=kwargs["mode"],
+                status=RouteStatus.PAPER_ELIGIBLE,
+                reasons=(RejectReason.LIVE_TRADING_DISABLED,),
+                net_profit_usd=Decimal("4.2"),
+                entry_ev=SimpleNamespace(
+                    expected_funding_usd=Decimal("-0.3000"),
+                    total_fees_usd=Decimal("0.80000"),
+                    simulated_roundtrip_cost_usd=Decimal("1.1"),
+                    net_profit_usd=Decimal("4.2"),
+                ),
+                capture_plan=None,
+                decided_at=kwargs["assembled_at"],
+            ),
+            snapshot,
+        )
+
+    monkeypatch.setattr(cli, "RiseXObservationAdapter", RecordingRiseXAdapter)
+    monkeypatch.setattr(cli, "HyperliquidObservationAdapter", RecordingHyperliquidAdapter)
+    monkeypatch.setattr(cli, "run_real_data_research_route", forbidden_runner)
+    monkeypatch.setattr(cli, "run_real_data_research_route_with_snapshot", fake_report_runner)
+
+    assert cli.main(_real_data_report_json_args()) == 0
+
+    assert len(constructed_risex_adapters) == 1
+    assert len(constructed_hedge_adapters) == 1
+    assert len(report_calls) == 1
+    assert json.loads(capsys.readouterr().out) == {
+        "report": "Public Readiness Report",
+        "route": {
+            "route_id": "cli-route-001",
+            "capture_id": "cli-capture-001",
+            "risex_venue": "RiseX",
+            "risex_symbol": "BTC-PERP",
+            "risex_side": "buy",
+            "hedge_venue": "Hyperliquid",
+            "hedge_symbol": "BTC",
+            "hedge_side": "sell",
+            "target_notional_usd": "500",
+        },
+        "decision": {
+            "mode": "ENTRY",
+            "status": "PAPER_ELIGIBLE",
+            "reasons": ["LIVE_TRADING_DISABLED"],
+            "net_profit_usd": "4.2",
+            "entry_ev": {
+                "expected_funding_usd": "-0.3000",
+                "total_fees_usd": "0.80000",
+                "simulated_roundtrip_cost_usd": "1.1",
+                "net_profit_usd": "4.2",
+            },
+        },
+        "snapshot": {
+            "state": "AVAILABLE",
+            "captured_at": "2026-08-13T12:00:00+00:00",
+            "risex_observed_at": "2026-08-13T12:00:01+00:00",
+            "hedge_observed_at": "2026-08-13T12:00:02+00:00",
+            "risex_funding_settlement_at": "2026-08-13T16:00:00+00:00",
+            "hedge_funding_settlement_at": "2026-08-13T16:00:00+00:00",
+            "funding": {
+                "risex": {
+                    "value_usd": "-0.500",
+                    "source": "OBSERVED",
+                    "description": "completed public RiseX funding",
+                    "metadata": {
+                        "entry_side": "buy",
+                        "public_funding_rate": "0.001",
+                        "public_funding_rate_source": "OBSERVED",
+                        "target_notional_usd": "500",
+                    },
+                },
+                "hedge": {
+                    "value_usd": "0.2000",
+                    "source": "OBSERVED",
+                    "description": "completed public hedge funding",
+                    "metadata": {
+                        "entry_side": "sell",
+                        "public_funding_rate": "0.0004",
+                        "public_funding_rate_source": "OBSERVED",
+                        "target_notional_usd": "500",
+                    },
+                },
+            },
+            "fees": {
+                "count": 2,
+                "components": [
+                    {
+                        "name": "risex_fee_cash_flow_unknown",
+                        "is_default": False,
+                        "amount_usd": {
+                            "value_usd": "0.35000",
+                            "source": "OBSERVED",
+                            "description": "completed public RiseX fees",
+                            "metadata": {
+                                "public_fee_completed_fills": "entry+estimated_exit",
+                                "public_fee_metadata_source": "OBSERVED",
+                                "target_notional_usd": "500",
+                            },
+                        },
+                    },
+                    {
+                        "name": "hyperliquid_fee_cash_flow_unknown",
+                        "is_default": False,
+                        "amount_usd": {
+                            "value_usd": "0.45000",
+                            "source": "OBSERVED",
+                            "description": "completed public hedge fees",
+                            "metadata": {
+                                "public_fee_completed_fills": "entry+estimated_exit",
+                                "public_fee_metadata_source": "OBSERVED",
+                                "target_notional_usd": "500",
+                            },
+                        },
+                    },
+                ],
+            },
+        },
+        "unknown_components": [],
+        "public_readiness": {
+            "status": "READY_FOR_LATER_FAIL_CLOSED_STAGES",
+            "reasons": [
+                "public evidence complete for one ENTRY route; "
+                "live/order/private/account stages remain outside this report"
+            ],
+            "display_only": True,
+        },
+        "later_fail_closed_blockers": ["LIVE_TRADING_DISABLED"],
+    }
+
+
 def test_real_data_cli_preserves_missing_economics_as_none(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
@@ -467,6 +696,108 @@ def test_real_data_cli_public_readiness_report_preserves_unknown_evidence(
     assert "fee.1.value_usd=0" not in output
 
 
+def test_real_data_cli_public_readiness_json_preserves_unknown_evidence_as_null(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    class RecordingRiseXAdapter:
+        name = "RiseX"
+
+    class RecordingHyperliquidAdapter:
+        name = "Hyperliquid"
+
+    def fake_report_runner(**kwargs: object) -> tuple[DecisionResult, object]:
+        route = kwargs["route"]
+        assert isinstance(route, RouteCandidate)
+        snapshot = SimpleNamespace(
+            captured_at=kwargs["assembled_at"],
+            risex_observed_at=datetime(2026, 8, 13, 12, 0, 1, tzinfo=UTC),
+            hedge_observed_at=datetime(2026, 8, 13, 12, 0, 2, tzinfo=UTC),
+            risex_funding_settlement_at=datetime(2026, 8, 13, 16, 0, tzinfo=UTC),
+            hedge_funding_settlement_at=datetime(2026, 8, 13, 16, 0, tzinfo=UTC),
+            funding=SimpleNamespace(
+                risex_funding_usd=EstimatedValue(
+                    value=None,
+                    source=ValueSource.UNKNOWN,
+                    metadata={"public_funding_rate": "not-a-rate"},
+                ),
+                hedge_funding_usd=EstimatedValue(
+                    value=Decimal("0.2000"),
+                    source=ValueSource.OBSERVED,
+                ),
+            ),
+            fees=FeeModel(
+                components=(
+                    FeeComponent(
+                        name="risex_fee_cash_flow_unknown",
+                        amount_usd=EstimatedValue(
+                            value=None,
+                            source=ValueSource.UNKNOWN,
+                            metadata={
+                                "public_fee_maker_bps": "1.25",
+                                "public_fee_metadata_source": "OBSERVED",
+                            },
+                        ),
+                    ),
+                )
+            ),
+        )
+        return (
+            DecisionResult(
+                route_id=route.route_id,
+                mode=kwargs["mode"],
+                status=RouteStatus.REJECTED,
+                reasons=(RejectReason.REQUIRED_LIVE_DATA_MISSING,),
+                net_profit_usd=None,
+                entry_ev=None,
+                capture_plan=None,
+                decided_at=kwargs["assembled_at"],
+            ),
+            snapshot,
+        )
+
+    monkeypatch.setattr(cli, "RiseXObservationAdapter", RecordingRiseXAdapter)
+    monkeypatch.setattr(cli, "HyperliquidObservationAdapter", RecordingHyperliquidAdapter)
+    monkeypatch.setattr(cli, "run_real_data_research_route_with_snapshot", fake_report_runner)
+
+    assert cli.main(_real_data_report_json_args()) == 0
+
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["decision"]["net_profit_usd"] is None
+    assert payload["decision"]["entry_ev"] == {
+        "expected_funding_usd": None,
+        "total_fees_usd": None,
+        "simulated_roundtrip_cost_usd": None,
+        "net_profit_usd": None,
+    }
+    assert payload["snapshot"]["funding"]["risex"] == {
+        "value_usd": None,
+        "source": "UNKNOWN",
+        "description": None,
+        "metadata": {"public_funding_rate": "not-a-rate"},
+    }
+    assert payload["snapshot"]["fees"]["components"][0]["amount_usd"] == {
+        "value_usd": None,
+        "source": "UNKNOWN",
+        "description": None,
+        "metadata": {
+            "public_fee_maker_bps": "1.25",
+            "public_fee_metadata_source": "OBSERVED",
+        },
+    }
+    assert payload["unknown_components"] == [
+        "funding.risex",
+        "fee.1.risex_fee_cash_flow_unknown",
+    ]
+    assert payload["public_readiness"]["status"] == "NOT_READY"
+    assert payload["public_readiness"]["reasons"] == [
+        "decision status is REJECTED",
+        "Entry EV fields are unavailable",
+        "UNKNOWN evidence remains: funding.risex,fee.1.risex_fee_cash_flow_unknown",
+    ]
+    assert "0" not in json.dumps(payload["decision"]["entry_ev"])
+
+
 def test_real_data_cli_public_readiness_report_handles_missing_snapshot(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
@@ -574,6 +905,40 @@ def test_real_data_cli_rejects_malformed_input_before_adapter_or_runner_calls(
 
     with pytest.raises(SystemExit) as exc_info:
         cli.main(_real_data_args(**overrides))
+
+    assert exc_info.value.code == 2
+    assert calls == []
+
+
+def test_real_data_cli_json_format_requires_public_readiness_report(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[str] = []
+
+    class ForbiddenRiseXAdapter:
+        name = "RiseX"
+
+        def __init__(self) -> None:
+            calls.append("risex_adapter")
+            raise AssertionError("RiseX adapter must not be constructed")
+
+    class ForbiddenHyperliquidAdapter:
+        name = "Hyperliquid"
+
+        def __init__(self) -> None:
+            calls.append("hedge_adapter")
+            raise AssertionError("Hyperliquid adapter must not be constructed")
+
+    def forbidden_runner(**_kwargs: object) -> DecisionResult:
+        calls.append("runner")
+        raise AssertionError("runner must not be called")
+
+    monkeypatch.setattr(cli, "RiseXObservationAdapter", ForbiddenRiseXAdapter)
+    monkeypatch.setattr(cli, "HyperliquidObservationAdapter", ForbiddenHyperliquidAdapter)
+    monkeypatch.setattr(cli, "run_real_data_research_route", forbidden_runner)
+
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main([*_real_data_args(), "--public-readiness-report-format", "json"])
 
     assert exc_info.value.code == 2
     assert calls == []

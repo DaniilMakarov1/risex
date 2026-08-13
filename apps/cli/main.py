@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from collections.abc import Mapping, Sequence
 from datetime import datetime
@@ -144,6 +145,12 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Print one route's public fee, funding, and readiness evidence.",
     )
+    real_data_route.add_argument(
+        "--public-readiness-report-format",
+        choices=("text", "json"),
+        default=None,
+        help="Select stdout format for --public-readiness-report.",
+    )
     real_data_route.set_defaults(handler=_run_real_data_route)
 
     return parser
@@ -153,10 +160,23 @@ def _decimal_or_none(value: Decimal | None) -> str:
     return "None" if value is None else str(value)
 
 
+def _decimal_json_or_none(value: Decimal | None) -> str | None:
+    return None if value is None else str(value)
+
+
 def _entry_ev_decimal_or_none(decision: DecisionResult, field_name: str) -> str:
     if decision.entry_ev is None:
         return "None"
     return _decimal_or_none(getattr(decision.entry_ev, field_name))
+
+
+def _entry_ev_json_or_none(
+    decision: DecisionResult,
+    field_name: str,
+) -> str | None:
+    if decision.entry_ev is None:
+        return None
+    return _decimal_json_or_none(getattr(decision.entry_ev, field_name))
 
 
 def _print_real_data_decision(decision: DecisionResult) -> None:
@@ -184,11 +204,24 @@ def _metadata_or_none(metadata: Mapping[str, str]) -> str:
     return ";".join(f"{key}={metadata[key]}" for key in sorted(metadata))
 
 
+def _metadata_json(metadata: Mapping[str, str]) -> dict[str, str]:
+    return {key: metadata[key] for key in sorted(metadata)}
+
+
 def _print_estimated_value(prefix: str, value: EstimatedValue) -> None:
     print(f"{prefix}.value_usd={_decimal_or_none(value.value)}")
     print(f"{prefix}.source={value.source.value}")
     print(f"{prefix}.description={value.description or 'None'}")
     print(f"{prefix}.metadata={_metadata_or_none(value.metadata)}")
+
+
+def _estimated_value_json(value: EstimatedValue) -> dict[str, object]:
+    return {
+        "value_usd": _decimal_json_or_none(value.value),
+        "source": value.source.value,
+        "description": value.description,
+        "metadata": _metadata_json(value.metadata),
+    }
 
 
 def _unknown_evidence_components(snapshot: VenueSnapshot | None) -> tuple[str, ...]:
@@ -229,6 +262,13 @@ def _public_readiness_blockers(
     return tuple(blockers)
 
 
+def _public_readiness_ready_reason() -> str:
+    return (
+        "public evidence complete for one ENTRY route; live/order/private/account "
+        "stages remain outside this report"
+    )
+
+
 def _print_public_readiness_report(
     route: RouteCandidate,
     decision: DecisionResult,
@@ -261,7 +301,10 @@ def _print_public_readiness_report(
         "simulated_roundtrip_cost_usd="
         f"{_entry_ev_decimal_or_none(decision, 'simulated_roundtrip_cost_usd')}"
     )
-    print(f"entry_ev_net_profit_usd={_entry_ev_decimal_or_none(decision, 'net_profit_usd')}")
+    print(
+        "entry_ev_net_profit_usd="
+        f"{_entry_ev_decimal_or_none(decision, 'net_profit_usd')}"
+    )
 
     if snapshot is None:
         print("snapshot=UNKNOWN")
@@ -293,18 +336,137 @@ def _print_public_readiness_report(
         print(f"public_readiness_reasons={'; '.join(blockers)}")
     else:
         print("public_readiness=READY_FOR_LATER_FAIL_CLOSED_STAGES")
-        print(
-            "public_readiness_reasons="
-            "public evidence complete for one ENTRY route; live/order/private/account "
-            "stages remain outside this report"
-        )
+        print(f"public_readiness_reasons={_public_readiness_ready_reason()}")
     print(f"later_fail_closed_blockers={_join_or_none(reasons)}")
+
+
+def _public_readiness_report_json(
+    route: RouteCandidate,
+    decision: DecisionResult,
+    snapshot: VenueSnapshot | None,
+) -> dict[str, object]:
+    reasons = tuple(reason.value for reason in decision.reasons)
+    unknowns = _unknown_evidence_components(snapshot)
+    blockers = _public_readiness_blockers(decision, snapshot, unknowns)
+    readiness_status = (
+        "NOT_READY" if blockers else "READY_FOR_LATER_FAIL_CLOSED_STAGES"
+    )
+    readiness_reasons = (
+        list(blockers) if blockers else [_public_readiness_ready_reason()]
+    )
+
+    snapshot_json: dict[str, object]
+    if snapshot is None:
+        snapshot_json = {
+            "state": "UNKNOWN",
+            "captured_at": None,
+            "risex_observed_at": None,
+            "hedge_observed_at": None,
+            "risex_funding_settlement_at": None,
+            "hedge_funding_settlement_at": None,
+            "funding": None,
+            "fees": None,
+        }
+    else:
+        snapshot_json = {
+            "state": "AVAILABLE",
+            "captured_at": snapshot.captured_at.isoformat(),
+            "risex_observed_at": snapshot.risex_observed_at.isoformat(),
+            "hedge_observed_at": snapshot.hedge_observed_at.isoformat(),
+            "risex_funding_settlement_at": (
+                snapshot.risex_funding_settlement_at.isoformat()
+            ),
+            "hedge_funding_settlement_at": (
+                snapshot.hedge_funding_settlement_at.isoformat()
+            ),
+            "funding": {
+                "risex": _estimated_value_json(snapshot.funding.risex_funding_usd),
+                "hedge": _estimated_value_json(snapshot.funding.hedge_funding_usd),
+            },
+            "fees": {
+                "count": len(snapshot.fees.components),
+                "components": [
+                    {
+                        "name": component.name,
+                        "is_default": component.is_default,
+                        "amount_usd": _estimated_value_json(component.amount_usd),
+                    }
+                    for component in snapshot.fees.components
+                ],
+            },
+        }
+
+    return {
+        "report": "Public Readiness Report",
+        "route": {
+            "route_id": route.route_id,
+            "capture_id": route.capture_id,
+            "risex_venue": route.risex_venue,
+            "risex_symbol": route.risex_symbol,
+            "risex_side": route.risex_entry_side,
+            "hedge_venue": route.hedge_venue,
+            "hedge_symbol": route.hedge_symbol,
+            "hedge_side": route.hedge_entry_side,
+            "target_notional_usd": str(route.target_notional_usd),
+        },
+        "decision": {
+            "mode": decision.mode.value,
+            "status": decision.status.value,
+            "reasons": list(reasons),
+            "net_profit_usd": _decimal_json_or_none(decision.net_profit_usd),
+            "entry_ev": {
+                "expected_funding_usd": _entry_ev_json_or_none(
+                    decision,
+                    "expected_funding_usd",
+                ),
+                "total_fees_usd": _entry_ev_json_or_none(
+                    decision,
+                    "total_fees_usd",
+                ),
+                "simulated_roundtrip_cost_usd": _entry_ev_json_or_none(
+                    decision,
+                    "simulated_roundtrip_cost_usd",
+                ),
+                "net_profit_usd": _entry_ev_json_or_none(
+                    decision,
+                    "net_profit_usd",
+                ),
+            },
+        },
+        "snapshot": snapshot_json,
+        "unknown_components": list(unknowns),
+        "public_readiness": {
+            "status": readiness_status,
+            "reasons": readiness_reasons,
+            "display_only": True,
+        },
+        "later_fail_closed_blockers": list(reasons),
+    }
+
+
+def _print_public_readiness_report_json(
+    route: RouteCandidate,
+    decision: DecisionResult,
+    snapshot: VenueSnapshot | None,
+) -> None:
+    print(
+        json.dumps(
+            _public_readiness_report_json(route, decision, snapshot),
+            indent=2,
+        )
+    )
 
 
 def _run_real_data_route(
     args: argparse.Namespace,
     parser: argparse.ArgumentParser,
 ) -> None:
+    if (
+        args.public_readiness_report_format is not None
+        and not args.public_readiness_report
+    ):
+        parser.error("--public-readiness-report-format requires --public-readiness-report")
+
     try:
         route = RouteCandidate(
             route_id=args.route_id,
@@ -331,7 +493,10 @@ def _run_real_data_route(
             assembled_at=args.assembled_at,
             mode=mode,
         )
-        _print_public_readiness_report(route, decision, snapshot)
+        if args.public_readiness_report_format == "json":
+            _print_public_readiness_report_json(route, decision, snapshot)
+        else:
+            _print_public_readiness_report(route, decision, snapshot)
         return
 
     decision = run_real_data_research_route(
