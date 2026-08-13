@@ -1651,6 +1651,9 @@ def _run_build_paper_session_run_command_text_preview(
     parser: argparse.ArgumentParser,
 ) -> None:
     try:
+        command_text_fixture_path = _normalized_local_output_path(
+            args.paper_session_run_command_text_path
+        )
         run_preview_output_path = _normalized_local_output_path(
             args.preview_json_output_path
         )
@@ -1670,7 +1673,11 @@ def _run_build_paper_session_run_command_text_preview(
         parser.error(str(exc))
 
     try:
-        normalized_output_paths = {
+        normalized_local_paths = {
+            "paper-session-run-command-text-path": command_text_fixture_path,
+            "paper-session-command-payload-json-path": _normalized_local_output_path(
+                command_paths["paper_session_command_payload_json_path"]
+            ),
             "preview-json-output-path": run_preview_output_path,
             "routes-json-output-path": _normalized_local_output_path(
                 command_paths["routes_json_output_path"]
@@ -1685,15 +1692,15 @@ def _run_build_paper_session_run_command_text_preview(
     except argparse.ArgumentTypeError as exc:
         parser.error(str(exc))
 
-    seen_output_paths: dict[Path, str] = {}
-    for path_name, normalized_path in normalized_output_paths.items():
-        existing_name = seen_output_paths.get(normalized_path)
+    seen_local_paths: dict[Path, str] = {}
+    for path_name, normalized_path in normalized_local_paths.items():
+        existing_name = seen_local_paths.get(normalized_path)
         if existing_name is not None:
             parser.error(
                 f"{existing_name} and {path_name} must not resolve to the same "
-                "local output path"
+                "local path"
             )
-        seen_output_paths[normalized_path] = path_name
+        seen_local_paths[normalized_path] = path_name
 
     try:
         payload_text = Path(

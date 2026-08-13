@@ -4432,6 +4432,283 @@ def test_build_paper_session_run_command_text_preview_requires_explicit_paths(
     assert calls == []
 
 
+def test_build_paper_session_run_command_text_preview_rejects_preview_command_text_collision_before_payload_read(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+) -> None:
+    calls: list[str] = []
+
+    original_read_text = cli.Path.read_text
+
+    def recording_read_text(self, *args: object, **kwargs: object) -> str:
+        calls.append(str(self))
+        if str(self) == str(payload_path):
+            raise AssertionError(
+                "payload must not be read when preview path collides with command text"
+            )
+        return original_read_text(self, *args, **kwargs)
+
+    def forbidden_artifact_write(_path: str, _payload: object) -> None:
+        calls.append("artifact_write")
+        raise AssertionError(
+            "artifact must not be written when preview path collides with command text"
+        )
+
+    payload_path = tmp_path / "payload.json"
+    payload_text = json.dumps({"routes": [_paper_session_route()]})
+    payload_path.write_text(payload_text, encoding="utf-8")
+    command_text_path = tmp_path / "run-command.txt"
+    routes_output_path = tmp_path / "routes-output.json"
+    package_preview_output_path = tmp_path / "package-preview-output.json"
+    session_report_path = tmp_path / "session-report.json"
+    command_text = _paper_session_run_command_text(
+        payload_path=payload_path,
+        routes_json_output_path=routes_output_path,
+        package_preview_json_output_path=package_preview_output_path,
+        session_report_json_path=session_report_path,
+    )
+    command_text_path.write_text(command_text, encoding="utf-8")
+    nested = tmp_path / "nested"
+    nested.mkdir()
+    run_preview_path = nested / ".." / "run-command.txt"
+
+    monkeypatch.setattr(cli.Path, "read_text", recording_read_text)
+    monkeypatch.setattr(cli, "_write_json_artifact", forbidden_artifact_write)
+
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main(
+            [
+                "build-paper-session-run-command-text-preview",
+                "--paper-session-run-command-text-path",
+                str(command_text_path),
+                "--preview-json-output-path",
+                str(run_preview_path),
+            ]
+        )
+
+    assert exc_info.value.code == 2
+    assert calls == [str(command_text_path)]
+    assert original_read_text(command_text_path, encoding="utf-8") == command_text
+    assert original_read_text(payload_path, encoding="utf-8") == payload_text
+    assert not routes_output_path.exists()
+    assert not package_preview_output_path.exists()
+    assert not session_report_path.exists()
+
+
+def test_build_paper_session_run_command_text_preview_rejects_preview_payload_collision_before_payload_read(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+) -> None:
+    calls: list[str] = []
+
+    original_read_text = cli.Path.read_text
+
+    def recording_read_text(self, *args: object, **kwargs: object) -> str:
+        calls.append(str(self))
+        if str(self) == str(payload_path):
+            raise AssertionError(
+                "payload must not be read when preview path collides with payload"
+            )
+        return original_read_text(self, *args, **kwargs)
+
+    def forbidden_artifact_write(_path: str, _payload: object) -> None:
+        calls.append("artifact_write")
+        raise AssertionError(
+            "artifact must not be written when preview path collides with payload"
+        )
+
+    payload_path = tmp_path / "payload.json"
+    payload_text = json.dumps({"routes": [_paper_session_route()]})
+    payload_path.write_text(payload_text, encoding="utf-8")
+    command_text_path = tmp_path / "run-command.txt"
+    routes_output_path = tmp_path / "routes-output.json"
+    package_preview_output_path = tmp_path / "package-preview-output.json"
+    session_report_path = tmp_path / "session-report.json"
+    command_text = _paper_session_run_command_text(
+        payload_path=payload_path,
+        routes_json_output_path=routes_output_path,
+        package_preview_json_output_path=package_preview_output_path,
+        session_report_json_path=session_report_path,
+    )
+    command_text_path.write_text(command_text, encoding="utf-8")
+    nested = tmp_path / "nested"
+    nested.mkdir()
+    run_preview_path = nested / ".." / "payload.json"
+
+    monkeypatch.setattr(cli.Path, "read_text", recording_read_text)
+    monkeypatch.setattr(cli, "_write_json_artifact", forbidden_artifact_write)
+
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main(
+            [
+                "build-paper-session-run-command-text-preview",
+                "--paper-session-run-command-text-path",
+                str(command_text_path),
+                "--preview-json-output-path",
+                str(run_preview_path),
+            ]
+        )
+
+    assert exc_info.value.code == 2
+    assert calls == [str(command_text_path)]
+    assert original_read_text(command_text_path, encoding="utf-8") == command_text
+    assert original_read_text(payload_path, encoding="utf-8") == payload_text
+    assert not routes_output_path.exists()
+    assert not package_preview_output_path.exists()
+    assert not session_report_path.exists()
+
+
+def test_build_paper_session_run_command_text_preview_rejects_command_text_payload_collision_before_payload_read(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+) -> None:
+    calls: list[str] = []
+
+    original_read_text = cli.Path.read_text
+
+    def recording_read_text(self, *args: object, **kwargs: object) -> str:
+        calls.append(str(self))
+        if len(calls) > 1:
+            raise AssertionError(
+                "payload must not be read when command text collides with payload"
+            )
+        return original_read_text(self, *args, **kwargs)
+
+    def forbidden_artifact_write(_path: str, _payload: object) -> None:
+        calls.append("artifact_write")
+        raise AssertionError(
+            "artifact must not be written when command text collides with payload"
+        )
+
+    command_text_path = tmp_path / "run-command.txt"
+    nested = tmp_path / "nested"
+    nested.mkdir()
+    payload_path = nested / ".." / "run-command.txt"
+    routes_output_path = tmp_path / "routes-output.json"
+    package_preview_output_path = tmp_path / "package-preview-output.json"
+    session_report_path = tmp_path / "session-report.json"
+    run_preview_path = tmp_path / "run-preview.json"
+    command_text = _paper_session_run_command_text(
+        payload_path=payload_path,
+        routes_json_output_path=routes_output_path,
+        package_preview_json_output_path=package_preview_output_path,
+        session_report_json_path=session_report_path,
+    )
+    command_text_path.write_text(command_text, encoding="utf-8")
+
+    monkeypatch.setattr(cli.Path, "read_text", recording_read_text)
+    monkeypatch.setattr(cli, "_write_json_artifact", forbidden_artifact_write)
+
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main(
+            [
+                "build-paper-session-run-command-text-preview",
+                "--paper-session-run-command-text-path",
+                str(command_text_path),
+                "--preview-json-output-path",
+                str(run_preview_path),
+            ]
+        )
+
+    assert exc_info.value.code == 2
+    assert calls == [str(command_text_path)]
+    assert original_read_text(command_text_path, encoding="utf-8") == command_text
+    assert not run_preview_path.exists()
+    assert not routes_output_path.exists()
+    assert not package_preview_output_path.exists()
+    assert not session_report_path.exists()
+
+
+@pytest.mark.parametrize(
+    "collision",
+    (
+        "routes-command-text",
+        "package-preview-payload",
+        "session-report-payload",
+    ),
+)
+def test_build_paper_session_run_command_text_preview_rejects_intended_output_input_collision_before_payload_read(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+    collision: str,
+) -> None:
+    calls: list[str] = []
+
+    original_read_text = cli.Path.read_text
+
+    def recording_read_text(self, *args: object, **kwargs: object) -> str:
+        calls.append(str(self))
+        if str(self) == str(payload_path):
+            raise AssertionError(
+                "payload must not be read when intended output paths collide with inputs"
+            )
+        return original_read_text(self, *args, **kwargs)
+
+    def forbidden_artifact_write(_path: str, _payload: object) -> None:
+        calls.append("artifact_write")
+        raise AssertionError(
+            "artifact must not be written when intended output paths collide with inputs"
+        )
+
+    payload_path = tmp_path / "payload.json"
+    payload_text = json.dumps({"routes": [_paper_session_route()]})
+    payload_path.write_text(payload_text, encoding="utf-8")
+    command_text_path = tmp_path / "run-command.txt"
+    routes_output_path = tmp_path / "routes-output.json"
+    package_preview_output_path = tmp_path / "package-preview-output.json"
+    session_report_path = tmp_path / "session-report.json"
+    run_preview_path = tmp_path / "run-preview.json"
+    nested = tmp_path / "nested"
+    nested.mkdir()
+
+    if collision == "routes-command-text":
+        routes_output_path = nested / ".." / "run-command.txt"
+    elif collision == "package-preview-payload":
+        package_preview_output_path = payload_path
+    elif collision == "session-report-payload":
+        session_report_path = nested / ".." / "payload.json"
+
+    command_text = _paper_session_run_command_text(
+        payload_path=payload_path,
+        routes_json_output_path=routes_output_path,
+        package_preview_json_output_path=package_preview_output_path,
+        session_report_json_path=session_report_path,
+    )
+    command_text_path.write_text(command_text, encoding="utf-8")
+
+    monkeypatch.setattr(cli.Path, "read_text", recording_read_text)
+    monkeypatch.setattr(cli, "_write_json_artifact", forbidden_artifact_write)
+
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main(
+            [
+                "build-paper-session-run-command-text-preview",
+                "--paper-session-run-command-text-path",
+                str(command_text_path),
+                "--preview-json-output-path",
+                str(run_preview_path),
+            ]
+        )
+
+    assert exc_info.value.code == 2
+    assert calls == [str(command_text_path)]
+    assert original_read_text(command_text_path, encoding="utf-8") == command_text
+    assert original_read_text(payload_path, encoding="utf-8") == payload_text
+    assert not run_preview_path.exists()
+
+    input_paths = {
+        command_text_path.resolve(strict=False),
+        payload_path.resolve(strict=False),
+    }
+    for output_path in (
+        routes_output_path,
+        package_preview_output_path,
+        session_report_path,
+    ):
+        if output_path.resolve(strict=False) not in input_paths:
+            assert not output_path.exists()
+
+
 @pytest.mark.parametrize(
     "collision",
     (
