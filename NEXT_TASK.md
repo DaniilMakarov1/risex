@@ -2,19 +2,19 @@
 
 ## Task ID
 
-RX-031 — Review-Directed Follow-up After RX-030
+RX-032 — Product Owner Roadmap Authorization Gate
 
 ## Objective
 
-Apply only explicit reviewer-directed fixes or handoff metadata updates after the read-only monitoring dashboard branch is reviewed. Keep the prior dashboard work read-only, downstream of existing owner modules, and free of decisions, polling, ledger writes, execution automation, or orders.
+Require explicit Product Owner or Control Tower authorization before promoting any new product, execution, monitoring, adapter, or governance stage. If a concrete authorized next task is supplied, update repository handoff metadata only. If no concrete authorization is supplied, stop and report blocked without inventing a product stage.
 
 ## Starting baseline
 
-Start from reviewer-accepted `main` after the prior dashboard task is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
+Start from reviewer-accepted `main` after the RX-031 metadata-only follow-up is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
 
 ## Branch
 
-Create and work on `task/rx-031-review-directed-follow-up-after-rx-030`. Do not implement on `main`.
+Create and work on `task/rx-032-product-owner-roadmap-authorization-gate`. Do not implement on `main`.
 
 ## Before changing files
 
@@ -30,44 +30,52 @@ Read:
 - STATUS.md
 - DECISIONS.md
 - NEXT_TASK.md
+- docs/WORKFLOW.md
+- Relevant templates in `docs/templates/`
 
 ## Allowed scope
 
-- Explicit reviewer-directed fixes to the read-only dashboard renderer and its focused deterministic tests.
-- Repository metadata updates required to record review disposition and prepare the next single handoff.
-- No product behavior changes unless the reviewer specifically directs a correction to the already-scoped dashboard display behavior.
+- Repository handoff metadata required to record explicit Product Owner or Control Tower authorization for exactly one next task.
+- `STATUS.md`, `IMPLEMENTATION_PLAN.md`, and `NEXT_TASK.md`.
+- `DECISIONS.md` only if the supplied authorization makes or changes an architectural or repository-governance decision.
+- Validation-only changes are not allowed unless required to keep the existing handoff validator passing after metadata edits.
 
 ## Forbidden scope
 
-- No new product stage, route discovery, ranking, watchlists, background loops, polling, scheduling, alerts, or auto-refresh.
+- No product behavior changes.
+- No dashboard behavior changes.
+- No route discovery, ranking, watchlists, background loops, polling, scheduling, alerts, or auto-refresh.
 - No venue adapters, market-data calls, private endpoints, credentials, account balances, exchange account state, or network-dependent tests.
 - No order placement, sendable exchange request construction, order cancellation, order status fetching, or execution automation.
 - No route evaluation, snapshot assembly, profitability calculation, funding verification, ledger reconciliation, live-gate bundle checking, execution planning, guarded live runner execution, or approval-boundary execution.
 - No ledger writes, storage migrations, replay changes, paper lifecycle changes, route eligibility mutation, or Capture state transitions.
 - No EV, fee, funding, VWAP/liquidity, basis, spread, price-impact, slippage, max-level, hidden-buffer, or safety-margin filters.
 - No new route statuses, reject reasons, canary architecture, hold-next-cycle logic, or live trading by default.
+- No new functions, classes, dataclasses, enums, modules, wrappers, config values, trace fields, future hooks, or contracts.
 
 ## Implementation requirements
 
-- Treat reviewer feedback as the only source of scope.
-- Preserve the read-only dashboard as an app-layer display surface over already-derived deterministic inputs.
-- Missing or unknown economics must remain missing display values rather than zero.
-- Preserve accepted owner boundaries unless the reviewer explicitly identifies a defect in the prior dashboard task.
-- Use a supervised worker/subagent before implementation edits if the reviewer-directed fix touches execution-boundary, order-placement safety, accounting/reconciliation, broad owner-boundary code, or repository-governance code.
+- Treat explicit Product Owner or Control Tower authorization as the only source for promoting a new task.
+- Do not infer authorization from roadmap sequence, previous assistant reports, or the existence of a future-stage idea in documentation.
+- If authorization supplies a concrete next task, prepare exactly one `NEXT_TASK.md` handoff for that task and keep the branch metadata-only.
+- If authorization does not supply a concrete next task, stop and report blocked without editing product code or inventing a handoff.
+- Preserve RX-030 as the latest accepted product task unless reviewer-accepted `main` has changed.
+- Preserve RX-031 as a metadata-only review-directed follow-up unless reviewer acceptance says otherwise.
+- Worker policy: workers are optional because this is metadata-only control-gate work. Use a supervised worker only if the supplied authorization requires non-trivial repository-governance changes; if a worker becomes required and unavailable, stop before edits.
 - Parent owns steering, final diff review, validation, commit, push, and final report.
 
 ## Required files
 
-- Likely `apps/dashboard/`
-- Likely focused tests under `tests/unit/`
-- Repository metadata files required by `AGENTS.md`
-- Do not touch product code outside files required by explicit reviewer feedback.
+- Likely `STATUS.md`
+- Likely `IMPLEMENTATION_PLAN.md`
+- Likely `NEXT_TASK.md`
+- `DECISIONS.md` only if required by an explicit architecture or repository-governance decision
+- Do not touch product code.
 
 ## Required tests
 
 - `python3 scripts/validate_next_task.py`
 - `python3 -m pytest tests/invariant`
-- Focused tests covering any reviewer-directed dashboard fix
 - `python3 -m pytest`
 - `python3 -m compileall apps core storage tests scripts`
 - `python3 -m apps.cli.main`

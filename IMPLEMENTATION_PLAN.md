@@ -44,17 +44,17 @@ RX-030 — Read-Only Monitoring Dashboard Without Decisions Or Orders is reviewe
 
 ## Current Product Branch Progress
 
-No product branch is active after RX-030 finalization. RX-031 is prepared as the next review-directed follow-up and roadmap handoff.
+RX-031 — Review-Directed Follow-up After RX-030 is active on `task/rx-031-review-directed-follow-up-after-rx-030` as a metadata-only follow-up. Local repo/git evidence and the GitHub connector did not expose additional actionable reviewer feedback after RX-030 finalization, so no dashboard or product code changes are authorized in RX-031.
 
 ## Current Product Handoff
 
-`NEXT_TASK.md` is prepared for RX-031, a review-directed follow-up and roadmap handoff after RX-030.
+`NEXT_TASK.md` is prepared for RX-032, a Product Owner roadmap authorization gate before any new product stage can be promoted.
 
 ## Remaining Gated Roadmap After RX-030
 
-Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030.
+Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030 or by the RX-031 no-additional-fix disposition.
 
-1. RX-031 — Review-Directed Follow-up After RX-030.
+1. RX-032 — Product Owner Roadmap Authorization Gate.
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
 
@@ -263,8 +263,12 @@ RX-030 implementation notes:
 - Missing economics remain missing display values instead of zero.
 - RX-030 does not call `evaluate_route()`, assemble snapshots, calculate profitability, verify funding, reconcile ledgers, check live-gate bundles, plan execution, run guarded live readiness, call approval-boundary execution, write ledger events, call adapters, use credentials, perform network I/O, place orders, enable live trading, add route statuses, add reject reasons, or create a second decision, snapshot, verifier, ledger-write, replay, economics, live-runner, execution-planning, or order path.
 
+## RX-031 — Review-Directed Follow-up After RX-030
+
+Apply only explicit reviewer-directed dashboard fixes or repository handoff metadata updates after RX-030 acceptance. In the absence of discoverable actionable reviewer feedback in local repo/git evidence or GitHub connector context, RX-031 remains metadata-only: it records the no-additional-fix disposition, leaves dashboard/product code unchanged, and prepares a Product Owner authorization gate for the next single handoff.
+
 ## Next Sequence
 
-1. RX-031 — Review-Directed Follow-up After RX-030.
+1. RX-032 — Product Owner Roadmap Authorization Gate.
 
-Do not promote execution automation, background loops, ranking, order placement, polling, alerts, auto-refresh, or later roadmap stages into the current handoff unless that exact future task is explicitly authorized.
+Do not promote execution automation, background loops, ranking, order placement, polling, alerts, auto-refresh, or later roadmap stages into the current handoff unless that exact future task is explicitly authorized by the Product Owner or Control Tower.
