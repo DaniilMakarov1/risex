@@ -66,11 +66,11 @@ RX-041 — Public One-Route Account-Independent Fee Cash Completion remains the 
 
 ## Current Repository Handoff
 
-RX-046 is reviewer-accepted and finalized on `main` as a governance/source-of-truth clarification task after RX-045. RX-045 remains the latest accepted product baseline. RX-046 is the latest accepted governance/source-of-truth task. RX-047 is current task-branch work, not accepted or finalized. Product Owner and Control Tower direction supplied for RX-047 identifies one concrete safe next handoff: RX-048, an opt-in structured JSON stdout output for the existing RX-045 manual one-route public readiness report, scoped to reuse the existing public read-only one-route adapter handoff, retained snapshot/report helper, source-aware fee/funding completion, and `evaluate_route()` path without changing runtime behavior in RX-047.
+RX-047 is reviewer-accepted and finalized on `main` as a governance/source-of-truth clarification task after RX-046. RX-045 remains the latest accepted product baseline. RX-047 is the latest accepted governance/source-of-truth task. Product Owner and Control Tower direction supplied for RX-047 identifies one concrete safe next handoff: RX-048, an opt-in structured JSON stdout output for the existing RX-045 manual one-route public readiness report, scoped to reuse the existing public read-only one-route adapter handoff, retained snapshot/report helper, source-aware fee/funding completion, and `evaluate_route()` path without changing runtime behavior in RX-047.
 
 ## Remaining Gated Roadmap After RX-045 Finalization
 
-Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, by RX-033 governance autonomy, by the RX-034 roadmap selection audit, by the RX-035 post-audit handoff cleanup, by the RX-036 roadmap source-of-truth clarification, by the RX-037 roadmap direction record, by RX-038 one-route real-data CLI finalization, by RX-039 public one-route economics source completion, by RX-040 public fee-source metadata preservation, by RX-041 public one-route account-independent fee cash completion, RX-042 finalization, RX-043 finalization, RX-044 finalization, RX-045 finalization, RX-046 finalization, or the RX-047 task branch.
+Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, by RX-033 governance autonomy, by the RX-034 roadmap selection audit, by the RX-035 post-audit handoff cleanup, by the RX-036 roadmap source-of-truth clarification, by the RX-037 roadmap direction record, by RX-038 one-route real-data CLI finalization, by RX-039 public one-route economics source completion, by RX-040 public fee-source metadata preservation, by RX-041 public one-route account-independent fee cash completion, RX-042 finalization, RX-043 finalization, RX-044 finalization, RX-045 finalization, RX-046 finalization, or RX-047 finalization.
 
 1. RX-048 - Structured JSON Stdout Public Readiness Report Output.
 
@@ -510,7 +510,7 @@ RX-047 implementation notes:
 - Preserve RX-045 as the latest accepted product baseline unless a later reviewer-accepted product task exists.
 - Preserve RX-046 as pending or accepted according to explicit reviewer evidence.
 
-RX-047 branch outcome:
+RX-047 accepted outcome:
 
 - RX-046 is reviewer-accepted and finalized on `main`; RX-045 remains the latest accepted product baseline.
 - Product Owner and Control Tower direction for RX-047 confirms the long-term goal of live-capable hedged funding capture/trading on RiseX with Hyperliquid hedge support while preserving all hard-stop gates.
@@ -522,7 +522,7 @@ RX-047 must not add product/runtime behavior, route discovery, ranking, watchlis
 
 ## RX-048 — Structured JSON Stdout Public Readiness Report Output
 
-After RX-047 reviewer acceptance, RX-048 should add one opt-in structured JSON stdout output mode for the existing RX-045 manual public readiness report on the existing `real-data-route` command.
+After RX-047 finalization, RX-048 should add one opt-in structured JSON stdout output mode for the existing RX-045 manual public readiness report on the existing `real-data-route` command.
 
 RX-048 implementation notes:
 
