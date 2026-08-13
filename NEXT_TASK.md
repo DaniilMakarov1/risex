@@ -6,7 +6,7 @@ RX-071 - Post-Local Operator Display Fail-Closed Handoff Clarification
 
 ## Objective
 
-After RX-070 reviewer acceptance and finalization, inspect the accepted fake-money paper-session operator/display chain, the RX-070 fail-closed smoke coverage outcome, current source-of-truth docs, and Product Owner direction to determine the next safe handoff.
+After RX-070 finalization, inspect the accepted fake-money paper-session operator/display chain, the RX-070 fail-closed smoke coverage outcome, current source-of-truth docs, and Product Owner direction to determine the next safe handoff.
 
 This is governance/source-of-truth only unless the accepted docs clearly ground exactly one non-dangerous local/manual/fake-money runtime or testability task. Do not infer Telegram transport, credentials, messaging/network behavior, execution automation, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths from the local smoke coverage.
 

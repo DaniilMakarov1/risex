@@ -1,11 +1,13 @@
 # Status
 
-- Current branch: `task/rx-070-local-paper-session-operator-display-fail-closed-smoke-fixture-coverage`.
-- Current task: RX-070 - Local Paper Session Operator Display Fail-Closed Smoke Fixture Coverage is implementation-complete on the task branch and pending reviewer acceptance.
-- Latest accepted product baseline: RX-069 reviewer-accepted and finalized on `main`.
+- Current branch: `main`.
+- Current task: RX-070 - Local Paper Session Operator Display Fail-Closed Smoke Fixture Coverage is reviewer-accepted and finalized on `main`.
+- Latest accepted product baseline: RX-070 reviewer-accepted and finalized on `main`.
 - RX-070 starting baseline: `3ed82a7feec9b35267f3ffea248bcfc9fb13bca2`
 - RX-070 task branch: `task/rx-070-local-paper-session-operator-display-fail-closed-smoke-fixture-coverage`
-- RX-070 review state: implementation-complete on the task branch; not reviewer-accepted.
+- Accepted RX-070 implementation HEAD: `7f4cfa18d9d1a2993075625b2817760603ffa8ec`
+- RX-070 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
+- RX-070 review state: reviewer-accepted and finalized on `main`.
 - RX-070 disposition: adds focused deterministic fail-closed smoke fixture coverage proving malformed or unsafe local operator/display fixtures fail before unintended artifacts, session execution, adapter construction, ledger instantiation/writes, report rendering, report mutation, external network calls, Telegram transport, credentials, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
 - RX-070 coverage boundary: the new smoke tests reuse accepted local command paths only: `build-paper-session-package`, `build-paper-session-display-payload`, `build-paper-session-display-command-preview`, `build-paper-session-display-command-text-preview`, `parse-paper-session-display-command-text`, and `render-paper-session-report-from-payload`. They cover unsafe operator command payload fields, malformed display payload fields, unsafe command text, command-text preview inputs, malformed parsed payload-backed render input, and non-null aggregate paper PnL report-display inputs.
 - RX-070 safety boundaries: no production code changes, no new user-facing CLI command, no CLI behavior changes, no parser weakening, no adapter endpoint changes, no external network calls in the new smoke coverage, no Telegram transport, bot token, credentials, webhooks, messaging, alerts, live trading, real orders, private/account endpoints, account state/balances, sendable exchange requests, order payloads, execution automation/planning, discovery/ranking/watchlists/polling/background loops/scheduling, storage migrations, replay/reconciliation changes, route eligibility mutation, Capture state transition changes, new route statuses/reject reasons, second owner paths, aggregate PnL calculation, or unknown-to-zero behavior.
@@ -408,8 +410,8 @@
 - Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
 - Current accepted `main` metadata/governance task: RX-059.
-- Current accepted `main` product task: RX-069.
-- Current RX task state: RX-070 is implementation-complete on `task/rx-070-local-paper-session-operator-display-fail-closed-smoke-fixture-coverage` and pending reviewer acceptance; `NEXT_TASK.md` is prepared for RX-071 as the next post-coverage clarification gate after RX-070 finalization.
+- Current accepted `main` product task: RX-070.
+- Current RX task state: RX-070 is reviewer-accepted and finalized on `main`; `NEXT_TASK.md` is prepared for RX-071 as the next post-coverage clarification gate after RX-070 finalization.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
@@ -657,10 +659,23 @@ RX-040 remains the previous accepted product task and preserves public fee-sourc
 - RX-067 is reviewer-accepted and finalized on `main`.
 - RX-068 is reviewer-accepted and finalized on `main`.
 - RX-069 is reviewer-accepted and finalized on `main`.
+- RX-070 is reviewer-accepted and finalized on `main`.
 - The next recommended task is RX-071 Post-Local Operator Display Fail-Closed Handoff Clarification after RX-070 finalization.
 - The RX-032 authorization does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - RX-033 autonomy does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized and accepted.
+
+## Tests last reported for RX-070 branch
+
+- `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
+- `python3 -m pytest tests/unit/test_cli_paper_session_smoke.py -q`: `5 passed`
+- `python3 -m pytest tests/invariant -q`: `37 passed`
+- `python3 -m pytest -q`: exit 0; completed to `[100%]`
+- `python3 -m compileall apps core storage tests scripts`: exit 0
+- `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
+- `git diff --check`: exit 0
+- `git diff --cached --check`: exit 0
+- Focused stale cross-project instruction search: no matches
 
 ## Tests last reported for RX-069 branch
 
@@ -1388,6 +1403,7 @@ RX-040 remains the previous accepted product task and preserves public fee-sourc
 - RX-067 is local fake-money paper runtime/testability coverage and reviewer-accepted on `main`. It adds test-only deterministic smoke coverage for the existing `paper-trade-session` flow with injected public-adapter doubles, two explicit valid `ENTRY` routes, existing decision/paper lifecycle/ledger/report owner paths, deterministic stdout, explicit local report export, string-or-null economics, known/unknown counts, `aggregate_paper_net_profit_usd=null`, no aggregate PnL calculation, and no unknown-to-zero behavior.
 - RX-068 is local fake-money paper package-to-runtime testability coverage and reviewer-accepted on `main`. It adds test-only deterministic smoke coverage proving accepted `build-paper-session-package` route-list output can feed accepted `paper-trade-session` runtime/report/display paths with injected public-adapter doubles, explicit local package artifacts, explicit SQLite ledger path, deterministic stdout, explicit local report export, accepted display rendering, string-or-null economics, known/unknown counts, `aggregate_paper_net_profit_usd=null`, no aggregate PnL calculation, and no unknown-to-zero behavior.
 - RX-069 is local fake-money paper operator/display end-to-end testability coverage and reviewer-accepted on `main`. It adds test-only deterministic smoke coverage proving accepted package, serial runtime, report export, display payload, display preview, command-text preview/parser, and payload-backed render command paths work as one generated local artifact chain, with no production behavior changes.
+- RX-070 is local fake-money paper operator/display fail-closed testability coverage and reviewer-accepted on `main`. It adds test-only deterministic smoke coverage proving malformed or unsafe local operator/display fixtures fail before unintended artifacts, runtime/session execution, report rendering, adapters, ledgers, Telegram/live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
 
 ## Next recommended task
 
