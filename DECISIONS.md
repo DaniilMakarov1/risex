@@ -1077,6 +1077,8 @@
 ## 2026-08-13 - RX-067
 
 - Date: 2026-08-13
+- Decision: Control Tower reviewer accepted RX-067 and finalized it on `main`.
+- Reason: Independent review confirmed the branch is test-only runtime coverage, changes no production code, exercises the accepted `paper-trade-session` path through injected adapter doubles, preserves unknown/null and aggregate-PnL boundaries, and passes focused plus full validation.
 - Decision: RX-067 adds focused deterministic local smoke fixture coverage for the existing `paper-trade-session` runtime path only.
 - Reason: RX-066 finalized the local display command-text preview artifact trail, and the accepted docs grounded a return to runtime/testability coverage for the actual serial fake-money paper session command before adding any new product behavior.
 - Decision: The RX-067 smoke uses injected deterministic public-adapter doubles instead of the real public adapters.

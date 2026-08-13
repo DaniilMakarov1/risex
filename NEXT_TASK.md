@@ -6,7 +6,7 @@ RX-068 - Local Paper Session Package-To-Runtime Smoke Fixture Coverage
 
 ## Objective
 
-After RX-067 reviewer acceptance and finalization, add focused deterministic local smoke fixture coverage proving that the accepted local operator-package builder output can feed the accepted `paper-trade-session` fake-money runtime and report/display path.
+After RX-067 finalization, add focused deterministic local smoke fixture coverage proving that the accepted local operator-package builder output can feed the accepted `paper-trade-session` fake-money runtime and report/display path.
 
 The coverage should exercise only existing local/manual commands and owner paths: build a route-list artifact through the accepted `build-paper-session-package` command, run that generated route-list through the accepted `paper-trade-session --routes-json-path ... --session-report-json-path ...` command under injected deterministic public-adapter doubles, and validate the resulting report through the accepted report display path if useful. This is testability coverage only: it should not add a new user-facing command, change existing CLI behavior, or add product behavior outside tests and source-of-truth docs.
 

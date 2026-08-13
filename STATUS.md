@@ -1,16 +1,18 @@
 # Status
 
-- Current branch: `task/rx-067-local-paper-session-runtime-smoke-fixture-coverage`.
-- Current task: RX-067 - Local Paper Session Runtime Smoke Fixture Coverage is implementation-complete on the task branch and pending reviewer acceptance.
-- Latest accepted product baseline: RX-066 reviewer-accepted and finalized on `main`.
+- Current branch: `main`.
+- Current task: RX-067 - Local Paper Session Runtime Smoke Fixture Coverage is reviewer-accepted and finalized on `main`.
+- Latest accepted product baseline: RX-067 reviewer-accepted and finalized on `main`.
 - RX-067 starting baseline: `04a513d39a73e9e98e16f5204daf139d11887447`
 - RX-067 task branch: `task/rx-067-local-paper-session-runtime-smoke-fixture-coverage`
-- RX-067 review state: implementation-complete on task branch; not reviewer-accepted.
+- Accepted RX-067 implementation HEAD: `4fe1de5ff911619550ca2ec907eab24db42ebedc`
+- RX-067 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
+- RX-067 review state: reviewer-accepted and finalized on `main`.
 - RX-067 disposition: adds focused deterministic local smoke fixture coverage for the existing `paper-trade-session` command path. The test-only smoke uses injected public-adapter doubles for two explicit valid `ENTRY` routes and exercises the accepted serial session path through route-list validation, adapter handoff, snapshot assembly, `evaluate_route()`, `run_paper_lifecycle()`, existing ledger ownership, optional local SQLite persistence, deterministic stdout, and explicit `--session-report-json-path` JSON export.
 - RX-067 coverage boundary: one route carries grounded public funding/fee metadata and starts the existing fake paper lifecycle; the second route remains technically executable but carries unknown public economics and rejects through the existing decision/lifecycle/ledger path. The smoke asserts ledger event counts/sequences/types, string-or-null economics, known/unknown count semantics, `aggregate_paper_net_profit_usd=null`, no aggregate paper PnL calculation, and no unknown-to-zero behavior.
 - RX-067 safety boundaries: no production code changes, no new user-facing CLI command, no CLI behavior changes, no adapter endpoint changes, no real public network calls in the new smoke coverage, no Telegram transport, bot token, credentials, webhooks, messaging, alerts, live trading, real orders, private/account endpoints, account state/balances, sendable exchange requests, order payloads, execution automation/planning, discovery/ranking/watchlists/polling/background loops/scheduling, storage migrations, replay/reconciliation changes, route eligibility mutation, Capture state transition changes, new route statuses/reject reasons, second owner paths, aggregate PnL calculation, or unknown-to-zero behavior.
 - RX-067 worker usage: no worker used. Worker policy was optional for RX-067 because the task was focused testability coverage and made no production, owner-boundary, ledger contract, replay, reconciliation, execution-boundary, live-gate, or repository-governance changes. Parent retained scope, implementation, final diff review, validation, commit, push, and reporting ownership.
-- RX-067 next handoff: `NEXT_TASK.md` is prepared for exactly one next local/manual/fake-money testability task after RX-067 reviewer acceptance and finalization, RX-068 Local Paper Session Package-To-Runtime Smoke Fixture Coverage.
+- RX-067 next handoff: `NEXT_TASK.md` is prepared for exactly one next local/manual/fake-money testability task after RX-067 finalization, RX-068 Local Paper Session Package-To-Runtime Smoke Fixture Coverage.
 - RX-066 starting baseline: `a132c4069903a910b90035ae188153571ae90f79`
 - RX-066 task branch: `task/rx-066-local-paper-session-display-command-text-preview-manifest`
 - Accepted RX-066 implementation HEAD: `58588df99a0f5571ee99955acf3f18e9e09b1350`
@@ -377,8 +379,8 @@
 - Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
 - Current accepted `main` metadata/governance task: RX-059.
-- Current accepted `main` product task: RX-066.
-- Current RX task state: RX-067 is implementation-complete on `task/rx-067-local-paper-session-runtime-smoke-fixture-coverage` and pending reviewer acceptance; `NEXT_TASK.md` is prepared for RX-068 as the next local/manual fake-money paper testability task after RX-067 finalization.
+- Current accepted `main` product task: RX-067.
+- Current RX task state: RX-067 is reviewer-accepted and finalized on `main`; `NEXT_TASK.md` is prepared for RX-068 as the next local/manual fake-money paper testability task after RX-067 finalization.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
@@ -425,7 +427,7 @@ RX-040 prepared `NEXT_TASK.md` for RX-041 after RX-040 finalization.
 RX-031 found no additional explicit actionable reviewer feedback in local repo/git evidence or GitHub connector context after RX-030 finalization. RX-031 is accepted metadata-only follow-up work and does not change dashboard or product code.
 RX-041 remains the accepted public account-independent fee-cash completion product task before the later RX-045/RX-048 reporting tasks and completes explicit public account-independent taker fee-rate metadata into entry plus immediate estimated-exit route-notional USD fee cash only inside the existing one-route snapshot path, while preserving fail-closed unknown handling and avoiding live/order/private/account-state scope.
 RX-040 remains the previous accepted product task and preserves public fee-source metadata on unknown fee cash values for source-aware inspection only. It does not add route discovery, ranking, polling, private endpoints, credentials, account balances/state, execution automation, order placement, sendable exchange request construction, ledger writes, fee-cash defaults, or live trading by default.
-`NEXT_TASK.md` is prepared for RX-068 Local Paper Session Package-To-Runtime Smoke Fixture Coverage after RX-067 reviewer acceptance and finalization.
+`NEXT_TASK.md` is prepared for RX-068 Local Paper Session Package-To-Runtime Smoke Fixture Coverage after RX-067 finalization.
 
 ## Completed accepted tasks
 
@@ -623,7 +625,8 @@ RX-040 remains the previous accepted product task and preserves public fee-sourc
 - RX-064 is reviewer-accepted and finalized on `main`.
 - RX-065 is reviewer-accepted and finalized on `main`.
 - RX-066 is reviewer-accepted and finalized on `main`.
-- The next recommended task is RX-068 Local Paper Session Package-To-Runtime Smoke Fixture Coverage after RX-067 reviewer acceptance and finalization.
+- RX-067 is reviewer-accepted and finalized on `main`.
+- The next recommended task is RX-068 Local Paper Session Package-To-Runtime Smoke Fixture Coverage after RX-067 finalization.
 - The RX-032 authorization does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - RX-033 autonomy does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized and accepted.
@@ -1339,8 +1342,8 @@ RX-040 remains the previous accepted product task and preserves public fee-sourc
 - RX-064 is manual fake-money paper display-command preview testing-support and reviewer-accepted on `main`. It adds `build-paper-session-display-command-preview` to validate an RX-062 display payload fixture, avoid report reading/rendering, and write one descriptive local preview/manifest for the exact manual display command plan without adding Telegram/live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
 - RX-065 is manual fake-money paper display-command text parsing testing-support and reviewer-accepted on `main`. It adds `parse-paper-session-display-command-text` to validate exact local command text into the minimal RX-062 display payload fixture, rejects flag-looking report-path tokens after the same-branch review fix, and does not add Telegram/live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
 - RX-066 is manual fake-money paper display-command text preview testing-support and reviewer-accepted on `main`. It adds `build-paper-session-display-command-text-preview` to validate exact local command text through RX-065 and RX-062 boundaries, write only a descriptive parser-command preview/manifest, reject normalized output path aliases before command text read/write, and avoid display payload writes, report reading/rendering, Telegram/live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
-- RX-067 is local fake-money paper runtime/testability coverage on the task branch and pending reviewer acceptance. It adds test-only deterministic smoke coverage for the existing `paper-trade-session` flow with injected public-adapter doubles, two explicit valid `ENTRY` routes, existing decision/paper lifecycle/ledger/report owner paths, deterministic stdout, explicit local report export, string-or-null economics, known/unknown counts, `aggregate_paper_net_profit_usd=null`, no aggregate PnL calculation, and no unknown-to-zero behavior.
+- RX-067 is local fake-money paper runtime/testability coverage and reviewer-accepted on `main`. It adds test-only deterministic smoke coverage for the existing `paper-trade-session` flow with injected public-adapter doubles, two explicit valid `ENTRY` routes, existing decision/paper lifecycle/ledger/report owner paths, deterministic stdout, explicit local report export, string-or-null economics, known/unknown counts, `aggregate_paper_net_profit_usd=null`, no aggregate PnL calculation, and no unknown-to-zero behavior.
 
 ## Next recommended task
 
-RX-068 Local Paper Session Package-To-Runtime Smoke Fixture Coverage after RX-067 reviewer acceptance and finalization.
+RX-068 Local Paper Session Package-To-Runtime Smoke Fixture Coverage after RX-067 finalization.
