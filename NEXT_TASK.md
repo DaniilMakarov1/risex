@@ -2,23 +2,23 @@
 
 ## Task ID
 
-RX-046 - Post-RX-045 Public Live-Readiness Handoff Clarification
+RX-047 - Product Owner Post-RX-045 Public Runtime Direction Gate
 
 ## Objective
 
-After RX-045 is reviewer-accepted, inspect the accepted manual public readiness report outcome and the source-of-truth repository docs to identify exactly one next non-dangerous public/read-only/non-trading live-readiness handoff if one is clearly grounded. If no such handoff is grounded, record that conclusion and prepare one narrow clarification handoff instead of inventing route discovery, polling, adapter endpoint changes, private/account endpoints, credentials, account state, orders, sendable exchange request construction, execution automation, or live trading.
+After RX-046 is reviewer-accepted, record explicit Product Owner direction supplied through Control Tower or source-of-truth repository docs for exactly one next non-dangerous public/read-only/non-trading live-readiness handoff after the accepted RX-045 manual public readiness report. If explicit direction is absent, ambiguous, unsafe, or reaches hard-stop scope, record that no clarified runtime handoff is available and prepare one narrow clarification handoff instead of inventing route discovery, polling, adapter endpoint changes, private/account endpoints, credentials, account state, orders, sendable exchange request construction, execution automation, or live trading.
 
 ## Starting baseline
 
-Start from reviewer-accepted `main` after RX-045 is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
+Start from reviewer-accepted `main` after RX-046 is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
 
 ## Branch
 
-Create and work on `task/rx-046-post-rx-045-public-live-readiness-handoff-clarification`. Do not implement on `main`.
+Create and work on `task/rx-047-product-owner-post-rx-045-public-runtime-direction-gate`. Do not implement on `main`.
 
 ## Before changing files
 
-Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, remote is wrong, branch is wrong, `origin/HEAD` is not `origin/main`, `HEAD` does not match the accepted starting baseline, RX-045 is not explicitly reviewer-accepted and finalized on `main`, or unrelated branch work would be mixed into this task.
+Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, remote is wrong, branch is wrong, `origin/HEAD` is not `origin/main`, `HEAD` does not match the accepted starting baseline, RX-046 is not explicitly reviewer-accepted and finalized on `main`, or unrelated branch work would be mixed into this task.
 
 If Control Tower selected this task autonomously, verify from the source-of-truth repository docs that the task is non-dangerous: source-of-truth clarification only, with no live trading, private/account endpoints, credentials, orders, sendable exchange request construction, automation, account-state access, destructive reset, unsafe scope, or financially dangerous action. Stop before edits unless explicit user approval exists for any hard-stop category.
 
@@ -37,10 +37,10 @@ Read:
 
 ## Allowed scope
 
-- Inspect the accepted RX-045 outcome and current source-of-truth docs for one clearly grounded next public/read-only/non-trading live-readiness handoff.
-- Update only source-of-truth docs needed to record whether such a handoff is grounded.
-- If a concrete safe later task is clearly grounded, prepare exactly that one later task in `NEXT_TASK.md`.
-- If no concrete safe later task is grounded, prepare exactly one narrow clarification or Product Owner direction handoff in `NEXT_TASK.md`.
+- Inspect the accepted RX-046 outcome, accepted RX-045 public readiness report outcome, current source-of-truth docs, and any explicit Product Owner direction supplied through Control Tower or source-of-truth docs.
+- Update only source-of-truth docs needed to record whether exactly one concrete safe public/read-only/non-trading live-readiness handoff is clarified.
+- If explicit Product Owner direction clearly identifies one concrete safe later task, prepare exactly that one later task in `NEXT_TASK.md`.
+- If Product Owner direction is absent, ambiguous, unsafe, or reaches hard-stop scope, record that conclusion and prepare exactly one narrow clarification handoff in `NEXT_TASK.md`.
 - Preserve the latest accepted product baseline separately from pending or current branch work.
 
 ## Forbidden scope
@@ -91,9 +91,10 @@ Read:
 ## Implementation requirements
 
 - Treat this as a source-of-truth clarification task, not as authorization for live trading, private/account endpoints, credentials, account state, orders, sendable exchange requests, execution automation, or financially dangerous actions.
-- Use repository docs and explicit reviewer evidence only; do not rely on chat memory or broad roadmap implication.
-- Preserve reviewer-only acceptance. Do not mark RX-046 or any later task accepted unless explicit reviewer acceptance exists.
-- Preserve RX-045 as pending or accepted according to explicit reviewer evidence.
+- Use repository docs and explicit Product Owner or reviewer evidence only; do not rely on chat memory or broad roadmap implication.
+- Preserve reviewer-only acceptance. Do not mark this task or any later task accepted unless explicit reviewer acceptance exists.
+- Preserve RX-045 as the latest accepted product baseline unless a later reviewer-accepted product task exists.
+- Preserve RX-046 as pending or accepted according to explicit reviewer evidence.
 - Keep `NEXT_TASK.md` as exactly one next task and require the handoff validator to pass.
 - Preserve Control Tower autonomy for ordinary non-dangerous tasks grounded in source-of-truth repository docs.
 - Preserve one RX task equals one clean executor task and one task branch.
