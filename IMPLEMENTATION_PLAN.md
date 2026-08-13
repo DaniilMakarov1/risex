@@ -56,21 +56,19 @@ The detour's purpose is to keep future live-adjacent work honest: funding settle
 
 ## Latest Accepted Product Task
 
-RX-041 — Public One-Route Account-Independent Fee Cash Completion is reviewer-accepted and finalized on `main`. It completes only explicit public account-independent taker fee-rate metadata with RX-040 field/container provenance into entry plus immediate estimated-exit route-notional USD fee cash through `core/economics/fees.py` and the existing one-route `assemble_route_snapshot()` path. Missing, malformed, non-finite, non-public, maker-only, ambiguous, missing-provenance, account-tier-dependent, account-state-dependent, or ungrounded fee inputs remain unknown and cannot become zero or partial fee cash. RX-041 does not add route discovery, ranking, polling, private endpoints, credentials, account state, orders, execution automation, ledger writes, route evaluation changes, fee defaults, or live trading by default.
+RX-045 — Manual One-Route Public Readiness Report is reviewer-accepted and finalized on `main`. It adds one opt-in `real-data-route --public-readiness-report` output path for exactly one explicit public route, plus an app-layer helper that retains the existing assembled snapshot for display. It reports existing decision, Entry EV, source-aware fee/funding evidence, deterministic `UNKNOWN` components, and display-only public-readiness context without changing decisions, routes, adapters, economics rules, ledger state, execution, live gates, orders, private/account endpoints, credentials, or live trading.
 
 ## Previous Product Baseline
 
-RX-040 — Public One-Route Fee Source Metadata Preservation remains the previous accepted product baseline before RX-041. It preserves explicit public fee-rate and account-tier fee-source metadata on unknown fee cash values in the existing read-only public RiseX and Hyperliquid adapters. Adapter fee cash remains `ValueSource.UNKNOWN` with `value=None`; missing, malformed, non-finite, non-public, account-tier-dependent, account-state-dependent, or ungrounded fee inputs remain unknown and cannot become zero.
+RX-041 — Public One-Route Account-Independent Fee Cash Completion remains the previous accepted product baseline before RX-045. It completes only explicit public account-independent taker fee-rate metadata with RX-040 field/container provenance into entry plus immediate estimated-exit route-notional USD fee cash through `core/economics/fees.py` and the existing one-route `assemble_route_snapshot()` path. Missing, malformed, non-finite, non-public, maker-only, ambiguous, missing-provenance, account-tier-dependent, account-state-dependent, or ungrounded fee inputs remain unknown and cannot become zero or partial fee cash.
 
 ## Current Repository Handoff
 
-RX-044 is reviewer-accepted and finalized on `main` as a governance/source-of-truth clarification task after RX-043. RX-041 remains the latest accepted product baseline. Product Owner clarification supplied through Control Tower selects option A, Manual One-Route Public Readiness Report. RX-044 records that option A clearly grounds one concrete safe later runtime reporting task when scoped as manual, one-route, public/read-only, non-trading, fail-closed, and built on the existing one-route public adapter, snapshot, runner, fee/funding completion, and evaluation paths.
+RX-045 is reviewer-accepted and finalized on `main` as a product/runtime reporting task after RX-044. RX-045 is the latest accepted product baseline. RX-044 remains the latest accepted governance/source-of-truth task. `NEXT_TASK.md` is prepared for RX-046 as exactly one next task.
 
-RX-045 is implementation-complete on `task/rx-045-manual-one-route-public-readiness-report` and pending reviewer acceptance. The branch adds one opt-in `real-data-route --public-readiness-report` output path for exactly one explicit public route, plus an app-layer helper that retains the existing assembled snapshot for display. It preserves RX-041 as the latest accepted product baseline and RX-044 as the latest accepted governance/source-of-truth task until reviewer acceptance exists for RX-045. `NEXT_TASK.md` is prepared for RX-046 as exactly one next task and does not mark RX-045 accepted.
+## Remaining Gated Roadmap After RX-045 Finalization
 
-## Remaining Gated Roadmap After RX-045 Branch
-
-Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, by RX-033 governance autonomy, by the RX-034 roadmap selection audit, by the RX-035 post-audit handoff cleanup, by the RX-036 roadmap source-of-truth clarification, by the RX-037 roadmap direction record, by RX-038 one-route real-data CLI finalization, by RX-039 public one-route economics source completion, by RX-040 public fee-source metadata preservation, by RX-041 public one-route account-independent fee cash completion, RX-042 finalization, RX-043 finalization, or RX-044 finalization.
+Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, by RX-033 governance autonomy, by the RX-034 roadmap selection audit, by the RX-035 post-audit handoff cleanup, by the RX-036 roadmap source-of-truth clarification, by the RX-037 roadmap direction record, by RX-038 one-route real-data CLI finalization, by RX-039 public one-route economics source completion, by RX-040 public fee-source metadata preservation, by RX-041 public one-route account-independent fee cash completion, RX-042 finalization, RX-043 finalization, RX-044 finalization, or RX-045 finalization.
 
 1. RX-046 - Post-RX-045 Public Live-Readiness Handoff Clarification.
 
@@ -468,13 +466,13 @@ RX-045 implementation notes:
 
 RX-045 must not add route discovery, ranking, watchlists, background loops, polling, scheduling, alerts, automatic refresh, adapters or adapter endpoint changes, private/account endpoints, credentials, API keys, account balances/state, account-tier assumptions, order placement, order cancellation, order status fetching, sendable exchange request construction, order payload construction, execution automation, execution planning, guarded live runner execution, approval-boundary execution, ledger writes, storage migrations, replay changes, paper lifecycle changes, funding settlement verification, ledger reconciliation, route eligibility mutation, Capture state transitions, route statuses, reject reasons, fee/funding/VWAP/liquidity/basis/spread/price-impact/slippage/max-level/hidden-buffer/safety-margin rule changes, canary architecture, hold-next-cycle logic, live trading by default, or any second route model, decision path, snapshot path, EV path, VWAP path, ledger-write path, replay path, execution-planning path, or live execution path.
 
-RX-045 branch outcome:
+RX-045 accepted outcome:
 
 - Adds `run_real_data_research_route_with_snapshot()` in `apps/research_runner/real_data.py` as an app-layer reporting helper that returns the existing decision plus the existing assembled snapshot, or no snapshot on the existing fail-closed adapter/handoff failure path.
 - Preserves `run_real_data_research_route()` behavior by delegating to the helper and returning only the decision.
 - Adds `--public-readiness-report` to the existing `real-data-route` CLI command while preserving no-argument fake CLI behavior and default `real-data-route` output.
 - Reports route identity, decision status/reasons, Entry EV fields, source-aware funding and fee values/metadata from the retained snapshot, deterministic `UNKNOWN` components, and a display-only public-readiness conclusion.
-- Keeps RX-045 implementation-complete and pending review; it does not mark RX-045 accepted without reviewer acceptance.
+- RX-045 is reviewer-accepted and finalized on `main`; it remains manual, one-route, public/read-only, non-trading, and reporting-only.
 
 ## RX-046 — Post-RX-045 Public Live-Readiness Handoff Clarification
 
@@ -485,8 +483,8 @@ RX-046 implementation notes:
 - Treat RX-046 as governance/source-of-truth only unless one concrete safe later task is clearly grounded in accepted docs and does not reach hard-stop scope.
 - If a concrete safe next public/read-only/non-trading task is grounded, prepare exactly that one later task in `NEXT_TASK.md`.
 - If no such task is grounded, record the no-grounded-runtime-handoff conclusion and prepare a narrow clarification handoff rather than inventing route discovery, polling, private endpoint, account-state, order, execution automation, or live-trading scope.
-- Preserve RX-041 as the latest accepted product baseline unless RX-045 is reviewer-accepted and finalized as a later product/runtime reporting baseline.
-- Preserve RX-045 as pending or accepted according to explicit reviewer evidence.
+- Preserve RX-045 as the latest accepted product baseline.
+- Preserve RX-044 as the latest accepted governance/source-of-truth task unless a later reviewer-accepted governance task exists.
 
 RX-046 must not add product/runtime behavior, route discovery, ranking, watchlists, background loops, polling, scheduling, alerts, automatic refresh, adapters, adapter endpoint changes, private/account endpoints, credentials, API keys, account balances/state, account-tier assumptions, order placement, order cancellation, order status fetching, sendable exchange request construction, order payload construction, execution automation, execution planning, guarded live runner execution, approval-boundary execution, ledger writes, storage migrations, replay changes, paper lifecycle changes, funding settlement verification, ledger reconciliation, route eligibility mutation, Capture state transitions, route statuses, reject reasons, fee/funding/VWAP/liquidity/basis/spread/price-impact/slippage/max-level/hidden-buffer/safety-margin rule changes, canary architecture, hold-next-cycle logic, live trading by default, or any second route model, decision path, snapshot path, EV path, VWAP path, ledger-write path, replay path, execution-planning path, or live execution path.
 
