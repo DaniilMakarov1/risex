@@ -249,7 +249,7 @@ RX-030 remains the latest accepted product task and adds one read-only dashboard
 - RX-031 is reviewer-accepted and finalized on `main`.
 - RX-032 is reviewer-accepted and finalized on `main`.
 - RX-033 is reviewer-accepted and finalized on `main`.
-- RX-034 is in progress on its task branch and is not reviewer-accepted.
+- RX-034 is implementation-complete on its task branch and is not reviewer-accepted.
 - The next recommended task is RX-035 Post-RX-034 Roadmap Handoff Cleanup.
 - The RX-032 authorization does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - RX-033 autonomy does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
@@ -264,7 +264,7 @@ RX-030 remains the latest accepted product task and adds one read-only dashboard
 - `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
 - `git diff --check`: exit 0
 - `git diff --cached --check`: exit 0
-- `git status --short`: `M DECISIONS.md`; `M IMPLEMENTATION_PLAN.md`; `M NEXT_TASK.md`; `M STATUS.md`
+- `git status --short`: empty after commit and push
 
 ## Tests last reported for RX-032 branch
 
