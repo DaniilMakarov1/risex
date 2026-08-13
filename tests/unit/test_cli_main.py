@@ -160,6 +160,151 @@ def _paper_session_package_args(
     return args
 
 
+def _paper_session_report_payload(**overrides: object) -> dict[str, object]:
+    report = {
+        "report": "Paper Trade Session Report",
+        "schema_version": 1,
+        "session": {
+            "ledger_path": None,
+            "route_count": 2,
+        },
+        "routes": [
+            {
+                "route_index": 1,
+                "route": {
+                    "route_id": "session-started",
+                    "capture_id": "capture-started",
+                    "risex_venue": "RiseX",
+                    "risex_symbol": "BTC-PERP",
+                    "risex_side": "buy",
+                    "hedge_venue": "Hyperliquid",
+                    "hedge_symbol": "BTC",
+                    "hedge_side": "sell",
+                    "target_notional_usd": "500",
+                    "mode": "ENTRY",
+                    "assembled_at": "2026-08-13T12:00:00+00:00",
+                },
+                "decision": {
+                    "mode": "ENTRY",
+                    "status": "PAPER_ELIGIBLE",
+                    "reasons": ["LIVE_GATES_NOT_IMPLEMENTED"],
+                    "net_profit_usd": "4.5",
+                    "entry_ev": {
+                        "expected_funding_usd": "7",
+                        "total_fees_usd": "1",
+                        "simulated_roundtrip_cost_usd": "1.5",
+                        "net_profit_usd": "4.5",
+                    },
+                },
+                "snapshot": {
+                    "state": "AVAILABLE",
+                    "funding_settlement_at": "2026-08-13T16:00:00+00:00",
+                },
+                "paper": {
+                    "started": True,
+                    "start_attribution": "entry_paper_eligible_decision",
+                    "start_blockers": [],
+                    "expected_funding_usd": "7",
+                    "total_fees_usd": "1",
+                    "simulated_roundtrip_cost_usd": "1.5",
+                    "net_profit_usd": "4.5",
+                },
+                "ledger_events": [],
+            },
+            {
+                "route_index": 2,
+                "route": {
+                    "route_id": "session-rejected",
+                    "capture_id": "capture-rejected",
+                    "risex_venue": "RiseX",
+                    "risex_symbol": "BTC-PERP",
+                    "risex_side": "buy",
+                    "hedge_venue": "Hyperliquid",
+                    "hedge_symbol": "BTC",
+                    "hedge_side": "sell",
+                    "target_notional_usd": "500",
+                    "mode": "ENTRY",
+                    "assembled_at": "2026-08-13T12:01:00+00:00",
+                },
+                "decision": {
+                    "mode": "ENTRY",
+                    "status": "REJECTED",
+                    "reasons": ["REQUIRED_LIVE_DATA_MISSING"],
+                    "net_profit_usd": None,
+                    "entry_ev": {
+                        "expected_funding_usd": None,
+                        "total_fees_usd": None,
+                        "simulated_roundtrip_cost_usd": None,
+                        "net_profit_usd": None,
+                    },
+                },
+                "snapshot": {
+                    "state": "AVAILABLE",
+                    "funding_settlement_at": "2026-08-13T16:00:00+00:00",
+                },
+                "paper": {
+                    "started": False,
+                    "start_attribution": "paper_start_blocked_by_decision",
+                    "start_blockers": ["decision_status_not_paper_eligible"],
+                    "expected_funding_usd": None,
+                    "total_fees_usd": None,
+                    "simulated_roundtrip_cost_usd": None,
+                    "net_profit_usd": None,
+                },
+                "ledger_events": [],
+            },
+        ],
+        "summary": {
+            "routes_total": 2,
+            "routes_with_snapshot": 2,
+            "routes_without_snapshot": 0,
+            "paper_started": 1,
+            "paper_not_started": 1,
+            "decision_status": {
+                "RESEARCH_ONLY": 0,
+                "PAPER_ELIGIBLE": 1,
+                "LIVE_ELIGIBLE": 0,
+                "REJECTED": 1,
+            },
+            "entry_ev_known": 1,
+            "entry_ev_unknown": 1,
+            "paper_expected_funding_known": 1,
+            "paper_expected_funding_unknown": 1,
+            "paper_total_fees_known": 1,
+            "paper_total_fees_unknown": 1,
+            "decision_net_profit_known": 1,
+            "decision_net_profit_unknown": 1,
+            "paper_net_profit_known": 1,
+            "paper_net_profit_unknown": 1,
+            "ledger_event_count": 6,
+            "ledger_event_sequences": [1, 2, 3, 4, 5, 6],
+            "ledger_event_types": [
+                "route_decision",
+                "paper_capture_opened",
+                "paper_settlement_observed",
+                "paper_capture_closed",
+                "route_decision",
+                "paper_rejection_recorded",
+            ],
+            "aggregate_paper_net_profit_usd": None,
+            "ledger_path": None,
+        },
+        "ledger_events": [],
+    }
+    report.update(overrides)
+    return report
+
+
+def _render_paper_session_report_args(tmp_path, report_payload: object) -> list[str]:
+    report_path = tmp_path / "paper-session-report.json"
+    report_path.write_text(json.dumps(report_payload), encoding="utf-8")
+    return [
+        "render-paper-session-report",
+        "--session-report-json-path",
+        str(report_path),
+    ]
+
+
 def test_no_arg_cli_fake_scan_refresh_output_remains_unchanged(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -1437,6 +1582,255 @@ def test_paper_trade_session_writes_explicit_deterministic_report_history_json(
     assert '"net_profit_usd": 0' not in first_report_text
 
     capsys.readouterr()
+
+
+def test_render_paper_session_report_outputs_deterministic_stdout_only_display(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path,
+) -> None:
+    calls: list[str] = []
+
+    class ForbiddenRiseXAdapter:
+        name = "RiseX"
+
+        def __init__(self) -> None:
+            calls.append("risex_adapter")
+            raise AssertionError("renderer must not construct adapters")
+
+    class ForbiddenHyperliquidAdapter:
+        name = "Hyperliquid"
+
+        def __init__(self) -> None:
+            calls.append("hedge_adapter")
+            raise AssertionError("renderer must not construct adapters")
+
+    class ForbiddenLedger:
+        def __init__(self, *_args: object, **_kwargs: object) -> None:
+            calls.append("ledger")
+            raise AssertionError("renderer must not instantiate ledgers")
+
+    def forbidden_runner(**_kwargs: object) -> DecisionResult:
+        calls.append("runner")
+        raise AssertionError("renderer must not run sessions")
+
+    def forbidden_lifecycle(**_kwargs: object) -> object:
+        calls.append("paper_lifecycle")
+        raise AssertionError("renderer must not call paper lifecycle")
+
+    monkeypatch.setattr(cli, "RiseXObservationAdapter", ForbiddenRiseXAdapter)
+    monkeypatch.setattr(cli, "HyperliquidObservationAdapter", ForbiddenHyperliquidAdapter)
+    monkeypatch.setattr(cli, "InMemoryLedger", ForbiddenLedger)
+    monkeypatch.setattr(cli, "SQLiteLedger", ForbiddenLedger)
+    monkeypatch.setattr(cli, "run_real_data_research_route", forbidden_runner)
+    monkeypatch.setattr(cli, "run_real_data_research_route_with_snapshot", forbidden_runner)
+    monkeypatch.setattr(cli, "run_paper_lifecycle", forbidden_lifecycle)
+
+    args = _render_paper_session_report_args(tmp_path, _paper_session_report_payload())
+    report_path = tmp_path / "paper-session-report.json"
+    report_text = report_path.read_text(encoding="utf-8")
+
+    assert cli.main(args) == 0
+    first_output = capsys.readouterr().out
+    assert cli.main(args) == 0
+
+    assert calls == []
+    assert report_path.read_text(encoding="utf-8") == report_text
+    assert capsys.readouterr().out == first_output
+    assert first_output == (
+        "Paper Session Report Display\n"
+        "route_count=2\n"
+        "route_ids=session-started,session-rejected\n"
+        "route.1.route_id=session-started\n"
+        "route.1.decision_status=PAPER_ELIGIBLE\n"
+        "route.1.paper_started=true\n"
+        "route.1.decision_net_profit_usd=4.5\n"
+        "route.1.decision_entry_ev_expected_funding_usd=7\n"
+        "route.1.decision_entry_ev_total_fees_usd=1\n"
+        "route.1.decision_entry_ev_simulated_roundtrip_cost_usd=1.5\n"
+        "route.1.decision_entry_ev_net_profit_usd=4.5\n"
+        "route.1.paper_expected_funding_usd=7\n"
+        "route.1.paper_total_fees_usd=1\n"
+        "route.1.paper_simulated_roundtrip_cost_usd=1.5\n"
+        "route.1.paper_net_profit_usd=4.5\n"
+        "route.2.route_id=session-rejected\n"
+        "route.2.decision_status=REJECTED\n"
+        "route.2.paper_started=false\n"
+        "route.2.decision_net_profit_usd=null\n"
+        "route.2.decision_entry_ev_expected_funding_usd=null\n"
+        "route.2.decision_entry_ev_total_fees_usd=null\n"
+        "route.2.decision_entry_ev_simulated_roundtrip_cost_usd=null\n"
+        "route.2.decision_entry_ev_net_profit_usd=null\n"
+        "route.2.paper_expected_funding_usd=null\n"
+        "route.2.paper_total_fees_usd=null\n"
+        "route.2.paper_simulated_roundtrip_cost_usd=null\n"
+        "route.2.paper_net_profit_usd=null\n"
+        "summary.decision_net_profit_known=1\n"
+        "summary.decision_net_profit_unknown=1\n"
+        "summary.entry_ev_known=1\n"
+        "summary.entry_ev_unknown=1\n"
+        "summary.paper_expected_funding_known=1\n"
+        "summary.paper_expected_funding_unknown=1\n"
+        "summary.paper_net_profit_known=1\n"
+        "summary.paper_net_profit_unknown=1\n"
+        "summary.paper_total_fees_known=1\n"
+        "summary.paper_total_fees_unknown=1\n"
+        "summary.aggregate_paper_net_profit_usd=null\n"
+    )
+    assert "paper_net_profit_usd=0" not in first_output
+    assert "summary.aggregate_paper_net_profit_usd=0" not in first_output
+
+
+@pytest.mark.parametrize(
+    "case",
+    (
+        "top_level_array",
+        "empty_routes",
+        "route_count_mismatch",
+        "numeric_economics",
+        "missing_aggregate",
+        "non_null_aggregate",
+        "missing_summary_count",
+    ),
+)
+def test_render_paper_session_report_rejects_malformed_input_before_output(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path,
+    case: str,
+) -> None:
+    calls: list[str] = []
+
+    class ForbiddenRiseXAdapter:
+        name = "RiseX"
+
+        def __init__(self) -> None:
+            calls.append("risex_adapter")
+            raise AssertionError("renderer must not construct adapters")
+
+    class ForbiddenHyperliquidAdapter:
+        name = "Hyperliquid"
+
+        def __init__(self) -> None:
+            calls.append("hedge_adapter")
+            raise AssertionError("renderer must not construct adapters")
+
+    def forbidden_runner(**_kwargs: object) -> DecisionResult:
+        calls.append("runner")
+        raise AssertionError("renderer must not run sessions")
+
+    monkeypatch.setattr(cli, "RiseXObservationAdapter", ForbiddenRiseXAdapter)
+    monkeypatch.setattr(cli, "HyperliquidObservationAdapter", ForbiddenHyperliquidAdapter)
+    monkeypatch.setattr(cli, "run_real_data_research_route_with_snapshot", forbidden_runner)
+
+    if case == "top_level_array":
+        malformed_payload: object = []
+    else:
+        malformed_payload = json.loads(json.dumps(_paper_session_report_payload()))
+        assert isinstance(malformed_payload, dict)
+        if case == "empty_routes":
+            malformed_payload["session"]["route_count"] = 0
+            malformed_payload["routes"] = []
+        elif case == "route_count_mismatch":
+            malformed_payload["session"]["route_count"] = 1
+        elif case == "numeric_economics":
+            malformed_payload["routes"][1]["paper"]["net_profit_usd"] = 0
+        elif case == "missing_aggregate":
+            del malformed_payload["summary"]["aggregate_paper_net_profit_usd"]
+        elif case == "non_null_aggregate":
+            malformed_payload["summary"]["aggregate_paper_net_profit_usd"] = "4.5"
+        elif case == "missing_summary_count":
+            del malformed_payload["summary"]["paper_net_profit_unknown"]
+        else:  # pragma: no cover - guarded by parametrization above.
+            raise AssertionError(case)
+
+    report_path = tmp_path / "malformed-paper-session-report.json"
+    report_path.write_text(json.dumps(malformed_payload), encoding="utf-8")
+    original_text = report_path.read_text(encoding="utf-8")
+
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main(
+            [
+                "render-paper-session-report",
+                "--session-report-json-path",
+                str(report_path),
+            ]
+        )
+
+    assert exc_info.value.code == 2
+    assert calls == []
+    assert report_path.read_text(encoding="utf-8") == original_text
+    assert capsys.readouterr().out == ""
+
+
+def test_render_paper_session_report_rejects_invalid_json_before_output(
+    capsys: pytest.CaptureFixture[str],
+    tmp_path,
+) -> None:
+    report_path = tmp_path / "invalid-paper-session-report.json"
+    report_path.write_text("{not-json", encoding="utf-8")
+
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main(
+            [
+                "render-paper-session-report",
+                "--session-report-json-path",
+                str(report_path),
+            ]
+        )
+
+    assert exc_info.value.code == 2
+    assert capsys.readouterr().out == ""
+
+
+def test_render_paper_session_report_renderer_has_no_forbidden_runtime_behavior() -> None:
+    renderer_source = "".join(
+        inspect.getsource(getattr(cli, name))
+        for name in (
+            "_run_render_paper_session_report",
+            "_paper_session_report_display_lines",
+            "_validated_paper_session_report_display_values",
+            "_paper_report_mapping",
+            "_paper_report_list",
+            "_paper_report_int",
+            "_paper_report_string",
+            "_paper_report_bool",
+            "_paper_report_economics_value",
+        )
+    )
+    lowered = renderer_source.lower()
+
+    assert "read_text" in renderer_source
+    assert "write_text" not in renderer_source
+    assert "run_real_data_research_route" not in renderer_source
+    assert "run_paper_lifecycle" not in renderer_source
+    assert "InMemoryLedger" not in renderer_source
+    assert "SQLiteLedger" not in renderer_source
+    assert "RiseXObservationAdapter" not in renderer_source
+    assert "HyperliquidObservationAdapter" not in renderer_source
+    assert "apps.live_runner" not in renderer_source
+    assert "core.execution" not in renderer_source
+    assert "reconciliation" not in lowered
+    assert "replay" not in lowered
+    assert "telegram" not in lowered
+    assert "webhook" not in lowered
+    assert "token" not in lowered
+    assert "credential" not in lowered
+    assert "secret" not in lowered
+    assert "api_key" not in lowered
+    assert "requests" not in lowered
+    assert "httpx" not in lowered
+    assert "urllib" not in lowered
+    assert "socket" not in lowered
+    assert "private" not in lowered
+    assert "account" not in lowered
+    assert "balance" not in lowered
+    assert "watchlist" not in lowered
+    assert "poll" not in lowered
+    assert "schedule" not in lowered
+    assert "alert" not in lowered
+    assert "ranking" not in lowered
+    assert "order_placement" not in lowered
 
 
 def test_build_paper_session_package_writes_deterministic_local_artifacts(

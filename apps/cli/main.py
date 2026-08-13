@@ -282,6 +282,20 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     build_paper_session_package.set_defaults(handler=_run_build_paper_session_package)
 
+    render_paper_session_report = subparsers.add_parser(
+        "render-paper-session-report",
+        help="Render an already-written local paper session report JSON to stdout.",
+    )
+    render_paper_session_report.add_argument(
+        "--session-report-json-path",
+        required=True,
+        type=_non_empty,
+        help="Explicit local RX-057 paper session report JSON path to render.",
+    )
+    render_paper_session_report.set_defaults(
+        handler=_run_render_paper_session_report
+    )
+
     return parser
 
 
@@ -1010,6 +1024,254 @@ def _paper_session_package_preview_json(
             "text": shlex.join(command_args),
         },
     }
+
+
+def _paper_report_mapping(value: object, field_name: str) -> Mapping[str, object]:
+    if not isinstance(value, Mapping):
+        raise argparse.ArgumentTypeError(f"{field_name} must be an object")
+    return value
+
+
+def _paper_report_list(value: object, field_name: str) -> list[object]:
+    if not isinstance(value, list):
+        raise argparse.ArgumentTypeError(f"{field_name} must be an array")
+    return value
+
+
+def _paper_report_int(value: object, field_name: str) -> int:
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise argparse.ArgumentTypeError(f"{field_name} must be an integer")
+    return value
+
+
+def _paper_report_string(value: object, field_name: str) -> str:
+    if not isinstance(value, str) or not value:
+        raise argparse.ArgumentTypeError(f"{field_name} must be a non-empty string")
+    return value
+
+
+def _paper_report_bool(value: object, field_name: str) -> bool:
+    if not isinstance(value, bool):
+        raise argparse.ArgumentTypeError(f"{field_name} must be a boolean")
+    return value
+
+
+def _paper_report_economics_value(value: object, field_name: str) -> str:
+    if value is None:
+        return "null"
+    if not isinstance(value, str):
+        raise argparse.ArgumentTypeError(f"{field_name} must be a string or null")
+    return value
+
+
+def _paper_report_bool_display(value: bool) -> str:
+    return "true" if value else "false"
+
+
+def _validated_paper_session_report_display_values(
+    report: Mapping[str, object],
+) -> dict[str, object]:
+    if report.get("report") != "Paper Trade Session Report":
+        raise argparse.ArgumentTypeError("report must be Paper Trade Session Report")
+    if report.get("schema_version") != 1:
+        raise argparse.ArgumentTypeError("schema_version must be 1")
+
+    session = _paper_report_mapping(report.get("session"), "session")
+    route_count = _paper_report_int(session.get("route_count"), "session.route_count")
+    if route_count < 1 or route_count > _MAX_PAPER_SESSION_ROUTES:
+        raise argparse.ArgumentTypeError(
+            "session.route_count must be between 1 and "
+            f"{_MAX_PAPER_SESSION_ROUTES}"
+        )
+    routes = _paper_report_list(report.get("routes"), "routes")
+    if len(routes) != route_count:
+        raise argparse.ArgumentTypeError(
+            "routes length must match session.route_count"
+        )
+
+    route_displays: list[dict[str, object]] = []
+    for index, route_item in enumerate(routes, start=1):
+        route_report = _paper_report_mapping(route_item, f"routes[{index}]")
+        route = _paper_report_mapping(
+            route_report.get("route"),
+            f"routes[{index}].route",
+        )
+        decision = _paper_report_mapping(
+            route_report.get("decision"),
+            f"routes[{index}].decision",
+        )
+        entry_ev = _paper_report_mapping(
+            decision.get("entry_ev"),
+            f"routes[{index}].decision.entry_ev",
+        )
+        paper = _paper_report_mapping(
+            route_report.get("paper"),
+            f"routes[{index}].paper",
+        )
+
+        route_displays.append(
+            {
+                "route_id": _paper_report_string(
+                    route.get("route_id"),
+                    f"routes[{index}].route.route_id",
+                ),
+                "decision_status": _paper_report_string(
+                    decision.get("status"),
+                    f"routes[{index}].decision.status",
+                ),
+                "paper_started": _paper_report_bool(
+                    paper.get("started"),
+                    f"routes[{index}].paper.started",
+                ),
+                "decision_net_profit_usd": _paper_report_economics_value(
+                    decision.get("net_profit_usd"),
+                    f"routes[{index}].decision.net_profit_usd",
+                ),
+                "decision_entry_ev_expected_funding_usd": (
+                    _paper_report_economics_value(
+                        entry_ev.get("expected_funding_usd"),
+                        f"routes[{index}].decision.entry_ev.expected_funding_usd",
+                    )
+                ),
+                "decision_entry_ev_total_fees_usd": (
+                    _paper_report_economics_value(
+                        entry_ev.get("total_fees_usd"),
+                        f"routes[{index}].decision.entry_ev.total_fees_usd",
+                    )
+                ),
+                "decision_entry_ev_simulated_roundtrip_cost_usd": (
+                    _paper_report_economics_value(
+                        entry_ev.get("simulated_roundtrip_cost_usd"),
+                        "routes"
+                        f"[{index}].decision.entry_ev.simulated_roundtrip_cost_usd",
+                    )
+                ),
+                "decision_entry_ev_net_profit_usd": (
+                    _paper_report_economics_value(
+                        entry_ev.get("net_profit_usd"),
+                        f"routes[{index}].decision.entry_ev.net_profit_usd",
+                    )
+                ),
+                "paper_expected_funding_usd": _paper_report_economics_value(
+                    paper.get("expected_funding_usd"),
+                    f"routes[{index}].paper.expected_funding_usd",
+                ),
+                "paper_total_fees_usd": _paper_report_economics_value(
+                    paper.get("total_fees_usd"),
+                    f"routes[{index}].paper.total_fees_usd",
+                ),
+                "paper_simulated_roundtrip_cost_usd": (
+                    _paper_report_economics_value(
+                        paper.get("simulated_roundtrip_cost_usd"),
+                        f"routes[{index}].paper.simulated_roundtrip_cost_usd",
+                    )
+                ),
+                "paper_net_profit_usd": _paper_report_economics_value(
+                    paper.get("net_profit_usd"),
+                    f"routes[{index}].paper.net_profit_usd",
+                ),
+            }
+        )
+
+    summary = _paper_report_mapping(report.get("summary"), "summary")
+    summary_count_fields = (
+        "entry_ev_known",
+        "entry_ev_unknown",
+        "paper_expected_funding_known",
+        "paper_expected_funding_unknown",
+        "paper_total_fees_known",
+        "paper_total_fees_unknown",
+        "decision_net_profit_known",
+        "decision_net_profit_unknown",
+        "paper_net_profit_known",
+        "paper_net_profit_unknown",
+    )
+    summary_counts = {
+        field_name: _paper_report_int(summary.get(field_name), f"summary.{field_name}")
+        for field_name in summary_count_fields
+    }
+    if "aggregate_paper_net_profit_usd" not in summary:
+        raise argparse.ArgumentTypeError(
+            "summary.aggregate_paper_net_profit_usd must be present and null"
+        )
+    if summary["aggregate_paper_net_profit_usd"] is not None:
+        raise argparse.ArgumentTypeError(
+            "summary.aggregate_paper_net_profit_usd must be null"
+        )
+
+    return {
+        "route_count": route_count,
+        "route_displays": route_displays,
+        "summary_counts": summary_counts,
+        "aggregate_paper_net_profit_usd": "null",
+    }
+
+
+def _paper_session_report_display_lines(
+    report: Mapping[str, object],
+) -> tuple[str, ...]:
+    display = _validated_paper_session_report_display_values(report)
+    route_displays = display["route_displays"]
+    assert isinstance(route_displays, list)
+    summary_counts = display["summary_counts"]
+    assert isinstance(summary_counts, dict)
+
+    route_ids = tuple(str(route["route_id"]) for route in route_displays)
+    lines = [
+        "Paper Session Report Display",
+        f"route_count={display['route_count']}",
+        f"route_ids={_join_or_none(route_ids)}",
+    ]
+    route_field_names = (
+        "route_id",
+        "decision_status",
+        "paper_started",
+        "decision_net_profit_usd",
+        "decision_entry_ev_expected_funding_usd",
+        "decision_entry_ev_total_fees_usd",
+        "decision_entry_ev_simulated_roundtrip_cost_usd",
+        "decision_entry_ev_net_profit_usd",
+        "paper_expected_funding_usd",
+        "paper_total_fees_usd",
+        "paper_simulated_roundtrip_cost_usd",
+        "paper_net_profit_usd",
+    )
+    for index, route_display in enumerate(route_displays, start=1):
+        for field_name in route_field_names:
+            value = route_display[field_name]
+            if isinstance(value, bool):
+                rendered_value = _paper_report_bool_display(value)
+            else:
+                rendered_value = str(value)
+            lines.append(f"route.{index}.{field_name}={rendered_value}")
+
+    for field_name in sorted(summary_counts):
+        lines.append(f"summary.{field_name}={summary_counts[field_name]}")
+    lines.append(
+        "summary.aggregate_paper_net_profit_usd="
+        f"{display['aggregate_paper_net_profit_usd']}"
+    )
+    return tuple(lines)
+
+
+def _run_render_paper_session_report(
+    args: argparse.Namespace,
+    parser: argparse.ArgumentParser,
+) -> None:
+    try:
+        report_text = Path(args.session_report_json_path).read_text(encoding="utf-8")
+        parsed_report = json.loads(report_text)
+        report = _paper_report_mapping(parsed_report, "report")
+        lines = _paper_session_report_display_lines(report)
+    except OSError as exc:
+        parser.error(f"session-report-json-path could not be read: {exc}")
+    except json.JSONDecodeError as exc:
+        parser.error(f"session-report-json-path must contain valid JSON: {exc}")
+    except argparse.ArgumentTypeError as exc:
+        parser.error(str(exc))
+
+    for line in lines:
+        print(line)
 
 
 def _run_real_data_route(
