@@ -13,6 +13,7 @@ from pathlib import Path
 
 from apps.cli.paper_session_payloads import (
     MAX_PAPER_SESSION_ROUTES as _MAX_PAPER_SESSION_ROUTES,
+    paper_session_display_command_payload_from_command_text as _paper_session_display_command_payload_from_command_text,
     paper_session_report_path_from_display_command_payload as _paper_session_report_path_from_display_command_payload,
     paper_session_route_list_from_command_payload as _paper_session_route_list_from_command_payload,
     paper_session_routes_from_json_path as _paper_session_routes_from_json_path,
@@ -327,6 +328,29 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     build_paper_session_display_command_preview.set_defaults(
         handler=_run_build_paper_session_display_command_preview
+    )
+
+    parse_paper_session_display_command_text = subparsers.add_parser(
+        "parse-paper-session-display-command-text",
+        help=(
+            "Parse local paper session report display command text into a "
+            "display payload fixture."
+        ),
+    )
+    parse_paper_session_display_command_text.add_argument(
+        "--paper-session-display-command-text-path",
+        required=True,
+        type=_non_empty,
+        help="Explicit local display command text fixture path.",
+    )
+    parse_paper_session_display_command_text.add_argument(
+        "--display-payload-json-path",
+        required=True,
+        type=_non_empty,
+        help="Explicit local JSON display payload fixture path to write.",
+    )
+    parse_paper_session_display_command_text.set_defaults(
+        handler=_run_parse_paper_session_display_command_text
     )
 
     render_paper_session_report = subparsers.add_parser(
@@ -1555,6 +1579,38 @@ def _run_build_paper_session_display_command_preview(
         f"{args.paper_session_display_command_payload_json_path}"
     )
     print(f"preview_json_path={args.preview_json_output_path}")
+
+
+def _run_parse_paper_session_display_command_text(
+    args: argparse.Namespace,
+    parser: argparse.ArgumentParser,
+) -> None:
+    try:
+        command_text = Path(
+            args.paper_session_display_command_text_path
+        ).read_text(encoding="utf-8")
+        payload = _paper_session_display_command_payload_from_command_text(
+            command_text
+        )
+        session_report_json_path = _paper_session_report_path_from_display_command_payload(
+            json.dumps(payload, sort_keys=True)
+        )
+    except OSError as exc:
+        parser.error(f"paper-session-display-command-text-path could not be read: {exc}")
+    except argparse.ArgumentTypeError as exc:
+        parser.error(str(exc))
+
+    if payload["session_report_json_path"] != session_report_json_path:
+        parser.error(
+            "display payload session_report_json_path did not round-trip"
+        )
+
+    _write_json_artifact(args.display_payload_json_path, payload)
+
+    print("Paper Session Display Command Text Parser")
+    print(f"command_text_path={args.paper_session_display_command_text_path}")
+    print(f"display_payload_json_path={args.display_payload_json_path}")
+    print(f"session_report_json_path={session_report_json_path}")
 
 
 def _run_paper_trade_route(

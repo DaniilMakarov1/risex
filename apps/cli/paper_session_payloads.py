@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shlex
 from collections.abc import Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
@@ -301,3 +302,53 @@ def paper_session_report_path_from_display_command_payload(
             "paper-session-display-command-payload "
             f"session_report_json_path: {exc}"
         ) from exc
+
+
+def paper_session_display_command_payload_from_command_text(
+    command_text: str,
+) -> dict[str, object]:
+    try:
+        command_source = _non_empty(command_text)
+    except argparse.ArgumentTypeError as exc:
+        raise argparse.ArgumentTypeError(
+            f"paper-session-display-command-text: {exc}"
+        ) from exc
+
+    try:
+        command_args = shlex.split(command_source)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(
+            f"paper-session-display-command-text must be valid command text: {exc}"
+        ) from exc
+
+    if (
+        len(command_args) != 3
+        or command_args[0] != "paper-session-report-display"
+        or command_args[1] != "--session-report-json-path"
+    ):
+        raise argparse.ArgumentTypeError(
+            "paper-session-display-command-text must be exactly "
+            "paper-session-report-display --session-report-json-path "
+            "<session-report-json-path>"
+        )
+
+    try:
+        session_report_json_path = _non_empty(command_args[2])
+    except argparse.ArgumentTypeError as exc:
+        raise argparse.ArgumentTypeError(
+            f"paper-session-display-command-text session_report_json_path: {exc}"
+        ) from exc
+
+    payload: dict[str, object] = {
+        "schema_version": 1,
+        "session_report_json_path": session_report_json_path,
+    }
+    parsed_payload_report_path = paper_session_report_path_from_display_command_payload(
+        json.dumps(payload, sort_keys=True)
+    )
+    if parsed_payload_report_path != session_report_json_path:
+        raise argparse.ArgumentTypeError(
+            "paper-session-display-command-text session_report_json_path "
+            "did not round-trip through display payload parser"
+        )
+    return payload

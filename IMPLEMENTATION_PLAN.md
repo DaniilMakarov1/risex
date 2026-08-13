@@ -37,6 +37,10 @@ RX-062 is reviewer-accepted and finalized on `main`. It adds one explicit local/
 
 RX-063 is reviewer-accepted and finalized on `main`. It adds one explicit local/manual `build-paper-session-display-payload` command that validates an already-written RX-057 session report through the accepted RX-061 display validation, validates the generated minimal payload through the accepted RX-062 parser, writes one local display payload fixture containing only `schema_version=1` and `session_report_json_path`, and stops before session execution, adapter construction, ledger writes, report mutation, Telegram/network/credential behavior, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
 
+RX-064 is reviewer-accepted and finalized on `main`. It adds one explicit local/manual `build-paper-session-display-command-preview` command that validates an RX-062 display payload fixture, does not read or render the referenced report JSON, writes one descriptive local preview/manifest for the exact manual display command plan, and stops before session execution, adapter construction, ledger writes, report mutation, Telegram/network/credential behavior, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
+
+RX-065 is implementation-complete on its task branch and pending reviewer acceptance. It adds one explicit local/manual `parse-paper-session-display-command-text` command that reads an explicit local command text fixture, accepts exactly `paper-session-report-display --session-report-json-path <session-report-json-path>` using `shlex.split()`, validates the generated minimal display payload through the accepted RX-062 parser, writes one RX-062 display payload fixture, and avoids report reading/rendering, session execution, adapters, ledgers, report mutation, Telegram/network/credential behavior, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, and second owner paths.
+
 ## Completed Accepted Work
 
 - RX-000 through RX-007 established the project constitution, domain contracts, product rules, economics, per-venue observations, offline scan/refresh orchestration, fake paper lifecycle, and append-only ledger persistence scaffolding.
@@ -86,6 +90,8 @@ RX-063 is reviewer-accepted and finalized on `main`. It adds one explicit local/
 - RX-060 added one local-only `build-paper-session-package` command that validates local command payload fixtures through the RX-058 boundary and writes explicit route-list plus preview/manifest artifacts without running sessions or adding Telegram/live/order/private/account scope.
 - RX-061 added one local-only `render-paper-session-report` command that renders already-written RX-057 session report JSON to deterministic stdout-only display, rejects missing displayed economics fields, preserves `aggregate_paper_net_profit_usd=null`, and adds no Telegram/live/order/private/account scope.
 - RX-062 added one local-only display command payload parser and `render-paper-session-report-from-payload` wrapper that validates minimal display payload fixtures before report reading and delegates to the RX-061 renderer without adding Telegram/live/order/private/account scope.
+- RX-063 added one local-only display payload fixture builder that validates already-written reports through RX-061 display validation and writes only the minimal RX-062 display payload fixture.
+- RX-064 added one local-only display command preview builder that validates RX-062 display payload fixtures without report reading/rendering and writes only a descriptive preview/manifest for the manual display command plan.
 - RX-Q001 and RX-Q002 added repository workflow, handoff validation, and supervised-worker governance.
 
 ## Accepted Offline Safety-Hardening Detour
@@ -106,9 +112,9 @@ RX-063 - Local Paper Session Display Payload Fixture Builder is reviewer-accepte
 
 RX-062 - Local Paper Session Display Command Payload Parser is reviewer-accepted and finalized on `main`. It adds one local-only `render-paper-session-report-from-payload` command and side-effect-free display payload parser that accepts only `schema_version=1` plus `session_report_json_path`, validates payloads before report reading, and delegates to the RX-061 renderer without running sessions, constructing adapters, writing ledgers or session reports, calling networks, adding Telegram/live/order/private/account scope, calculating aggregate PnL, or converting unknowns to zero.
 
-## Current Next Task
+## Current Task Branch
 
-RX-065 Local Paper Session Display Command Text Parser is prepared in `NEXT_TASK.md` after RX-064 finalization. It must remain local/manual/command-text parsing only for later Telegram-style command interface testing and must not add Telegram transport, credentials, network/messaging behavior, session execution, adapters, ledgers, report mutation, execution automation, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
+RX-065 Local Paper Session Display Command Text Parser is implementation-complete on `task/rx-065-local-paper-session-display-command-text-parser` and pending reviewer acceptance. It remains local/manual/command-text parsing only for later Telegram-style command interface testing and adds no Telegram transport, credentials, network/messaging behavior, session execution, adapters, ledgers, report mutation, execution automation, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths. `NEXT_TASK.md` is prepared for RX-066 Local Paper Session Display Command Text Preview Manifest after RX-065 review acceptance and finalization.
 
 ## Previous Product Baseline
 
@@ -154,11 +160,15 @@ RX-062 is reviewer-accepted and finalized on `main` as the local/manual display 
 
 RX-063 is reviewer-accepted and finalized on `main` as the local/manual display payload fixture builder after RX-062. It validates explicit already-written RX-057 report JSON through RX-061 display validation, validates the generated minimal fixture through the RX-062 parser, writes exactly one local display payload fixture, and still avoids Telegram transport, credentials, messaging/network behavior, session execution, adapters, ledgers, report mutation, execution automation, discovery/ranking/polling, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, and second owner paths.
 
-## Remaining Gated Roadmap After RX-064 Finalization
+RX-064 is reviewer-accepted and finalized on `main` as the local/manual display command preview builder after RX-063. It validates explicit RX-062 display payload fixtures, avoids report reading/rendering, writes exactly one descriptive local preview/manifest for the accepted manual display command plan, and still avoids Telegram transport, credentials, messaging/network behavior, session execution, adapters, ledgers, report mutation, execution automation, discovery/ranking/polling, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, and second owner paths.
 
-Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. RX-064 implements exactly one local/manual/fake-money display command preview/manifest builder handoff and does not authorize any additional trading, execution automation, execution planning, polling, ranking, discovery, ledger/storage/replay change, Telegram transport, credentials, messaging, alerts, webhooks, or live-order roadmap stage.
+RX-065 is implementation-complete on its task branch as the local/manual display command text parser after RX-064. It validates exact local command text through `shlex.split()`, writes only the minimal RX-062 display payload fixture to an explicit local output path, and still avoids Telegram transport, credentials, messaging/network behavior, report reading/rendering, session execution, adapters, ledgers, report mutation, execution automation, discovery/ranking/polling, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, and second owner paths.
 
-1. RX-065 Local Paper Session Display Command Text Parser.
+## Remaining Gated Roadmap After RX-065 Implementation
+
+Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. RX-065 implements exactly one local/manual/fake-money display command text parser handoff and does not authorize any additional trading, execution automation, execution planning, polling, ranking, discovery, ledger/storage/replay change, Telegram transport, credentials, messaging, alerts, webhooks, or live-order roadmap stage.
+
+1. RX-066 Local Paper Session Display Command Text Preview Manifest.
 
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
@@ -1028,16 +1038,30 @@ After RX-064 reviewer acceptance and finalization, RX-065 should add one local-o
 
 RX-065 implementation notes:
 
-- The parser should consume explicit local command text only and normalize it into the accepted local display payload/display command preparation boundary.
-- It may write one explicit local display payload or parser output artifact only if `NEXT_TASK.md` for RX-065 requires an output path; it must not infer destinations.
+- The parser should consume one explicit local command text fixture path and one explicit local display payload JSON output path, then normalize exact command text into the accepted RX-062 display payload boundary.
+- It must accept exactly `paper-session-report-display --session-report-json-path <session-report-json-path>` and use a robust argument splitter such as `shlex.split()`.
+- It must write at most one explicit local display payload artifact containing only `schema_version=1` and `session_report_json_path`; it must not infer destinations.
+- It must validate the generated display payload through the accepted RX-062 parser before artifact write.
 - It must validate malformed command text before any artifact write.
 - It must not render reports, read report JSON, execute sessions, construct adapters, instantiate ledgers, write ledger events, write or mutate session report/history results, send messages, call networks, add Telegram transport, or add live/order/private/account scope.
 - It must not recompute decisions, paper outcomes, economics, summary counts, ledger events, or aggregate PnL.
 
 RX-065 must not add Telegram transport, Telegram bot tokens, webhooks, external network calls, alerts, messaging behavior, credentials, API keys, live trading, order placement/cancel/status behavior, private/account endpoints, account state, account balances, account-tier assumptions, sendable exchange requests, order payload construction, execution automation, execution planning, guarded live runner execution, approval-boundary execution, route discovery, ranking, watchlists, polling, background loops, scheduling, auto-refresh, adapter endpoint changes, fee/funding/VWAP/liquidity/basis/economics rule changes, funding settlement verification changes, ledger reconciliation changes, replay changes, storage migrations, route eligibility mutation, Capture state transition changes, route statuses, reject reasons, canary architecture, hold-next-cycle logic, unknown-to-zero behavior, aggregate PnL invention/calculation, or second route/session/decision/snapshot/economics/paper lifecycle/ledger-write/report/replay/reconciliation/execution/live paths.
 
+RX-065 branch outcome:
+
+- RX-065 adds `paper_session_display_command_payload_from_command_text()` in `apps/cli/paper_session_payloads.py`.
+- The helper accepts exactly `paper-session-report-display --session-report-json-path <session-report-json-path>` using `shlex.split()`, rejects malformed shell quoting and missing, extra, reordered, duplicate, wrong, empty, transport-like, route-list-like, economics-like, or execution-like arguments, and returns only the minimal RX-062 display payload dictionary.
+- The helper validates the generated payload JSON through `paper_session_report_path_from_display_command_payload()` before returning.
+- RX-065 adds `parse-paper-session-display-command-text` in `apps/cli/main.py`.
+- The command requires explicit `--paper-session-display-command-text-path` and `--display-payload-json-path`; it does not infer output destinations.
+- It reads only the local command text fixture, validates the generated payload through the accepted RX-062 display payload parser, writes one local JSON fixture artifact with only `schema_version=1` and `session_report_json_path`, and prints deterministic path summary lines for the command text fixture path, display payload path, and session report path.
+- Malformed command text, malformed shell quoting, missing required paths, unreadable command text paths, or generated payload validation failures fail before artifact write.
+- RX-065 does not read or render report JSON, run sessions, construct adapters, instantiate ledgers, write ledger events, write or mutate report/history artifacts, call networks, add Telegram transport, add live/order/private/account behavior, discover/rank/poll, replay/reconcile ledgers, migrate storage, add statuses/reasons, calculate aggregate PnL, turn unknowns into zero, or create second owner paths.
+- RX-065 prepares RX-066 Local Paper Session Display Command Text Preview Manifest as exactly one next product/runtime testing-support handoff after reviewer acceptance and finalization.
+
 ## Next Sequence
 
-1. RX-065 Local Paper Session Display Command Text Parser.
+1. RX-066 Local Paper Session Display Command Text Preview Manifest.
 
 Do not promote execution automation, background loops, ranking, order placement, polling, alerts, auto-refresh, Telegram transport, bot tokens, private endpoints, credentials, account-state access, destructive reset, financially dangerous actions, or later roadmap stages into the current handoff unless that exact future task is explicitly user-approved for hard-stop scope or explicitly directed by the Product Owner, autonomously selected by Control Tower under RX-033 for non-dangerous scope, and passes the repository's hard approval gates.

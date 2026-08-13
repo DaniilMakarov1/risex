@@ -176,6 +176,176 @@ def test_paper_session_display_command_payload_normalizes_report_path() -> None:
     assert parsed == "/tmp/paper-session-report.json"
 
 
+def test_paper_session_display_command_text_builds_rx062_payload() -> None:
+    parsed = payloads.paper_session_display_command_payload_from_command_text(
+        "paper-session-report-display --session-report-json-path "
+        "/tmp/paper-session-report.json"
+    )
+
+    assert parsed == {
+        "schema_version": 1,
+        "session_report_json_path": "/tmp/paper-session-report.json",
+    }
+    assert set(parsed) == {"schema_version", "session_report_json_path"}
+    assert (
+        payloads.paper_session_report_path_from_display_command_payload(
+            json.dumps(parsed, sort_keys=True)
+        )
+        == "/tmp/paper-session-report.json"
+    )
+
+
+def test_paper_session_display_command_text_accepts_quoted_path_with_spaces() -> None:
+    parsed = payloads.paper_session_display_command_payload_from_command_text(
+        "paper-session-report-display --session-report-json-path "
+        "'/tmp/paper session report.json'"
+    )
+
+    assert parsed == {
+        "schema_version": 1,
+        "session_report_json_path": "/tmp/paper session report.json",
+    }
+
+
+def test_paper_session_display_command_text_validates_generated_payload(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    validator_calls: list[str] = []
+
+    def recording_validator(payload_text: str) -> str:
+        validator_calls.append(payload_text)
+        return "/tmp/paper-session-report.json"
+
+    monkeypatch.setattr(
+        payloads,
+        "paper_session_report_path_from_display_command_payload",
+        recording_validator,
+    )
+
+    parsed = payloads.paper_session_display_command_payload_from_command_text(
+        "paper-session-report-display --session-report-json-path "
+        "/tmp/paper-session-report.json"
+    )
+
+    assert parsed == {
+        "schema_version": 1,
+        "session_report_json_path": "/tmp/paper-session-report.json",
+    }
+    assert len(validator_calls) == 1
+    assert json.loads(validator_calls[0]) == parsed
+
+
+def test_paper_session_display_command_text_rejects_validator_mismatch(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def mismatching_validator(_payload_text: str) -> str:
+        return "/tmp/other-report.json"
+
+    monkeypatch.setattr(
+        payloads,
+        "paper_session_report_path_from_display_command_payload",
+        mismatching_validator,
+    )
+
+    with pytest.raises(argparse.ArgumentTypeError):
+        payloads.paper_session_display_command_payload_from_command_text(
+            "paper-session-report-display --session-report-json-path "
+            "/tmp/paper-session-report.json"
+        )
+
+
+@pytest.mark.parametrize(
+    "command_text",
+    (
+        "",
+        "paper-session-report-display",
+        "paper-session-report-display --session-report-json-path",
+        "paper-session-report-display --session-report-json-path ''",
+        "paper-session-report-display --session-report-json-path   ",
+        "paper-session-report-display --session-report-json-path=/tmp/report.json",
+        "--session-report-json-path /tmp/report.json",
+        "paper-session-report-display /tmp/report.json --session-report-json-path",
+        "paper-session-report-display --wrong-flag /tmp/report.json",
+        "paper-session-report-display --session-report-json-path /tmp/report.json extra",
+        "paper-session-report-display --session-report-json-path /tmp/report.json --chat-id 1",
+        "paper-session-report-display --session-report-json-path /tmp/report.json --route-id route-1",
+        "paper-session-report-display --session-report-json-path /tmp/report.json --net-profit-usd 0",
+        "render-paper-session-report --session-report-json-path /tmp/report.json",
+        "paper-trade-session --routes-json-path /tmp/routes.json",
+        "paper-session-report-display --session-report-json-path '/tmp/report.json",
+    ),
+)
+def test_paper_session_display_command_text_rejects_malformed_commands(
+    monkeypatch: pytest.MonkeyPatch,
+    command_text: str,
+) -> None:
+    constructed_adapters: list[str] = []
+
+    class ForbiddenRiseXAdapter:
+        name = "RiseX"
+
+        def __init__(self) -> None:
+            constructed_adapters.append("risex")
+            raise AssertionError("command text parser must not construct adapters")
+
+    class ForbiddenHyperliquidAdapter:
+        name = "Hyperliquid"
+
+        def __init__(self) -> None:
+            constructed_adapters.append("hyperliquid")
+            raise AssertionError("command text parser must not construct adapters")
+
+    monkeypatch.setattr(payloads, "RiseXObservationAdapter", ForbiddenRiseXAdapter)
+    monkeypatch.setattr(
+        payloads,
+        "HyperliquidObservationAdapter",
+        ForbiddenHyperliquidAdapter,
+    )
+
+    with pytest.raises(argparse.ArgumentTypeError):
+        payloads.paper_session_display_command_payload_from_command_text(command_text)
+
+    assert constructed_adapters == []
+
+
+def test_paper_session_display_command_text_parser_has_no_side_effect_behavior() -> None:
+    source = inspect.getsource(
+        payloads.paper_session_display_command_payload_from_command_text
+    )
+    lowered = source.lower()
+
+    assert "shlex.split" in source
+    assert "paper_session_report_path_from_display_command_payload" in source
+    assert "read_text" not in source
+    assert "write_text" not in source
+    assert "run_paper_lifecycle" not in source
+    assert "run_real_data_research_route" not in source
+    assert "InMemoryLedger" not in source
+    assert "SQLiteLedger" not in source
+    assert "RiseXObservationAdapter" not in source
+    assert "HyperliquidObservationAdapter" not in source
+    assert "aggregate" not in lowered
+    assert "pnl" not in lowered
+    assert "telegram" not in lowered
+    assert "webhook" not in lowered
+    assert "token" not in lowered
+    assert "credential" not in lowered
+    assert "secret" not in lowered
+    assert "api_key" not in lowered
+    assert "requests" not in lowered
+    assert "httpx" not in lowered
+    assert "urllib" not in lowered
+    assert "socket" not in lowered
+    assert "private" not in lowered
+    assert "account" not in lowered
+    assert "balance" not in lowered
+    assert "watchlist" not in lowered
+    assert "poll" not in lowered
+    assert "schedule" not in lowered
+    assert "alert" not in lowered
+    assert "ranking" not in lowered
+
+
 @pytest.mark.parametrize(
     "payload",
     (
