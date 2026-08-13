@@ -1,20 +1,20 @@
 # Status
 
-- Current branch: `task/rx-053-manual-one-route-public-paper-trader-bridge`.
-- Current task: RX-053 - Manual One-Route Public Paper Trader Bridge implementation-complete on task branch and pending reviewer acceptance.
+- Current branch: `main`.
+- Current task: RX-053 - Manual One-Route Public Paper Trader Bridge reviewer-accepted and finalized on `main`.
 - RX-053 starting baseline: `624ee731fe12e5b3b8a1db7e2c3a786e9c8271ca`
-- RX-053 review state: implementation-complete on task branch; not reviewer-accepted and not finalized on `main`.
-- RX-053 implementation HEAD: pending final task-branch commit; use git history for the exact branch HEAD.
+- RX-053 review state: reviewer-accepted and finalized on `main`.
+- Accepted RX-053 implementation HEAD: `4722daffd6a919be27365b94ae51a183e96c906d`
+- RX-053 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
 - RX-053 disposition: adds one explicit manual `paper-trade-route` command for one supplied RiseX plus Hyperliquid public route. The command validates route id, capture id, exact public venues, symbols, opposing entry sides, positive finite target notional, required `ENTRY` mode, and timezone-aware assembly timestamp before constructing adapters. It reuses the existing public read-only RiseX and Hyperliquid adapters, `run_real_data_research_route_with_snapshot()`, and the single `evaluate_route(route, snapshot, mode)` path, then delegates fake paper behavior to `run_paper_lifecycle()` when a public snapshot provides a funding settlement timestamp. It writes fake paper events only through the existing accounting ledger helpers and optionally persists them only through explicit `--ledger-sqlite-path` using the existing SQLite ledger contract.
 - RX-053 stdout summary: deterministic `paper-trade-route` output covers route id, capture id, decision mode/status/reasons, decision net profit, snapshot availability, funding settlement timestamp when known, fake paper started/not-started state, paper start blockers, ledger event count/sequences/types, and existing paper PnL explanation values without recalculating profitability.
 - RX-053 safety boundaries: no live trading, real orders, private/account endpoints, credentials, account state/balances, account-tier assumptions, sendable exchange requests, order payloads, execution automation, execution planning, guarded live runner execution, approval-boundary execution, polling, discovery, ranking, watchlists, adapter endpoint changes, storage migrations, replay changes, ledger reconciliation changes, route eligibility mutation, Capture state transition changes, new route statuses/reject reasons, second owner paths, or unknown-to-zero behavior.
 - RX-053 next handoff: `NEXT_TASK.md` is prepared for exactly one next governance/source-of-truth task, RX-054 Post-Manual Paper Bridge Handoff Clarification, after reviewer acceptance and finalization of the manual bridge.
 - RX-053 worker usage: one supervised worker was used for design support before implementation edits. Parent approved the narrow app-layer CLI bridge direction after the worker confirmed it is source-grounded, non-dangerous, one-task/one-branch compliant, preserves accepted baseline versus pending review state, uses the existing one-route public decision path, uses the existing fake paper lifecycle, keeps ledger writes inside accounting ownership, keeps `NEXT_TASK.md` to exactly one task, preserves reviewer-only acceptance, excludes hard-stop categories, avoids live/order/private scope, avoids discovery/ranking/polling, preserves unknown-as-missing behavior, avoids new statuses/reasons and second owner paths, and preserves Parent ownership.
 - RX-053 preflight: work occurred only in `/Users/daniilmakarov/.codex/worktrees/7b8f/risex-main` on `task/rx-053-manual-one-route-public-paper-trader-bridge`; before edits, `HEAD` and `origin/main` matched `624ee731fe12e5b3b8a1db7e2c3a786e9c8271ca`, the remote was `https://github.com/DaniilMakarov1/risex.git`, and the worktree was clean. The branch had been created from the accepted RX-052-finalized `main` baseline during the previous aborted turn and contained no file changes before this continuation.
-- RX-048 remains the latest reviewer-accepted product/reporting task on `main`; RX-052 is the latest reviewer-accepted governance/source-of-truth task on `main`; RX-053 is pending review and is not accepted until reviewer acceptance is explicit.
+- RX-053 is the latest reviewer-accepted product/runtime task on `main`; RX-052 is the latest reviewer-accepted governance/source-of-truth task on `main`.
 - Current accepted `main` metadata/governance task: RX-052.
-- Current accepted `main` product task: RX-048.
-- Current pending product/runtime task: RX-053.
+- Current accepted `main` product task: RX-053.
 - Previous accepted task branch state follows for historical context.
 - RX-052 task branch: reviewer-accepted and finalized on `main`.
 - RX-052 starting baseline: `e125065a8b43b38ebd4031f66097eb736fc6a717`
@@ -249,8 +249,8 @@
 - Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
 - Current accepted `main` metadata/governance task: RX-052.
-- Current accepted `main` product task: RX-048.
-- Current RX task state: RX-053 is implementation-complete on `task/rx-053-manual-one-route-public-paper-trader-bridge` and pending reviewer acceptance; RX-048 remains the latest accepted product/reporting baseline on `main`, RX-052 remains the latest accepted metadata/governance follow-up on `main`, and `NEXT_TASK.md` is prepared for RX-054 after RX-053 review.
+- Current accepted `main` product task: RX-053.
+- Current RX task state: RX-053 is reviewer-accepted and finalized on `main`; RX-053 is the latest accepted product/runtime baseline, RX-052 remains the latest accepted metadata/governance follow-up on `main`, and `NEXT_TASK.md` is prepared for RX-054.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
@@ -284,17 +284,18 @@ RX-044 is the accepted metadata/governance follow-up on `main`. It records expli
 RX-045 is the accepted product task before RX-048 on `main`. It adds the manual public readiness report only and does not authorize live/order/private/account-state scope.
 RX-046 is the accepted metadata/governance follow-up on `main`. It records that no concrete safe post-RX-045 public/read-only/non-trading runtime handoff is source-grounded and prepares one narrow Product Owner direction gate.
 RX-047 is the accepted metadata/governance follow-up on `main`. It records explicit Product Owner and Control Tower direction selecting RX-048, opt-in structured JSON stdout for the existing manual one-route public readiness report, as the next safe handoff.
-RX-048 is the latest accepted product task on `main`. It adds one explicit JSON stdout format for the existing manual public readiness report only; default `real-data-route` output and default text report output remain unchanged, and the JSON selector fails closed without `--public-readiness-report`.
+RX-048 is the accepted product/reporting task before RX-053 on `main`. It adds one explicit JSON stdout format for the existing manual public readiness report only; default `real-data-route` output and default text report output remain unchanged, and the JSON selector fails closed without `--public-readiness-report`.
 RX-049 is the accepted metadata/governance follow-up before RX-050 on `main`. It records that the accepted RX-048 outcome and current source-of-truth docs do not clearly ground one concrete safe post-RX-048 public/read-only/non-trading runtime handoff, keeps product/runtime scope out of the branch, and prepares a narrow Product Owner direction gate.
 RX-050 is the accepted metadata/governance follow-up before RX-051 on `main`. It records that explicit Product Owner/Control Tower direction after RX-049 remains broad live-capable product direction only, does not authorize hard-stop scope, and still does not clearly ground one concrete safe public/read-only/non-trading runtime handoff after RX-048. RX-050 prepares a narrow concrete clarification handoff and changes no product/runtime behavior.
 RX-051 is the accepted metadata/governance follow-up before RX-052 on `main`. It records repository instruction/source-of-truth hygiene, removes the one stale tracked cross-project wording by rephrasing it generically, confirms no repo-local instruction directory or tracked stale generated artifacts, prepares RX-052 as the single next clarification handoff, and changes no product/runtime behavior.
 RX-052 is the latest accepted metadata/governance follow-up on `main`. It records Product Owner clarification that the next product path is a working fake-money paper trader system before live trading is considered, prepares RX-053 as one manual fake-money paper-trader bridge handoff, and does not change product/runtime behavior.
+RX-053 is the latest accepted product/runtime task on `main`. It adds one explicit manual `paper-trade-route` fake-money bridge from one public one-route ENTRY decision into the existing fake paper lifecycle and append-only ledger, with optional explicit local SQLite persistence through the existing SQLite ledger contract. It does not add live trading, real orders, private/account endpoints, credentials, account state, sendable exchange requests, order payloads, execution automation, execution planning, polling, discovery, ranking, watchlists, new statuses/reasons, second owner paths, or unknown-to-zero behavior.
 RX-041 prepared `NEXT_TASK.md` for RX-042 after RX-041 finalization.
 RX-040 prepared `NEXT_TASK.md` for RX-041 after RX-040 finalization.
 RX-031 found no additional explicit actionable reviewer feedback in local repo/git evidence or GitHub connector context after RX-030 finalization. RX-031 is accepted metadata-only follow-up work and does not change dashboard or product code.
 RX-041 remains the accepted public account-independent fee-cash completion product task before the later RX-045/RX-048 reporting tasks and completes explicit public account-independent taker fee-rate metadata into entry plus immediate estimated-exit route-notional USD fee cash only inside the existing one-route snapshot path, while preserving fail-closed unknown handling and avoiding live/order/private/account-state scope.
 RX-040 remains the previous accepted product task and preserves public fee-source metadata on unknown fee cash values for source-aware inspection only. It does not add route discovery, ranking, polling, private endpoints, credentials, account balances/state, execution automation, order placement, sendable exchange request construction, ledger writes, fee-cash defaults, or live trading by default.
-`NEXT_TASK.md` is prepared for RX-054 after RX-053 reviewer acceptance and finalization.
+`NEXT_TASK.md` is prepared for RX-054 after RX-053 finalization.
 
 ## Completed accepted tasks
 
@@ -469,7 +470,8 @@ RX-040 remains the previous accepted product task and preserves public fee-sourc
 - RX-050 is reviewer-accepted and finalized on `main`.
 - RX-051 is reviewer-accepted and finalized on `main`.
 - RX-052 is reviewer-accepted and finalized on `main`.
-- The next recommended task is RX-053 Manual One-Route Public Paper Trader Bridge.
+- RX-053 is reviewer-accepted and finalized on `main`.
+- The next recommended task is RX-054 Post-Manual Paper Bridge Handoff Clarification.
 - The RX-032 authorization does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - RX-033 autonomy does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized and accepted.
@@ -1157,6 +1159,7 @@ RX-040 remains the previous accepted product task and preserves public fee-sourc
 - RX-050 is governance/docs-only and reviewer-accepted on `main`. It records that explicit Product Owner/Control Tower direction supplied for RX-050 remains broad live-capable product direction only, does not authorize hard-stop scope, and still does not clearly ground one concrete safe public/read-only/non-trading runtime handoff after RX-048. It prepares a narrow concrete clarification handoff and does not change product/runtime behavior.
 - RX-051 is repository-governance/source-of-truth hygiene only and reviewer-accepted on `main`. It audits stale cross-project workflow references, removes the one tracked stale literal reference by rewording historical status text generically, confirms no repo-local `.codex` instruction directory, confirms no tracked stale generated artifacts, prepares RX-052 as the single next clarification handoff, and does not change product/runtime behavior.
 - RX-052 is governance/source-of-truth clarification only and reviewer-accepted on `main`. It records Product Owner clarification that the next product path is a working fake-money paper trader system before live trading is considered, prepares RX-053 as one manual fake-money paper-trader bridge handoff, and does not change product/runtime behavior.
+- RX-053 is manual fake-money paper runtime only and reviewer-accepted on `main`. It adds one explicit `paper-trade-route` bridge that reuses the public one-route ENTRY decision path, delegates fake paper behavior to the existing paper lifecycle, and writes fake paper ledger events only through existing accounting ownership.
 
 ## Next recommended task
 
