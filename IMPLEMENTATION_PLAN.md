@@ -63,11 +63,11 @@ RX-040 — Public One-Route Fee Source Metadata Preservation remains the previou
 
 ## Current Repository Handoff
 
-RX-043 is reviewer-accepted and finalized on `main` as a governance/source-of-truth clarification task after RX-042. RX-041 remains the latest accepted product baseline. RX-044 is the current governance/source-of-truth task branch after accepted RX-043 finalization. Product Owner clarification supplied through Control Tower selects option A, Manual One-Route Public Readiness Report. RX-044 records that option A clearly grounds one concrete safe later runtime reporting task when scoped as manual, one-route, public/read-only, non-trading, fail-closed, and built on the existing one-route public adapter, snapshot, runner, fee/funding completion, and evaluation paths.
+RX-044 is reviewer-accepted and finalized on `main` as a governance/source-of-truth clarification task after RX-043. RX-041 remains the latest accepted product baseline. Product Owner clarification supplied through Control Tower selects option A, Manual One-Route Public Readiness Report. RX-044 records that option A clearly grounds one concrete safe later runtime reporting task when scoped as manual, one-route, public/read-only, non-trading, fail-closed, and built on the existing one-route public adapter, snapshot, runner, fee/funding completion, and evaluation paths. `NEXT_TASK.md` is prepared for RX-045 as exactly one next task.
 
-## Remaining Gated Roadmap After RX-044 Branch
+## Remaining Gated Roadmap After RX-044 Finalization
 
-Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, by RX-033 governance autonomy, by the RX-034 roadmap selection audit, by the RX-035 post-audit handoff cleanup, by the RX-036 roadmap source-of-truth clarification, by the RX-037 roadmap direction record, by RX-038 one-route real-data CLI finalization, by RX-039 public one-route economics source completion, by RX-040 public fee-source metadata preservation, by RX-041 public one-route account-independent fee cash completion, RX-042 finalization, RX-043 finalization, or RX-044 branch completion.
+Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, by RX-033 governance autonomy, by the RX-034 roadmap selection audit, by the RX-035 post-audit handoff cleanup, by the RX-036 roadmap source-of-truth clarification, by the RX-037 roadmap direction record, by RX-038 one-route real-data CLI finalization, by RX-039 public one-route economics source completion, by RX-040 public fee-source metadata preservation, by RX-041 public one-route account-independent fee cash completion, RX-042 finalization, RX-043 finalization, or RX-044 finalization.
 
 1. RX-045 - Manual One-Route Public Readiness Report.
 
@@ -442,7 +442,7 @@ RX-044 implementation notes:
 - Preserve RX-041 as the latest accepted product baseline unless a later reviewer-accepted product task exists.
 - Preserve RX-043 as pending or accepted according to explicit reviewer evidence.
 
-RX-044 branch outcome:
+RX-044 accepted outcome:
 
 - RX-043 is reviewer-accepted and finalized on `main`; RX-041 remains the latest accepted product baseline.
 - Product Owner clarification supplied through Control Tower selects option A, Manual One-Route Public Readiness Report.
