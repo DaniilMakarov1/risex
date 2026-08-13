@@ -1025,6 +1025,8 @@
 ## 2026-08-13 - RX-065
 
 - Date: 2026-08-13
+- Decision: Control Tower reviewer accepted RX-065 after a same-branch review fix and finalized it on `main`.
+- Reason: Review found the parser is local/manual command-text parsing and display-payload preparation only, rejects malformed and flag-looking report-path tokens before artifact write, validates the generated fixture through the accepted RX-062 parser, writes only the minimal RX-062 payload shape, and adds no hard-stop scope.
 - Decision: RX-065 adds one side-effect-free `paper_session_display_command_payload_from_command_text()` helper in the CLI app-layer payload owner `apps/cli/paper_session_payloads.py`.
 - Reason: RX-064 grounded the next fake-money paper testing-support step as local/manual command-text parsing for later Telegram-style operator command interface testing, and the accepted RX-062 display payload parser is the boundary that generated payloads must reuse.
 - Decision: The accepted local command text grammar is exactly `paper-session-report-display --session-report-json-path <session-report-json-path>`, parsed with `shlex.split()`.
