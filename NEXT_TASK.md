@@ -2,23 +2,23 @@
 
 ## Task ID
 
-RX-042 - Post-RX-041 Public Live-Readiness Handoff Clarification
+RX-043 - Product Owner Public Live-Readiness Handoff Direction Gate
 
 ## Objective
 
-After the public one-route account-independent fee cash completion task is reviewer-accepted, inspect the source-of-truth repository docs and the accepted outcome to prepare exactly one next handoff. Prefer a concrete narrow public/read-only/non-trading live-readiness task only if it is clearly grounded in the docs and Product Owner direction. If no such safe runtime task is clearly grounded, record that conclusion and prepare a narrow clarification handoff instead of inventing scope.
+After RX-042 is reviewer-accepted, inspect the source-of-truth repository docs, the accepted RX-042 conclusion, and any explicit Product Owner direction supplied through Control Tower to prepare exactly one next handoff. Prefer a concrete narrow public/read-only/non-trading live-readiness task only if it is clearly grounded in the docs and explicit Product Owner direction. If no such safe runtime task is clearly grounded, record that conclusion and prepare one narrow clarification handoff instead of inventing product/runtime scope.
 
 ## Starting baseline
 
-Start from reviewer-accepted `main` after the public one-route account-independent fee cash completion task is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
+Start from reviewer-accepted `main` after RX-042 is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
 
 ## Branch
 
-Create and work on `task/rx-042-post-rx-041-public-live-readiness-handoff-clarification`. Do not implement on `main`.
+Create and work on `task/rx-043-product-owner-public-live-readiness-handoff-direction-gate`. Do not implement on `main`.
 
 ## Before changing files
 
-Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, remote is wrong, branch is wrong, `origin/HEAD` is not `origin/main`, `HEAD` does not match the accepted starting baseline, or unrelated branch work would be mixed into this task.
+Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, remote is wrong, branch is wrong, `origin/HEAD` is not `origin/main`, `HEAD` does not match the accepted starting baseline, RX-042 is not explicitly reviewer-accepted and finalized on `main`, or unrelated branch work would be mixed into this task.
 
 If Control Tower selected this task autonomously, verify from the source-of-truth repository docs that the task is non-dangerous: source-of-truth clarification and next-handoff preparation only, with no live trading, private/account endpoints, credentials, orders, sendable exchange request construction, automation, account-state access, destructive reset, unsafe scope, or financially dangerous action. Stop before edits unless explicit user approval exists for any hard-stop category.
 
@@ -37,10 +37,11 @@ Read:
 
 ## Allowed scope
 
-- Inspect the accepted fee completion outcome and current source-of-truth docs.
-- Decide whether exactly one safe, concrete, public/read-only, non-trading next runtime handoff is clearly grounded by the docs.
-- If a safe runtime handoff is clearly grounded, write exactly that one task into `NEXT_TASK.md`.
-- If no safe runtime handoff is clearly grounded, record the no-grounded-runtime-handoff conclusion and prepare one narrow clarification handoff.
+- Inspect the accepted RX-042 conclusion and current source-of-truth docs.
+- Inspect only explicit Product Owner direction supplied through Control Tower or recorded in source-of-truth docs.
+- Decide whether exactly one safe, concrete, public/read-only, non-trading next runtime handoff is clearly grounded by the docs and explicit Product Owner direction.
+- If a safe runtime handoff is clearly grounded, write exactly that one future task into `NEXT_TASK.md`.
+- If no safe runtime handoff is clearly grounded, record the no-clarified-runtime-handoff conclusion and prepare one narrow clarification handoff.
 - Update only governance/source-of-truth docs needed to record the outcome and next handoff.
 - Preserve accepted baseline and current task review state accurately.
 
@@ -91,7 +92,7 @@ Read:
 
 ## Implementation requirements
 
-- Treat this as an ordinary non-dangerous governance/source-of-truth task unless the docs clearly ground a later safe runtime handoff for a future task.
+- Treat this as an ordinary non-dangerous governance/source-of-truth task unless the docs and explicit Product Owner direction clearly ground a later safe runtime handoff for a future task.
 - Do not implement any product/runtime behavior.
 - Use only repository source-of-truth docs and explicit reviewer/Product Owner evidence; do not rely on chat memory or broad roadmap implication.
 - Preserve the latest accepted product baseline separately from any current task branch or pending review state.
@@ -102,7 +103,7 @@ Read:
 - Preserve Parent ownership of branch discipline, final diff review, validation, commit, push, and final report.
 - Worker policy: one supervised worker required because this is repository-governance/source-of-truth work.
 - The worker is required for design support before implementation edits and may continue only if Parent explicitly asks for implementation support.
-- At DESIGN CHECKPOINT, the worker must answer whether the planned handoff clarification is docs/governance-only, non-dangerous, source-grounded, one-task/one-branch compliant, preserves accepted baseline versus pending review state, avoids inventing product/runtime scope, excludes all hard-stop categories, keeps `NEXT_TASK.md` to exactly one task, preserves reviewer acceptance, and preserves Parent ownership.
+- At DESIGN CHECKPOINT, the worker must answer whether the planned Product Owner direction gate is docs/governance-only, non-dangerous, source-grounded, one-task/one-branch compliant, preserves accepted baseline versus pending review state, avoids inventing product/runtime scope, excludes all hard-stop categories, keeps `NEXT_TASK.md` to exactly one task, preserves reviewer acceptance, and preserves Parent ownership.
 - The worker must stop at DESIGN CHECKPOINT before implementation edits and wait for Parent approval or steering before continuing.
 - The worker must also stop at CODE CHECKPOINT, TEST CHECKPOINT, and VALIDATION CHECKPOINT if it continues beyond design support.
 - Parent owns steering, final diff review, validation, commit, push, and final report.

@@ -59,15 +59,15 @@ RX-041 — Public One-Route Account-Independent Fee Cash Completion is reviewer-
 
 RX-040 — Public One-Route Fee Source Metadata Preservation remains the previous accepted product baseline before RX-041. It preserves explicit public fee-rate and account-tier fee-source metadata on unknown fee cash values in the existing read-only public RiseX and Hyperliquid adapters. Adapter fee cash remains `ValueSource.UNKNOWN` with `value=None`; missing, malformed, non-finite, non-public, account-tier-dependent, account-state-dependent, or ungrounded fee inputs remain unknown and cannot become zero.
 
-## Current Product Handoff
+## Current Repository Handoff
 
-`NEXT_TASK.md` is prepared for RX-042, a governance/source-of-truth clarification task after RX-041 because the current docs do not clearly ground a concrete next public/read-only runtime live-readiness step. RX-042 must inspect the accepted RX-041 outcome and source-of-truth docs, then prepare exactly one next safe handoff without inventing route discovery, polling, private endpoints, credentials, account state, orders, execution automation, or live trading.
+RX-042 is implemented on the current task branch as a governance/source-of-truth clarification task after RX-041 and remains pending reviewer acceptance. RX-042 inspected the accepted RX-041 outcome and current source-of-truth docs and found no clearly grounded concrete next public/read-only runtime live-readiness step. `NEXT_TASK.md` is therefore prepared for RX-043, a narrow Product Owner direction gate, rather than inferred route discovery, polling, private endpoints, credentials, account state, orders, execution automation, or live trading.
 
-## Remaining Gated Roadmap After RX-041
+## Remaining Gated Roadmap After RX-042 Branch Clarification
 
-Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, by RX-033 governance autonomy, by the RX-034 roadmap selection audit, by the RX-035 post-audit handoff cleanup, by the RX-036 roadmap source-of-truth clarification, by the RX-037 roadmap direction record, by RX-038 one-route real-data CLI finalization, by RX-039 public one-route economics source completion, by RX-040 public fee-source metadata preservation, or by RX-041 public one-route account-independent fee cash completion.
+Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, by RX-033 governance autonomy, by the RX-034 roadmap selection audit, by the RX-035 post-audit handoff cleanup, by the RX-036 roadmap source-of-truth clarification, by the RX-037 roadmap direction record, by RX-038 one-route real-data CLI finalization, by RX-039 public one-route economics source completion, by RX-040 public fee-source metadata preservation, by RX-041 public one-route account-independent fee cash completion, or by the RX-042 branch clarification.
 
-1. RX-042 - Post-RX-041 Public Live-Readiness Handoff Clarification.
+1. RX-043 - Product Owner Public Live-Readiness Handoff Direction Gate.
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
 
@@ -390,7 +390,7 @@ RX-041 must not add route discovery, ranking, watchlists, background loops, poll
 
 ## RX-042 — Post-RX-041 Public Live-Readiness Handoff Clarification
 
-After RX-041 reviewer acceptance, RX-042 should inspect the source-of-truth docs and the accepted RX-041 outcome to identify exactly one next non-dangerous public/read-only live-readiness handoff if one is clearly grounded.
+After RX-041 reviewer acceptance, RX-042 inspects the source-of-truth docs and the accepted RX-041 outcome to identify exactly one next non-dangerous public/read-only live-readiness handoff if one is clearly grounded.
 
 RX-042 implementation notes:
 
@@ -399,10 +399,30 @@ RX-042 implementation notes:
 - Preserve RX-041 as pending or accepted according to explicit reviewer evidence; do not treat implementation completion as reviewer acceptance.
 - Keep RX-042 docs/governance-only unless a clearly grounded non-dangerous handoff is selected for later work.
 
+RX-042 branch outcome:
+
+- RX-041 is reviewer-accepted and finalized on `main`.
+- The current source-of-truth docs record the long-term live-capable product direction, but they do not clearly ground a concrete next public/read-only runtime task after RX-041.
+- RX-042 therefore records the no-grounded-runtime-handoff conclusion and prepares RX-043 as one narrow Product Owner direction gate instead of inventing route discovery, polling, private endpoint, account-state, order, execution automation, or live-trading scope.
+
 RX-042 must not add product/runtime behavior, route discovery, ranking, watchlists, background loops, polling, scheduling, alerts, automatic refresh, adapters, private endpoints, credentials, account balances/state, orders, sendable exchange request or order payload construction, execution automation, ledger writes, storage migrations, replay changes, paper lifecycle changes, funding settlement verification, ledger reconciliation, execution planning, guarded live runner execution, approval-boundary execution, live trading by default, route statuses, reject reasons, artificial filters, canary architecture, hold-next-cycle logic, or any second route model, decision path, snapshot path, EV path, VWAP path, ledger-write path, replay path, execution-planning path, or live execution path.
+
+## RX-043 — Product Owner Public Live-Readiness Handoff Direction Gate
+
+After RX-042 reviewer acceptance, RX-043 should record explicit Product Owner direction, supplied through Control Tower or source-of-truth docs, for exactly one next non-dangerous public/read-only/non-trading live-readiness handoff before runtime scope resumes.
+
+RX-043 implementation notes:
+
+- Treat RX-043 as governance/source-of-truth only.
+- If explicit Product Owner direction clearly identifies one concrete safe public/read-only/non-trading runtime task, prepare exactly that one later task in `NEXT_TASK.md`.
+- If explicit Product Owner direction is absent, ambiguous, unsafe, or reaches a hard-stop category, record that no clarified runtime handoff is available and do not invent product/runtime scope.
+- Preserve RX-041 as the latest accepted product baseline unless a later reviewer-accepted product task exists.
+- Preserve RX-042 as pending or accepted according to explicit reviewer evidence.
+
+RX-043 must not add product/runtime behavior, route discovery, ranking, watchlists, background loops, polling, scheduling, alerts, automatic refresh, adapters, private endpoints, credentials, account balances/state, orders, sendable exchange request or order payload construction, execution automation, ledger writes, storage migrations, replay changes, paper lifecycle changes, funding settlement verification, ledger reconciliation, execution planning, guarded live runner execution, approval-boundary execution, live trading by default, route statuses, reject reasons, artificial filters, canary architecture, hold-next-cycle logic, or any second route model, decision path, snapshot path, EV path, VWAP path, ledger-write path, replay path, execution-planning path, or live execution path.
 
 ## Next Sequence
 
-1. RX-042 - Post-RX-041 Public Live-Readiness Handoff Clarification.
+1. RX-043 - Product Owner Public Live-Readiness Handoff Direction Gate.
 
 Do not promote execution automation, background loops, ranking, order placement, polling, alerts, auto-refresh, private endpoints, credentials, account-state access, destructive reset, financially dangerous actions, or later roadmap stages into the current handoff unless that exact future task is explicitly user-approved for hard-stop scope or explicitly directed by the Product Owner, autonomously selected by Control Tower under RX-033 for non-dangerous scope, and passes the repository's hard approval gates.
