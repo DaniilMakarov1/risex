@@ -6,7 +6,7 @@ RX-070 - Local Paper Session Operator Display Fail-Closed Smoke Fixture Coverage
 
 ## Objective
 
-After RX-069 reviewer acceptance and finalization, add focused deterministic local smoke fixture coverage proving that malformed or unsafe local operator/display fixtures fail closed across the accepted local fake-money paper-session operator display command chain.
+After RX-069 finalization, add focused deterministic local smoke fixture coverage proving that malformed or unsafe local operator/display fixtures fail closed across the accepted local fake-money paper-session operator display command chain.
 
 This is testability coverage only. It must reuse existing accepted commands and local fixtures, make no external network calls, and add no production behavior unless a tiny owner-path bug fix is strictly required by the smoke and stays inside the accepted owner path.
 
