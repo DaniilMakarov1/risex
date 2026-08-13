@@ -51,11 +51,11 @@ The detour's purpose is to keep future live-adjacent work honest: funding settle
 
 ## Latest Accepted Product Task
 
-RX-039 — Public One-Route Economics Source Completion is reviewer-accepted and finalized on `main`. It completes explicit public funding-rate metadata into route-notional USD funding cash only inside the existing one-route `assemble_route_snapshot()` path where route notional and leg side are known. RiseX and Hyperliquid adapters remain read-only public observation adapters and still return unknown USD cash from `fetch_observation(symbol)`; account-tier fee cash remains unknown. RX-039 does not add route discovery, ranking, polling, private endpoints, credentials, account state, orders, execution automation, ledger writes, fee-cash defaults, or live trading by default.
+RX-040 — Public One-Route Fee Source Metadata Preservation is reviewer-accepted and finalized on `main`. It preserves explicit public fee-rate and account-tier fee-source metadata on unknown fee cash values in the existing read-only public RiseX and Hyperliquid adapters. Fee cash remains `ValueSource.UNKNOWN` with `value=None`; missing, malformed, non-finite, non-public, account-tier-dependent, account-state-dependent, or ungrounded fee inputs remain unknown and cannot become zero. RX-040 does not add route discovery, ranking, polling, private endpoints, credentials, account state, orders, execution automation, ledger writes, fee-cash defaults, fee cash completion, or live trading by default.
 
-## Current Product Branch Progress
+## Previous Product Baseline
 
-RX-040 is implemented on `task/rx-040-public-one-route-fee-source-metadata-preservation` and is pending reviewer acceptance. It preserves explicit public fee-rate and fee-source metadata on unknown fee cash values in the existing read-only public RiseX and Hyperliquid adapters. RX-040 does not change the accepted `main` baseline until reviewer acceptance and finalization.
+RX-039 — Public One-Route Economics Source Completion remains the previous accepted product baseline before RX-040. It completes explicit public funding-rate metadata into route-notional USD funding cash only inside the existing one-route `assemble_route_snapshot()` path where route notional and leg side are known. RiseX and Hyperliquid adapters remain read-only public observation adapters and still return unknown USD cash from `fetch_observation(symbol)`; account-tier fee cash remains unknown.
 
 ## Current Product Handoff
 
@@ -374,7 +374,7 @@ RX-040 does not add route discovery, ranking, watchlists, background loops, poll
 
 ## RX-041 — Public One-Route Account-Independent Fee Cash Completion
 
-After RX-040 reviewer acceptance, RX-041 should add the smallest fee-owned public-data-only completion from explicit account-independent public fee-rate metadata into route-notional USD fee cash for one explicitly supplied RiseX plus Hyperliquid route.
+After RX-040 reviewer acceptance and finalization, RX-041 should add the smallest fee-owned public-data-only completion from explicit account-independent public fee-rate metadata into route-notional USD fee cash for one explicitly supplied RiseX plus Hyperliquid route.
 
 RX-041 implementation notes:
 
