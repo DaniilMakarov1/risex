@@ -1476,9 +1476,9 @@ def test_build_paper_session_package_writes_deterministic_local_artifacts(
             assembled_at="2026-08-13T12:01:00+00:00",
         ),
     ]
-    routes_output_path = tmp_path / "operator-routes.json"
+    routes_output_path = tmp_path / "operator routes with spaces.json"
     preview_output_path = tmp_path / "operator-preview.json"
-    intended_report_path = tmp_path / "operator-session-report.json"
+    intended_report_path = tmp_path / "operator session report with spaces.json"
     args = _paper_session_package_args(
         tmp_path,
         {"routes": routes},
@@ -1523,8 +1523,8 @@ def test_build_paper_session_package_writes_deterministic_local_artifacts(
             ],
             "text": (
                 "python3 -m apps.cli.main paper-trade-session "
-                f"--routes-json-path {routes_output_path} "
-                f"--session-report-json-path {intended_report_path}"
+                f"--routes-json-path '{routes_output_path}' "
+                f"--session-report-json-path '{intended_report_path}'"
             ),
         },
     }

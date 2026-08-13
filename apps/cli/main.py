@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shlex
 import sys
 from collections.abc import Mapping, Sequence
 from datetime import datetime
@@ -1006,7 +1007,7 @@ def _paper_session_package_preview_json(
         "session_report_json_path": session_report_json_path,
         "manual_command": {
             "argv": command_args,
-            "text": " ".join(command_args),
+            "text": shlex.join(command_args),
         },
     }
 
