@@ -14,6 +14,7 @@ from core.domain.contracts import (
     VenueSnapshot,
     validate_timezone_aware_datetime,
 )
+from core.economics.funding import complete_public_funding_cash_flow
 from core.economics.liquidity import calculate_executable_quote
 from core.venues.base import VenueAdapter
 
@@ -138,8 +139,16 @@ def assemble_route_snapshot(
         risex_estimated_exit_quote=risex_exit_quote,
         hedge_estimated_exit_quote=hedge_exit_quote,
         funding=FundingSnapshot(
-            risex_funding_usd=risex_observation.expected_funding_usd,
-            hedge_funding_usd=hedge_observation.expected_funding_usd,
+            risex_funding_usd=complete_public_funding_cash_flow(
+                risex_observation.expected_funding_usd,
+                target_notional_usd=route.target_notional_usd,
+                entry_side=route.risex_entry_side,
+            ),
+            hedge_funding_usd=complete_public_funding_cash_flow(
+                hedge_observation.expected_funding_usd,
+                target_notional_usd=route.target_notional_usd,
+                entry_side=route.hedge_entry_side,
+            ),
         ),
         fees=FeeModel(
             components=risex_observation.fees.components + hedge_observation.fees.components

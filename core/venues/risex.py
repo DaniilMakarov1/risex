@@ -20,6 +20,15 @@ from core.domain.contracts import (
 )
 from core.domain.enums import ValueSource
 
+_PUBLIC_FUNDING_RATE_FIELDS = (
+    "funding_rate",
+    "fundingRate",
+    "next_funding_rate",
+    "nextFundingRate",
+    "predicted_funding_rate",
+    "predictedFundingRate",
+)
+
 
 class RiseXObservationAdapter:
     """Fetch and normalize one read-only RISEx venue observation."""
@@ -52,6 +61,7 @@ class RiseXObservationAdapter:
             market.get("next_funding_time"),
             "next_funding_time",
         )
+        funding_metadata = _public_funding_rate_metadata(market)
 
         orderbook_payload = self._get_json(
             "/v1/orderbook",
@@ -75,6 +85,7 @@ class RiseXObservationAdapter:
                     "RISEx public market data exposes funding rates, "
                     "not notional-specific funding cash flow."
                 ),
+                metadata=funding_metadata,
             ),
             funding_settlement_at=funding_settlement_at,
             fees=FeeModel(
@@ -195,6 +206,36 @@ def _parse_positive_decimal(raw_value: Any, field_name: str) -> Decimal:
     if not value.is_finite() or value <= Decimal("0"):
         raise ValueError(f"RISEx {field_name} must be positive")
     return value
+
+
+def _parse_finite_decimal(raw_value: Any) -> Decimal | None:
+    if raw_value is None:
+        return None
+    try:
+        value = Decimal(str(raw_value))
+    except (InvalidOperation, ValueError):
+        return None
+    if not value.is_finite():
+        return None
+    return value
+
+
+def _public_funding_rate_metadata(market: Mapping[str, Any]) -> dict[str, str]:
+    config = market.get("config")
+    containers = (market, config) if isinstance(config, Mapping) else (market,)
+    for container in containers:
+        for field_name in _PUBLIC_FUNDING_RATE_FIELDS:
+            if field_name not in container:
+                continue
+            funding_rate = _parse_finite_decimal(container.get(field_name))
+            if funding_rate is None:
+                return {}
+            return {
+                "public_funding_rate": str(funding_rate),
+                "public_funding_rate_field": field_name,
+                "public_funding_rate_source": ValueSource.OBSERVED.value,
+            }
+    return {}
 
 
 def _parse_levels(raw_levels: Any, side: str) -> tuple[OrderBookLevel, ...]:

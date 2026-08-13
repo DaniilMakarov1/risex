@@ -46,7 +46,7 @@ class HyperliquidObservationAdapter:
             self._post_info({"type": "l2Book", "coin": coin}),
             symbol=coin,
         )
-        funding_settlement_at = _parse_funding_settlement_at(
+        funding_settlement_at, funding_metadata = _parse_predicted_funding(
             self._post_info({"type": "predictedFundings"}),
             coin=coin,
         )
@@ -63,6 +63,7 @@ class HyperliquidObservationAdapter:
                     "Hyperliquid public market data exposes funding rates, "
                     "not notional-specific funding cash flow."
                 ),
+                metadata=funding_metadata,
             ),
             funding_settlement_at=funding_settlement_at,
             fees=FeeModel(
@@ -176,6 +177,18 @@ def _parse_positive_decimal(raw_value: Any, field_name: str) -> Decimal:
     return value
 
 
+def _parse_finite_decimal(raw_value: Any) -> Decimal | None:
+    if raw_value is None:
+        return None
+    try:
+        value = Decimal(str(raw_value))
+    except (InvalidOperation, ValueError):
+        return None
+    if not value.is_finite():
+        return None
+    return value
+
+
 def _parse_levels(raw_levels: Any, side: str) -> tuple[OrderBookLevel, ...]:
     if not isinstance(raw_levels, list) or not raw_levels:
         raise ValueError(f"Hyperliquid l2Book requires non-empty {side}")
@@ -217,7 +230,7 @@ def _parse_order_book(payload: Any, *, symbol: str) -> tuple[OrderBook, datetime
     )
 
 
-def _parse_funding_settlement_at(payload: Any, *, coin: str) -> datetime:
+def _parse_predicted_funding(payload: Any, *, coin: str) -> tuple[datetime, dict[str, str]]:
     if not isinstance(payload, list):
         raise ValueError("Hyperliquid predictedFundings response requires a list")
 
@@ -254,7 +267,16 @@ def _parse_funding_settlement_at(payload: Any, *, coin: str) -> datetime:
         raise ValueError(f"Hyperliquid HlPerp predicted funding not found for coin {coin}")
     if len(hyperliquid_entries) > 1:
         raise ValueError(f"Hyperliquid HlPerp predicted funding is ambiguous for coin {coin}")
-    return _parse_epoch_milliseconds(
-        hyperliquid_entries[0].get("nextFundingTime"),
+    funding_payload = hyperliquid_entries[0]
+    funding_settlement_at = _parse_epoch_milliseconds(
+        funding_payload.get("nextFundingTime"),
         "nextFundingTime",
     )
+    funding_rate = _parse_finite_decimal(funding_payload.get("fundingRate"))
+    if funding_rate is None:
+        return funding_settlement_at, {}
+    return funding_settlement_at, {
+        "public_funding_rate": str(funding_rate),
+        "public_funding_rate_field": "fundingRate",
+        "public_funding_rate_source": ValueSource.OBSERVED.value,
+    }

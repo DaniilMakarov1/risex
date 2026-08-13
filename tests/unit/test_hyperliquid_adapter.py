@@ -144,6 +144,11 @@ def test_fetch_observation_normalizes_public_hyperliquid_market_data_only() -> N
     assert observation.order_book.asks[0].size == Decimal("0.11543")
     assert observation.expected_funding_usd.value is None
     assert observation.expected_funding_usd.source is ValueSource.UNKNOWN
+    assert observation.expected_funding_usd.metadata == {
+        "public_funding_rate": "0.0000125",
+        "public_funding_rate_field": "fundingRate",
+        "public_funding_rate_source": "OBSERVED",
+    }
     assert len(observation.fees.components) == 1
     assert observation.fees.components[0].amount_usd.value is None
     assert observation.fees.components[0].amount_usd.source is ValueSource.UNKNOWN
@@ -216,6 +221,26 @@ def test_fetch_observation_fails_closed_when_market_lookup_is_ambiguous() -> Non
 
     with pytest.raises(ValueError, match="ambiguous"):
         _adapter(fake_api).fetch_observation("BTC-PERP")
+
+
+@pytest.mark.parametrize("funding_rate", (None, "not-a-rate", "NaN", "Infinity"))
+def test_fetch_observation_keeps_malformed_hyperliquid_funding_rate_unknown(
+    funding_rate: Any,
+) -> None:
+    funding_payload = {"nextFundingTime": NEXT_FUNDING_MS}
+    if funding_rate is not None:
+        funding_payload["fundingRate"] = funding_rate
+    fake_api = FakeHyperliquidInfoAPI(
+        predicted_fundings_payload=_predicted_fundings_payload(
+            venue_entries=[["HlPerp", funding_payload]]
+        )
+    )
+
+    observation = _adapter(fake_api).fetch_observation("BTC")
+
+    assert observation.expected_funding_usd.value is None
+    assert observation.expected_funding_usd.source is ValueSource.UNKNOWN
+    assert observation.expected_funding_usd.metadata == {}
 
 
 @pytest.mark.parametrize(

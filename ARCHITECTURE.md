@@ -102,7 +102,7 @@ Any non-terminal Capture may transition to `FAILED`. Capture states with possibl
 ## Single-owner business logic
 
 - Fees are calculated only in `core/economics/fees.py`.
-- Funding is calculated only in `core/economics/funding.py`.
+- Funding is calculated only in `core/economics/funding.py`, including public funding-rate metadata completion into route-notional USD cash flow.
 - Liquidity and VWAP are calculated only in `core/economics/liquidity.py`.
 - Basis and unwind tracking belong only in `core/economics/basis.py`.
 - Entry EV is calculated only in `core/economics/ev.py`.
@@ -322,6 +322,16 @@ RX-038 adds one manual real-data CLI entry point:
 6. Output is deterministic and preserves missing `DecisionResult` economics as `None` rather than zero.
 7. It does not discover routes, rank routes, poll, loop, write ledger events, start paper lifecycle, verify funding settlement, reconcile ledgers, plan execution, run guarded live readiness, call approval-boundary execution, use private/account/auth endpoints, use credentials, read account state, construct sendable requests or order payloads, place orders, enable live trading, add route statuses, add reject reasons, or create a second decision, snapshot, verifier, ledger-write, replay, economics, execution-planning, or live execution path.
 
+RX-039 adds public one-route economics source completion:
+
+1. RiseX and Hyperliquid adapters may preserve explicit public funding-rate metadata from their existing public market-data responses while still returning `ValueSource.UNKNOWN` USD funding cash because `fetch_observation(symbol)` has no selected route notional.
+2. `core/economics/funding.py` owns `complete_public_funding_cash_flow()`, which converts unknown funding values with explicit observed public funding-rate metadata into USD cash only from one `RouteCandidate.target_notional_usd` and one leg entry side.
+3. The sign convention is deterministic: positive funding rates mean longs pay shorts, so `buy` legs use `-rate * notional` and `sell` legs use `rate * notional`; negative rates naturally reverse that cash flow.
+4. The existing `assemble_route_snapshot()` path calls the funding-owned helper while building the existing `FundingSnapshot`; `assemble_route_snapshot_from_adapters()`, `run_real_data_research_route()`, and `evaluate_route()` remain the same handoff, runner, and decision paths.
+5. Missing, malformed, non-finite, non-public, or ungrounded funding-rate metadata stays `ValueSource.UNKNOWN` and fails closed through existing economics handling.
+6. Account-tier-dependent fee cash remains unknown; RX-039 does not invent user fee tiers or convert fee schedules to zero.
+7. It does not add route discovery, ranking, polling, loops, private/account/auth endpoints, credentials, account state, order placement, sendable exchange request construction, execution automation, ledger writes, storage migrations, replay changes, paper lifecycle changes, route statuses, reject reasons, live trading by default, or any second route model, decision path, snapshot path, EV path, VWAP path, ledger-write path, replay path, execution-planning path, or live execution path.
+
 RX-005 adds deterministic offline orchestration over multiple fake route candidates:
 
 1. `core/pipeline/offline_scan.py` owns the route-candidate iteration layer.
@@ -449,7 +459,7 @@ Spread, price impact, basis, slippage, and fees are not independent arbitrary re
 
 ## Unknown values
 
-Unknown values must not silently become zero. `EstimatedValue` requires `source=UNKNOWN` values to carry no numeric value, and callers must use source-aware handling before a value can participate in economics. Fee defaults must use `USER_CONFIGURED`; last-observed funding estimates must use `ESTIMATED_FROM_LAST_VALUE`.
+Unknown values must not silently become zero. `EstimatedValue` requires `source=UNKNOWN` values to carry no numeric value, and callers must use source-aware handling before a value can participate in economics. Fee defaults must use `USER_CONFIGURED`; last-observed funding estimates must use `ESTIMATED_FROM_LAST_VALUE`. Public funding-rate metadata may become observed USD funding cash only when the existing one-route snapshot path has explicit route notional and leg side; missing, malformed, or ungrounded metadata remains unknown.
 
 ## Entry and exit economics
 

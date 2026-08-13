@@ -1,7 +1,12 @@
 # Status
 
-- Current branch: `main`.
-- Current task: RX-038 - One-Route Real Data CLI Toward Live Readiness finalization.
+- Current branch: `task/rx-039-public-one-route-economics-source-completion`.
+- Current task: RX-039 - Public One-Route Economics Source Completion implementation branch.
+- RX-039 starting baseline: `2dfc3c264199ca76345527f2f5fa89fc66d644d5`
+- RX-039 review state: implementation-complete on task branch; pending reviewer acceptance.
+- RX-039 disposition: completes explicit public funding-rate metadata into route-notional USD funding cash inside the existing `assemble_route_snapshot()` path when a one-route `RouteCandidate.target_notional_usd` and leg entry side ground the value. RiseX and Hyperliquid adapters preserve public funding-rate metadata only and still return unknown USD cash from `fetch_observation(symbol)`. Account-tier fees remain unknown.
+- RX-039 next handoff: `NEXT_TASK.md` is prepared for exactly one next non-dangerous product/runtime task, RX-040 Public One-Route Fee Source Metadata Preservation, scoped as source-aware, public-data-only, one-route-at-a-time, read-only, fail-closed, and non-trading.
+- RX-039 worker usage: one supervised worker was used for design support before implementation edits; Parent approved the source-aware public funding-rate completion direction with fee completion out of scope.
 - RX-038 starting baseline: `a3b94823a7e0c182f931deb49b35107fbc771998`
 - RX-038 review state: reviewer-accepted and finalized on `main`.
 - Latest accepted product task: RX-038 — One-Route Real Data CLI Toward Live Readiness.
@@ -124,7 +129,7 @@
 - Accepted baseline branch: `main`
 - Current accepted `main` metadata/governance task: RX-037.
 - Current accepted `main` product task: RX-038.
-- Current RX task state: RX-038 is reviewer-accepted and finalized on `main`; latest accepted metadata/governance follow-up remains RX-037.
+- Current RX task state: RX-039 is implementation-complete on `task/rx-039-public-one-route-economics-source-completion` and pending reviewer acceptance; latest accepted product task remains RX-038 and latest accepted metadata/governance follow-up remains RX-037.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
@@ -149,7 +154,7 @@ RX-013 remains the previous accepted product baseline before RX-014.
 RX-012 remains the previous accepted product baseline before RX-013.
 RX-Q001 remains the previous accepted governance baseline before RX-Q002.
 RX-011 remains the previous accepted product implementation baseline before RX-012.
-`NEXT_TASK.md` is prepared for RX-039 after RX-038 finalization.
+`NEXT_TASK.md` is prepared for RX-040 after RX-039 branch implementation.
 RX-031 found no additional explicit actionable reviewer feedback in local repo/git evidence or GitHub connector context after RX-030 finalization. RX-031 is accepted metadata-only follow-up work and does not change dashboard or product code.
 RX-038 is the latest accepted product task and adds one manual read-only public-data CLI entry point for one explicit RiseX plus Hyperliquid route. It does not add route discovery, ranking, polling, private endpoints, credentials, account balances/state, execution automation, order placement, sendable exchange request construction, ledger writes, or live trading by default.
 
@@ -250,6 +255,7 @@ RX-038 is the latest accepted product task and adds one manual read-only public-
 - One real market-data route snapshot handoff exists in `core/pipeline/snapshot.py` and delegates to `assemble_route_snapshot()` for one existing route at a time.
 - One real-data research runner exists in `apps/research_runner/real_data.py` and evaluates one explicit existing route at a time through the existing adapter handoff and `evaluate_route()` path.
 - One manual real-data CLI entry point exists in `apps/cli/main.py` as `real-data-route`; it validates one explicit RiseX plus Hyperliquid route before adapter construction, instantiates only the existing public read-only adapters, delegates to `run_real_data_research_route()`, and prints deterministic one-decision output without converting missing economics to zero.
+- RX-039 branch behavior: explicit public funding-rate metadata from RiseX and Hyperliquid observations can be completed into route-notional USD funding cash by `core/economics/funding.py` inside the existing `assemble_route_snapshot()` path. Missing, malformed, non-finite, non-public, or ungrounded funding-rate metadata remains unknown, and account-tier fee cash remains unknown.
 - One approval-gated funding settlement verification workflow exists in `core/monitoring/funding_settlement.py`; it records explicit caller-supplied observed settlement evidence through the existing ledger helper and does not call `evaluate_route()`, assemble snapshots, calculate profitability, reconcile ledgers, plan execution, place orders, or enable live trading.
 - One non-sending execution planning workflow exists in `core/execution/planning.py`; it consumes existing Capture, RouteCandidate, route decision, funding verification, ledger reconciliation, CapturePlan freshness, and execution-capability evidence and returns evidence-only intended entry/unwind actions without ledger writes, adapters, live runner behavior, sendable API requests, orders, route eligibility mutation, or live trading.
 - One guarded no-order live runner workflow exists in `apps/live_runner/guarded.py`; it consumes existing Capture, RouteCandidate, funding verification, ledger reconciliation, live-gate bundle, and non-sending execution-plan evidence and returns only blocked or no-order readiness without ledger writes, adapters, order placement imports, sendable API requests, route eligibility mutation, or live trading by default.
@@ -293,10 +299,22 @@ RX-038 is the latest accepted product task and adds one manual read-only public-
 - RX-036 is reviewer-accepted and finalized on `main`.
 - RX-037 is reviewer-accepted and finalized on `main`.
 - RX-038 is reviewer-accepted and finalized on `main`.
-- The next recommended task is RX-039 Public One-Route Economics Source Completion.
+- The next recommended task is RX-040 Public One-Route Fee Source Metadata Preservation.
 - The RX-032 authorization does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - RX-033 autonomy does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized and accepted.
+
+## Tests last reported for RX-039 branch
+
+- `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
+- `python3 -m pytest tests/unit/test_funding.py tests/unit/test_risex_adapter.py tests/unit/test_hyperliquid_adapter.py tests/unit/test_snapshot_assembly.py tests/unit/test_real_data_research_runner.py tests/unit/test_cli_main.py`: `140 passed in 0.17s`
+- `python3 -m pytest tests/invariant`: `37 passed in 0.24s`
+- `python3 -m pytest`: `602 passed in 1.09s`
+- `python3 -m compileall apps core storage tests scripts`: exit 0
+- `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
+- `git diff --check`: exit 0
+- `git diff --cached --check`: exit 0
+- `git status --short`: `M ARCHITECTURE.md`; `M DECISIONS.md`; `M IMPLEMENTATION_PLAN.md`; `M NEXT_TASK.md`; `M PRODUCT_INVARIANTS.md`; `M README.md`; `M STATUS.md`; `M core/economics/funding.py`; `M core/pipeline/snapshot.py`; `M core/venues/hyperliquid.py`; `M core/venues/risex.py`; `M tests/unit/test_funding.py`; `M tests/unit/test_hyperliquid_adapter.py`; `M tests/unit/test_risex_adapter.py`; `M tests/unit/test_snapshot_assembly.py`
 
 ## Tests last reported for RX-038 branch
 
@@ -750,7 +768,7 @@ RX-038 is the latest accepted product task and adds one manual read-only public-
 - RiseX adapter is read-only public market data only and is wired only through the one-route real-data research runner when a caller explicitly supplies it.
 - Hyperliquid adapter is read-only public market data only and is wired only through the one-route real-data research runner when a caller explicitly supplies it.
 - The manual real-data CLI is one-route-at-a-time only. It has no route discovery, ranking, watchlist, polling, loop, scheduler, alerting, ledger-write, paper lifecycle, execution planning, order placement, private endpoint, credential, account-state, or live-trading behavior.
-- Current public real adapters still return `UNKNOWN` funding and fee cash-flow values, so real public-adapter research decisions are expected to fail closed as missing live data until a future task supplies approved source-aware economics.
+- Current public real adapters still return `UNKNOWN` funding and fee cash-flow values from `fetch_observation(symbol)`. RX-039 branch behavior can complete explicit public funding-rate metadata into route-notional USD funding cash only inside the existing one-route snapshot path; account-tier fee cash remains unknown, so real public-adapter research decisions can still fail closed as missing live data.
 - Offline fake runners still perform no network calls.
 - Existing no-argument fake CLI behavior is unchanged.
 - No real exchange order submission.
@@ -773,7 +791,8 @@ RX-038 is the latest accepted product task and adds one manual read-only public-
 - RX-036 is governance/docs-only. It re-confirms that the source-of-truth docs still do not clearly ground a concrete non-dangerous product/runtime implementation task after RX-035 and prepares a Product Owner roadmap direction gate before product/runtime scope resumes.
 - RX-037 is governance/docs-only. It records explicit Product Owner roadmap direction and prepares the RX-038 manual one-route real-data CLI handoff, but it does not implement the CLI or change product/runtime behavior.
 - RX-038 adds the manual one-route real-data CLI only. It is reviewer-accepted and finalized on `main`, remains non-trading, public-data-only, read-only, and fail-closed, and does not authorize live/order/private/account-state scope.
+- RX-039 completes public funding-rate metadata into route-notional USD funding cash on its task branch only. It remains non-trading, public-data-only, read-only, one-route-at-a-time, and pending reviewer acceptance.
 
 ## Next recommended task
 
-RX-039 - Public One-Route Economics Source Completion.
+RX-040 - Public One-Route Fee Source Metadata Preservation.

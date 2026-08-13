@@ -125,6 +125,53 @@ def test_fetch_observation_preserves_exact_risex_api_symbol_when_requested() -> 
     assert observation.order_book.symbol == "BTC/USDC"
 
 
+def test_fetch_observation_preserves_public_risex_funding_rate_metadata_only() -> None:
+    markets_payload = _markets_payload()
+    markets_payload["data"]["markets"][0]["funding_rate"] = "0.0002"
+    fake_api = FakeRiseXAPI(markets_payload=markets_payload)
+
+    observation = _adapter(fake_api).fetch_observation("BTC-PERP")
+
+    assert observation.expected_funding_usd.value is None
+    assert observation.expected_funding_usd.source is ValueSource.UNKNOWN
+    assert observation.expected_funding_usd.metadata == {
+        "public_funding_rate": "0.0002",
+        "public_funding_rate_field": "funding_rate",
+        "public_funding_rate_source": "OBSERVED",
+    }
+
+
+def test_fetch_observation_preserves_config_public_funding_rate_metadata_only() -> None:
+    markets_payload = _markets_payload()
+    markets_payload["data"]["markets"][0]["config"]["nextFundingRate"] = "-0.0001"
+    fake_api = FakeRiseXAPI(markets_payload=markets_payload)
+
+    observation = _adapter(fake_api).fetch_observation("BTC-PERP")
+
+    assert observation.expected_funding_usd.value is None
+    assert observation.expected_funding_usd.source is ValueSource.UNKNOWN
+    assert observation.expected_funding_usd.metadata == {
+        "public_funding_rate": "-0.0001",
+        "public_funding_rate_field": "nextFundingRate",
+        "public_funding_rate_source": "OBSERVED",
+    }
+
+
+@pytest.mark.parametrize("funding_rate", ("not-a-rate", "NaN", "Infinity"))
+def test_fetch_observation_keeps_malformed_risex_funding_rate_unknown(
+    funding_rate: str,
+) -> None:
+    markets_payload = _markets_payload()
+    markets_payload["data"]["markets"][0]["fundingRate"] = funding_rate
+    fake_api = FakeRiseXAPI(markets_payload=markets_payload)
+
+    observation = _adapter(fake_api).fetch_observation("BTC-PERP")
+
+    assert observation.expected_funding_usd.value is None
+    assert observation.expected_funding_usd.source is ValueSource.UNKNOWN
+    assert observation.expected_funding_usd.metadata == {}
+
+
 def test_fetch_observation_fails_closed_when_market_is_missing() -> None:
     fake_api = FakeRiseXAPI(markets_payload={"data": {"markets": []}})
 

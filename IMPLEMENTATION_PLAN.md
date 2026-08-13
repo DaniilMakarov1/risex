@@ -54,17 +54,17 @@ RX-038 — One-Route Real Data CLI Toward Live Readiness is reviewer-accepted an
 
 ## Current Product Branch Progress
 
-No product task branch is active on `main` after RX-038 finalization. The next product/runtime step must start from `NEXT_TASK.md` as a clean RX-039 executor task and branch.
+RX-039 is active on branch `task/rx-039-public-one-route-economics-source-completion`. The branch completes explicit public funding-rate metadata into route-notional USD funding cash inside the existing one-route snapshot path while preserving RX-038 as the latest accepted product task until reviewer acceptance.
 
 ## Current Product Handoff
 
-`NEXT_TASK.md` is prepared for RX-039, a public-data-only one-route economics source completion task for the existing real-data research path. RX-039 must remain source-aware, one-route-at-a-time, read-only, non-trading, and fail-closed, with no private endpoints, credentials, account state, orders, automation, ledger writes, route discovery/ranking/polling, live trading, or unknown-to-zero conversion.
+`NEXT_TASK.md` is prepared for RX-040, a public-data-only one-route fee-source metadata preservation task for the existing real-data research path. RX-040 must remain source-aware, one-route-at-a-time, read-only, non-trading, and fail-closed, with no private endpoints, credentials, account state, orders, automation, ledger writes, route discovery/ranking/polling, live trading, account-tier assumptions, or unknown-to-zero conversion.
 
-## Remaining Gated Roadmap After RX-038
+## Remaining Gated Roadmap After RX-039 Branch
 
 Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, by RX-033 governance autonomy, by the RX-034 roadmap selection audit, by the RX-035 post-audit handoff cleanup, by the RX-036 roadmap source-of-truth clarification, by the RX-037 roadmap direction record, or by RX-038 one-route real-data CLI finalization.
 
-1. RX-039 - Public One-Route Economics Source Completion.
+1. RX-040 - Public One-Route Fee Source Metadata Preservation.
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
 
@@ -341,8 +341,23 @@ RX-038 implementation notes:
 
 RX-038 does not add route discovery, ranking, watchlists, background loops, polling, scheduling, alerts, automatic refresh, private endpoints, credentials, account balances/state, orders, sendable exchange request or order payload construction, execution automation, ledger writes, paper lifecycle changes, funding settlement verification, ledger reconciliation, execution planning, guarded live runner execution, approval-boundary execution, live trading by default, route statuses, reject reasons, artificial filters, canary architecture, hold-next-cycle logic, or any second decision, snapshot, EV, VWAP, ledger-write, replay, execution-planning, or live execution path.
 
+## RX-039 — Public One-Route Economics Source Completion
+
+After RX-038 reviewer acceptance, RX-039 adds the smallest source-aware public-data-only funding economics completion for one explicitly supplied RiseX plus Hyperliquid route.
+
+RX-039 implementation notes:
+
+- `core/venues/risex.py` and `core/venues/hyperliquid.py` preserve explicit public funding-rate metadata from existing public responses while still returning unknown USD funding cash from `fetch_observation(symbol)`.
+- `core/economics/funding.py` owns `complete_public_funding_cash_flow()`, which converts public funding-rate metadata into `ValueSource.OBSERVED` USD funding cash only when the existing route target notional and leg entry side are available.
+- Positive funding rates mean longs pay shorts, so `buy` legs use `-rate * notional` and `sell` legs use `rate * notional`.
+- `core/pipeline/snapshot.py` calls the funding-owned completion helper inside the existing `assemble_route_snapshot()` path before building the existing `FundingSnapshot`.
+- `assemble_route_snapshot_from_adapters()`, `run_real_data_research_route()`, `evaluate_route()`, and `apps/cli/main.py` keep their existing one-route handoff, runner, decision, and output paths.
+- Missing, malformed, non-finite, non-public, or ungrounded funding-rate inputs remain `ValueSource.UNKNOWN`; account-tier fee cash remains unknown.
+
+RX-039 does not add route discovery, ranking, watchlists, background loops, polling, scheduling, alerts, automatic refresh, private endpoints, credentials, account balances/state, orders, sendable exchange request or order payload construction, execution automation, ledger writes, storage migrations, replay changes, paper lifecycle changes, funding settlement verification, ledger reconciliation, execution planning, guarded live runner execution, approval-boundary execution, live trading by default, route statuses, reject reasons, artificial filters, canary architecture, hold-next-cycle logic, or any second route model, decision path, snapshot path, EV path, VWAP path, ledger-write path, replay path, execution-planning path, or live execution path.
+
 ## Next Sequence
 
-1. RX-039 - Public One-Route Economics Source Completion.
+1. RX-040 - Public One-Route Fee Source Metadata Preservation.
 
 Do not promote execution automation, background loops, ranking, order placement, polling, alerts, auto-refresh, private endpoints, credentials, account-state access, destructive reset, financially dangerous actions, or later roadmap stages into the current handoff unless that exact future task is explicitly user-approved for hard-stop scope or explicitly directed by the Product Owner, autonomously selected by Control Tower under RX-033 for non-dangerous scope, and passes the repository's hard approval gates.

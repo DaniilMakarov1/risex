@@ -98,6 +98,17 @@ def _observation(
     )
 
 
+def _public_rate_funding(rate: str) -> EstimatedValue:
+    return EstimatedValue(
+        value=None,
+        source=ValueSource.UNKNOWN,
+        metadata={
+            "public_funding_rate": rate,
+            "public_funding_rate_source": "OBSERVED",
+        },
+    )
+
+
 def _observations() -> tuple[VenueObservation, VenueObservation]:
     risex_observation = _observation(
         venue="RiseX",
@@ -348,6 +359,68 @@ def test_valid_observations_assemble_route_aligned_snapshot_from_vwap_logic() ->
         *risex_observation.fees.components,
         *hedge_observation.fees.components,
     )
+
+
+def test_assembly_completes_public_funding_rate_metadata_from_route_notional() -> None:
+    route = _route()
+    risex_observation = _observation(
+        venue="RiseX",
+        symbol="BTC-PERP",
+        observed_at=RISEX_OBSERVED_AT,
+        settlement_at=RISEX_SETTLEMENT_AT,
+        funding=_public_rate_funding("0.001"),
+        fees=_fees("risex_fees"),
+    )
+    hedge_observation = _observation(
+        venue="Hyperliquid",
+        symbol="BTC",
+        observed_at=HEDGE_OBSERVED_AT,
+        settlement_at=HEDGE_SETTLEMENT_AT,
+        funding=_public_rate_funding("0.0004"),
+        fees=_fees("hedge_fees"),
+    )
+
+    snapshot = assemble_route_snapshot(
+        route=route,
+        observations=_observation_mapping(risex_observation, hedge_observation),
+        assembled_at=ASSEMBLED_AT,
+    )
+
+    assert snapshot.funding.risex_funding_usd.value == Decimal("-0.500")
+    assert snapshot.funding.risex_funding_usd.source is ValueSource.OBSERVED
+    assert snapshot.funding.risex_funding_usd.metadata["entry_side"] == "buy"
+    assert snapshot.funding.risex_funding_usd.metadata["target_notional_usd"] == "500"
+    assert snapshot.funding.hedge_funding_usd.value == Decimal("0.2000")
+    assert snapshot.funding.hedge_funding_usd.source is ValueSource.OBSERVED
+    assert snapshot.funding.hedge_funding_usd.metadata["entry_side"] == "sell"
+    assert snapshot.funding.hedge_funding_usd.metadata["target_notional_usd"] == "500"
+
+
+def test_assembly_preserves_malformed_public_funding_rate_metadata_as_unknown() -> None:
+    route = _route()
+    _, hedge_observation = _observations()
+    risex_observation = _observation(
+        venue="RiseX",
+        symbol="BTC-PERP",
+        observed_at=RISEX_OBSERVED_AT,
+        settlement_at=RISEX_SETTLEMENT_AT,
+        funding=_public_rate_funding("not-a-rate"),
+        fees=_fees("risex_fees"),
+    )
+
+    snapshot = assemble_route_snapshot(
+        route=route,
+        observations=_observation_mapping(risex_observation, hedge_observation),
+        assembled_at=ASSEMBLED_AT,
+    )
+
+    assert snapshot.funding.risex_funding_usd.value is None
+    assert snapshot.funding.risex_funding_usd.source is ValueSource.UNKNOWN
+
+    decision = evaluate_route(route, snapshot, EvaluationMode.ENTRY)
+
+    assert decision.status is RouteStatus.REJECTED
+    assert decision.reasons == (RejectReason.REQUIRED_LIVE_DATA_MISSING,)
 
 
 def test_assembly_preserves_mismatched_settlement_timestamps_but_evaluation_rejects() -> None:
