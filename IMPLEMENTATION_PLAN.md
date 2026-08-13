@@ -23,6 +23,8 @@ RX-055 is reviewer-accepted and finalized on `main` as the manual serial fake-mo
 
 RX-056 is reviewer-accepted and finalized on `main` as governance/source-of-truth only. It records that the accepted RX-055 outcome plus Product Owner and Control Tower direction clearly ground exactly one next non-dangerous fake-money paper-trader handoff: manual local JSON report/history export for serial paper sessions.
 
+RX-057 is implementation-complete on `task/rx-057-manual-paper-session-report-history-export` and pending reviewer acceptance. It adds an explicit local `--session-report-json-path` JSON report/history export for the existing `paper-trade-session` command, while preserving no artifact writes when the path is absent and keeping the export downstream of accepted RX-055 session outcomes and paper ledger events.
+
 ## Completed Accepted Work
 
 - RX-000 through RX-007 established the project constitution, domain contracts, product rules, economics, per-venue observations, offline scan/refresh orchestration, fake paper lifecycle, and append-only ledger persistence scaffolding.
@@ -65,6 +67,7 @@ RX-056 is reviewer-accepted and finalized on `main` as governance/source-of-trut
 - RX-053 added one manual `paper-trade-route` fake-money bridge from one public one-route ENTRY decision into the existing fake paper lifecycle and append-only ledger.
 - RX-054 recorded Product Owner clarification that the fake-money paper trader path should continue beyond the manual one-route bridge toward serial strategy testing, recorded Telegram as later interface direction only, prepared RX-055 as one manual serial paper session runner handoff, and did not change product/runtime behavior.
 - RX-055 added one manual `paper-trade-session` fake-money serial runner for an operator-supplied local JSON route-list file capped at 25 exact explicit ENTRY routes, preserving existing decision, paper lifecycle, and ledger ownership paths.
+- RX-056 recorded that the accepted RX-055 outcome plus Product Owner and Control Tower direction clearly ground exactly one next non-dangerous fake-money paper-trader handoff, manual local JSON report/history export for serial paper sessions, and did not change product/runtime behavior.
 - RX-Q001 and RX-Q002 added repository workflow, handoff validation, and supervised-worker governance.
 
 ## Accepted Offline Safety-Hardening Detour
@@ -76,6 +79,10 @@ The detour's purpose is to keep future live-adjacent work honest: funding settle
 ## Latest Accepted Product Task
 
 RX-055 - Manual Serial Paper Session Runner is reviewer-accepted and finalized on `main`. It adds one explicit `paper-trade-session` command for an operator-supplied local JSON route-list file capped at 25 exact explicit RiseX plus Hyperliquid ENTRY routes. It validates the whole list before adapter construction, runs each route serially through `run_real_data_research_route_with_snapshot()` and the shared `evaluate_route(route, snapshot, mode)` path, delegates fake paper behavior to `run_paper_lifecycle()` when a public snapshot is available, writes fake paper events only through existing accounting ledger ownership, optionally persists through explicit local SQLite only, and prints deterministic per-route output plus count-only session summaries without aggregating PnL or turning unknowns into zero.
+
+## Current Product Task Branch
+
+RX-057 - Manual Paper Session Report History Export is implementation-complete on the task branch and pending reviewer acceptance. It adds one explicit `paper-trade-session --session-report-json-path` local JSON artifact writer. The artifact is written only when the operator supplies that path, and its payload is built from the existing validated route inputs, serial session outcomes, and paper ledger events already produced through RX-055 owner paths.
 
 ## Previous Product Baseline
 
@@ -107,11 +114,13 @@ RX-055 is reviewer-accepted and finalized on `main` as the latest accepted produ
 
 RX-056 is reviewer-accepted and finalized on `main` as the latest accepted governance/source-of-truth task. It inspects the accepted RX-055 serial paper session runner, current source-of-truth docs, Product Owner direction toward serial fake-money paper strategy testing, and Control Tower review direction. It finds that exactly one next implementation handoff is grounded after RX-055: a manual local JSON report/history export for `paper-trade-session` results using explicit local output paths and existing session outcomes or paper ledger events only. The handoff is narrow test-enabling infrastructure for later Telegram command/display adaptation, but it must not add Telegram transport, bot tokens, webhooks, messaging, network calls, discovery, polling, execution automation, live/order/private/account, ledger replay/reconciliation, storage-migration, second-owner-path, or unknown-to-zero scope.
 
-## Remaining Gated Roadmap After RX-056 Finalization
+RX-057 is implementation-complete on the task branch and pending reviewer acceptance. It implements the RX-056 handoff as one explicit local JSON report/history export for the existing manual session command. Implementation completion is not acceptance; RX-055 remains the latest accepted product/runtime task on `main` until reviewer acceptance and finalization.
 
-Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. RX-056 finalization prepares exactly one next local report/history export handoff and does not authorize any additional trading, execution automation, execution planning, polling, ranking, discovery, ledger/storage/replay change, Telegram transport, credentials, bot-ready command parsing, or live-order roadmap stage.
+## Remaining Gated Roadmap After RX-057 Implementation
 
-1. RX-057 - Manual Paper Session Report History Export.
+Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. RX-057 implementation prepares exactly one next local Telegram-ready command payload parsing handoff and does not authorize any additional trading, execution automation, execution planning, polling, ranking, discovery, ledger/storage/replay change, Telegram transport, credentials, messaging, alerts, webhooks, or live-order roadmap stage.
+
+1. RX-058 - Local Paper Session Command Payload Parser Fixtures.
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
 
@@ -791,8 +800,29 @@ RX-057 implementation notes:
 
 RX-057 must not add live trading, real exchange order placement, order cancellation, order status fetching, private/account endpoints, credentials, API keys, Telegram bot tokens, Telegram transport, webhooks, external Telegram network calls, alerts, messaging behavior, exchange account state, account balances, account-tier assumptions, sendable exchange request construction, order payload construction, execution automation, execution planning, guarded live runner execution, approval-boundary execution, automatic polling, background loops, scheduling, auto-refresh, route discovery, route ranking, watchlists, storage migrations, replay changes, ledger reconciliation changes, funding settlement verification changes, route eligibility mutation, Capture state transition changes, route statuses, reject reasons, unknown-to-zero behavior, aggregate PnL invention, artificial filters, canary architecture, hold-next-cycle logic, live trading by default, or any second route model, decision path, snapshot assembly path, EV path, VWAP path, fee/funding path, paper lifecycle path, ledger-write path, replay path, reconciliation path, execution-planning path, or live execution path.
 
+RX-057 branch outcome:
+
+- Adds one optional `--session-report-json-path` flag to the existing `paper-trade-session` command.
+- Writes no report/history artifact unless the operator supplies that explicit local path.
+- Builds the deterministic JSON payload from validated route inputs, already-retained decisions/snapshots, paper lifecycle outcomes, and paper ledger events produced by the existing session run.
+- Preserves the RX-055 25-route explicit ENTRY cap, existing stdout behavior, count-only known/unknown summary fields, unknown/null values, and explicit `aggregate_paper_net_profit_usd=null`.
+- Does not add Telegram transport, tokens, credentials, network calls, messaging, alerts, webhooks, discovery, ranking, watchlists, polling, background loops, scheduling, execution automation, live/order/private/account scope, replay, reconciliation, storage migrations, new statuses/reasons, or second owner paths.
+
+## RX-058 — Local Paper Session Command Payload Parser Fixtures
+
+After RX-057 reviewer acceptance and finalization, RX-058 should add a local-only parser/fixture layer for paper session command payloads suitable for later Telegram command/display adaptation.
+
+RX-058 implementation notes:
+
+- The parser must be local-only and deterministic. It may convert caller-supplied text or JSON-like payload fixtures into the existing `paper-trade-session` route-list input shape, but it must not invoke Telegram transport, bot tokens, webhooks, external network calls, alerts, messaging behavior, credentials, or API keys.
+- It must preserve the existing `paper-trade-session` 25-route explicit ENTRY cap by delegating to or matching the accepted route-list validation boundary before adapter construction.
+- It must not run sessions, call adapters, write ledgers, write report artifacts, discover/rank routes, poll, schedule, create watchlists, replay or reconcile ledgers, plan execution, place orders, use private/account endpoints, read account state, mutate route eligibility, add statuses/reasons, or add second owner paths.
+- Focused tests must cover accepted fixture parsing, malformed payload rejection before adapter/session construction, no network/Telegram/live/order/private/account scope, preservation of explicit ENTRY route fields, and no weakening of RX-055/RX-057 validation or unknown/null semantics.
+
+RX-058 must not add Telegram transport, Telegram bot tokens, webhooks, external Telegram network calls, alerts, messaging behavior, credentials, API keys, live trading, order placement/cancel/status behavior, private/account endpoints, account state, account balances, sendable exchange requests, order payload construction, execution automation, execution planning, guarded live runner execution, approval-boundary execution, route discovery, ranking, watchlists, polling, background loops, scheduling, auto-refresh, adapter endpoint changes, fee/funding/VWAP/liquidity/basis/economics rule changes, funding settlement verification changes, ledger reconciliation changes, replay changes, storage migrations, route eligibility mutation, Capture state transition changes, route statuses, reject reasons, canary architecture, hold-next-cycle logic, unknown-to-zero behavior, aggregate PnL invention, or second route/session/decision/snapshot/economics/paper lifecycle/ledger-write/replay/reconciliation/execution/live paths.
+
 ## Next Sequence
 
-1. RX-057 - Manual Paper Session Report History Export.
+1. RX-058 - Local Paper Session Command Payload Parser Fixtures.
 
 Do not promote execution automation, background loops, ranking, order placement, polling, alerts, auto-refresh, Telegram transport, bot tokens, private endpoints, credentials, account-state access, destructive reset, financially dangerous actions, or later roadmap stages into the current handoff unless that exact future task is explicitly user-approved for hard-stop scope or explicitly directed by the Product Owner, autonomously selected by Control Tower under RX-033 for non-dangerous scope, and passes the repository's hard approval gates.

@@ -19,7 +19,12 @@ from apps.research_runner.fake_data import (
     build_fake_focused_refresh_observations,
     build_fake_route_candidates_and_observations,
 )
-from core.accounting.ledger import InMemoryLedger, Ledger, LedgerEvent
+from core.accounting.ledger import (
+    InMemoryLedger,
+    Ledger,
+    LedgerEvent,
+    ledger_payload_to_jsonable,
+)
 from core.domain.contracts import (
     DecisionResult,
     EstimatedValue,
@@ -246,6 +251,12 @@ def _build_parser() -> argparse.ArgumentParser:
         default=None,
         type=_non_empty,
         help="Optional explicit local SQLite ledger path for fake paper events.",
+    )
+    paper_trade_session.add_argument(
+        "--session-report-json-path",
+        default=None,
+        type=_non_empty,
+        help="Optional explicit local JSON path for the paper session report/history export.",
     )
     paper_trade_session.set_defaults(handler=_run_paper_trade_session)
 
@@ -750,7 +761,7 @@ def _run_one_paper_trade_route(
     return decision, snapshot, paper_result, ledger.records()[start_event_count:]
 
 
-def _print_paper_session_summary(
+def _paper_session_summary_fields(
     *,
     route_count: int,
     decisions: Sequence[DecisionResult],
@@ -758,9 +769,9 @@ def _print_paper_session_summary(
     paper_results: Sequence[PaperRunResult | None],
     session_ledger_events: Sequence[LedgerEvent],
     ledger_path: str | None,
-) -> None:
+) -> dict[str, object]:
     status_counts = {
-        status: sum(1 for decision in decisions if decision.status is status)
+        status.value: sum(1 for decision in decisions if decision.status is status)
         for status in RouteStatus
     }
     decision_net_profit_known = sum(
@@ -789,35 +800,259 @@ def _print_paper_session_summary(
         1 for paper_result in paper_results if paper_result is not None and paper_result.started
     )
 
+    return {
+        "routes_total": route_count,
+        "routes_with_snapshot": sum(1 for snapshot in snapshots if snapshot is not None),
+        "routes_without_snapshot": sum(1 for snapshot in snapshots if snapshot is None),
+        "paper_started": paper_started,
+        "paper_not_started": route_count - paper_started,
+        "decision_status": status_counts,
+        "entry_ev_known": entry_ev_known,
+        "entry_ev_unknown": route_count - entry_ev_known,
+        "paper_expected_funding_known": paper_expected_funding_known,
+        "paper_expected_funding_unknown": route_count - paper_expected_funding_known,
+        "paper_total_fees_known": paper_total_fees_known,
+        "paper_total_fees_unknown": route_count - paper_total_fees_known,
+        "decision_net_profit_known": decision_net_profit_known,
+        "decision_net_profit_unknown": route_count - decision_net_profit_known,
+        "paper_net_profit_known": paper_net_profit_known,
+        "paper_net_profit_unknown": route_count - paper_net_profit_known,
+        "ledger_event_count": len(session_ledger_events),
+        "ledger_event_sequences": [event.sequence for event in session_ledger_events],
+        "ledger_event_types": [event.event_type for event in session_ledger_events],
+        "aggregate_paper_net_profit_usd": None,
+        "ledger_path": ledger_path,
+    }
+
+
+def _print_paper_session_summary(
+    *,
+    route_count: int,
+    decisions: Sequence[DecisionResult],
+    snapshots: Sequence[VenueSnapshot | None],
+    paper_results: Sequence[PaperRunResult | None],
+    session_ledger_events: Sequence[LedgerEvent],
+    ledger_path: str | None,
+) -> None:
+    summary = _paper_session_summary_fields(
+        route_count=route_count,
+        decisions=decisions,
+        snapshots=snapshots,
+        paper_results=paper_results,
+        session_ledger_events=session_ledger_events,
+        ledger_path=ledger_path,
+    )
+    status_counts = summary["decision_status"]
+    assert isinstance(status_counts, dict)
+
     print("Paper Trade Session Summary")
-    print(f"routes_total={route_count}")
-    print(f"routes_with_snapshot={sum(1 for snapshot in snapshots if snapshot is not None)}")
-    print(f"routes_without_snapshot={sum(1 for snapshot in snapshots if snapshot is None)}")
-    print(f"paper_started={paper_started}")
-    print(f"paper_not_started={route_count - paper_started}")
+    print(f"routes_total={summary['routes_total']}")
+    print(f"routes_with_snapshot={summary['routes_with_snapshot']}")
+    print(f"routes_without_snapshot={summary['routes_without_snapshot']}")
+    print(f"paper_started={summary['paper_started']}")
+    print(f"paper_not_started={summary['paper_not_started']}")
     for status in RouteStatus:
-        print(f"decision_status.{status.value}={status_counts[status]}")
-    print(f"entry_ev_known={entry_ev_known}")
-    print(f"entry_ev_unknown={route_count - entry_ev_known}")
-    print(f"paper_expected_funding_known={paper_expected_funding_known}")
-    print(f"paper_expected_funding_unknown={route_count - paper_expected_funding_known}")
-    print(f"paper_total_fees_known={paper_total_fees_known}")
-    print(f"paper_total_fees_unknown={route_count - paper_total_fees_known}")
-    print(f"decision_net_profit_known={decision_net_profit_known}")
-    print(f"decision_net_profit_unknown={route_count - decision_net_profit_known}")
-    print(f"paper_net_profit_known={paper_net_profit_known}")
-    print(f"paper_net_profit_unknown={route_count - paper_net_profit_known}")
-    print(f"ledger_event_count={len(session_ledger_events)}")
+        print(f"decision_status.{status.value}={status_counts[status.value]}")
+    print(f"entry_ev_known={summary['entry_ev_known']}")
+    print(f"entry_ev_unknown={summary['entry_ev_unknown']}")
+    print(f"paper_expected_funding_known={summary['paper_expected_funding_known']}")
+    print(f"paper_expected_funding_unknown={summary['paper_expected_funding_unknown']}")
+    print(f"paper_total_fees_known={summary['paper_total_fees_known']}")
+    print(f"paper_total_fees_unknown={summary['paper_total_fees_unknown']}")
+    print(f"decision_net_profit_known={summary['decision_net_profit_known']}")
+    print(f"decision_net_profit_unknown={summary['decision_net_profit_unknown']}")
+    print(f"paper_net_profit_known={summary['paper_net_profit_known']}")
+    print(f"paper_net_profit_unknown={summary['paper_net_profit_unknown']}")
+    print(f"ledger_event_count={summary['ledger_event_count']}")
     print(
         "ledger_event_sequences="
-        f"{_join_or_none(tuple(str(event.sequence) for event in session_ledger_events))}"
+        f"{_join_or_none(tuple(str(sequence) for sequence in summary['ledger_event_sequences']))}"
     )
     print(
         "ledger_event_types="
-        f"{_join_or_none(tuple(event.event_type for event in session_ledger_events))}"
+        f"{_join_or_none(tuple(str(event_type) for event_type in summary['ledger_event_types']))}"
     )
     print("aggregate_paper_net_profit_usd=None")
     print(f"ledger_path={ledger_path or 'None'}")
+
+
+def _ledger_event_json(event: LedgerEvent) -> dict[str, object]:
+    return {
+        "sequence": event.sequence,
+        "event_type": event.event_type,
+        "recorded_at": event.recorded_at.isoformat(),
+        "payload": ledger_payload_to_jsonable(event.payload),
+    }
+
+
+def _paper_session_route_report_json(
+    *,
+    route_index: int,
+    route: RouteCandidate,
+    assembled_at: datetime,
+    decision: DecisionResult,
+    snapshot: VenueSnapshot | None,
+    paper_result: PaperRunResult | None,
+    route_events: Sequence[LedgerEvent],
+) -> dict[str, object]:
+    if paper_result is None:
+        paper_json = {
+            "started": False,
+            "start_attribution": None,
+            "start_blockers": ["public_snapshot_unavailable"],
+            "expected_funding_usd": None,
+            "total_fees_usd": None,
+            "simulated_roundtrip_cost_usd": None,
+            "net_profit_usd": None,
+        }
+    else:
+        explanation = paper_result.explanation
+        paper_json = {
+            "started": paper_result.started,
+            "start_attribution": explanation.paper_start_attribution,
+            "start_blockers": list(explanation.paper_start_blockers),
+            "expected_funding_usd": _decimal_json_or_none(
+                explanation.expected_funding_usd
+            ),
+            "total_fees_usd": _decimal_json_or_none(explanation.total_fees_usd),
+            "simulated_roundtrip_cost_usd": _decimal_json_or_none(
+                explanation.simulated_roundtrip_cost_usd
+            ),
+            "net_profit_usd": _decimal_json_or_none(explanation.net_profit_usd),
+        }
+
+    return {
+        "route_index": route_index,
+        "route": {
+            "route_id": route.route_id,
+            "capture_id": route.capture_id,
+            "risex_venue": route.risex_venue,
+            "risex_symbol": route.risex_symbol,
+            "risex_side": route.risex_entry_side,
+            "hedge_venue": route.hedge_venue,
+            "hedge_symbol": route.hedge_symbol,
+            "hedge_side": route.hedge_entry_side,
+            "target_notional_usd": str(route.target_notional_usd),
+            "mode": EvaluationMode.ENTRY.value,
+            "assembled_at": assembled_at.isoformat(),
+        },
+        "decision": {
+            "mode": decision.mode.value,
+            "status": decision.status.value,
+            "reasons": [reason.value for reason in decision.reasons],
+            "net_profit_usd": _decimal_json_or_none(decision.net_profit_usd),
+            "entry_ev": {
+                "expected_funding_usd": _entry_ev_json_or_none(
+                    decision,
+                    "expected_funding_usd",
+                ),
+                "total_fees_usd": _entry_ev_json_or_none(
+                    decision,
+                    "total_fees_usd",
+                ),
+                "simulated_roundtrip_cost_usd": _entry_ev_json_or_none(
+                    decision,
+                    "simulated_roundtrip_cost_usd",
+                ),
+                "net_profit_usd": _entry_ev_json_or_none(
+                    decision,
+                    "net_profit_usd",
+                ),
+            },
+        },
+        "snapshot": {
+            "state": "UNKNOWN" if snapshot is None else "AVAILABLE",
+            "funding_settlement_at": (
+                None if snapshot is None else snapshot.risex_funding_settlement_at.isoformat()
+            ),
+        },
+        "paper": paper_json,
+        "ledger_events": [_ledger_event_json(event) for event in route_events],
+    }
+
+
+def _paper_session_report_json(
+    *,
+    route_inputs: Sequence[tuple[RouteCandidate, datetime]],
+    decisions: Sequence[DecisionResult],
+    snapshots: Sequence[VenueSnapshot | None],
+    paper_results: Sequence[PaperRunResult | None],
+    route_event_batches: Sequence[Sequence[LedgerEvent]],
+    session_ledger_events: Sequence[LedgerEvent],
+    ledger_path: str | None,
+) -> dict[str, object]:
+    route_reports: list[dict[str, object]] = []
+    route_report_inputs = zip(
+        route_inputs,
+        decisions,
+        snapshots,
+        paper_results,
+        route_event_batches,
+        strict=True,
+    )
+    for route_index, (
+        (route, assembled_at),
+        decision,
+        snapshot,
+        paper_result,
+        route_events,
+    ) in enumerate(route_report_inputs, start=1):
+        route_reports.append(
+            _paper_session_route_report_json(
+                route_index=route_index,
+                route=route,
+                assembled_at=assembled_at,
+                decision=decision,
+                snapshot=snapshot,
+                paper_result=paper_result,
+                route_events=route_events,
+            )
+        )
+
+    return {
+        "report": "Paper Trade Session Report",
+        "schema_version": 1,
+        "session": {
+            "route_count": len(route_inputs),
+            "ledger_path": ledger_path,
+        },
+        "routes": route_reports,
+        "summary": _paper_session_summary_fields(
+            route_count=len(route_inputs),
+            decisions=decisions,
+            snapshots=snapshots,
+            paper_results=paper_results,
+            session_ledger_events=session_ledger_events,
+            ledger_path=ledger_path,
+        ),
+        "ledger_events": [_ledger_event_json(event) for event in session_ledger_events],
+    }
+
+
+def _write_paper_session_report_json(
+    *,
+    report_json_path: str,
+    route_inputs: Sequence[tuple[RouteCandidate, datetime]],
+    decisions: Sequence[DecisionResult],
+    snapshots: Sequence[VenueSnapshot | None],
+    paper_results: Sequence[PaperRunResult | None],
+    route_event_batches: Sequence[Sequence[LedgerEvent]],
+    session_ledger_events: Sequence[LedgerEvent],
+    ledger_path: str | None,
+) -> None:
+    payload = _paper_session_report_json(
+        route_inputs=route_inputs,
+        decisions=decisions,
+        snapshots=snapshots,
+        paper_results=paper_results,
+        route_event_batches=route_event_batches,
+        session_ledger_events=session_ledger_events,
+        ledger_path=ledger_path,
+    )
+    Path(report_json_path).write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
 
 
 def _run_real_data_route(
@@ -936,6 +1171,7 @@ def _run_paper_trade_session(
         decisions: list[DecisionResult] = []
         snapshots: list[VenueSnapshot | None] = []
         paper_results: list[PaperRunResult | None] = []
+        route_event_batches: list[tuple[LedgerEvent, ...]] = []
 
         print("Paper Trade Session")
         print(f"route_count={len(route_inputs)}")
@@ -949,6 +1185,7 @@ def _run_paper_trade_session(
             decisions.append(decision)
             snapshots.append(snapshot)
             paper_results.append(paper_result)
+            route_event_batches.append(tuple(route_events))
 
             print(f"session_route_index={route_index}")
             _print_paper_trade_summary(
@@ -969,6 +1206,17 @@ def _run_paper_trade_session(
             session_ledger_events=session_ledger_events,
             ledger_path=args.ledger_sqlite_path,
         )
+        if args.session_report_json_path is not None:
+            _write_paper_session_report_json(
+                report_json_path=args.session_report_json_path,
+                route_inputs=route_inputs,
+                decisions=decisions,
+                snapshots=snapshots,
+                paper_results=paper_results,
+                route_event_batches=route_event_batches,
+                session_ledger_events=session_ledger_events,
+                ledger_path=args.ledger_sqlite_path,
+            )
     finally:
         close = getattr(ledger, "close", None)
         if close is not None:

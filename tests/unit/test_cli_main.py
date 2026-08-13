@@ -124,12 +124,15 @@ def _paper_session_args(
     routes_payload: object,
     *,
     ledger_sqlite_path: object = OMIT,
+    session_report_json_path: object = OMIT,
 ) -> list[str]:
     routes_path = tmp_path / "paper-session-routes.json"
     routes_path.write_text(json.dumps(routes_payload), encoding="utf-8")
     args = ["paper-trade-session", "--routes-json-path", str(routes_path)]
     if ledger_sqlite_path is not OMIT:
         args.extend(["--ledger-sqlite-path", str(ledger_sqlite_path)])
+    if session_report_json_path is not OMIT:
+        args.extend(["--session-report-json-path", str(session_report_json_path)])
     return args
 
 
@@ -1199,8 +1202,10 @@ def test_paper_trade_session_runs_finite_routes_serially_with_deterministic_summ
             assembled_at="2026-08-13T12:01:00+00:00",
         ),
     ]
-
     assert cli.main(_paper_session_args(tmp_path, routes_payload)) == 0
+    assert sorted(path.name for path in tmp_path.iterdir()) == [
+        "paper-session-routes.json"
+    ]
 
     assert len(constructed_risex_adapters) == 2
     assert len(constructed_hedge_adapters) == 2
@@ -1283,6 +1288,131 @@ def test_paper_trade_session_runs_finite_routes_serially_with_deterministic_summ
         "aggregate_paper_net_profit_usd=None\n"
         "ledger_path=None\n"
     )
+
+
+def test_paper_trade_session_writes_explicit_deterministic_report_history_json(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path,
+) -> None:
+    class RecordingRiseXAdapter:
+        name = "RiseX"
+
+    class RecordingHyperliquidAdapter:
+        name = "Hyperliquid"
+
+    def fake_report_runner(**kwargs: object) -> tuple[DecisionResult, object]:
+        route = kwargs["route"]
+        assert isinstance(route, RouteCandidate)
+        snapshot = SimpleNamespace(
+            risex_funding_settlement_at=datetime(2026, 8, 13, 16, 0, tzinfo=UTC)
+        )
+        if route.route_id == "session-started":
+            return (
+                DecisionResult(
+                    route_id=route.route_id,
+                    mode=EvaluationMode.ENTRY,
+                    status=RouteStatus.PAPER_ELIGIBLE,
+                    reasons=(RejectReason.LIVE_GATES_NOT_IMPLEMENTED,),
+                    net_profit_usd=Decimal("4.5"),
+                    entry_ev=SimpleNamespace(
+                        expected_funding_usd=Decimal("7"),
+                        total_fees_usd=Decimal("1"),
+                        simulated_roundtrip_cost_usd=Decimal("1.5"),
+                        net_profit_usd=Decimal("4.5"),
+                    ),
+                    capture_plan=None,
+                    decided_at=kwargs["assembled_at"],
+                ),
+                snapshot,
+            )
+        return (
+            DecisionResult(
+                route_id=route.route_id,
+                mode=EvaluationMode.ENTRY,
+                status=RouteStatus.REJECTED,
+                reasons=(RejectReason.REQUIRED_LIVE_DATA_MISSING,),
+                net_profit_usd=None,
+                entry_ev=None,
+                capture_plan=None,
+                decided_at=kwargs["assembled_at"],
+            ),
+            snapshot,
+        )
+
+    monkeypatch.setattr(cli, "RiseXObservationAdapter", RecordingRiseXAdapter)
+    monkeypatch.setattr(cli, "HyperliquidObservationAdapter", RecordingHyperliquidAdapter)
+    monkeypatch.setattr(cli, "run_real_data_research_route_with_snapshot", fake_report_runner)
+
+    routes_payload = [
+        _paper_session_route(route_id="session-started", capture_id="capture-started"),
+        _paper_session_route(
+            route_id="session-rejected",
+            capture_id="capture-rejected",
+            assembled_at="2026-08-13T12:01:00+00:00",
+        ),
+    ]
+    report_path = tmp_path / "paper-session-report.json"
+    args = _paper_session_args(
+        tmp_path,
+        routes_payload,
+        session_report_json_path=report_path,
+    )
+
+    assert cli.main(args) == 0
+    first_report_text = report_path.read_text(encoding="utf-8")
+    assert cli.main(args) == 0
+    assert report_path.read_text(encoding="utf-8") == first_report_text
+
+    report = json.loads(first_report_text)
+    assert report["report"] == "Paper Trade Session Report"
+    assert report["schema_version"] == 1
+    assert report["session"] == {
+        "ledger_path": None,
+        "route_count": 2,
+    }
+    assert [route["route"]["route_id"] for route in report["routes"]] == [
+        "session-started",
+        "session-rejected",
+    ]
+    assert report["routes"][0]["decision"]["entry_ev"] == {
+        "expected_funding_usd": "7",
+        "net_profit_usd": "4.5",
+        "simulated_roundtrip_cost_usd": "1.5",
+        "total_fees_usd": "1",
+    }
+    assert report["routes"][0]["decision"]["net_profit_usd"] == "4.5"
+    assert report["routes"][0]["paper"]["net_profit_usd"] == "4.5"
+    assert report["routes"][1]["decision"]["entry_ev"] == {
+        "expected_funding_usd": None,
+        "net_profit_usd": None,
+        "simulated_roundtrip_cost_usd": None,
+        "total_fees_usd": None,
+    }
+    assert report["routes"][1]["decision"]["net_profit_usd"] is None
+    assert report["routes"][1]["paper"]["expected_funding_usd"] is None
+    assert report["routes"][1]["paper"]["total_fees_usd"] is None
+    assert report["routes"][1]["paper"]["net_profit_usd"] is None
+    assert report["summary"]["entry_ev_known"] == 1
+    assert report["summary"]["entry_ev_unknown"] == 1
+    assert report["summary"]["paper_expected_funding_known"] == 1
+    assert report["summary"]["paper_expected_funding_unknown"] == 1
+    assert report["summary"]["paper_total_fees_known"] == 1
+    assert report["summary"]["paper_total_fees_unknown"] == 1
+    assert report["summary"]["decision_net_profit_known"] == 1
+    assert report["summary"]["decision_net_profit_unknown"] == 1
+    assert report["summary"]["paper_net_profit_known"] == 1
+    assert report["summary"]["paper_net_profit_unknown"] == 1
+    assert report["summary"]["aggregate_paper_net_profit_usd"] is None
+    assert "paper_net_profit_sum" not in report["summary"]
+    assert "aggregate_paper_pnl_usd" not in report["summary"]
+    assert report["summary"]["ledger_event_sequences"] == [1, 2, 3, 4, 5, 6]
+    assert [event["sequence"] for event in report["ledger_events"]] == [1, 2, 3, 4, 5, 6]
+    assert '"expected_funding_usd": 0' not in first_report_text
+    assert '"total_fees_usd": 0' not in first_report_text
+    assert '"net_profit_usd": 0' not in first_report_text
+
+    capsys.readouterr()
 
 
 def test_paper_trade_session_handles_missing_snapshot_without_paper_events(
