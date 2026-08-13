@@ -68,7 +68,7 @@ RX-045 — Manual One-Route Public Readiness Report remains the previous accepte
 
 ## Current Repository Handoff
 
-RX-048 is reviewer-accepted and finalized on `main` as the latest accepted product/reporting task after RX-047. RX-049 is reviewer-accepted and finalized on `main` as the latest accepted governance/source-of-truth task. RX-048 implements the concrete safe handoff selected by RX-047: an opt-in structured JSON stdout output for the existing RX-045 manual one-route public readiness report.
+RX-048 is reviewer-accepted and finalized on `main` as the latest accepted product/reporting task after RX-047. RX-049 is reviewer-accepted and finalized on `main` as the prior governance/source-of-truth task that prepared RX-050. RX-048 implements the concrete safe handoff selected by RX-047: an opt-in structured JSON stdout output for the existing RX-045 manual one-route public readiness report.
 
 RX-048 reuses the existing public read-only one-route adapter handoff, retained snapshot/report helper, source-aware fee/funding completion, and `evaluate_route()` path, preserves the default one-decision text output and default text public-readiness report, and prepares RX-049 as a narrow post-RX-048 handoff clarification rather than inventing later runtime scope.
 
