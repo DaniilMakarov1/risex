@@ -7,9 +7,16 @@ import json
 import sys
 from collections.abc import Mapping, Sequence
 from datetime import datetime
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from pathlib import Path
 
+from apps.cli.paper_session_payloads import (
+    MAX_PAPER_SESSION_ROUTES as _MAX_PAPER_SESSION_ROUTES,
+    non_empty as _non_empty,
+    paper_session_routes_from_json_path as _paper_session_routes_from_json_path,
+    positive_finite_decimal as _positive_finite_decimal,
+    timezone_aware_datetime as _timezone_aware_datetime,
+)
 from apps.paper_runner.lifecycle import PaperRunResult, run_paper_lifecycle
 from apps.research_runner.real_data import (
     run_real_data_research_route,
@@ -31,31 +38,12 @@ from core.domain.contracts import (
     RouteCandidate,
     VALID_ORDER_SIDES,
     VenueSnapshot,
-    validate_timezone_aware_datetime,
 )
 from core.domain.enums import EvaluationMode, RouteStatus, ValueSource
 from core.pipeline.scan_refresh import run_broad_scan, run_focused_refresh
 from core.venues.hyperliquid import HyperliquidObservationAdapter
 from core.venues.risex import RiseXObservationAdapter
 from storage.sqlite.ledger import SQLiteLedger
-
-_PAPER_SESSION_ROUTE_FIELDS = frozenset(
-    (
-        "route_id",
-        "capture_id",
-        "risex_venue",
-        "risex_symbol",
-        "risex_side",
-        "hedge_venue",
-        "hedge_symbol",
-        "hedge_side",
-        "target_notional_usd",
-        "mode",
-        "assembled_at",
-    )
-)
-_MAX_PAPER_SESSION_ROUTES = 25
-
 
 def _print_decisions(label: str, decisions: tuple[DecisionResult, ...]) -> None:
     print(label)
@@ -79,41 +67,6 @@ def _run_fake_scan_refresh() -> None:
 
     _print_decisions("Broad Scan", broad_scan.decisions)
     _print_decisions("Focused Refresh", focused_refresh.decisions)
-
-
-def _non_empty(value: str) -> str:
-    cleaned = value.strip()
-    if not cleaned:
-        raise argparse.ArgumentTypeError("value must be non-empty")
-    return cleaned
-
-
-def _positive_finite_decimal(value: str) -> Decimal:
-    try:
-        notional = Decimal(value)
-    except InvalidOperation as exc:
-        raise argparse.ArgumentTypeError(
-            "target notional must be a positive finite Decimal"
-        ) from exc
-    if not notional.is_finite() or notional <= Decimal("0"):
-        raise argparse.ArgumentTypeError(
-            "target notional must be a positive finite Decimal"
-        )
-    return notional
-
-
-def _timezone_aware_datetime(value: str) -> datetime:
-    try:
-        parsed = datetime.fromisoformat(value)
-    except ValueError as exc:
-        raise argparse.ArgumentTypeError(
-            "assembled-at must be an ISO 8601 timezone-aware timestamp"
-        ) from exc
-    try:
-        validate_timezone_aware_datetime(parsed, "assembled_at")
-    except ValueError as exc:
-        raise argparse.ArgumentTypeError(str(exc)) from exc
-    return parsed
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -628,108 +581,6 @@ def _print_paper_trade_summary(
     )
     print(f"paper.net_profit_usd={_decimal_or_none(paper_net_profit_usd)}")
     print(f"ledger_path={ledger_path or 'None'}")
-
-
-def _route_string(
-    payload: Mapping[str, object],
-    field_name: str,
-    route_index: int,
-) -> str:
-    value = payload[field_name]
-    if not isinstance(value, str):
-        raise argparse.ArgumentTypeError(
-            f"route {route_index} {field_name} must be a string"
-        )
-    try:
-        return _non_empty(value)
-    except argparse.ArgumentTypeError as exc:
-        raise argparse.ArgumentTypeError(
-            f"route {route_index} {field_name}: {exc}"
-        ) from exc
-
-
-def _paper_session_routes_from_json_path(
-    routes_json_path: str,
-) -> tuple[tuple[RouteCandidate, datetime], ...]:
-    try:
-        raw_routes = json.loads(Path(routes_json_path).read_text(encoding="utf-8"))
-    except OSError as exc:
-        raise argparse.ArgumentTypeError(
-            f"routes-json-path could not be read: {exc}"
-        ) from exc
-    except json.JSONDecodeError as exc:
-        raise argparse.ArgumentTypeError(
-            f"routes-json-path must contain valid JSON: {exc.msg}"
-        ) from exc
-
-    if not isinstance(raw_routes, list):
-        raise argparse.ArgumentTypeError(
-            "routes-json-path must contain a finite JSON array of explicit routes"
-        )
-    if not raw_routes:
-        raise argparse.ArgumentTypeError("routes-json-path route array must be non-empty")
-    if len(raw_routes) > _MAX_PAPER_SESSION_ROUTES:
-        raise argparse.ArgumentTypeError(
-            "routes-json-path route array must contain at most "
-            f"{_MAX_PAPER_SESSION_ROUTES} explicit routes"
-        )
-
-    route_inputs: list[tuple[RouteCandidate, datetime]] = []
-    for route_index, raw_route in enumerate(raw_routes, start=1):
-        if not isinstance(raw_route, Mapping):
-            raise argparse.ArgumentTypeError(f"route {route_index} must be an object")
-
-        field_names = set(raw_route)
-        if field_names != _PAPER_SESSION_ROUTE_FIELDS:
-            missing = sorted(_PAPER_SESSION_ROUTE_FIELDS - field_names)
-            extra = sorted(field_names - _PAPER_SESSION_ROUTE_FIELDS)
-            raise argparse.ArgumentTypeError(
-                f"route {route_index} must contain exactly explicit route fields; "
-                f"missing={_join_or_none(tuple(missing))} "
-                f"extra={_join_or_none(tuple(extra))}"
-            )
-
-        mode = _route_string(raw_route, "mode", route_index)
-        if mode != EvaluationMode.ENTRY.value:
-            raise argparse.ArgumentTypeError(
-                f"route {route_index} mode must be {EvaluationMode.ENTRY.value}"
-            )
-
-        risex_venue = _route_string(raw_route, "risex_venue", route_index)
-        if risex_venue != RiseXObservationAdapter.name:
-            raise argparse.ArgumentTypeError(
-                f"route {route_index} risex_venue must be {RiseXObservationAdapter.name}"
-            )
-        hedge_venue = _route_string(raw_route, "hedge_venue", route_index)
-        if hedge_venue != HyperliquidObservationAdapter.name:
-            raise argparse.ArgumentTypeError(
-                "route "
-                f"{route_index} hedge_venue must be {HyperliquidObservationAdapter.name}"
-            )
-
-        try:
-            route = RouteCandidate(
-                route_id=_route_string(raw_route, "route_id", route_index),
-                capture_id=_route_string(raw_route, "capture_id", route_index),
-                risex_venue=risex_venue,
-                risex_symbol=_route_string(raw_route, "risex_symbol", route_index),
-                risex_entry_side=_route_string(raw_route, "risex_side", route_index),
-                hedge_venue=hedge_venue,
-                hedge_symbol=_route_string(raw_route, "hedge_symbol", route_index),
-                hedge_entry_side=_route_string(raw_route, "hedge_side", route_index),
-                target_notional_usd=_positive_finite_decimal(
-                    _route_string(raw_route, "target_notional_usd", route_index)
-                ),
-            )
-            assembled_at = _timezone_aware_datetime(
-                _route_string(raw_route, "assembled_at", route_index)
-            )
-        except (ValueError, argparse.ArgumentTypeError) as exc:
-            raise argparse.ArgumentTypeError(f"route {route_index}: {exc}") from exc
-
-        route_inputs.append((route, assembled_at))
-
-    return tuple(route_inputs)
 
 
 def _run_one_paper_trade_route(

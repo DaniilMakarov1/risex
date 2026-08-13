@@ -1,7 +1,16 @@
 # Status
 
-- Current branch: `main`.
-- Current task: RX-058 - Local Paper Session Command Payload Parser Fixtures is prepared in `NEXT_TASK.md` and not started.
+- Current branch: `task/rx-058-local-paper-session-command-payload-parser-fixtures`.
+- Current task: RX-058 - Local Paper Session Command Payload Parser Fixtures is implementation-complete and pending reviewer acceptance.
+- RX-058 starting baseline: `758dcbb4eea6bd7f55f2fa65028457f2cf24751a`
+- RX-058 review state: implementation-complete on task branch; not reviewer-accepted until explicit review and finalization on `main`.
+- RX-058 disposition: adds one local-only paper session command payload parser/fixture helper in `apps/cli/paper_session_payloads.py`. The helper normalizes explicit local JSON payload fixtures into the same exact route-list dictionary shape accepted by `paper-trade-session --routes-json-path`, and the existing route-list file loader now delegates to the same validation boundary.
+- RX-058 validation boundary: preserves the RX-055 25-route explicit ENTRY cap, exact route fields, required RiseX/Hyperliquid venues, opposing entry sides, positive finite string notional, and timezone-aware `assembled_at`. Malformed, over-limit, non-ENTRY, wrong-venue, same-side, non-string, non-finite, extra-field, missing-field, or timezone-naive payload fixtures fail before adapter construction or any side-effectful runtime path.
+- RX-058 unknown-value behavior: parser output contains route-list dictionaries only. It adds no economics, decision, paper, summary, ledger, report, aggregate PnL, or unknown-to-zero fields, preserving RX-057 known/unknown/null and count-only report/export boundaries by omission.
+- RX-058 safety boundaries: no session execution from the parser, no adapter construction from the parser, no ledger writes from the parser, no report/history artifact writes from the parser, no Telegram transport, bot token, credentials, webhooks, messaging, alerts, external network calls, live trading, real orders, private/account endpoints, account state/balances, sendable exchange requests, order payloads, execution automation, execution planning, guarded live runner execution, approval-boundary execution, polling, discovery, ranking, watchlists, adapter endpoint changes, storage migrations, replay changes, ledger reconciliation changes, route eligibility mutation, Capture state transition changes, new route statuses/reject reasons, second owner paths, aggregate PnL invention, or unknown-to-zero behavior.
+- RX-058 worker usage: one supervised worker was used for design support before implementation edits. Parent approved the local parser/fixture direction after the worker confirmed it is source-grounded, non-dangerous, one-task/one-branch compliant, preserves accepted baseline versus pending review state, keeps `NEXT_TASK.md` to exactly one task, preserves reviewer-only acceptance, stays local-only, avoids session execution, avoids adapter construction, avoids ledger writes, avoids report artifact writes, preserves the RX-055 25-route explicit ENTRY cap, preserves RX-057 report/export boundaries, preserves known/unknown/null and count-only semantics, avoids aggregate PnL invention, excludes Telegram token/network credentials and all hard-stop categories, avoids discovery/ranking/watchlists/polling/background loops/scheduling/alerts, avoids new statuses/reasons and second owner paths, and preserves Parent ownership.
+- RX-058 preflight: work occurred only in `/Users/daniilmakarov/.codex/worktrees/3c9b/risex-main` on `task/rx-058-local-paper-session-command-payload-parser-fixtures`; before edits, `HEAD`, `main`, and `origin/main` matched `758dcbb4eea6bd7f55f2fa65028457f2cf24751a`, `origin/HEAD` was `origin/main`, the remote was `https://github.com/DaniilMakarov1/risex.git`, and the worktree was clean.
+- RX-059 prepared scope: governance/source-of-truth clarification only after RX-058 reviewer acceptance and finalization. It must inspect the accepted RX-058 parser outcome and current docs, then prepare exactly one next safe handoff if grounded or a narrow Product Owner clarification gate if not.
 - RX-057 starting baseline: `07e09f99db692d90c17dfcef7deea4ea502870df`
 - RX-057 review state: reviewer-accepted after fix-in-same-branch and finalized on `main`.
 - Accepted RX-057 implementation HEAD: `2b83ea0cb9b5975ee7e9d9a04bfc99d31ff20ff2`
@@ -280,7 +289,7 @@
 - Accepted baseline branch: `main`
 - Current accepted `main` metadata/governance task: RX-056.
 - Current accepted `main` product task: RX-057.
-- Current RX task state: RX-058 is prepared in `NEXT_TASK.md` and not started; RX-057 is the latest accepted product/runtime baseline on `main`, and RX-056 is the latest accepted metadata/governance follow-up on `main`.
+- Current RX task state: RX-058 is implementation-complete on its task branch and pending reviewer acceptance; RX-057 is still the latest accepted product/runtime baseline on `main`, RX-056 is still the latest accepted metadata/governance follow-up on `main`, and `NEXT_TASK.md` is prepared for RX-059 after RX-058 review/finalization.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
@@ -327,7 +336,7 @@ RX-040 prepared `NEXT_TASK.md` for RX-041 after RX-040 finalization.
 RX-031 found no additional explicit actionable reviewer feedback in local repo/git evidence or GitHub connector context after RX-030 finalization. RX-031 is accepted metadata-only follow-up work and does not change dashboard or product code.
 RX-041 remains the accepted public account-independent fee-cash completion product task before the later RX-045/RX-048 reporting tasks and completes explicit public account-independent taker fee-rate metadata into entry plus immediate estimated-exit route-notional USD fee cash only inside the existing one-route snapshot path, while preserving fail-closed unknown handling and avoiding live/order/private/account-state scope.
 RX-040 remains the previous accepted product task and preserves public fee-source metadata on unknown fee cash values for source-aware inspection only. It does not add route discovery, ranking, polling, private endpoints, credentials, account balances/state, execution automation, order placement, sendable exchange request construction, ledger writes, fee-cash defaults, or live trading by default.
-`NEXT_TASK.md` is prepared for RX-058 after RX-057 finalization.
+`NEXT_TASK.md` is prepared for RX-059 after RX-058 branch implementation. RX-058 remains pending reviewer acceptance until explicit review and finalization on `main`.
 
 ## Completed accepted tasks
 
@@ -1222,4 +1231,4 @@ RX-040 remains the previous accepted product task and preserves public fee-sourc
 
 ## Next recommended task
 
-RX-058 - Local Paper Session Command Payload Parser Fixtures.
+RX-059 - Post-Local Paper Session Payload Parser Handoff Clarification.

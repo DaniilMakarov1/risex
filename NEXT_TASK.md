@@ -2,29 +2,27 @@
 
 ## Task ID
 
-RX-058 - Local Paper Session Command Payload Parser Fixtures
+RX-059 - Post-Local Paper Session Payload Parser Handoff Clarification
 
 ## Objective
 
-After RX-057 reviewer acceptance and finalization, add a local-only parser/fixture layer for paper session command payloads suitable for later Telegram command/display adaptation.
+After RX-058 reviewer acceptance and finalization, inspect the accepted local paper session command payload parser outcome and current source-of-truth docs to identify exactly one next non-dangerous fake-money paper-trader handoff if one is clearly grounded.
 
-The parser must convert explicit local test payloads into the existing `paper-trade-session` route-list input shape without running a session, calling adapters, writing ledgers, writing report artifacts, sending messages, using credentials, or performing network behavior.
-
-The task must preserve the RX-055 route-list cap of 25 exact explicit `ENTRY` routes, preserve RX-057 report/history export boundaries, preserve known/unknown/null semantics, and avoid any Telegram transport or hard-stop scope.
+If no concrete safe next handoff is grounded, record that conclusion and prepare one narrow Product Owner clarification gate instead of inventing runtime, transport, automation, live, order, private/account, credential, ledger replay/reconciliation, storage migration, or second-owner-path scope.
 
 ## Starting baseline
 
-Start from reviewer-accepted `main` after RX-057 is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
+Start from reviewer-accepted `main` after RX-058 is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
 
 ## Branch
 
-Create and work on `task/rx-058-local-paper-session-command-payload-parser-fixtures`. Do not implement on `main`.
+Create and work on `task/rx-059-post-local-paper-session-payload-parser-handoff-clarification`. Do not implement on `main`.
 
 ## Before changing files
 
-Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, the remote is wrong, the branch is wrong, `origin/HEAD` is not `origin/main`, `HEAD` does not match the accepted starting baseline, RX-057 is not explicitly reviewer-accepted and finalized on `main`, or unrelated branch work would be mixed into this task.
+Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, the remote is wrong, the branch is wrong, `origin/HEAD` is not `origin/main`, `HEAD` does not match the accepted starting baseline, RX-058 is not explicitly reviewer-accepted and finalized on `main`, or unrelated branch work would be mixed into this task.
 
-If Control Tower selected this task autonomously, verify from the source-of-truth repository docs that the task is non-dangerous, manual, local-only, fake-money paper-trader testing support. Stop before edits unless explicit user approval exists for any task involving live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, or financially dangerous actions.
+If Control Tower selected this task autonomously, verify from the source-of-truth repository docs that the task is non-dangerous, governance/source-of-truth only, and grounded in the accepted fake-money paper-trader testing-support trail. Stop before edits unless explicit user approval exists for any task involving live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, or financially dangerous actions.
 
 Read:
 
@@ -41,18 +39,21 @@ Read:
 
 ## Allowed scope
 
-- Add a local-only deterministic parser/fixture helper for future paper session command payload adaptation.
-- Convert explicit local test payloads into the existing `paper-trade-session` route-list input shape.
-- Reuse or preserve the accepted `paper-trade-session` route validation boundary, including the 25-route explicit `ENTRY` cap.
-- Add focused tests for accepted payload parsing and malformed payload rejection before session execution, adapter construction, ledger writes, or report writes.
-- Update source-of-truth docs and `NEXT_TASK.md` with exactly one next task after RX-058.
+- Inspect the accepted RX-058 parser outcome and current source-of-truth docs.
+- Record whether exactly one next non-dangerous fake-money paper-trader handoff is clearly grounded.
+- Prepare exactly one next task in `NEXT_TASK.md`.
+- Update source-of-truth docs only as needed: likely `README.md`, `ARCHITECTURE.md`, `PRODUCT_INVARIANTS.md`, `IMPLEMENTATION_PLAN.md`, `STATUS.md`, `DECISIONS.md`, and `NEXT_TASK.md`.
+- Keep RX-058 accepted versus pending state accurate according to explicit reviewer evidence.
 
 ## Forbidden scope
 
+- No product/runtime behavior changes.
+- No CLI output behavior changes.
+- No parser behavior changes.
 - No Telegram transport.
 - No Telegram bot tokens.
 - No webhooks.
-- No external Telegram network calls.
+- No external network calls.
 - No alerts or messaging behavior.
 - No credentials.
 - No API keys or secrets.
@@ -72,17 +73,12 @@ Read:
 - No execution planning.
 - No guarded live runner execution.
 - No approval-boundary execution.
-- No session execution from the parser.
-- No adapter construction from the parser.
-- No ledger writes from the parser.
-- No report/history artifact writes from the parser.
 - No route discovery.
 - No route ranking.
 - No watchlists.
 - No polling.
 - No background loops.
 - No scheduling.
-- No alerts.
 - No automatic refresh.
 - No adapter endpoint changes.
 - No fee, funding, VWAP/liquidity, basis, spread, price-impact, slippage, max-level, hidden-buffer, or safety-margin rule changes.
@@ -103,19 +99,18 @@ Read:
 
 ## Implementation requirements
 
-- Treat the task as the single next product/runtime testing-support task.
-- Preserve reviewer-only acceptance: RX-057 branch work is not accepted until explicit reviewer acceptance and finalization on `main`.
-- Use the accepted RX-057 outcome, accepted RX-055/RX-056 baseline, current source-of-truth docs, and Product Owner/Control Tower direction recorded in the repository trail rather than chat memory.
-- Keep the parser local-only and deterministic.
-- Keep parser output limited to the existing route-list input shape consumed by `paper-trade-session`.
-- Preserve the existing route-list validation boundary and 25-route exact explicit `ENTRY` cap.
-- Do not run `paper-trade-session`, instantiate adapters, write ledgers, write report/history artifacts, or call network behavior from the parser.
-- Keep Telegram as later interface direction only. This task may prepare command payload fixtures for later display/command adaptation, but it must not add transport, tokens, credentials, network, webhooks, alerts, or messaging.
-- Control Tower autonomous selection is allowed only because this is non-dangerous fake-money paper-trader testing support grounded in repository docs.
+- Treat the task as governance/source-of-truth only.
+- Preserve reviewer-only acceptance: RX-058 branch work is not accepted until explicit reviewer acceptance and finalization on `main`.
+- Use the accepted RX-058 outcome, accepted RX-055 through RX-057 baselines, current source-of-truth docs, and Product Owner/Control Tower direction recorded in the repository trail rather than chat memory.
+- If exactly one concrete safe next fake-money paper-trader handoff is grounded, prepare that one handoff in `NEXT_TASK.md`.
+- If no such handoff is grounded, prepare one narrow Product Owner clarification gate.
+- Keep Telegram as later interface direction only unless an exact future task is explicitly approved through the repository gates. Do not add transport, tokens, credentials, network, webhooks, alerts, or messaging.
+- Keep `NEXT_TASK.md` to exactly one task and require `python3 scripts/validate_next_task.py` to pass.
+- Control Tower autonomous selection is allowed only because this is non-dangerous governance/source-of-truth work grounded in repository docs.
 - Live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, and financially dangerous actions require explicit user approval before task selection, creation, execution, fixing, or finalization.
 - Worker policy: one supervised worker required.
-- The worker is required for design support before implementation edits because this task touches product/runtime CLI-adjacent parsing behavior and future interface boundaries.
-- At DESIGN CHECKPOINT, the worker must answer whether the parser/fixture direction is source-grounded, non-dangerous, one-task/one-branch compliant, preserves accepted baseline versus pending review state, keeps `NEXT_TASK.md` to exactly one task, preserves reviewer-only acceptance, stays local-only, avoids session execution, avoids adapter construction, avoids ledger writes, avoids report artifact writes, preserves the RX-055 25-route explicit `ENTRY` cap, preserves RX-057 report/export boundaries, preserves known/unknown/null and count-only semantics, avoids aggregate PnL invention, excludes Telegram token/network credentials and all hard-stop categories, avoids discovery/ranking/watchlists/polling/background loops/scheduling/alerts, avoids new statuses/reasons and second owner paths, and preserves Parent ownership.
+- The worker is required for design support before implementation edits because this task changes repository-governance handoff state after a product/runtime testing-support task.
+- At DESIGN CHECKPOINT, the worker must answer whether the proposed handoff is source-grounded, non-dangerous, one-task/one-branch compliant, preserves accepted baseline versus pending review state, keeps `NEXT_TASK.md` to exactly one task, preserves reviewer-only acceptance, avoids runtime behavior changes, excludes Telegram token/network credentials and all hard-stop categories, avoids discovery/ranking/watchlists/polling/background loops/scheduling/alerts, avoids execution automation/planning, avoids live/order/private/account scope, avoids ledger replay/reconciliation/storage migration, avoids new statuses/reasons and second owner paths, and preserves Parent ownership.
 - The worker must stop at DESIGN CHECKPOINT before implementation edits and wait for Parent approval or steering before continuing.
 - The worker must also stop at CODE CHECKPOINT, TEST CHECKPOINT, and VALIDATION CHECKPOINT if it continues beyond design support.
 - Parent owns steering, final diff review, validation, commit, push, and final report.
@@ -124,8 +119,6 @@ Read:
 
 ## Required files
 
-- Likely `apps/cli/main.py` or a narrow app-local parser module only if strictly necessary
-- Likely `tests/unit/test_cli_main.py` or a focused parser test file
 - Likely `README.md`
 - Likely `ARCHITECTURE.md`
 - Likely `PRODUCT_INVARIANTS.md`
@@ -133,18 +126,12 @@ Read:
 - Likely `STATUS.md`
 - Likely `DECISIONS.md`
 - `NEXT_TASK.md`
-- Other files only if strictly necessary for the local-only parser/fixture layer
+- Other source-of-truth docs only if strictly necessary
 
 ## Required tests
 
 - `python3 scripts/validate_next_task.py`
-- Focused tests covering accepted local payload parsing into the existing route-list shape.
-- Focused tests covering malformed payload rejection before adapter/session construction.
-- Focused tests proving the parser does not run sessions, construct adapters, write ledgers, or write report artifacts.
-- Focused tests preserving the RX-055 25-route explicit `ENTRY` cap.
-- Focused tests proving unknown/null values do not become zero.
-- Focused tests proving aggregate paper PnL is not invented.
-- Focused doc/search checks proving no Telegram/live/order/private/account hard-stop scope was introduced.
+- Focused docs/search checks proving no Telegram/live/order/private/account hard-stop scope was introduced.
 - Focused search checks proving no route discovery, ranking, watchlists, polling, background loops, scheduling, alerts, storage migration, replay, reconciliation, or second owner path was introduced.
 - `python3 -m pytest tests/invariant`
 - `python3 -m pytest`
