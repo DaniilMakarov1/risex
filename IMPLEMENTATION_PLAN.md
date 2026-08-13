@@ -23,7 +23,7 @@ RX-055 is reviewer-accepted and finalized on `main` as the manual serial fake-mo
 
 RX-056 is reviewer-accepted and finalized on `main` as governance/source-of-truth only. It records that the accepted RX-055 outcome plus Product Owner and Control Tower direction clearly ground exactly one next non-dangerous fake-money paper-trader handoff: manual local JSON report/history export for serial paper sessions.
 
-RX-057 is implementation-complete on `task/rx-057-manual-paper-session-report-history-export` and pending reviewer acceptance. It adds an explicit local `--session-report-json-path` JSON report/history export for the existing `paper-trade-session` command, while preserving no artifact writes when the path is absent and keeping the export downstream of accepted RX-055 session outcomes and paper ledger events.
+RX-057 is reviewer-accepted and finalized on `main` as the manual paper session report/history export. It adds an explicit local `--session-report-json-path` JSON report/history export for the existing `paper-trade-session` command, while preserving no artifact writes when the path is absent and keeping the export downstream of accepted RX-055 session outcomes and paper ledger events.
 
 ## Completed Accepted Work
 
@@ -68,6 +68,7 @@ RX-057 is implementation-complete on `task/rx-057-manual-paper-session-report-hi
 - RX-054 recorded Product Owner clarification that the fake-money paper trader path should continue beyond the manual one-route bridge toward serial strategy testing, recorded Telegram as later interface direction only, prepared RX-055 as one manual serial paper session runner handoff, and did not change product/runtime behavior.
 - RX-055 added one manual `paper-trade-session` fake-money serial runner for an operator-supplied local JSON route-list file capped at 25 exact explicit ENTRY routes, preserving existing decision, paper lifecycle, and ledger ownership paths.
 - RX-056 recorded that the accepted RX-055 outcome plus Product Owner and Control Tower direction clearly ground exactly one next non-dangerous fake-money paper-trader handoff, manual local JSON report/history export for serial paper sessions, and did not change product/runtime behavior.
+- RX-057 added one explicit local JSON report/history export for `paper-trade-session` results, requiring `--session-report-json-path` before writing any report artifact and preserving existing session owner paths, count-only/unknown-null semantics, and no aggregate PnL invention.
 - RX-Q001 and RX-Q002 added repository workflow, handoff validation, and supervised-worker governance.
 
 ## Accepted Offline Safety-Hardening Detour
@@ -78,11 +79,15 @@ The detour's purpose is to keep future live-adjacent work honest: funding settle
 
 ## Latest Accepted Product Task
 
+RX-057 - Manual Paper Session Report History Export is reviewer-accepted and finalized on `main`. It adds one explicit local JSON report/history export for the existing `paper-trade-session` command. The artifact is written only when the operator supplies `--session-report-json-path`, and its payload is built from the existing validated route inputs, serial session outcomes, and paper ledger events already produced through RX-055 owner paths. It preserves count-only known/unknown summary fields, string-or-null economics values, and explicit `aggregate_paper_net_profit_usd = null`.
+
+## Previous Product Task
+
 RX-055 - Manual Serial Paper Session Runner is reviewer-accepted and finalized on `main`. It adds one explicit `paper-trade-session` command for an operator-supplied local JSON route-list file capped at 25 exact explicit RiseX plus Hyperliquid ENTRY routes. It validates the whole list before adapter construction, runs each route serially through `run_real_data_research_route_with_snapshot()` and the shared `evaluate_route(route, snapshot, mode)` path, delegates fake paper behavior to `run_paper_lifecycle()` when a public snapshot is available, writes fake paper events only through existing accounting ledger ownership, optionally persists through explicit local SQLite only, and prints deterministic per-route output plus count-only session summaries without aggregating PnL or turning unknowns into zero.
 
-## Current Product Task Branch
+## Current Next Task
 
-RX-057 - Manual Paper Session Report History Export is implementation-complete on the task branch and pending reviewer acceptance. It adds one explicit `paper-trade-session --session-report-json-path` local JSON artifact writer. The artifact is written only when the operator supplies that path, and its payload is built from the existing validated route inputs, serial session outcomes, and paper ledger events already produced through RX-055 owner paths.
+RX-058 - Local Paper Session Command Payload Parser Fixtures is prepared in `NEXT_TASK.md` and not started.
 
 ## Previous Product Baseline
 
@@ -110,13 +115,13 @@ RX-053 is reviewer-accepted and finalized on `main` as the accepted one-route pr
 
 RX-054 is reviewer-accepted and finalized on `main` as the accepted governance/source-of-truth task before RX-056. It inspects the accepted RX-053 bridge outcome, records Product Owner clarification to continue toward serial fake-money paper strategy testing, records Telegram as later interface direction only, and prepares RX-055 Manual Serial Paper Session Runner as exactly one next non-dangerous handoff. RX-054 changes no product/runtime behavior.
 
-RX-055 is reviewer-accepted and finalized on `main` as the latest accepted product/runtime task. It adds one explicit manual `paper-trade-session` command for a local JSON route-list file capped at 25 exact explicit ENTRY routes, reuses the existing public one-route decision path, delegates fake paper handling to the existing fake paper lifecycle, keeps ledger writes inside existing accounting ownership, preserves unknown economics as count-only known/unknown summary fields, and keeps aggregate PnL as `None`.
+RX-055 is reviewer-accepted and finalized on `main` as the accepted product/runtime task before RX-057. It adds one explicit manual `paper-trade-session` command for a local JSON route-list file capped at 25 exact explicit ENTRY routes, reuses the existing public one-route decision path, delegates fake paper handling to the existing fake paper lifecycle, keeps ledger writes inside existing accounting ownership, preserves unknown economics as count-only known/unknown summary fields, and keeps aggregate PnL as `None`.
 
 RX-056 is reviewer-accepted and finalized on `main` as the latest accepted governance/source-of-truth task. It inspects the accepted RX-055 serial paper session runner, current source-of-truth docs, Product Owner direction toward serial fake-money paper strategy testing, and Control Tower review direction. It finds that exactly one next implementation handoff is grounded after RX-055: a manual local JSON report/history export for `paper-trade-session` results using explicit local output paths and existing session outcomes or paper ledger events only. The handoff is narrow test-enabling infrastructure for later Telegram command/display adaptation, but it must not add Telegram transport, bot tokens, webhooks, messaging, network calls, discovery, polling, execution automation, live/order/private/account, ledger replay/reconciliation, storage-migration, second-owner-path, or unknown-to-zero scope.
 
-RX-057 is implementation-complete on the task branch and pending reviewer acceptance. It implements the RX-056 handoff as one explicit local JSON report/history export for the existing manual session command. Implementation completion is not acceptance; RX-055 remains the latest accepted product/runtime task on `main` until reviewer acceptance and finalization.
+RX-057 is reviewer-accepted and finalized on `main` as the latest accepted product/runtime reporting task. It implements the RX-056 handoff as one explicit local JSON report/history export for the existing manual session command and preserves RX-055 session ownership, no-write-without-path behavior, count-only summaries, unknown/null semantics, and explicit no aggregate PnL.
 
-## Remaining Gated Roadmap After RX-057 Implementation
+## Remaining Gated Roadmap After RX-057 Finalization
 
 Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. RX-057 implementation prepares exactly one next local Telegram-ready command payload parsing handoff and does not authorize any additional trading, execution automation, execution planning, polling, ranking, discovery, ledger/storage/replay change, Telegram transport, credentials, messaging, alerts, webhooks, or live-order roadmap stage.
 

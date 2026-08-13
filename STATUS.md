@@ -1,9 +1,11 @@
 # Status
 
-- Current branch: `task/rx-057-manual-paper-session-report-history-export`.
-- Current task: RX-057 - Manual Paper Session Report History Export is implementation-complete on the task branch and pending reviewer acceptance.
+- Current branch: `main`.
+- Current task: RX-058 - Local Paper Session Command Payload Parser Fixtures is prepared in `NEXT_TASK.md` and not started.
 - RX-057 starting baseline: `07e09f99db692d90c17dfcef7deea4ea502870df`
-- RX-057 review state: implementation-complete on the task branch; not accepted until explicit reviewer acceptance and finalization on `main`.
+- RX-057 review state: reviewer-accepted after fix-in-same-branch and finalized on `main`.
+- Accepted RX-057 implementation HEAD: `2b83ea0cb9b5975ee7e9d9a04bfc99d31ff20ff2`
+- RX-057 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
 - RX-057 disposition: adds one explicit `paper-trade-session --session-report-json-path` local JSON report/history export. The command writes no report/history artifact unless the operator supplies that output path. The export is built from already-validated route inputs, retained serial session decisions/snapshots, fake paper lifecycle outcomes, and paper ledger events produced through the existing RX-055 session owner paths.
 - RX-057 unknown-value behavior: Entry EV, paper expected funding, paper total fees, decision net profit, and paper net profit remain string-or-null values in JSON. Unknown values remain `null`, count-only known/unknown summary fields are preserved, and aggregate paper PnL remains explicitly `null` rather than inferred or summed.
 - RX-057 safety boundaries: no Telegram transport, bot token, credentials, webhooks, messaging, alerts, external Telegram network calls, live trading, real orders, private/account endpoints, account state/balances, account-tier assumptions, sendable exchange requests, order payloads, execution automation, execution planning, guarded live runner execution, approval-boundary execution, polling, discovery, ranking, watchlists, adapter endpoint changes, storage migrations, replay changes, ledger reconciliation changes, route eligibility mutation, Capture state transition changes, new route statuses/reject reasons, second owner paths, aggregate PnL invention, or unknown-to-zero behavior.
@@ -40,9 +42,9 @@
 - RX-054 safety boundaries: no product/runtime code changes, CLI behavior changes, live trading, real orders, private/account endpoints, credentials, account state/balances, account-tier assumptions, sendable exchange requests, order payloads, execution automation, execution planning, guarded live runner execution, approval-boundary execution, polling, discovery, ranking, watchlists, Telegram transport, bot tokens, adapter endpoint changes, storage migrations, replay changes, ledger reconciliation changes, route eligibility mutation, Capture state transition changes, new route statuses/reject reasons, second owner paths, or unknown-to-zero behavior.
 - RX-054 worker usage: one supervised worker was used for design support before implementation edits. Parent approved the narrow docs-only handoff direction after the worker confirmed RX-055 is source-grounded only as a manual finite serial extension of RX-053, non-dangerous, one-task/one-branch compliant, preserves accepted baseline and reviewer-only acceptance, keeps `NEXT_TASK.md` to exactly one task, excludes hard-stop categories including Telegram token/network credentials, avoids discovery/ranking/watchlists/polling/background loops/scheduling/alerts, preserves unknown-as-missing behavior, avoids new statuses/reasons and second owner paths, and preserves Parent ownership.
 - RX-054 preflight: work occurred only in `/Users/daniilmakarov/.codex/worktrees/8ab5/risex-main` on `task/rx-054-post-manual-paper-bridge-handoff-clarification`; before edits, `HEAD`, `main`, `origin/main`, and the task branch matched `14e61bc790ea16d5e6cd489ade089abf2d228d6f`, `origin/HEAD` was `origin/main`, the remote was `https://github.com/DaniilMakarov1/risex.git`, and the worktree was clean.
-- RX-055 is the latest reviewer-accepted product/runtime task on `main`; RX-056 is the latest reviewer-accepted governance/source-of-truth task on `main`.
+- RX-057 is the latest reviewer-accepted product/runtime task on `main`; RX-056 is the latest reviewer-accepted governance/source-of-truth task on `main`.
 - Current accepted `main` metadata/governance task: RX-056.
-- Current accepted `main` product task: RX-055.
+- Current accepted `main` product task: RX-057.
 - Previous accepted task branch state follows for historical context.
 - RX-052 task branch: reviewer-accepted and finalized on `main`.
 - RX-052 starting baseline: `e125065a8b43b38ebd4031f66097eb736fc6a717`
@@ -277,8 +279,8 @@
 - Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
 - Current accepted `main` metadata/governance task: RX-056.
-- Current accepted `main` product task: RX-055.
-- Current RX task state: RX-057 is implementation-complete on the task branch and pending reviewer acceptance; RX-055 is the latest accepted product/runtime baseline on `main`, RX-056 is the latest accepted metadata/governance follow-up on `main`, and `NEXT_TASK.md` is prepared for RX-058.
+- Current accepted `main` product task: RX-057.
+- Current RX task state: RX-058 is prepared in `NEXT_TASK.md` and not started; RX-057 is the latest accepted product/runtime baseline on `main`, and RX-056 is the latest accepted metadata/governance follow-up on `main`.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
@@ -318,14 +320,14 @@ RX-050 is the accepted metadata/governance follow-up before RX-051 on `main`. It
 RX-051 is the accepted metadata/governance follow-up before RX-052 on `main`. It records repository instruction/source-of-truth hygiene, removes the one stale tracked cross-project wording by rephrasing it generically, confirms no repo-local instruction directory or tracked stale generated artifacts, prepares RX-052 as the single next clarification handoff, and changes no product/runtime behavior.
 RX-052 is the accepted metadata/governance follow-up before RX-054 on `main`. It records Product Owner clarification that the next product path is a working fake-money paper trader system before live trading is considered, prepares RX-053 as one manual fake-money paper-trader bridge handoff, and does not change product/runtime behavior.
 RX-053 is the accepted product/runtime task before RX-055 on `main`. It adds one explicit manual `paper-trade-route` fake-money bridge from one public one-route ENTRY decision into the existing fake paper lifecycle and append-only ledger, with optional explicit local SQLite persistence through the existing SQLite ledger contract. It does not add live trading, real orders, private/account endpoints, credentials, account state, sendable exchange requests, order payloads, execution automation, execution planning, polling, discovery, ranking, watchlists, new statuses/reasons, second owner paths, or unknown-to-zero behavior.
-RX-054 is the latest accepted metadata/governance follow-up on `main`. It records Product Owner clarification that the fake-money paper trader path should continue beyond the manual one-route bridge toward serial strategy testing, records Telegram as later interface direction only, prepares RX-055 as one manual serial paper session runner handoff, and does not change product/runtime behavior.
-RX-055 is the latest accepted product/runtime task on `main`. It adds one explicit manual `paper-trade-session` command for an operator-supplied local JSON route-list file capped at 25 exact explicit ENTRY routes, reuses the existing public one-route decision path, delegates fake paper handling to the existing paper lifecycle, writes only through existing ledger ownership, preserves unknown values as count-only known/unknown summary fields, and does not add Telegram, live/order/private/account, discovery/ranking/polling/watchlist, execution-planning, storage-migration, replay/reconciliation, new-status/reason, second-owner-path, or unknown-to-zero behavior.
+RX-054 is the accepted metadata/governance follow-up before RX-056 on `main`. It records Product Owner clarification that the fake-money paper trader path should continue beyond the manual one-route bridge toward serial strategy testing, records Telegram as later interface direction only, prepares RX-055 as one manual serial paper session runner handoff, and does not change product/runtime behavior.
+RX-055 is the accepted product/runtime task before RX-057 on `main`. It adds one explicit manual `paper-trade-session` command for an operator-supplied local JSON route-list file capped at 25 exact explicit ENTRY routes, reuses the existing public one-route decision path, delegates fake paper handling to the existing paper lifecycle, writes only through existing ledger ownership, preserves unknown values as count-only known/unknown summary fields, and does not add Telegram, live/order/private/account, discovery/ranking/polling/watchlist, execution-planning, storage-migration, replay/reconciliation, new-status/reason, second-owner-path, or unknown-to-zero behavior.
 RX-041 prepared `NEXT_TASK.md` for RX-042 after RX-041 finalization.
 RX-040 prepared `NEXT_TASK.md` for RX-041 after RX-040 finalization.
 RX-031 found no additional explicit actionable reviewer feedback in local repo/git evidence or GitHub connector context after RX-030 finalization. RX-031 is accepted metadata-only follow-up work and does not change dashboard or product code.
 RX-041 remains the accepted public account-independent fee-cash completion product task before the later RX-045/RX-048 reporting tasks and completes explicit public account-independent taker fee-rate metadata into entry plus immediate estimated-exit route-notional USD fee cash only inside the existing one-route snapshot path, while preserving fail-closed unknown handling and avoiding live/order/private/account-state scope.
 RX-040 remains the previous accepted product task and preserves public fee-source metadata on unknown fee cash values for source-aware inspection only. It does not add route discovery, ranking, polling, private endpoints, credentials, account balances/state, execution automation, order placement, sendable exchange request construction, ledger writes, fee-cash defaults, or live trading by default.
-`NEXT_TASK.md` is prepared for RX-058 after RX-057 reviewer acceptance and finalization.
+`NEXT_TASK.md` is prepared for RX-058 after RX-057 finalization.
 
 ## Completed accepted tasks
 
@@ -384,6 +386,12 @@ RX-040 remains the previous accepted product task and preserves public fee-sourc
 - RX-049 — Post-RX-048 Public Live-Readiness Handoff Clarification
 - RX-050 — Product Owner Post-RX-048 Public Runtime Direction Gate
 - RX-051 — Repository Instruction Hygiene And Stale Cross-Project Reference Audit
+- RX-052 — Product Owner Concrete Post-RX-048 Public Runtime Handoff Clarification
+- RX-053 — Manual One-Route Public Paper Trader Bridge
+- RX-054 — Post-Manual Paper Bridge Handoff Clarification
+- RX-055 — Manual Serial Paper Session Runner
+- RX-056 — Post-Serial Paper Session Handoff Clarification
+- RX-057 — Manual Paper Session Report History Export
 
 ## Current architecture status
 
@@ -504,25 +512,24 @@ RX-040 remains the previous accepted product task and preserves public fee-sourc
 - RX-054 is reviewer-accepted and finalized on `main`.
 - RX-055 is reviewer-accepted and finalized on `main`.
 - RX-056 is reviewer-accepted and finalized on `main`.
-- RX-057 is implementation-complete on the task branch and pending reviewer acceptance.
-- The next recommended task is RX-058 Local Paper Session Command Payload Parser Fixtures after RX-057 reviewer acceptance and finalization.
+- RX-057 is reviewer-accepted and finalized on `main`.
+- The next recommended task is RX-058 Local Paper Session Command Payload Parser Fixtures.
 - The RX-032 authorization does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - RX-033 autonomy does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized and accepted.
 
-## Tests last reported for RX-055 branch
+## Tests last reported for RX-057 branch
 
-- `python3 -m pytest tests/unit/test_cli_main.py`: `75 passed in 0.14s`
-- `python3 -m pytest tests/unit/test_cli_main.py -k 'paper_trade_session'`: `19 passed, 56 deselected in 0.08s`
+- `python3 -m pytest tests/unit/test_cli_main.py -k 'paper_trade_session'`: `20 passed`
 - `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
-- `python3 -m pytest tests/invariant`: `37 passed in 0.28s`
-- `python3 -m pytest`: `693 passed in 0.96s`
+- `python3 -m pytest tests/invariant`: `37 passed`
+- `python3 -m pytest`: `694 passed`
 - `python3 -m compileall apps core storage tests scripts`: exit 0
 - `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
 - Forbidden cross-project literal search across tracked and hidden non-.git files: no matches; exit 1
 - `git diff --check`: exit 0
 - `git diff --cached --check`: exit 0
-- `git status --short`: modified `ARCHITECTURE.md`, `DECISIONS.md`, `IMPLEMENTATION_PLAN.md`, `NEXT_TASK.md`, `PRODUCT_INVARIANTS.md`, `README.md`, `STATUS.md`, `apps/cli/main.py`, and `tests/unit/test_cli_main.py`
+- `git status --short`: clean on task branch before finalization
 
 ## Tests last reported for RX-053 branch
 
@@ -1211,7 +1218,7 @@ RX-040 remains the previous accepted product task and preserves public fee-sourc
 - RX-054 is governance/source-of-truth clarification only and reviewer-accepted on `main`. It records Product Owner clarification toward serial fake-money paper strategy testing, records Telegram as later interface direction only, prepares RX-055 as one manual serial paper session runner handoff, and does not change product/runtime behavior.
 - RX-055 is manual fake-money paper runtime only and reviewer-accepted on `main`. It adds one explicit `paper-trade-session` command for a capped finite local JSON route list, reuses existing public ENTRY decision and paper lifecycle paths, preserves unknowns as count-only summaries, and does not add Telegram, live/order/private/account, discovery/ranking/polling/watchlist, execution-planning, storage-migration, replay/reconciliation, status/reason, second-owner-path, or unknown-to-zero behavior.
 - RX-056 is governance/source-of-truth clarification only and reviewer-accepted on `main`. It records that the accepted RX-055 baseline plus Product Owner and Control Tower direction clearly ground one next safe fake-money paper-trader handoff: manual local JSON report/history export for `paper-trade-session` results, without changing product/runtime behavior.
-- RX-057 is implementation-complete on the task branch and pending reviewer acceptance. It adds one explicit local JSON report/history export for `paper-trade-session` results, requires `--session-report-json-path` before writing any report artifact, preserves existing session owner paths and count-only/unknown-null semantics, and does not add Telegram transport, live/order/private/account, discovery/ranking/polling/watchlist, execution-planning, storage-migration, replay/reconciliation, status/reason, second-owner-path, aggregate-PnL, or unknown-to-zero behavior.
+- RX-057 is manual fake-money paper runtime/reporting only and reviewer-accepted on `main`. It adds one explicit local JSON report/history export for `paper-trade-session` results, requires `--session-report-json-path` before writing any report artifact, preserves existing session owner paths and count-only/unknown-null semantics, and does not add Telegram transport, live/order/private/account, discovery/ranking/polling/watchlist, execution-planning, storage-migration, replay/reconciliation, status/reason, second-owner-path, aggregate-PnL, or unknown-to-zero behavior.
 
 ## Next recommended task
 
