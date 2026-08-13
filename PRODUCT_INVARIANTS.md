@@ -135,6 +135,8 @@ The manual public paper-trader bridge may start fake paper lifecycle only downst
 
 A manual serial paper session runner may aggregate only deterministic route outcomes and counts from a finite operator-supplied explicit route list. It must not discover, rank, poll, schedule, alert, loop in the background, read private/account state, construct order material, or automate execution. Missing snapshot, Entry EV, funding, fee, decision net profit, or paper PnL values must remain missing in route output and session summaries; session aggregates must not turn unknown values into zero, success, or profitability.
 
+The RX-055 manual serial command accepts only a non-empty finite local JSON array of exact route objects. Discovery-style, ranking-style, watchlist-style, polling-style, missing, empty, malformed, extra-field, non-ENTRY, non-opposing-side, non-finite-notional, or timezone-naive route-list inputs fail before adapter construction. Session summaries are count-only for outcomes and known-versus-unknown values; aggregate paper PnL remains `None`.
+
 Allowed value sources are exactly:
 
 - `DOCUMENTED`

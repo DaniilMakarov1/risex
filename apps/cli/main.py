@@ -8,6 +8,7 @@ import sys
 from collections.abc import Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
+from pathlib import Path
 
 from apps.paper_runner.lifecycle import PaperRunResult, run_paper_lifecycle
 from apps.research_runner.real_data import (
@@ -18,7 +19,7 @@ from apps.research_runner.fake_data import (
     build_fake_focused_refresh_observations,
     build_fake_route_candidates_and_observations,
 )
-from core.accounting.ledger import InMemoryLedger, LedgerEvent
+from core.accounting.ledger import InMemoryLedger, Ledger, LedgerEvent
 from core.domain.contracts import (
     DecisionResult,
     EstimatedValue,
@@ -32,6 +33,22 @@ from core.pipeline.scan_refresh import run_broad_scan, run_focused_refresh
 from core.venues.hyperliquid import HyperliquidObservationAdapter
 from core.venues.risex import RiseXObservationAdapter
 from storage.sqlite.ledger import SQLiteLedger
+
+_PAPER_SESSION_ROUTE_FIELDS = frozenset(
+    (
+        "route_id",
+        "capture_id",
+        "risex_venue",
+        "risex_symbol",
+        "risex_side",
+        "hedge_venue",
+        "hedge_symbol",
+        "hedge_side",
+        "target_notional_usd",
+        "mode",
+        "assembled_at",
+    )
+)
 
 
 def _print_decisions(label: str, decisions: tuple[DecisionResult, ...]) -> None:
@@ -209,6 +226,27 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Optional explicit local SQLite ledger path for fake paper events.",
     )
     paper_trade_route.set_defaults(handler=_run_paper_trade_route)
+
+    paper_trade_session = subparsers.add_parser(
+        "paper-trade-session",
+        help=(
+            "Evaluate a finite explicit route-list file serially and run fake "
+            "paper lifecycle attempts."
+        ),
+    )
+    paper_trade_session.add_argument(
+        "--routes-json-path",
+        required=True,
+        type=_non_empty,
+        help="Local JSON file containing a finite explicit route array.",
+    )
+    paper_trade_session.add_argument(
+        "--ledger-sqlite-path",
+        default=None,
+        type=_non_empty,
+        help="Optional explicit local SQLite ledger path for fake paper events.",
+    )
+    paper_trade_session.set_defaults(handler=_run_paper_trade_session)
 
     return parser
 
@@ -580,6 +618,182 @@ def _print_paper_trade_summary(
     print(f"ledger_path={ledger_path or 'None'}")
 
 
+def _route_string(
+    payload: Mapping[str, object],
+    field_name: str,
+    route_index: int,
+) -> str:
+    value = payload[field_name]
+    if not isinstance(value, str):
+        raise argparse.ArgumentTypeError(
+            f"route {route_index} {field_name} must be a string"
+        )
+    try:
+        return _non_empty(value)
+    except argparse.ArgumentTypeError as exc:
+        raise argparse.ArgumentTypeError(
+            f"route {route_index} {field_name}: {exc}"
+        ) from exc
+
+
+def _paper_session_routes_from_json_path(
+    routes_json_path: str,
+) -> tuple[tuple[RouteCandidate, datetime], ...]:
+    try:
+        raw_routes = json.loads(Path(routes_json_path).read_text(encoding="utf-8"))
+    except OSError as exc:
+        raise argparse.ArgumentTypeError(
+            f"routes-json-path could not be read: {exc}"
+        ) from exc
+    except json.JSONDecodeError as exc:
+        raise argparse.ArgumentTypeError(
+            f"routes-json-path must contain valid JSON: {exc.msg}"
+        ) from exc
+
+    if not isinstance(raw_routes, list):
+        raise argparse.ArgumentTypeError(
+            "routes-json-path must contain a finite JSON array of explicit routes"
+        )
+    if not raw_routes:
+        raise argparse.ArgumentTypeError("routes-json-path route array must be non-empty")
+
+    route_inputs: list[tuple[RouteCandidate, datetime]] = []
+    for route_index, raw_route in enumerate(raw_routes, start=1):
+        if not isinstance(raw_route, Mapping):
+            raise argparse.ArgumentTypeError(f"route {route_index} must be an object")
+
+        field_names = set(raw_route)
+        if field_names != _PAPER_SESSION_ROUTE_FIELDS:
+            missing = sorted(_PAPER_SESSION_ROUTE_FIELDS - field_names)
+            extra = sorted(field_names - _PAPER_SESSION_ROUTE_FIELDS)
+            raise argparse.ArgumentTypeError(
+                f"route {route_index} must contain exactly explicit route fields; "
+                f"missing={_join_or_none(tuple(missing))} "
+                f"extra={_join_or_none(tuple(extra))}"
+            )
+
+        mode = _route_string(raw_route, "mode", route_index)
+        if mode != EvaluationMode.ENTRY.value:
+            raise argparse.ArgumentTypeError(
+                f"route {route_index} mode must be {EvaluationMode.ENTRY.value}"
+            )
+
+        risex_venue = _route_string(raw_route, "risex_venue", route_index)
+        if risex_venue != RiseXObservationAdapter.name:
+            raise argparse.ArgumentTypeError(
+                f"route {route_index} risex_venue must be {RiseXObservationAdapter.name}"
+            )
+        hedge_venue = _route_string(raw_route, "hedge_venue", route_index)
+        if hedge_venue != HyperliquidObservationAdapter.name:
+            raise argparse.ArgumentTypeError(
+                "route "
+                f"{route_index} hedge_venue must be {HyperliquidObservationAdapter.name}"
+            )
+
+        try:
+            route = RouteCandidate(
+                route_id=_route_string(raw_route, "route_id", route_index),
+                capture_id=_route_string(raw_route, "capture_id", route_index),
+                risex_venue=risex_venue,
+                risex_symbol=_route_string(raw_route, "risex_symbol", route_index),
+                risex_entry_side=_route_string(raw_route, "risex_side", route_index),
+                hedge_venue=hedge_venue,
+                hedge_symbol=_route_string(raw_route, "hedge_symbol", route_index),
+                hedge_entry_side=_route_string(raw_route, "hedge_side", route_index),
+                target_notional_usd=_positive_finite_decimal(
+                    _route_string(raw_route, "target_notional_usd", route_index)
+                ),
+            )
+            assembled_at = _timezone_aware_datetime(
+                _route_string(raw_route, "assembled_at", route_index)
+            )
+        except (ValueError, argparse.ArgumentTypeError) as exc:
+            raise argparse.ArgumentTypeError(f"route {route_index}: {exc}") from exc
+
+        route_inputs.append((route, assembled_at))
+
+    return tuple(route_inputs)
+
+
+def _run_one_paper_trade_route(
+    *,
+    route: RouteCandidate,
+    assembled_at: datetime,
+    ledger: Ledger,
+) -> tuple[DecisionResult, VenueSnapshot | None, PaperRunResult | None, tuple[LedgerEvent, ...]]:
+    start_event_count = len(ledger.records())
+    risex_adapter = RiseXObservationAdapter()
+    hedge_adapter = HyperliquidObservationAdapter()
+    decision, snapshot = run_real_data_research_route_with_snapshot(
+        route=route,
+        risex_adapter=risex_adapter,
+        hedge_adapter=hedge_adapter,
+        assembled_at=assembled_at,
+        mode=EvaluationMode.ENTRY,
+    )
+    paper_result = (
+        None
+        if snapshot is None
+        else run_paper_lifecycle(
+            route=route,
+            decision=decision,
+            funding_settlement_at=snapshot.risex_funding_settlement_at,
+            ledger=ledger,
+        )
+    )
+    return decision, snapshot, paper_result, ledger.records()[start_event_count:]
+
+
+def _print_paper_session_summary(
+    *,
+    route_count: int,
+    decisions: Sequence[DecisionResult],
+    snapshots: Sequence[VenueSnapshot | None],
+    paper_results: Sequence[PaperRunResult | None],
+    session_ledger_events: Sequence[LedgerEvent],
+    ledger_path: str | None,
+) -> None:
+    status_counts = {
+        status: sum(1 for decision in decisions if decision.status is status)
+        for status in RouteStatus
+    }
+    decision_net_profit_known = sum(
+        1 for decision in decisions if decision.net_profit_usd is not None
+    )
+    paper_net_profit_known = sum(
+        1
+        for paper_result in paper_results
+        if paper_result is not None and paper_result.explanation.net_profit_usd is not None
+    )
+    paper_started = sum(
+        1 for paper_result in paper_results if paper_result is not None and paper_result.started
+    )
+
+    print("Paper Trade Session Summary")
+    print(f"routes_total={route_count}")
+    print(f"routes_with_snapshot={sum(1 for snapshot in snapshots if snapshot is not None)}")
+    print(f"routes_without_snapshot={sum(1 for snapshot in snapshots if snapshot is None)}")
+    print(f"paper_started={paper_started}")
+    print(f"paper_not_started={route_count - paper_started}")
+    for status in RouteStatus:
+        print(f"decision_status.{status.value}={status_counts[status]}")
+    print(f"decision_net_profit_known={decision_net_profit_known}")
+    print(f"decision_net_profit_unknown={route_count - decision_net_profit_known}")
+    print(f"paper_net_profit_known={paper_net_profit_known}")
+    print(f"paper_net_profit_unknown={route_count - paper_net_profit_known}")
+    print(f"ledger_event_count={len(session_ledger_events)}")
+    print(
+        "ledger_event_sequences="
+        f"{_join_or_none(tuple(str(event.sequence) for event in session_ledger_events))}"
+    )
+    print(
+        "ledger_event_types="
+        f"{_join_or_none(tuple(event.event_type for event in session_ledger_events))}"
+    )
+    print("aggregate_paper_net_profit_usd=None")
+    print(f"ledger_path={ledger_path or 'None'}")
+
+
 def _run_real_data_route(
     args: argparse.Namespace,
     parser: argparse.ArgumentParser,
@@ -657,24 +871,10 @@ def _run_paper_trade_route(
         else InMemoryLedger()
     )
     try:
-        risex_adapter = RiseXObservationAdapter()
-        hedge_adapter = HyperliquidObservationAdapter()
-        decision, snapshot = run_real_data_research_route_with_snapshot(
+        decision, snapshot, paper_result, _route_events = _run_one_paper_trade_route(
             route=route,
-            risex_adapter=risex_adapter,
-            hedge_adapter=hedge_adapter,
             assembled_at=args.assembled_at,
-            mode=EvaluationMode.ENTRY,
-        )
-        paper_result = (
-            None
-            if snapshot is None
-            else run_paper_lifecycle(
-                route=route,
-                decision=decision,
-                funding_settlement_at=snapshot.risex_funding_settlement_at,
-                ledger=ledger,
-            )
+            ledger=ledger,
         )
         ledger_events = ledger.records()
         _print_paper_trade_summary(
@@ -683,6 +883,64 @@ def _run_paper_trade_route(
             snapshot=snapshot,
             paper_result=paper_result,
             ledger_events=ledger_events,
+            ledger_path=args.ledger_sqlite_path,
+        )
+    finally:
+        close = getattr(ledger, "close", None)
+        if close is not None:
+            close()
+
+
+def _run_paper_trade_session(
+    args: argparse.Namespace,
+    parser: argparse.ArgumentParser,
+) -> None:
+    try:
+        route_inputs = _paper_session_routes_from_json_path(args.routes_json_path)
+    except argparse.ArgumentTypeError as exc:
+        parser.error(str(exc))
+
+    ledger = (
+        SQLiteLedger(args.ledger_sqlite_path)
+        if args.ledger_sqlite_path is not None
+        else InMemoryLedger()
+    )
+    try:
+        session_start_event_count = len(ledger.records())
+        decisions: list[DecisionResult] = []
+        snapshots: list[VenueSnapshot | None] = []
+        paper_results: list[PaperRunResult | None] = []
+
+        print("Paper Trade Session")
+        print(f"route_count={len(route_inputs)}")
+        print(f"ledger_path={args.ledger_sqlite_path or 'None'}")
+        for route_index, (route, assembled_at) in enumerate(route_inputs, start=1):
+            decision, snapshot, paper_result, route_events = _run_one_paper_trade_route(
+                route=route,
+                assembled_at=assembled_at,
+                ledger=ledger,
+            )
+            decisions.append(decision)
+            snapshots.append(snapshot)
+            paper_results.append(paper_result)
+
+            print(f"session_route_index={route_index}")
+            _print_paper_trade_summary(
+                route=route,
+                decision=decision,
+                snapshot=snapshot,
+                paper_result=paper_result,
+                ledger_events=route_events,
+                ledger_path=args.ledger_sqlite_path,
+            )
+
+        session_ledger_events = ledger.records()[session_start_event_count:]
+        _print_paper_session_summary(
+            route_count=len(route_inputs),
+            decisions=decisions,
+            snapshots=snapshots,
+            paper_results=paper_results,
+            session_ledger_events=session_ledger_events,
             ledger_path=args.ledger_sqlite_path,
         )
     finally:

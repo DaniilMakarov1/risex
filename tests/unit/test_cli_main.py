@@ -101,6 +101,38 @@ def _paper_trade_args(**overrides: object) -> list[str]:
     return args
 
 
+def _paper_session_route(**overrides: object) -> dict[str, str]:
+    values = dict(BASE_ARGS)
+    values.update(overrides)
+    return {
+        "route_id": str(values["route_id"]),
+        "capture_id": str(values["capture_id"]),
+        "risex_venue": str(values["risex_venue"]),
+        "risex_symbol": str(values["risex_symbol"]),
+        "risex_side": str(values["risex_side"]),
+        "hedge_venue": str(values["hedge_venue"]),
+        "hedge_symbol": str(values["hedge_symbol"]),
+        "hedge_side": str(values["hedge_side"]),
+        "target_notional_usd": str(values["target_notional_usd"]),
+        "mode": str(values["mode"]),
+        "assembled_at": str(values["assembled_at"]),
+    }
+
+
+def _paper_session_args(
+    tmp_path,
+    routes_payload: object,
+    *,
+    ledger_sqlite_path: object = OMIT,
+) -> list[str]:
+    routes_path = tmp_path / "paper-session-routes.json"
+    routes_path.write_text(json.dumps(routes_payload), encoding="utf-8")
+    args = ["paper-trade-session", "--routes-json-path", str(routes_path)]
+    if ledger_sqlite_path is not OMIT:
+        args.extend(["--ledger-sqlite-path", str(ledger_sqlite_path)])
+    return args
+
+
 def test_no_arg_cli_fake_scan_refresh_output_remains_unchanged(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -1091,6 +1123,374 @@ def test_paper_trade_cli_can_use_explicit_sqlite_ledger_path(
         ]
     finally:
         reopened.close()
+
+
+def test_paper_trade_session_runs_finite_routes_serially_with_deterministic_summary(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path,
+) -> None:
+    constructed_risex_adapters: list[object] = []
+    constructed_hedge_adapters: list[object] = []
+    runner_calls: list[dict[str, object]] = []
+
+    class RecordingRiseXAdapter:
+        name = "RiseX"
+
+        def __init__(self) -> None:
+            constructed_risex_adapters.append(self)
+
+    class RecordingHyperliquidAdapter:
+        name = "Hyperliquid"
+
+        def __init__(self) -> None:
+            constructed_hedge_adapters.append(self)
+
+    def fake_report_runner(**kwargs: object) -> tuple[DecisionResult, object]:
+        runner_calls.append(kwargs)
+        route = kwargs["route"]
+        assert isinstance(route, RouteCandidate)
+        assert kwargs["mode"] is EvaluationMode.ENTRY
+        snapshot = SimpleNamespace(
+            risex_funding_settlement_at=datetime(2026, 8, 13, 16, 0, tzinfo=UTC)
+        )
+        if route.route_id == "session-started":
+            return (
+                DecisionResult(
+                    route_id=route.route_id,
+                    mode=EvaluationMode.ENTRY,
+                    status=RouteStatus.PAPER_ELIGIBLE,
+                    reasons=(RejectReason.LIVE_GATES_NOT_IMPLEMENTED,),
+                    net_profit_usd=Decimal("4.5"),
+                    entry_ev=SimpleNamespace(
+                        expected_funding_usd=Decimal("7"),
+                        total_fees_usd=Decimal("1"),
+                        simulated_roundtrip_cost_usd=Decimal("1.5"),
+                        net_profit_usd=Decimal("4.5"),
+                    ),
+                    capture_plan=None,
+                    decided_at=kwargs["assembled_at"],
+                ),
+                snapshot,
+            )
+        return (
+            DecisionResult(
+                route_id=route.route_id,
+                mode=EvaluationMode.ENTRY,
+                status=RouteStatus.REJECTED,
+                reasons=(RejectReason.REQUIRED_LIVE_DATA_MISSING,),
+                net_profit_usd=None,
+                entry_ev=None,
+                capture_plan=None,
+                decided_at=kwargs["assembled_at"],
+            ),
+            snapshot,
+        )
+
+    monkeypatch.setattr(cli, "RiseXObservationAdapter", RecordingRiseXAdapter)
+    monkeypatch.setattr(cli, "HyperliquidObservationAdapter", RecordingHyperliquidAdapter)
+    monkeypatch.setattr(cli, "run_real_data_research_route_with_snapshot", fake_report_runner)
+
+    routes_payload = [
+        _paper_session_route(route_id="session-started", capture_id="capture-started"),
+        _paper_session_route(
+            route_id="session-rejected",
+            capture_id="capture-rejected",
+            assembled_at="2026-08-13T12:01:00+00:00",
+        ),
+    ]
+
+    assert cli.main(_paper_session_args(tmp_path, routes_payload)) == 0
+
+    assert len(constructed_risex_adapters) == 2
+    assert len(constructed_hedge_adapters) == 2
+    assert [call["route"].route_id for call in runner_calls] == [
+        "session-started",
+        "session-rejected",
+    ]
+    assert capsys.readouterr().out == (
+        "Paper Trade Session\n"
+        "route_count=2\n"
+        "ledger_path=None\n"
+        "session_route_index=1\n"
+        "Paper Trade Route\n"
+        "route_id=session-started\n"
+        "capture_id=capture-started\n"
+        "mode=ENTRY\n"
+        "status=PAPER_ELIGIBLE\n"
+        "reasons=LIVE_GATES_NOT_IMPLEMENTED\n"
+        "decision.net_profit_usd=4.5\n"
+        "snapshot=AVAILABLE\n"
+        "funding_settlement_at=2026-08-13T16:00:00+00:00\n"
+        "paper_started=True\n"
+        "paper_start_attribution=entry_paper_eligible_decision\n"
+        "paper_start_blockers=None\n"
+        "ledger_event_count=4\n"
+        "ledger_event_sequences=1,2,3,4\n"
+        "ledger_event_types=route_decision,paper_capture_opened,"
+        "paper_settlement_observed,paper_capture_closed\n"
+        "paper.expected_funding_usd=7\n"
+        "paper.total_fees_usd=1\n"
+        "paper.simulated_roundtrip_cost_usd=1.5\n"
+        "paper.net_profit_usd=4.5\n"
+        "ledger_path=None\n"
+        "session_route_index=2\n"
+        "Paper Trade Route\n"
+        "route_id=session-rejected\n"
+        "capture_id=capture-rejected\n"
+        "mode=ENTRY\n"
+        "status=REJECTED\n"
+        "reasons=REQUIRED_LIVE_DATA_MISSING\n"
+        "decision.net_profit_usd=None\n"
+        "snapshot=AVAILABLE\n"
+        "funding_settlement_at=2026-08-13T16:00:00+00:00\n"
+        "paper_started=False\n"
+        "paper_start_attribution=paper_start_blocked_by_decision\n"
+        "paper_start_blockers=decision_status_not_paper_eligible\n"
+        "ledger_event_count=2\n"
+        "ledger_event_sequences=5,6\n"
+        "ledger_event_types=route_decision,paper_rejection_recorded\n"
+        "paper.expected_funding_usd=None\n"
+        "paper.total_fees_usd=None\n"
+        "paper.simulated_roundtrip_cost_usd=None\n"
+        "paper.net_profit_usd=None\n"
+        "ledger_path=None\n"
+        "Paper Trade Session Summary\n"
+        "routes_total=2\n"
+        "routes_with_snapshot=2\n"
+        "routes_without_snapshot=0\n"
+        "paper_started=1\n"
+        "paper_not_started=1\n"
+        "decision_status.RESEARCH_ONLY=0\n"
+        "decision_status.PAPER_ELIGIBLE=1\n"
+        "decision_status.LIVE_ELIGIBLE=0\n"
+        "decision_status.REJECTED=1\n"
+        "decision_net_profit_known=1\n"
+        "decision_net_profit_unknown=1\n"
+        "paper_net_profit_known=1\n"
+        "paper_net_profit_unknown=1\n"
+        "ledger_event_count=6\n"
+        "ledger_event_sequences=1,2,3,4,5,6\n"
+        "ledger_event_types=route_decision,paper_capture_opened,"
+        "paper_settlement_observed,paper_capture_closed,route_decision,"
+        "paper_rejection_recorded\n"
+        "aggregate_paper_net_profit_usd=None\n"
+        "ledger_path=None\n"
+    )
+
+
+def test_paper_trade_session_handles_missing_snapshot_without_paper_events(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path,
+) -> None:
+    class RecordingRiseXAdapter:
+        name = "RiseX"
+
+    class RecordingHyperliquidAdapter:
+        name = "Hyperliquid"
+
+    def fake_report_runner(**kwargs: object) -> tuple[DecisionResult, None]:
+        route = kwargs["route"]
+        assert isinstance(route, RouteCandidate)
+        return (
+            DecisionResult(
+                route_id=route.route_id,
+                mode=EvaluationMode.ENTRY,
+                status=RouteStatus.REJECTED,
+                reasons=(RejectReason.REQUIRED_LIVE_DATA_MISSING,),
+                net_profit_usd=None,
+                entry_ev=None,
+                capture_plan=None,
+                decided_at=kwargs["assembled_at"],
+            ),
+            None,
+        )
+
+    monkeypatch.setattr(cli, "RiseXObservationAdapter", RecordingRiseXAdapter)
+    monkeypatch.setattr(cli, "HyperliquidObservationAdapter", RecordingHyperliquidAdapter)
+    monkeypatch.setattr(cli, "run_real_data_research_route_with_snapshot", fake_report_runner)
+
+    assert cli.main(_paper_session_args(tmp_path, [_paper_session_route()])) == 0
+
+    output = capsys.readouterr().out
+    assert "snapshot=UNKNOWN\n" in output
+    assert "paper_start_blockers=public_snapshot_unavailable\n" in output
+    assert "ledger_event_count=0\n" in output
+    assert "routes_with_snapshot=0\n" in output
+    assert "routes_without_snapshot=1\n" in output
+    assert "paper_started=0\n" in output
+    assert "paper_not_started=1\n" in output
+    assert "paper_net_profit_unknown=1\n" in output
+    assert "aggregate_paper_net_profit_usd=None\n" in output
+    assert "paper.net_profit_usd=0" not in output
+
+
+def test_paper_trade_session_can_use_explicit_sqlite_ledger_path(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path,
+) -> None:
+    class RecordingRiseXAdapter:
+        name = "RiseX"
+
+    class RecordingHyperliquidAdapter:
+        name = "Hyperliquid"
+
+    def fake_report_runner(**kwargs: object) -> tuple[DecisionResult, object]:
+        route = kwargs["route"]
+        assert isinstance(route, RouteCandidate)
+        return (
+            DecisionResult(
+                route_id=route.route_id,
+                mode=EvaluationMode.ENTRY,
+                status=RouteStatus.PAPER_ELIGIBLE,
+                reasons=(RejectReason.LIVE_GATES_NOT_IMPLEMENTED,),
+                net_profit_usd=Decimal("4.5"),
+                entry_ev=SimpleNamespace(
+                    expected_funding_usd=Decimal("7"),
+                    total_fees_usd=Decimal("1"),
+                    simulated_roundtrip_cost_usd=Decimal("1.5"),
+                    net_profit_usd=Decimal("4.5"),
+                ),
+                capture_plan=None,
+                decided_at=kwargs["assembled_at"],
+            ),
+            SimpleNamespace(
+                risex_funding_settlement_at=datetime(2026, 8, 13, 16, 0, tzinfo=UTC)
+            ),
+        )
+
+    db_path = tmp_path / "paper-session-ledger.sqlite"
+    monkeypatch.setattr(cli, "RiseXObservationAdapter", RecordingRiseXAdapter)
+    monkeypatch.setattr(cli, "HyperliquidObservationAdapter", RecordingHyperliquidAdapter)
+    monkeypatch.setattr(cli, "run_real_data_research_route_with_snapshot", fake_report_runner)
+
+    assert (
+        cli.main(
+            _paper_session_args(
+                tmp_path,
+                [_paper_session_route()],
+                ledger_sqlite_path=db_path,
+            )
+        )
+        == 0
+    )
+
+    output = capsys.readouterr().out
+    assert f"ledger_path={db_path}\n" in output
+    assert "ledger_event_count=4\n" in output
+
+    reopened = SQLiteLedger(db_path)
+    try:
+        assert [event.event_type for event in reopened.records()] == [
+            LedgerEventType.ROUTE_DECISION_RECORDED.value,
+            LedgerEventType.PAPER_CAPTURE_OPENED.value,
+            LedgerEventType.PAPER_SETTLEMENT_OBSERVED.value,
+            LedgerEventType.PAPER_CAPTURE_CLOSED.value,
+        ]
+    finally:
+        reopened.close()
+
+
+@pytest.mark.parametrize(
+    "routes_payload",
+    (
+        [],
+        {"routes": [_paper_session_route()]},
+        [{"routes": [_paper_session_route()]}],
+        [_paper_session_route(mode="DISCOVERY")],
+        [_paper_session_route(risex_venue="WrongVenue")],
+        [_paper_session_route(hedge_venue="WrongVenue")],
+        [_paper_session_route(hedge_side="buy")],
+        [_paper_session_route(target_notional_usd="0")],
+        [_paper_session_route(target_notional_usd="NaN")],
+        [_paper_session_route(assembled_at="2026-08-13T12:00:00")],
+        [{**_paper_session_route(), "watchlist": "BTC"}],
+        [{key: value for key, value in _paper_session_route().items() if key != "route_id"}],
+        [{**_paper_session_route(), "target_notional_usd": 500}],
+    ),
+)
+def test_paper_trade_session_rejects_malformed_route_list_before_adapter_calls(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+    routes_payload: object,
+) -> None:
+    calls: list[str] = []
+
+    class ForbiddenRiseXAdapter:
+        name = "RiseX"
+
+        def __init__(self) -> None:
+            calls.append("risex_adapter")
+            raise AssertionError("RiseX adapter must not be constructed")
+
+    class ForbiddenHyperliquidAdapter:
+        name = "Hyperliquid"
+
+        def __init__(self) -> None:
+            calls.append("hedge_adapter")
+            raise AssertionError("Hyperliquid adapter must not be constructed")
+
+    def forbidden_report_runner(**_kwargs: object) -> tuple[DecisionResult, object]:
+        calls.append("report_runner")
+        raise AssertionError("report runner must not be called")
+
+    monkeypatch.setattr(cli, "RiseXObservationAdapter", ForbiddenRiseXAdapter)
+    monkeypatch.setattr(cli, "HyperliquidObservationAdapter", ForbiddenHyperliquidAdapter)
+    monkeypatch.setattr(cli, "run_real_data_research_route_with_snapshot", forbidden_report_runner)
+
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main(_paper_session_args(tmp_path, routes_payload))
+
+    assert exc_info.value.code == 2
+    assert calls == []
+
+
+def test_paper_trade_session_rejects_invalid_json_before_adapter_calls(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+) -> None:
+    calls: list[str] = []
+
+    class ForbiddenRiseXAdapter:
+        name = "RiseX"
+
+        def __init__(self) -> None:
+            calls.append("risex_adapter")
+            raise AssertionError("RiseX adapter must not be constructed")
+
+    class ForbiddenHyperliquidAdapter:
+        name = "Hyperliquid"
+
+        def __init__(self) -> None:
+            calls.append("hedge_adapter")
+            raise AssertionError("Hyperliquid adapter must not be constructed")
+
+    monkeypatch.setattr(cli, "RiseXObservationAdapter", ForbiddenRiseXAdapter)
+    monkeypatch.setattr(cli, "HyperliquidObservationAdapter", ForbiddenHyperliquidAdapter)
+
+    routes_path = tmp_path / "invalid-session-routes.json"
+    routes_path.write_text("{not-json", encoding="utf-8")
+
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main(["paper-trade-session", "--routes-json-path", str(routes_path)])
+
+    assert exc_info.value.code == 2
+    assert calls == []
+
+
+def test_paper_trade_session_does_not_add_live_order_private_or_telegram_behavior() -> None:
+    source = inspect.getsource(cli)
+    session_source = inspect.getsource(cli._run_paper_trade_session)
+
+    assert "apps.live_runner" not in source
+    assert "core.execution" not in source
+    assert "telegram" not in source.lower()
+    assert "webhook" not in source.lower()
+    assert "run_guarded_live" not in session_source
+    assert "order_placement" not in session_source
+    assert "approval" not in session_source
 
 
 def test_real_data_cli_does_not_directly_call_snapshot_handoff_or_evaluate() -> None:

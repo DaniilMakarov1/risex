@@ -2,27 +2,27 @@
 
 ## Task ID
 
-RX-055 - Manual Serial Paper Session Runner
+RX-056 - Post-Serial Paper Session Handoff Clarification
 
 ## Objective
 
-After RX-054 reviewer acceptance and finalization, create one manual, explicitly invoked serial fake-money paper testing runner or command for a finite operator-supplied list of explicit RiseX plus Hyperliquid routes. The runner must reuse the existing public one-route decision path and existing fake paper lifecycle plus ledger ownership, produce deterministic session summary stdout for strategy testing, and optionally persist fake paper ledger events only through an explicit local SQLite ledger path.
+After RX-055 reviewer acceptance and finalization, inspect the accepted manual serial paper session runner outcome and current source-of-truth docs to identify exactly one next non-dangerous fake-money paper-trader handoff if one is clearly grounded. If no such handoff is grounded, record the no-grounded-handoff conclusion and prepare one narrow Product Owner clarification gate.
 
-Product Owner plans to test later through a Telegram bot, but Telegram is product direction only for now. RX-055 must not implement Telegram transport, bot tokens, credentials, external Telegram network calls, webhooks, alerts, or messaging behavior. Bot-ready command parsing may be a later non-network task; actual Telegram transport and token handling require an explicit future credentials/network gate.
+RX-056 is governance/source-of-truth only. It must not implement product/runtime behavior, CLI output behavior, Telegram transport, credentials, route discovery, polling, execution automation, live trading, orders, private/account endpoints, account-state behavior, ledger replay/reconciliation changes, storage migrations, or later roadmap stages.
 
 ## Starting baseline
 
-Start from reviewer-accepted `main` after RX-054 is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
+Start from reviewer-accepted `main` after RX-055 is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
 
 ## Branch
 
-Create and work on `task/rx-055-manual-serial-paper-session-runner`. Do not implement on `main`.
+Create and work on `task/rx-056-post-serial-paper-session-handoff-clarification`. Do not implement on `main`.
 
 ## Before changing files
 
-Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, remote is wrong, branch is wrong, `origin/HEAD` is not `origin/main`, `HEAD` does not match the accepted starting baseline, RX-054 is not explicitly reviewer-accepted and finalized on `main`, or unrelated branch work would be mixed into this task.
+Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, remote is wrong, branch is wrong, `origin/HEAD` is not `origin/main`, `HEAD` does not match the accepted starting baseline, RX-055 is not explicitly reviewer-accepted and finalized on `main`, or unrelated branch work would be mixed into this task.
 
-If Control Tower selected this task autonomously, verify from the source-of-truth repository docs that the task is non-dangerous fake-money paper-trader work only. Stop before edits unless explicit user approval exists for any task involving live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, or financially dangerous actions.
+If Control Tower selected this task autonomously, verify from the source-of-truth repository docs that the task is non-dangerous governance/source-of-truth work only. Stop before edits unless explicit user approval exists for any task involving live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, or financially dangerous actions.
 
 Read:
 
@@ -39,17 +39,16 @@ Read:
 
 ## Allowed scope
 
-- Add one manual, explicitly invoked serial fake-money paper session runner or CLI command for a finite operator-supplied list of explicit routes.
-- Reuse the existing public read-only RiseX and Hyperliquid adapter construction boundaries after validation.
-- Reuse the existing one-route public real-data decision path, including `run_real_data_research_route_with_snapshot()` and the shared `evaluate_route(route, snapshot, mode)` path in `EvaluationMode.ENTRY`.
-- Reuse the existing fake paper lifecycle in `apps/paper_runner/lifecycle.py`.
-- Keep fake paper ledger writes behind `core/accounting/ledger.py`.
-- If local persistence is implemented, use only the existing `storage/sqlite/ledger.py` contract and an explicit operator-supplied local SQLite path.
-- Produce deterministic stdout for per-route outcomes and session-level summary counts suitable for manual strategy testing.
-- Update focused tests and source-of-truth docs for exactly this manual serial fake-money paper session scope.
+- Inspect the accepted RX-055 outcome and current source-of-truth docs.
+- Record whether exactly one next non-dangerous fake-money paper-trader handoff is clearly grounded after RX-055.
+- If one concrete safe handoff is grounded, prepare exactly that one later task in `NEXT_TASK.md`.
+- If no concrete safe handoff is grounded, prepare one narrow Product Owner clarification gate in `NEXT_TASK.md`.
+- Update source-of-truth docs only as needed for this clarification: likely `README.md`, `ARCHITECTURE.md`, `PRODUCT_INVARIANTS.md`, `IMPLEMENTATION_PLAN.md`, `STATUS.md`, `DECISIONS.md`, and `NEXT_TASK.md`.
 
 ## Forbidden scope
 
+- No product/runtime code changes.
+- No CLI behavior changes.
 - No route discovery.
 - No route ranking.
 - No watchlists.
@@ -96,23 +95,17 @@ Read:
 
 ## Implementation requirements
 
-- Treat RX-055 as the single next product/runtime task and keep it limited to manual fake-money serial paper testing.
-- The operator must supply a finite explicit route list. Missing, empty, malformed, unbounded, discovery-style, ranking-style, watchlist-style, or polling-style inputs must fail closed before adapter construction for the affected run.
-- Each route in the session must use the existing public one-route input requirements: route id, capture id, exact RiseX and Hyperliquid venues, symbols, opposing entry sides, positive finite target notional, `ENTRY` mode, and timezone-aware assembly timestamp.
-- Each serial route decision must flow through the existing one-route public decision helper and shared `evaluate_route(route, snapshot, mode)` path. RX-055 must not add a second decision, snapshot, EV, VWAP, fee, funding, or route model path.
-- Fake paper handling must delegate to the existing `run_paper_lifecycle()` behavior when a public snapshot is available.
-- Missing public snapshot, Entry EV, funding, fee, decision net profit, or paper PnL values must remain `None`/unknown in route output and session summaries. Aggregates must not turn unknown values into zero, success, or profitability.
-- Non-started decisions must remain explicit fake paper rejections through existing ledger behavior when a snapshot is available.
-- Session output must be deterministic and must not mutate route statuses, reject reasons, route eligibility, Capture transitions, economics, replay, ledger reconciliation, execution planning, or live gates.
-- Optional local persistence must reuse the existing SQLite ledger contract through an explicit local path only; do not add storage migrations or a second storage layer.
-- Telegram must be recorded as later interface direction only. Bot-ready command parsing may be a future non-network task; actual Telegram transport, bot tokens, credentials, webhooks, and external network behavior require an explicit future credentials/network gate and are forbidden in RX-055.
-- Preserve reviewer-only acceptance; implementation-complete branch work is not accepted until an explicit reviewer accepts it.
-- Preserve RX-054 as pending or accepted according to explicit reviewer evidence.
-- Control Tower autonomous selection is allowed only because this is non-dangerous fake-money paper-trader work grounded in source-of-truth repository docs.
+- Treat RX-056 as the single next governance/source-of-truth task.
+- Preserve reviewer-only acceptance: RX-055 branch work is not accepted until explicit reviewer acceptance and finalization on `main`.
+- Preserve RX-055 as pending or accepted according to explicit reviewer evidence found in the repository/git state.
+- Use the accepted RX-055 outcome and current source-of-truth docs rather than chat memory to decide whether one concrete next non-dangerous handoff is grounded.
+- If a next handoff is prepared, keep `NEXT_TASK.md` to exactly one task and make the handoff fail closed around all hard-stop categories.
+- Telegram remains later interface direction only unless an explicit future credentials/network gate authorizes transport and token handling. RX-056 must not add or prepare actual Telegram network, bot-token, webhook, alert, or messaging behavior.
+- Control Tower autonomous selection is allowed only because this is non-dangerous governance/source-of-truth work grounded in repository docs.
 - Live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, and financially dangerous actions require explicit user approval before task selection, creation, execution, fixing, or finalization.
 - Worker policy: one supervised worker required.
-- The worker is required for design support before implementation edits because this task touches manual runtime, app/CLI ownership, fake paper lifecycle integration, and ledger ownership boundaries.
-- At DESIGN CHECKPOINT, the worker must answer whether the manual serial runner design is source-grounded, non-dangerous, one-task/one-branch compliant, preserves accepted baseline versus pending review state, reuses the existing one-route public decision path, reuses the existing fake paper lifecycle, keeps ledger writes inside accounting ownership, keeps optional persistence inside the existing SQLite ledger contract, keeps `NEXT_TASK.md` to exactly one task, preserves reviewer-only acceptance, excludes hard-stop categories including Telegram token/network credentials, avoids discovery/ranking/watchlists/polling/background loops/scheduling/alerts, preserves unknown-as-missing behavior, avoids new statuses/reasons and second owner paths, and preserves Parent ownership.
+- The worker is required for design support before implementation edits because this task touches repository governance, accepted baseline versus pending review state, and future handoff scope.
+- At DESIGN CHECKPOINT, the worker must answer whether the RX-056 clarification direction is source-grounded, non-dangerous, one-task/one-branch compliant, preserves accepted baseline versus pending review state, keeps `NEXT_TASK.md` to exactly one task, preserves reviewer-only acceptance, excludes all hard-stop categories including Telegram token/network credentials, avoids invented runtime scope, avoids discovery/ranking/watchlists/polling/background loops/scheduling/alerts, avoids new statuses/reasons and second owner paths, and preserves Parent ownership.
 - The worker must stop at DESIGN CHECKPOINT before implementation edits and wait for Parent approval or steering before continuing.
 - The worker must also stop at CODE CHECKPOINT, TEST CHECKPOINT, and VALIDATION CHECKPOINT if it continues beyond design support.
 - Parent owns steering, final diff review, validation, commit, push, and final report.
@@ -121,8 +114,6 @@ Read:
 
 ## Required files
 
-- Likely `apps/cli/main.py`
-- Likely `tests/unit/test_cli_main.py`
 - Likely `README.md`
 - Likely `ARCHITECTURE.md`
 - Likely `PRODUCT_INVARIANTS.md`
@@ -130,12 +121,12 @@ Read:
 - Likely `STATUS.md`
 - Likely `DECISIONS.md`
 - `NEXT_TASK.md`
-- Other files only if strictly necessary for the manual serial runner and its focused tests
+- Other docs/templates only if strictly necessary for the RX-056 clarification
 
 ## Required tests
 
 - `python3 scripts/validate_next_task.py`
-- Focused tests for the serial paper session runner covering at least: a started route, a non-started route, deterministic session summary output, finite explicit route list handling, optional explicit SQLite ledger path behavior if implemented, malformed route/operator input fail-closed before adapter construction, preservation of unknown economics as missing rather than zero, and absence of live/order/private/account/Telegram behavior.
+- Focused doc/search checks proving no new runtime files were changed and no Telegram/live/order/private/account hard-stop scope was introduced.
 - `python3 -m pytest tests/invariant`
 - `python3 -m pytest`
 - `python3 -m compileall apps core storage tests scripts`

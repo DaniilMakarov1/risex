@@ -1,7 +1,15 @@
 # Status
 
-- Current branch: `main`.
-- Current task: RX-055 - Manual Serial Paper Session Runner is prepared in `NEXT_TASK.md` and not started.
+- Current branch: `task/rx-055-manual-serial-paper-session-runner`.
+- Current task: RX-055 - Manual Serial Paper Session Runner is implementation-complete on the task branch and pending reviewer acceptance.
+- RX-055 starting baseline: `4dcb9249b3108696222ea4493e4af21ace719f38`
+- RX-055 review state: implementation-complete on task branch; not accepted until explicit reviewer acceptance.
+- RX-055 disposition: adds one explicit manual `paper-trade-session` command for one operator-supplied local JSON route-list file. The route-list schema is a non-empty finite JSON array of exact route objects only. Every route validates route id, capture id, exact RiseX and Hyperliquid venues, symbols, opposing entry sides, positive finite target notional, required `ENTRY` mode, and timezone-aware assembly timestamp before any adapter construction. Each route reuses `run_real_data_research_route_with_snapshot()` and the single `evaluate_route(route, snapshot, mode)` path, delegates fake paper behavior to `run_paper_lifecycle()` when a public snapshot is available, and writes fake paper ledger events only through the existing accounting ledger ownership. Optional persistence uses only explicit `--ledger-sqlite-path` with the existing SQLite ledger contract.
+- RX-055 unknown-value behavior: missing public snapshot, Entry EV, funding, fee, decision net profit, or paper PnL values remain `None`/unknown in per-route output and session summaries. Session summaries report counts and known/unknown counts only and print `aggregate_paper_net_profit_usd=None` rather than aggregating PnL.
+- RX-055 safety boundaries: no Telegram transport, bot token, credentials, webhooks, messaging, alerts, external Telegram network calls, live trading, real orders, private/account endpoints, account state/balances, account-tier assumptions, sendable exchange requests, order payloads, execution automation, execution planning, guarded live runner execution, approval-boundary execution, polling, discovery, ranking, watchlists, adapter endpoint changes, storage migrations, replay changes, ledger reconciliation changes, route eligibility mutation, Capture state transition changes, new route statuses/reject reasons, second owner paths, or unknown-to-zero behavior.
+- RX-055 worker usage: one supervised worker was used for design support before implementation edits. Parent approved the manual finite serial command direction after the worker confirmed it is source-grounded, non-dangerous, one-task/one-branch compliant, preserves accepted baseline versus pending review state, reuses the existing one-route public decision path, reuses the existing fake paper lifecycle, keeps ledger writes inside accounting ownership, keeps optional persistence inside the existing SQLite ledger contract, keeps `NEXT_TASK.md` to exactly one task, preserves reviewer-only acceptance, excludes Telegram token/network credentials and all live/order/private/account hard-stops, avoids discovery/ranking/watchlists/polling/background loops/scheduling/alerts, preserves unknown-as-missing behavior, avoids new statuses/reasons and second owner paths, and preserves Parent ownership.
+- RX-055 preflight: work occurred only in `/Users/daniilmakarov/.codex/worktrees/5b56/risex-main` on `task/rx-055-manual-serial-paper-session-runner`; before edits, `HEAD`, `main`, and `origin/main` matched `4dcb9249b3108696222ea4493e4af21ace719f38`, `origin/HEAD` was `origin/main`, the remote was `https://github.com/DaniilMakarov1/risex.git`, and the worktree was clean.
+- RX-056 prepared scope: governance/source-of-truth clarification only after RX-055 reviewer acceptance and finalization. It must inspect the accepted RX-055 outcome and current docs to identify exactly one next non-dangerous fake-money paper-trader handoff if clearly grounded, or prepare a narrow Product Owner clarification gate rather than inventing Telegram transport, credentials, discovery, polling, execution automation, live trading, orders, private/account endpoints, account-state, ledger replay/reconciliation, or storage-migration scope.
 - RX-054 starting baseline: `14e61bc790ea16d5e6cd489ade089abf2d228d6f`
 - RX-054 review state: reviewer-accepted and finalized on `main`.
 - Accepted RX-054 implementation HEAD: `7ca46c0e08cee095c6edc8cecde2849f622f1a9e`
@@ -253,7 +261,7 @@
 - Accepted baseline branch: `main`
 - Current accepted `main` metadata/governance task: RX-054.
 - Current accepted `main` product task: RX-053.
-- Current RX task state: RX-054 is reviewer-accepted and finalized on `main`; RX-053 remains the latest accepted product/runtime baseline, RX-054 is the latest accepted metadata/governance follow-up on `main`, and `NEXT_TASK.md` is prepared for RX-055.
+- Current RX task state: RX-055 is implementation-complete on `task/rx-055-manual-serial-paper-session-runner` and pending reviewer acceptance; RX-053 remains the latest accepted product/runtime baseline on `main`, RX-054 is the latest accepted metadata/governance follow-up on `main`, and `NEXT_TASK.md` is prepared for RX-056.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
@@ -299,7 +307,7 @@ RX-040 prepared `NEXT_TASK.md` for RX-041 after RX-040 finalization.
 RX-031 found no additional explicit actionable reviewer feedback in local repo/git evidence or GitHub connector context after RX-030 finalization. RX-031 is accepted metadata-only follow-up work and does not change dashboard or product code.
 RX-041 remains the accepted public account-independent fee-cash completion product task before the later RX-045/RX-048 reporting tasks and completes explicit public account-independent taker fee-rate metadata into entry plus immediate estimated-exit route-notional USD fee cash only inside the existing one-route snapshot path, while preserving fail-closed unknown handling and avoiding live/order/private/account-state scope.
 RX-040 remains the previous accepted product task and preserves public fee-source metadata on unknown fee cash values for source-aware inspection only. It does not add route discovery, ranking, polling, private endpoints, credentials, account balances/state, execution automation, order placement, sendable exchange request construction, ledger writes, fee-cash defaults, or live trading by default.
-`NEXT_TASK.md` is prepared for RX-055 after RX-054 reviewer acceptance and finalization.
+`NEXT_TASK.md` is prepared for RX-056 after RX-055 reviewer acceptance and finalization.
 
 ## Completed accepted tasks
 
@@ -475,10 +483,26 @@ RX-040 remains the previous accepted product task and preserves public fee-sourc
 - RX-051 is reviewer-accepted and finalized on `main`.
 - RX-052 is reviewer-accepted and finalized on `main`.
 - RX-053 is reviewer-accepted and finalized on `main`.
-- The next recommended task is RX-055 Manual Serial Paper Session Runner after RX-054 reviewer acceptance and finalization.
+- RX-054 is reviewer-accepted and finalized on `main`.
+- RX-055 is implementation-complete on the task branch and pending reviewer acceptance.
+- The next recommended task is RX-056 Post-Serial Paper Session Handoff Clarification after RX-055 reviewer acceptance and finalization.
 - The RX-032 authorization does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - RX-033 autonomy does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized and accepted.
+
+## Tests last reported for RX-055 branch
+
+- `python3 -m pytest tests/unit/test_cli_main.py`: `74 passed in 0.13s`
+- `python3 -m pytest tests/unit/test_cli_main.py -k 'paper_trade_session or paper_trade_cli'`: `43 passed, 31 deselected in 0.17s`
+- `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
+- `python3 -m pytest tests/invariant`: `37 passed in 0.32s`
+- `python3 -m pytest`: `692 passed in 1.35s`
+- `python3 -m compileall apps core storage tests scripts`: exit 0
+- `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
+- Forbidden cross-project literal search across tracked and hidden non-.git files: no matches; exit 1
+- `git diff --check`: exit 0
+- `git diff --cached --check`: exit 0
+- `git status --short`: modified `ARCHITECTURE.md`, `DECISIONS.md`, `IMPLEMENTATION_PLAN.md`, `NEXT_TASK.md`, `PRODUCT_INVARIANTS.md`, `README.md`, `STATUS.md`, `apps/cli/main.py`, and `tests/unit/test_cli_main.py`
 
 ## Tests last reported for RX-053 branch
 
@@ -1167,4 +1191,4 @@ RX-040 remains the previous accepted product task and preserves public fee-sourc
 
 ## Next recommended task
 
-RX-055 - Manual Serial Paper Session Runner.
+RX-056 - Post-Serial Paper Session Handoff Clarification.
