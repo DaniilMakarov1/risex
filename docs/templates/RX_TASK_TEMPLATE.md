@@ -20,6 +20,8 @@ Create and work on `task/rx-000-short-name`.
 
 Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, remote is wrong, branch is wrong, or HEAD does not match the stated baseline.
 
+If Control Tower selected this task autonomously, verify from the source-of-truth repository docs that the task is non-dangerous. Stop before edits unless explicit user approval exists for any task involving live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, or financially dangerous actions.
+
 Read:
 
 - AGENTS.md
@@ -54,6 +56,9 @@ Read:
 
 - List the exact implementation constraints for this task.
 - State which owner module owns any changed business logic.
+- State whether Control Tower selected this task autonomously or the user explicitly requested it.
+- State that autonomous selection is allowed only for non-dangerous tasks grounded in source-of-truth repository docs.
+- State that live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, and financially dangerous actions require explicit user approval before task selection, creation, execution, fixing, or finalization.
 - State the worker policy: `workers forbidden`, `workers optional`, or `one supervised worker required`.
 - Require one supervised worker/subagent for non-trivial architecture-sensitive tasks, including live-gate, accounting, reconciliation, execution-boundary, ledger, safety-critical, broad contract, owner-boundary, or repository-governance tasks.
 - For required-worker tasks, state whether the worker is required for design support only or for implementation support, and list the questions the worker must answer at DESIGN CHECKPOINT.

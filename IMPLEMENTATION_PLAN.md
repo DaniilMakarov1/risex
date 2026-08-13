@@ -46,17 +46,17 @@ RX-030 — Read-Only Monitoring Dashboard Without Decisions Or Orders is reviewe
 
 ## Current Product Branch Progress
 
-No product branch is active after RX-032 finalization. RX-032 was metadata-only: it recorded the narrowed Product Owner authorization for exactly one next governance/docs task and did not change product behavior or remove hard approval gates.
+No product branch is active after RX-032 finalization. RX-033 is a governance/docs-only task branch that defines Control Tower autonomous task selection for future non-dangerous RX tasks without changing product behavior or removing hard approval gates.
 
 ## Current Product Handoff
 
-`NEXT_TASK.md` is prepared for RX-033, a governance/docs-only task to define how Control Tower may autonomously select and run future non-dangerous RX tasks from source-of-truth repository docs while preserving explicit user approval gates for dangerous actions.
+`NEXT_TASK.md` is prepared on this branch for RX-034, a Control Tower roadmap selection audit gate that may autonomously inspect source-of-truth docs and select the next non-dangerous RX task where the docs support one.
 
 ## Remaining Gated Roadmap After RX-030
 
-Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, or by the RX-032 Product Owner authorization record.
+Future stages must be promoted through `NEXT_TASK.md` one at a time and accepted before any later stage starts. No additional trading, execution automation, polling, ranking, or live-order roadmap stage is authorized by RX-030, by the RX-031 no-additional-fix disposition, by the RX-032 Product Owner authorization record, or by RX-033 governance autonomy.
 
-1. RX-033 — Control Tower Autonomous Task Selection Governance.
+1. RX-034 — Control Tower Roadmap Selection Audit Gate.
 
 ## RX-000 — Project Constitution and Walking Skeleton Foundation
 
@@ -275,8 +275,14 @@ Record the Product Owner authorization supplied through Control Tower as authori
 
 RX-032 does not itself change Control Tower autonomy rules. It does not authorize live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, or financially dangerous actions without explicit user approval.
 
+## RX-033 — Control Tower Autonomous Task Selection Governance
+
+Define the repository workflow rule that, after RX-033 reviewer acceptance, Control Tower may autonomously select, create, run, coordinate review/fixes for, and finalize future non-dangerous RX tasks from source-of-truth repository docs without asking the user to name each next task.
+
+RX-033 preserves one RX task at a time, one clean executor task, one task branch, exactly-one-task `NEXT_TASK.md`, source-of-truth repository docs, Parent ownership, worker checkpoint requirements, and explicit reviewer acceptance. It does not authorize live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, or financially dangerous actions without explicit user approval.
+
 ## Next Sequence
 
-1. RX-033 — Control Tower Autonomous Task Selection Governance.
+1. RX-034 — Control Tower Roadmap Selection Audit Gate.
 
-Do not promote execution automation, background loops, ranking, order placement, polling, alerts, auto-refresh, private endpoints, credentials, account-state access, destructive reset, financially dangerous actions, or later roadmap stages into the current handoff unless that exact future task is explicitly authorized by the Product Owner or Control Tower and passes the repository's hard approval gates.
+Do not promote execution automation, background loops, ranking, order placement, polling, alerts, auto-refresh, private endpoints, credentials, account-state access, destructive reset, financially dangerous actions, or later roadmap stages into the current handoff unless that exact future task is explicitly user-approved for hard-stop scope or autonomously selected by Control Tower under RX-033 for non-dangerous scope and passes the repository's hard approval gates.

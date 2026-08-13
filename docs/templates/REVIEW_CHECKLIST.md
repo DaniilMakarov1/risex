@@ -24,6 +24,9 @@
 
 ## Workflow
 
+- If Control Tower selected the task autonomously, selection is grounded in source-of-truth repository docs and the task is non-dangerous.
+- Explicit user approval is present for any live trading, order placement, sendable exchange request, private endpoint, credential, account balances/state, destructive reset, unsafe scope, or financially dangerous action; otherwise those categories are absent from scope.
+- Control Tower did not treat implementation completion, self-review, or fix coordination as reviewer acceptance.
 - `STATUS.md` separates the accepted baseline from current task completion/review state.
 - `DECISIONS.md` records only decisions actually made by the task.
 - `NEXT_TASK.md` contains exactly one next task and passes `python scripts/validate_next_task.py`.

@@ -4,6 +4,19 @@ This repository uses one RX task per Codex session and one task branch per RX ta
 
 ## Roles
 
+### Control Tower Autonomous Selection
+
+After RX-033 is reviewer-accepted, Control Tower may autonomously select, create, run, coordinate review/fixes for, and finalize future non-dangerous RX tasks from the source-of-truth repository docs without asking the user to name each next task.
+
+Autonomous selection is constrained by the same repository workflow:
+
+- Use the source-of-truth docs for selection, scope, branch, validation, and reporting: `NEXT_TASK.md`, `IMPLEMENTATION_PLAN.md`, `STATUS.md`, `DECISIONS.md`, `AGENTS.md`, this workflow, and the templates in `docs/templates/`.
+- Run exactly one RX task at a time, in one clean Codex executor task, on one task branch. Do not batch tasks, run continuous unattended task chains, or start the next RX task before the current task is finalized under this workflow.
+- Preserve Parent Codex ownership of scope, branch discipline, worker steering, final diff review, validation, commit, push, and final report.
+- Preserve reviewer-only acceptance. Control Tower may coordinate review and fixes, but implementation-complete work is not accepted until an explicit reviewer accepts it.
+- Keep `NEXT_TASK.md` as exactly one next task and require `python scripts/validate_next_task.py` to pass.
+- Stop for explicit user approval before selecting, creating, running, fixing, or finalizing any task involving live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, or financially dangerous actions. Ordinary non-dangerous RX work may continue autonomously when grounded in repository docs; ask the user only when the candidate reaches a hard-stop category, unsafe scope, financially dangerous action, destructive reset, or genuine product/architecture fork that cannot be resolved from the docs.
+
 ### Parent Codex
 
 - Owns task scope, branch creation, architecture checks, final diff review, validation, commit, push, and final report.

@@ -14,6 +14,15 @@ This repository is the source of truth for RiseX Points Farmer implementation wo
 - Use `docs/WORKFLOW.md` and the templates in `docs/templates/` when preparing task prompts, worker checkpoints, reports, and review checklists.
 - Treat accepted offline safety-hardening work as guardrail evidence, not as a product strategy change or permission to keep adding speculative scaffolding. Future tasks must follow the single task in `NEXT_TASK.md`, return to the intended product roadmap after the current handoff, and avoid "while here" abstractions.
 
+## Control Tower autonomous task selection
+
+- After RX-033 is reviewer-accepted, Control Tower may autonomously select, create, run, coordinate review/fixes for, and finalize future non-dangerous RX tasks from the source-of-truth repository docs without asking the user to name each next task.
+- Autonomous selection must use the repository docs, especially `NEXT_TASK.md`, `IMPLEMENTATION_PLAN.md`, `STATUS.md`, `DECISIONS.md`, this file, and `docs/WORKFLOW.md`; do not rely on chat memory or broad roadmap implication.
+- Autonomy is limited to one RX task at a time, one clean Codex executor task, and one task branch. It does not authorize batched work, continuous unattended task chains, or starting the next RX task before the current task is finalized under this workflow.
+- Control Tower may coordinate review and fixes, but reviewer acceptance remains explicit and separate. Implementation-complete work on a task branch is not accepted until a reviewer accepts it.
+- Parent Codex still owns task scope, branch discipline, worker steering, final diff review, validation, commit, push, and final report for each executor task.
+- Hard stop: Control Tower must obtain explicit user approval before selecting, creating, running, fixing, or finalizing any task involving live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, or financially dangerous actions. Ordinary non-dangerous RX work may continue autonomously when grounded in repository docs; ask the user only when the candidate reaches a hard-stop category, unsafe scope, financially dangerous action, destructive reset, or genuine product/architecture fork that cannot be resolved from the docs.
+
 ## Parent, worker, and reviewer boundaries
 
 - Parent Codex owns task scope, branch discipline, architecture checks, final diff review, validation, commit, push, and final report.

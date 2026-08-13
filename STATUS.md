@@ -1,7 +1,10 @@
 # Status
 
-- Current branch: `main`.
-- Current task: RX-032 — Product Owner Roadmap Authorization Gate finalization.
+- Current branch: `task/rx-033-control-tower-autonomous-task-selection-governance`.
+- Current task: RX-033 — Control Tower Autonomous Task Selection Governance implementation branch.
+- RX-033 starting baseline: `ff27045e0f1dccbccc21aec1d41eb4ad91549e8c`
+- RX-033 review state: implementation branch; reviewer acceptance remains pending after Parent validation and push.
+- RX-033 disposition: governance/docs-only changes define Control Tower autonomous task selection for future non-dangerous RX tasks while preserving explicit approval gates for live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, and financially dangerous actions.
 - RX-032 starting baseline: `1eee2c26e40030b1ba7a3935d4eb6483acfd9a81`
 - RX-032 review state: reviewer-accepted and finalized on `main`.
 - Accepted RX-032 implementation HEAD: `9ee0e56a0ecb6be7c95182047353774db11a3155`
@@ -81,9 +84,9 @@
 - Previous accepted product task before RX-012: RX-011 — Offline Execution Capability Gate Design and Fake Replay Coverage
 - Accepted RX-011 implementation HEAD: `317d3913ad02082f3d17a228b40da8abee729343`
 - Accepted baseline branch: `main`
-- Current accepted `main` governance task: RX-Q004.
+- Current accepted `main` metadata/governance task: RX-032.
 - Current accepted `main` product task: RX-030.
-- Current RX task state: RX-032 is reviewer-accepted and finalized on `main`; latest accepted product task remains RX-030 and latest accepted metadata/governance follow-up is RX-032.
+- Current RX task state: RX-033 is implementation branch work only; reviewer acceptance remains pending. Latest accepted product task remains RX-030 and latest accepted metadata/governance follow-up is RX-032.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
@@ -107,7 +110,7 @@ RX-013 remains the previous accepted product baseline before RX-014.
 RX-012 remains the previous accepted product baseline before RX-013.
 RX-Q001 remains the previous accepted governance baseline before RX-Q002.
 RX-011 remains the previous accepted product implementation baseline before RX-012.
-`NEXT_TASK.md` is prepared for RX-033 after RX-032 finalization on `main`.
+`NEXT_TASK.md` is prepared on this branch for RX-034 after RX-033 implementation.
 RX-031 found no additional explicit actionable reviewer feedback in local repo/git evidence or GitHub connector context after RX-030 finalization. RX-031 is accepted metadata-only follow-up work and does not change dashboard or product code.
 RX-030 remains the latest accepted product task and adds one read-only dashboard renderer for already-derived deterministic fixture evidence only. It does not add route discovery, polling, adapters, route evaluation, snapshot assembly, funding verification, ledger reconciliation, live-gate bundle checking, execution planning, guarded live execution, approval-boundary execution, ledger writes, network I/O, or orders.
 
@@ -148,6 +151,7 @@ RX-030 remains the latest accepted product task and adds one read-only dashboard
 - RX-029 — Explicit Approval-Gated Order Placement Boundary
 - RX-030 — Read-Only Monitoring Dashboard Without Decisions Or Orders
 - RX-031 — Review-Directed Follow-up After RX-030
+- RX-032 — Product Owner Roadmap Authorization Gate
 
 ## Current architecture status
 
@@ -215,6 +219,9 @@ RX-030 remains the latest accepted product task and adds one read-only dashboard
 - Required workers must stop at DESIGN CHECKPOINT before implementation edits and wait for Parent approval or steering; workers must also stop at CODE CHECKPOINT, TEST CHECKPOINT, and VALIDATION CHECKPOINT when they continue beyond design support.
 - Parent Codex owns steering, final diff review, validation, commit, push, and final report. Workers must not commit, push, merge, approve work, or start unrelated scope.
 - If a required worker is unavailable, skips checkpoints, continues after being stopped, or drifts into forbidden scope, Parent Codex must stop or steer before accepting worker output.
+- After RX-033 reviewer acceptance, Control Tower may autonomously select, create, run, coordinate review/fixes for, and finalize future non-dangerous RX tasks from source-of-truth repository docs without asking the user to name each next task.
+- Control Tower autonomy remains limited to one RX task at a time, one clean executor task, one task branch, source-of-truth repository docs, Parent ownership, worker checkpoint requirements, exactly-one-task `NEXT_TASK.md`, and explicit reviewer acceptance.
+- Control Tower must stop for explicit user approval before selecting, creating, running, fixing, or finalizing any task involving live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, or financially dangerous actions.
 - Accepted offline safety-hardening work is guardrail evidence, not permission to keep adding speculative scaffolding.
 - Future roadmap stages are gated and must be promoted through `NEXT_TASK.md` one task at a time before implementation.
 - RX-020 keeps `RouteCandidate` as the authoritative route identity and selected-notional construction contract. Empty or non-string identity fields, invalid or non-opposing entry sides, and non-`Decimal`, non-finite, zero, or negative target notionals fail closed at construction. Positive target notionals below `MIN_LEG_NOTIONAL_USD` continue to fail through the existing minimum-notional route evaluation gate.
@@ -234,8 +241,10 @@ RX-030 remains the latest accepted product task and adds one read-only dashboard
 - RX-030 is reviewer-accepted and finalized on `main`.
 - RX-031 is reviewer-accepted and finalized on `main`.
 - RX-032 is reviewer-accepted and finalized on `main`.
-- The next recommended task is RX-033 Control Tower Autonomous Task Selection Governance.
+- RX-033 is the current governance/docs-only branch and is not accepted until explicit reviewer acceptance.
+- The next recommended task is RX-034 Control Tower Roadmap Selection Audit Gate.
 - The RX-032 authorization does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
+- RX-033 autonomy does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized and accepted.
 
 ## Tests last reported for RX-032 branch
@@ -248,6 +257,17 @@ RX-030 remains the latest accepted product task and adds one read-only dashboard
 - `git diff --check`: exit 0
 - `git diff --cached --check`: exit 0
 - `git status --short`: `M DECISIONS.md`; `M IMPLEMENTATION_PLAN.md`; `M NEXT_TASK.md`; `M STATUS.md`
+
+## Tests last reported for RX-033 branch
+
+- `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
+- `python3 -m pytest tests/invariant`: `37 passed in 0.24s`
+- `python3 -m pytest`: `560 passed in 0.77s`
+- `python3 -m compileall apps core storage tests scripts`: exit 0
+- `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
+- `git diff --check`: exit 0
+- `git diff --cached --check`: exit 0
+- `git status --short`: `M AGENTS.md`; `M DECISIONS.md`; `M IMPLEMENTATION_PLAN.md`; `M NEXT_TASK.md`; `M STATUS.md`; `M docs/WORKFLOW.md`; `M docs/templates/REVIEW_CHECKLIST.md`; `M docs/templates/RX_TASK_TEMPLATE.md`
 
 ## Tests last reported for RX-032 finalization on main
 
@@ -577,8 +597,8 @@ RX-030 remains the latest accepted product task and adds one read-only dashboard
 - SQLite reopen fail-closed replay coverage is deterministic offline test coverage only.
 - Paper result attribution and PnL explanation are deterministic fake offline reporting only; they copy existing `DecisionResult` economics and do not verify realized PnL.
 - RX-031 did not discover any external reviewer feedback beyond local repo/git evidence and the GitHub connector's available PR/commit context. Any out-of-band reviewer direction must be supplied explicitly in a future handoff.
-- RX-032 records authorization only. It does not itself change Control Tower autonomy rules; that workflow change is deferred to the single next governance/docs handoff.
+- RX-033 is governance/docs-only. It changes repository task-selection workflow after reviewer acceptance, but it does not change product/runtime behavior, remove reviewer acceptance, or weaken hard approval gates.
 
 ## Next recommended task
 
-RX-033 — Control Tower Autonomous Task Selection Governance.
+RX-034 — Control Tower Roadmap Selection Audit Gate.
