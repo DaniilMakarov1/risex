@@ -306,6 +306,29 @@ def _build_parser() -> argparse.ArgumentParser:
         handler=_run_build_paper_session_display_payload
     )
 
+    build_paper_session_display_command_preview = subparsers.add_parser(
+        "build-paper-session-display-command-preview",
+        help=(
+            "Build a local preview artifact for a manual paper session report "
+            "display command."
+        ),
+    )
+    build_paper_session_display_command_preview.add_argument(
+        "--paper-session-display-command-payload-json-path",
+        required=True,
+        type=_non_empty,
+        help="Explicit local JSON display command payload fixture path.",
+    )
+    build_paper_session_display_command_preview.add_argument(
+        "--preview-json-output-path",
+        required=True,
+        type=_non_empty,
+        help="Explicit local JSON preview/manifest artifact path to write.",
+    )
+    build_paper_session_display_command_preview.set_defaults(
+        handler=_run_build_paper_session_display_command_preview
+    )
+
     render_paper_session_report = subparsers.add_parser(
         "render-paper-session-report",
         help="Render an already-written local paper session report JSON to stdout.",
@@ -1067,6 +1090,29 @@ def _paper_session_package_preview_json(
     }
 
 
+def _paper_session_display_command_preview_json(
+    *,
+    display_payload_json_path: str,
+) -> dict[str, object]:
+    command_args = [
+        "python3",
+        "-m",
+        "apps.cli.main",
+        "render-paper-session-report-from-payload",
+        "--paper-session-display-command-payload-json-path",
+        display_payload_json_path,
+    ]
+    return {
+        "preview": "Paper Session Display Command Preview",
+        "schema_version": 1,
+        "display_payload_json_path": display_payload_json_path,
+        "manual_command": {
+            "argv": command_args,
+            "text": shlex.join(command_args),
+        },
+    }
+
+
 def _paper_report_mapping(value: object, field_name: str) -> Mapping[str, object]:
     if not isinstance(value, Mapping):
         raise argparse.ArgumentTypeError(f"{field_name} must be an object")
@@ -1479,6 +1525,36 @@ def _run_build_paper_session_display_payload(
 
     print(f"display_payload_json_path={args.display_payload_json_path}")
     print(f"session_report_json_path={args.session_report_json_path}")
+
+
+def _run_build_paper_session_display_command_preview(
+    args: argparse.Namespace,
+    parser: argparse.ArgumentParser,
+) -> None:
+    try:
+        payload_text = Path(
+            args.paper_session_display_command_payload_json_path
+        ).read_text(encoding="utf-8")
+        _paper_session_report_path_from_display_command_payload(payload_text)
+    except OSError as exc:
+        parser.error(
+            "paper-session-display-command-payload-json-path could not be read: "
+            f"{exc}"
+        )
+    except argparse.ArgumentTypeError as exc:
+        parser.error(str(exc))
+
+    preview = _paper_session_display_command_preview_json(
+        display_payload_json_path=args.paper_session_display_command_payload_json_path
+    )
+    _write_json_artifact(args.preview_json_output_path, preview)
+
+    print("Paper Session Display Command Preview")
+    print(
+        "display_payload_json_path="
+        f"{args.paper_session_display_command_payload_json_path}"
+    )
+    print(f"preview_json_path={args.preview_json_output_path}")
 
 
 def _run_paper_trade_route(
