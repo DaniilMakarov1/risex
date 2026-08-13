@@ -2,27 +2,29 @@
 
 ## Task ID
 
-RX-059 - Post-Local Paper Session Payload Parser Handoff Clarification
+RX-060 - Local Paper Session Operator Package Builder
 
 ## Objective
 
-After RX-058 reviewer acceptance and finalization, inspect the accepted local paper session command payload parser outcome and current source-of-truth docs to identify exactly one next non-dangerous fake-money paper-trader handoff if one is clearly grounded.
+After RX-059 reviewer acceptance and finalization, add one local-only, manually invoked operator-package/preview builder for serial fake-money paper sessions.
 
-If no concrete safe next handoff is grounded, record that conclusion and prepare one narrow Product Owner clarification gate instead of inventing runtime, transport, automation, live, order, private/account, credential, ledger replay/reconciliation, storage migration, or second-owner-path scope.
+The builder must consume explicit local command payload fixtures through the accepted RX-058 parser and validation boundary, then produce deterministic local operator artifacts suitable for manual serial paper-trader testing and later Telegram display adaptation: a validated route-list JSON file plus a preview/manifest JSON describing route count, route ids, intended local input/report paths, and the exact manual `paper-trade-session --routes-json-path ... --session-report-json-path ...` command plan.
+
+The builder must not execute the session, construct adapters, write ledger events, write session report/history results, send messages, call networks, add Telegram transport, or add live/order/private/account scope.
 
 ## Starting baseline
 
-Start from reviewer-accepted `main` after RX-058 is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
+Start from reviewer-accepted `main` after RX-059 is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
 
 ## Branch
 
-Create and work on `task/rx-059-post-local-paper-session-payload-parser-handoff-clarification`. Do not implement on `main`.
+Create and work on `task/rx-060-local-paper-session-operator-package-builder`. Do not implement on `main`.
 
 ## Before changing files
 
-Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, the remote is wrong, the branch is wrong, `origin/HEAD` is not `origin/main`, `HEAD` does not match the accepted starting baseline, RX-058 is not explicitly reviewer-accepted and finalized on `main`, or unrelated branch work would be mixed into this task.
+Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, the remote is wrong, the branch is wrong, `origin/HEAD` is not `origin/main`, `HEAD` does not match the accepted starting baseline, RX-059 is not explicitly reviewer-accepted and finalized on `main`, or unrelated branch work would be mixed into this task.
 
-If Control Tower selected this task autonomously, verify from the source-of-truth repository docs that the task is non-dangerous, governance/source-of-truth only, and grounded in the accepted fake-money paper-trader testing-support trail. Stop before edits unless explicit user approval exists for any task involving live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, or financially dangerous actions.
+If Control Tower selected this task autonomously, verify from the source-of-truth repository docs that the task is non-dangerous, product/runtime testing-support only, local/manual/fake-money only, and grounded in the accepted RX-055/RX-057/RX-058 trail plus explicit Product Owner direction. Stop before edits unless explicit user approval exists for any task involving live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, or financially dangerous actions.
 
 Read:
 
@@ -39,17 +41,25 @@ Read:
 
 ## Allowed scope
 
-- Inspect the accepted RX-058 parser outcome and current source-of-truth docs.
-- Record whether exactly one next non-dangerous fake-money paper-trader handoff is clearly grounded.
-- Prepare exactly one next task in `NEXT_TASK.md`.
-- Update source-of-truth docs only as needed: likely `README.md`, `ARCHITECTURE.md`, `PRODUCT_INVARIANTS.md`, `IMPLEMENTATION_PLAN.md`, `STATUS.md`, `DECISIONS.md`, and `NEXT_TASK.md`.
-- Keep RX-058 accepted versus pending state accurate according to explicit reviewer evidence.
+- Add one explicit local/manual operator-package builder entry point in the CLI app layer.
+- Consume explicit local command payload fixture text from an operator-supplied local file path through the accepted RX-058 parser/validation boundary.
+- Write a deterministic validated route-list JSON artifact suitable for `paper-trade-session --routes-json-path`.
+- Write a deterministic preview/manifest JSON artifact describing route count, route ids, intended local route-list and session-report paths, and the exact manual `paper-trade-session --routes-json-path ... --session-report-json-path ...` command plan.
+- Require explicit local output paths for every artifact the builder writes.
+- Preserve RX-055 route-list validation semantics, including the 25-route explicit ENTRY cap, exact route fields, required RiseX/Hyperliquid venues, opposing sides, positive finite string notional, and timezone-aware `assembled_at`.
+- Preserve RX-057 report/history semantics by planning an intended session report path only; do not write a session report/history result artifact.
+- Add focused tests for accepted package generation, malformed payload rejection before any side-effectful runtime path, deterministic artifact content, explicit output paths, no session execution, no adapter construction, no ledger writes, no session report/history writes, no Telegram/network/credential/live/order/private/account behavior, no discovery/ranking/watchlist/polling/background loop/scheduling/alert behavior, no aggregate PnL, and no unknown-to-zero behavior.
+- Update source-of-truth docs for the RX-060 outcome and next handoff.
 
 ## Forbidden scope
 
-- No product/runtime behavior changes.
-- No CLI output behavior changes.
-- No parser behavior changes.
+- No session execution.
+- No adapter construction.
+- No ledger event writes.
+- No session report/history result writes.
+- No product behavior outside the explicit local operator-package builder.
+- No existing CLI output behavior changes except the new explicitly invoked builder command.
+- No parser behavior weakening.
 - No Telegram transport.
 - No Telegram bot tokens.
 - No webhooks.
@@ -99,18 +109,22 @@ Read:
 
 ## Implementation requirements
 
-- Treat the task as governance/source-of-truth only.
-- Preserve reviewer-only acceptance: RX-058 branch work is not accepted until explicit reviewer acceptance and finalization on `main`.
-- Use the accepted RX-058 outcome, accepted RX-055 through RX-057 baselines, current source-of-truth docs, and Product Owner/Control Tower direction recorded in the repository trail rather than chat memory.
-- If exactly one concrete safe next fake-money paper-trader handoff is grounded, prepare that one handoff in `NEXT_TASK.md`.
-- If no such handoff is grounded, prepare one narrow Product Owner clarification gate.
-- Keep Telegram as later interface direction only unless an exact future task is explicitly approved through the repository gates. Do not add transport, tokens, credentials, network, webhooks, alerts, or messaging.
+- Keep the builder local-only, manually invoked, deterministic, and fake-money paper testing-support only.
+- Keep ownership in the CLI app layer. Reuse `apps/cli/paper_session_payloads.py` for payload parsing and route-list validation instead of duplicating the boundary.
+- The builder may add a new explicit CLI command or narrowly scoped CLI helper only for the operator package.
+- The command must read the command payload fixture from an explicit local file path and validate the entire command payload before writing any artifact.
+- The command must write no files unless explicit local output paths are supplied.
+- The route-list artifact must contain only exact route-list dictionaries accepted by `paper-trade-session --routes-json-path`; it must not add economics, decision, paper, summary, report, ledger, aggregate PnL, transport, unknown placeholder, or unknown-to-zero fields.
+- The preview/manifest artifact must be descriptive only. It may include route count, route ids, route-list artifact path, intended session report path, and a string/list representation of the exact manual `paper-trade-session` command plan.
+- The preview/manifest artifact must not contain credentials, secrets, bot tokens, private/account data, sendable exchange requests, order payloads, live execution material, realized session results, ledger events, report/history results, aggregate PnL, or invented economics.
+- The builder must not call `run_real_data_research_route()`, `run_real_data_research_route_with_snapshot()`, `run_paper_lifecycle()`, `InMemoryLedger`, `SQLiteLedger`, adapters, live runner modules, execution modules, replay, reconciliation, or network clients.
+- Keep Telegram as later interface/display direction only. RX-060 may produce deterministic local artifacts suitable for later Telegram display adaptation, but it must not add real Telegram transport, bot tokens, credentials, webhooks, alerts, messaging behavior, or external network calls.
 - Keep `NEXT_TASK.md` to exactly one task and require `python3 scripts/validate_next_task.py` to pass.
-- Control Tower autonomous selection is allowed only because this is non-dangerous governance/source-of-truth work grounded in repository docs.
+- Control Tower autonomous selection is allowed only because this is non-dangerous local/manual/fake-money testing-support work grounded in repository docs plus explicit Product Owner direction.
 - Live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, and financially dangerous actions require explicit user approval before task selection, creation, execution, fixing, or finalization.
 - Worker policy: one supervised worker required.
-- The worker is required for design support before implementation edits because this task changes repository-governance handoff state after a product/runtime testing-support task.
-- At DESIGN CHECKPOINT, the worker must answer whether the proposed handoff is source-grounded, non-dangerous, one-task/one-branch compliant, preserves accepted baseline versus pending review state, keeps `NEXT_TASK.md` to exactly one task, preserves reviewer-only acceptance, avoids runtime behavior changes, excludes Telegram token/network credentials and all hard-stop categories, avoids discovery/ranking/watchlists/polling/background loops/scheduling/alerts, avoids execution automation/planning, avoids live/order/private/account scope, avoids ledger replay/reconciliation/storage migration, avoids new statuses/reasons and second owner paths, and preserves Parent ownership.
+- The worker is required for design support before implementation edits because this task adds a new local artifact-writing boundary adjacent to paper-session command preparation.
+- At DESIGN CHECKPOINT, the worker must answer whether the proposed builder is source-grounded, non-dangerous, one-task/one-branch compliant, preserves accepted baseline versus pending review state, keeps `NEXT_TASK.md` to exactly one task, preserves reviewer-only acceptance, consumes the RX-058 parser/validation boundary, avoids session execution, avoids adapter construction, avoids ledger writes, avoids session report/history result writes, requires explicit local output paths, excludes Telegram token/network credentials and all hard-stop categories, avoids discovery/ranking/watchlists/polling/background loops/scheduling/alerts, avoids execution automation/planning, avoids live/order/private/account scope, avoids ledger replay/reconciliation/storage migration, avoids new statuses/reasons and second owner paths, preserves unknown-as-missing/no-aggregate-PnL behavior, and preserves Parent ownership.
 - The worker must stop at DESIGN CHECKPOINT before implementation edits and wait for Parent approval or steering before continuing.
 - The worker must also stop at CODE CHECKPOINT, TEST CHECKPOINT, and VALIDATION CHECKPOINT if it continues beyond design support.
 - Parent owns steering, final diff review, validation, commit, push, and final report.
@@ -119,6 +133,10 @@ Read:
 
 ## Required files
 
+- Likely `apps/cli/main.py`
+- Likely `apps/cli/paper_session_payloads.py`
+- Likely `tests/unit/test_cli_main.py`
+- Likely `tests/unit/test_paper_session_payloads.py`
 - Likely `README.md`
 - Likely `ARCHITECTURE.md`
 - Likely `PRODUCT_INVARIANTS.md`
@@ -131,6 +149,8 @@ Read:
 ## Required tests
 
 - `python3 scripts/validate_next_task.py`
+- Focused unit tests for the local operator-package builder.
+- Focused docs/search checks proving RX-060 Local Paper Session Operator Package Builder is the current next task and not a clarification-gate handoff.
 - Focused docs/search checks proving no Telegram/live/order/private/account hard-stop scope was introduced.
 - Focused search checks proving no route discovery, ranking, watchlists, polling, background loops, scheduling, alerts, storage migration, replay, reconciliation, or second owner path was introduced.
 - `python3 -m pytest tests/invariant`
