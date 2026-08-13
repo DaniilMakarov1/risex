@@ -7,15 +7,12 @@ import json
 import sys
 from collections.abc import Mapping, Sequence
 from datetime import datetime
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 from apps.cli.paper_session_payloads import (
     MAX_PAPER_SESSION_ROUTES as _MAX_PAPER_SESSION_ROUTES,
-    non_empty as _non_empty,
     paper_session_routes_from_json_path as _paper_session_routes_from_json_path,
-    positive_finite_decimal as _positive_finite_decimal,
-    timezone_aware_datetime as _timezone_aware_datetime,
 )
 from apps.paper_runner.lifecycle import PaperRunResult, run_paper_lifecycle
 from apps.research_runner.real_data import (
@@ -38,12 +35,14 @@ from core.domain.contracts import (
     RouteCandidate,
     VALID_ORDER_SIDES,
     VenueSnapshot,
+    validate_timezone_aware_datetime,
 )
 from core.domain.enums import EvaluationMode, RouteStatus, ValueSource
 from core.pipeline.scan_refresh import run_broad_scan, run_focused_refresh
 from core.venues.hyperliquid import HyperliquidObservationAdapter
 from core.venues.risex import RiseXObservationAdapter
 from storage.sqlite.ledger import SQLiteLedger
+
 
 def _print_decisions(label: str, decisions: tuple[DecisionResult, ...]) -> None:
     print(label)
@@ -67,6 +66,41 @@ def _run_fake_scan_refresh() -> None:
 
     _print_decisions("Broad Scan", broad_scan.decisions)
     _print_decisions("Focused Refresh", focused_refresh.decisions)
+
+
+def _non_empty(value: str) -> str:
+    cleaned = value.strip()
+    if not cleaned:
+        raise argparse.ArgumentTypeError("value must be non-empty")
+    return cleaned
+
+
+def _positive_finite_decimal(value: str) -> Decimal:
+    try:
+        notional = Decimal(value)
+    except InvalidOperation as exc:
+        raise argparse.ArgumentTypeError(
+            "target notional must be a positive finite Decimal"
+        ) from exc
+    if not notional.is_finite() or notional <= Decimal("0"):
+        raise argparse.ArgumentTypeError(
+            "target notional must be a positive finite Decimal"
+        )
+    return notional
+
+
+def _timezone_aware_datetime(value: str) -> datetime:
+    try:
+        parsed = datetime.fromisoformat(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(
+            "assembled-at must be an ISO 8601 timezone-aware timestamp"
+        ) from exc
+    try:
+        validate_timezone_aware_datetime(parsed, "assembled_at")
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(str(exc)) from exc
+    return parsed
 
 
 def _build_parser() -> argparse.ArgumentParser:

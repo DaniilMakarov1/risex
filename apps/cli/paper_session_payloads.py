@@ -31,14 +31,14 @@ PAPER_SESSION_ROUTE_FIELDS = frozenset(PAPER_SESSION_ROUTE_FIELD_NAMES)
 MAX_PAPER_SESSION_ROUTES = 25
 
 
-def non_empty(value: str) -> str:
+def _non_empty(value: str) -> str:
     cleaned = value.strip()
     if not cleaned:
         raise argparse.ArgumentTypeError("value must be non-empty")
     return cleaned
 
 
-def positive_finite_decimal(value: str) -> Decimal:
+def _positive_finite_decimal(value: str) -> Decimal:
     try:
         notional = Decimal(value)
     except InvalidOperation as exc:
@@ -52,7 +52,7 @@ def positive_finite_decimal(value: str) -> Decimal:
     return notional
 
 
-def timezone_aware_datetime(value: str) -> datetime:
+def _timezone_aware_datetime(value: str) -> datetime:
     try:
         parsed = datetime.fromisoformat(value)
     except ValueError as exc:
@@ -81,7 +81,7 @@ def _route_string(
             f"route {route_index} {field_name} must be a string"
         )
     try:
-        return non_empty(value)
+        return _non_empty(value)
     except argparse.ArgumentTypeError as exc:
         raise argparse.ArgumentTypeError(
             f"route {route_index} {field_name}: {exc}"
@@ -148,11 +148,11 @@ def validate_paper_session_route_list(
                 hedge_venue=hedge_venue,
                 hedge_symbol=_route_string(raw_route, "hedge_symbol", route_index),
                 hedge_entry_side=_route_string(raw_route, "hedge_side", route_index),
-                target_notional_usd=positive_finite_decimal(
+                target_notional_usd=_positive_finite_decimal(
                     _route_string(raw_route, "target_notional_usd", route_index)
                 ),
             )
-            assembled_at = timezone_aware_datetime(
+            assembled_at = _timezone_aware_datetime(
                 _route_string(raw_route, "assembled_at", route_index)
             )
         except (ValueError, argparse.ArgumentTypeError) as exc:
@@ -210,7 +210,7 @@ def paper_session_route_list_from_command_payload(
     payload_text: str,
 ) -> list[dict[str, str]]:
     try:
-        payload_source = non_empty(payload_text)
+        payload_source = _non_empty(payload_text)
     except argparse.ArgumentTypeError as exc:
         raise argparse.ArgumentTypeError(
             f"paper-session-command-payload: {exc}"
