@@ -283,6 +283,29 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     build_paper_session_package.set_defaults(handler=_run_build_paper_session_package)
 
+    build_paper_session_display_payload = subparsers.add_parser(
+        "build-paper-session-display-payload",
+        help=(
+            "Build a local display command payload fixture for an existing "
+            "paper session report."
+        ),
+    )
+    build_paper_session_display_payload.add_argument(
+        "--session-report-json-path",
+        required=True,
+        type=_non_empty,
+        help="Explicit local RX-057 paper session report JSON path to validate.",
+    )
+    build_paper_session_display_payload.add_argument(
+        "--display-payload-json-path",
+        required=True,
+        type=_non_empty,
+        help="Explicit local JSON display payload fixture path to write.",
+    )
+    build_paper_session_display_payload.set_defaults(
+        handler=_run_build_paper_session_display_payload
+    )
+
     render_paper_session_report = subparsers.add_parser(
         "render-paper-session-report",
         help="Render an already-written local paper session report JSON to stdout.",
@@ -1420,6 +1443,41 @@ def _run_build_paper_session_package(
     )
     print(f"routes_json_path={args.routes_json_output_path}")
     print(f"preview_json_path={args.preview_json_output_path}")
+    print(f"session_report_json_path={args.session_report_json_path}")
+
+
+def _run_build_paper_session_display_payload(
+    args: argparse.Namespace,
+    parser: argparse.ArgumentParser,
+) -> None:
+    try:
+        report_text = Path(args.session_report_json_path).read_text(encoding="utf-8")
+        parsed_report = json.loads(report_text)
+        report = _paper_report_mapping(parsed_report, "report")
+        _validated_paper_session_report_display_values(report)
+        payload = {
+            "schema_version": 1,
+            "session_report_json_path": args.session_report_json_path,
+        }
+        parsed_payload_report_path = (
+            _paper_session_report_path_from_display_command_payload(
+                json.dumps(payload, sort_keys=True)
+            )
+        )
+        if parsed_payload_report_path != args.session_report_json_path:
+            raise argparse.ArgumentTypeError(
+                "display payload session_report_json_path did not round-trip"
+            )
+    except OSError as exc:
+        parser.error(f"session-report-json-path could not be read: {exc}")
+    except json.JSONDecodeError as exc:
+        parser.error(f"session-report-json-path must contain valid JSON: {exc}")
+    except argparse.ArgumentTypeError as exc:
+        parser.error(str(exc))
+
+    _write_json_artifact(args.display_payload_json_path, payload)
+
+    print(f"display_payload_json_path={args.display_payload_json_path}")
     print(f"session_report_json_path={args.session_report_json_path}")
 
 
