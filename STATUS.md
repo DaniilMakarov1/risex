@@ -1,8 +1,16 @@
 # Status
 
-- Current branch: `main`.
-- Current task: RX-065 - Local Paper Session Display Command Text Parser is reviewer-accepted and finalized on `main`.
+- Current branch: `task/rx-066-local-paper-session-display-command-text-preview-manifest`.
+- Current task: RX-066 - Local Paper Session Display Command Text Preview Manifest is implementation-complete on the task branch and pending reviewer acceptance.
 - Latest accepted product baseline: RX-065 reviewer-accepted and finalized on `main`.
+- RX-066 starting baseline: `a132c4069903a910b90035ae188153571ae90f79`
+- RX-066 task branch: `task/rx-066-local-paper-session-display-command-text-preview-manifest`
+- RX-066 review state: implementation-complete on task branch, not accepted until explicit reviewer acceptance.
+- RX-066 disposition: adds one local-only, manually invoked `build-paper-session-display-command-text-preview` CLI command. The command consumes one explicit local command text fixture path, one explicit intended display payload JSON path, and one explicit preview/manifest JSON output path; validates command text through the accepted RX-065 parser; validates the generated payload through the accepted RX-062 parser; and writes only a descriptive local manifest for the exact manual parser command plan.
+- RX-066 artifact boundary: malformed command text, malformed shell quoting, missing required paths, unreadable command text fixture paths, generated payload parser failure, or identical intended display payload and preview output paths fail before artifact write. The manifest contains only `schema_version=1`, `command_text_fixture_path`, `intended_display_payload_json_path`, `normalized_session_report_json_path`, and the exact manual `parse-paper-session-display-command-text --paper-session-display-command-text-path ... --display-payload-json-path ...` command plan as argv plus robustly quoted `shlex.join()` text. It contains no route lists, decisions, paper outcomes, economics, summaries, ledger events, aggregate PnL fields, transport fields, credentials, network destinations, private/account data, sendable requests, order payloads, or execution intent.
+- RX-066 safety boundaries: no display payload artifact write, report JSON reading or rendering, session execution, adapter construction, ledger instantiation, ledger writes, session report/history writes or mutation, Telegram transport, bot token, credentials, webhooks, messaging, alerts, external network calls, live trading, real orders, private/account endpoints, account state/balances, sendable exchange requests, order payloads, execution automation/planning, discovery/ranking/watchlists/polling/background loops/scheduling, adapter endpoint changes, storage migrations, replay/reconciliation changes, route eligibility mutation, Capture state transition changes, new route statuses/reject reasons, second owner paths, aggregate PnL calculation, or unknown-to-zero behavior.
+- RX-066 worker usage: exactly one supervised worker was used for design support before implementation edits. The worker stopped at DESIGN CHECKPOINT and confirmed the proposed preview builder is source-grounded, non-dangerous, one-task/one-branch compliant, preserves accepted baseline versus pending review state, keeps `NEXT_TASK.md` to exactly one task, preserves reviewer-only acceptance, consumes only explicit local command text fixture paths, intended display payload output paths, and preview output paths, writes only a descriptive local preview/manifest artifact, avoids display payload writes, avoids report reading/rendering, session execution, adapter construction, ledger writes, report/history result writes or mutations, excludes Telegram token/network credentials and all hard-stop categories, avoids discovery/ranking/watchlists/polling/background loops/scheduling/alerts, execution automation/planning, live/order/private/account scope, ledger replay/reconciliation/storage migration, new statuses/reasons and second owner paths, preserves unknown-as-missing/no-aggregate-PnL behavior, and preserves Parent ownership. Parent approved the `build-paper-session-display-command-text-preview` direction and retained implementation, final diff review, validation, commit, push, and reporting ownership.
+- RX-066 next handoff: `NEXT_TASK.md` is prepared for exactly one next fake-money paper-trader runtime/testability task after RX-066 reviewer acceptance and finalization, RX-067 Local Paper Session Runtime Smoke Fixture Coverage, scoped to deterministic coverage for the existing `paper-trade-session` path without new commands, CLI behavior changes, Telegram transport, messaging/network credentials, live/order/private/account scope, aggregate PnL calculation, unknown-to-zero behavior, or second owner paths.
 - RX-065 starting baseline: `19e4266e6b2115b5e0b0dca08515097ebb754abe`
 - RX-065 task branch: `task/rx-065-local-paper-session-display-command-text-parser`
 - Accepted RX-065 implementation HEAD: `cfbccb5814712b9d4fb7a39ab7bc7aa57d808b7c`
@@ -359,7 +367,7 @@
 - Accepted baseline branch: `main`
 - Current accepted `main` metadata/governance task: RX-059.
 - Current accepted `main` product task: RX-065.
-- Current RX task state: RX-065 is reviewer-accepted after fix-in-same-branch and finalized on `main`; `NEXT_TASK.md` is prepared for RX-066 as the next local/manual fake-money paper testing-support task after RX-065 finalization.
+- Current RX task state: RX-066 is implementation-complete on the task branch and pending reviewer acceptance; `NEXT_TASK.md` is prepared for RX-067 as the next local/manual fake-money paper runtime/testability task after RX-066 finalization.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
@@ -406,7 +414,7 @@ RX-040 prepared `NEXT_TASK.md` for RX-041 after RX-040 finalization.
 RX-031 found no additional explicit actionable reviewer feedback in local repo/git evidence or GitHub connector context after RX-030 finalization. RX-031 is accepted metadata-only follow-up work and does not change dashboard or product code.
 RX-041 remains the accepted public account-independent fee-cash completion product task before the later RX-045/RX-048 reporting tasks and completes explicit public account-independent taker fee-rate metadata into entry plus immediate estimated-exit route-notional USD fee cash only inside the existing one-route snapshot path, while preserving fail-closed unknown handling and avoiding live/order/private/account-state scope.
 RX-040 remains the previous accepted product task and preserves public fee-source metadata on unknown fee cash values for source-aware inspection only. It does not add route discovery, ranking, polling, private endpoints, credentials, account balances/state, execution automation, order placement, sendable exchange request construction, ledger writes, fee-cash defaults, or live trading by default.
-`NEXT_TASK.md` is prepared for RX-066 Local Paper Session Display Command Text Preview Manifest after RX-065 finalization.
+`NEXT_TASK.md` is prepared for RX-067 Local Paper Session Runtime Smoke Fixture Coverage after RX-066 finalization.
 
 ## Completed accepted tasks
 
@@ -603,7 +611,7 @@ RX-040 remains the previous accepted product task and preserves public fee-sourc
 - RX-063 is reviewer-accepted and finalized on `main`.
 - RX-064 is reviewer-accepted and finalized on `main`.
 - RX-065 is reviewer-accepted and finalized on `main`.
-- The next recommended task is RX-066 Local Paper Session Display Command Text Preview Manifest after RX-065 finalization.
+- The next recommended task is RX-067 Local Paper Session Runtime Smoke Fixture Coverage after RX-066 finalization.
 - The RX-032 authorization does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - RX-033 autonomy does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized and accepted.
@@ -1321,4 +1329,4 @@ RX-040 remains the previous accepted product task and preserves public fee-sourc
 
 ## Next recommended task
 
-RX-066 Local Paper Session Display Command Text Preview Manifest after RX-065 finalization.
+RX-067 Local Paper Session Runtime Smoke Fixture Coverage after RX-066 finalization.

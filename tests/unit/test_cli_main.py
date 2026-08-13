@@ -370,6 +370,29 @@ def _parse_paper_session_display_command_text_args(
     return args
 
 
+def _build_paper_session_display_command_text_preview_args(
+    tmp_path,
+    command_text: str,
+    *,
+    command_text_path: object = OMIT,
+    display_payload_json_path: object = OMIT,
+    preview_json_output_path: object = OMIT,
+) -> list[str]:
+    if command_text_path is OMIT:
+        command_text_path = tmp_path / "paper session display command text.txt"
+    command_text_path.write_text(command_text, encoding="utf-8")
+    args = [
+        "build-paper-session-display-command-text-preview",
+        "--paper-session-display-command-text-path",
+        str(command_text_path),
+    ]
+    if display_payload_json_path is not OMIT:
+        args.extend(["--display-payload-json-path", str(display_payload_json_path)])
+    if preview_json_output_path is not OMIT:
+        args.extend(["--preview-json-output-path", str(preview_json_output_path)])
+    return args
+
+
 def test_no_arg_cli_fake_scan_refresh_output_remains_unchanged(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -3053,6 +3076,472 @@ def test_parse_paper_session_display_command_text_has_no_forbidden_runtime_behav
     assert "HyperliquidObservationAdapter" not in parser_source
     assert "apps.live_runner" not in parser_source
     assert "core.execution" not in parser_source
+    assert "reconciliation" not in lowered
+    assert "replay" not in lowered
+    assert "telegram" not in lowered
+    assert "webhook" not in lowered
+    assert "token" not in lowered
+    assert "credential" not in lowered
+    assert "secret" not in lowered
+    assert "api_key" not in lowered
+    assert "requests" not in lowered
+    assert "httpx" not in lowered
+    assert "urllib" not in lowered
+    assert "socket" not in lowered
+    assert "private" not in lowered
+    assert "account" not in lowered
+    assert "balance" not in lowered
+    assert "watchlist" not in lowered
+    assert "poll" not in lowered
+    assert "schedule" not in lowered
+    assert "alert" not in lowered
+    assert "ranking" not in lowered
+    assert "order_placement" not in lowered
+    assert "aggregate" not in lowered
+    assert "pnl" not in lowered
+
+
+def test_build_paper_session_display_command_text_preview_writes_deterministic_manifest(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path,
+) -> None:
+    calls: list[str] = []
+
+    class ForbiddenRiseXAdapter:
+        name = "RiseX"
+
+        def __init__(self) -> None:
+            calls.append("risex_adapter")
+            raise AssertionError("command text preview must not construct adapters")
+
+    class ForbiddenHyperliquidAdapter:
+        name = "Hyperliquid"
+
+        def __init__(self) -> None:
+            calls.append("hedge_adapter")
+            raise AssertionError("command text preview must not construct adapters")
+
+    class ForbiddenLedger:
+        def __init__(self, *_args: object, **_kwargs: object) -> None:
+            calls.append("ledger")
+            raise AssertionError("command text preview must not instantiate ledgers")
+
+    def forbidden_runner(**_kwargs: object) -> DecisionResult:
+        calls.append("runner")
+        raise AssertionError("command text preview must not run sessions")
+
+    def forbidden_lifecycle(**_kwargs: object) -> object:
+        calls.append("paper_lifecycle")
+        raise AssertionError("command text preview must not call paper lifecycle")
+
+    def forbidden_render(
+        _args: object,
+        _parser: object,
+    ) -> None:
+        calls.append("render")
+        raise AssertionError("command text preview must not render reports")
+
+    monkeypatch.setattr(cli, "RiseXObservationAdapter", ForbiddenRiseXAdapter)
+    monkeypatch.setattr(cli, "HyperliquidObservationAdapter", ForbiddenHyperliquidAdapter)
+    monkeypatch.setattr(cli, "InMemoryLedger", ForbiddenLedger)
+    monkeypatch.setattr(cli, "SQLiteLedger", ForbiddenLedger)
+    monkeypatch.setattr(cli, "run_real_data_research_route", forbidden_runner)
+    monkeypatch.setattr(cli, "run_real_data_research_route_with_snapshot", forbidden_runner)
+    monkeypatch.setattr(cli, "run_paper_lifecycle", forbidden_lifecycle)
+    monkeypatch.setattr(cli, "_run_render_paper_session_report", forbidden_render)
+    monkeypatch.setattr(
+        cli,
+        "_run_render_paper_session_report_from_payload",
+        forbidden_render,
+    )
+    monkeypatch.setattr(
+        cli,
+        "_run_build_paper_session_display_payload",
+        forbidden_render,
+    )
+
+    report_path = tmp_path / "missing paper session report with spaces.json"
+    command_text_path = tmp_path / "display command text with spaces.txt"
+    display_payload_path = tmp_path / "intended display payload with spaces.json"
+    preview_path = tmp_path / "display command text preview with spaces.json"
+    command_text = (
+        "paper-session-report-display --session-report-json-path "
+        f"{shlex.quote(str(report_path))}"
+    )
+    args = _build_paper_session_display_command_text_preview_args(
+        tmp_path,
+        command_text,
+        command_text_path=command_text_path,
+        display_payload_json_path=display_payload_path,
+        preview_json_output_path=preview_path,
+    )
+
+    original_read_text = cli.Path.read_text
+    read_paths: list[str] = []
+
+    def recording_read_text(self, *args: object, **kwargs: object) -> str:
+        read_paths.append(str(self))
+        if str(self) == str(report_path):
+            raise AssertionError("command text preview must not read report JSON")
+        if str(self) == str(display_payload_path):
+            raise AssertionError("command text preview must not read display payload")
+        return original_read_text(self, *args, **kwargs)
+
+    original_write_json_artifact = cli._write_json_artifact
+    write_paths: list[str] = []
+
+    def recording_write_json_artifact(path: str, payload: object) -> None:
+        write_paths.append(path)
+        if path == str(display_payload_path):
+            raise AssertionError("command text preview must not write display payload")
+        original_write_json_artifact(path, payload)
+
+    monkeypatch.setattr(cli.Path, "read_text", recording_read_text)
+    monkeypatch.setattr(cli, "_write_json_artifact", recording_write_json_artifact)
+
+    assert cli.main(args) == 0
+    first_preview_artifact = original_read_text(preview_path, encoding="utf-8")
+    first_output = capsys.readouterr().out
+    assert cli.main(args) == 0
+
+    assert calls == []
+    assert read_paths == [str(command_text_path), str(command_text_path)]
+    assert write_paths == [str(preview_path), str(preview_path)]
+    assert original_read_text(preview_path, encoding="utf-8") == first_preview_artifact
+    assert capsys.readouterr().out == first_output
+    assert not report_path.exists()
+    assert not display_payload_path.exists()
+
+    expected_command_args = [
+        "python3",
+        "-m",
+        "apps.cli.main",
+        "parse-paper-session-display-command-text",
+        "--paper-session-display-command-text-path",
+        str(command_text_path),
+        "--display-payload-json-path",
+        str(display_payload_path),
+    ]
+    preview = json.loads(first_preview_artifact)
+    assert preview == {
+        "schema_version": 1,
+        "command_text_fixture_path": str(command_text_path),
+        "intended_display_payload_json_path": str(display_payload_path),
+        "normalized_session_report_json_path": str(report_path),
+        "manual_command": {
+            "argv": expected_command_args,
+            "text": shlex.join(expected_command_args),
+        },
+    }
+    assert f"'{command_text_path}'" in preview["manual_command"]["text"]
+    assert f"'{display_payload_path}'" in preview["manual_command"]["text"]
+
+    sanitized_preview = dict(preview)
+    sanitized_preview["command_text_fixture_path"] = "<command-text-path>"
+    sanitized_preview["intended_display_payload_json_path"] = "<display-payload-path>"
+    sanitized_preview["normalized_session_report_json_path"] = "<session-report-path>"
+    sanitized_preview["manual_command"] = {
+        "argv": [
+            "<python>",
+            "-m",
+            "apps.cli.main",
+            "parse-paper-session-display-command-text",
+            "--paper-session-display-command-text-path",
+            "<command-text-path>",
+            "--display-payload-json-path",
+            "<display-payload-path>",
+        ],
+        "text": (
+            "python3 -m apps.cli.main parse-paper-session-display-command-text "
+            "--paper-session-display-command-text-path <command-text-path> "
+            "--display-payload-json-path <display-payload-path>"
+        ),
+    }
+    lowered_preview = json.dumps(sanitized_preview, sort_keys=True).lower()
+    forbidden_fields = (
+        "routes",
+        "decision",
+        "paper_started",
+        "paper_outcome",
+        "summary",
+        "ledger",
+        "aggregate_paper_net_profit_usd",
+        "paper_net_profit_usd",
+        "expected_funding_usd",
+        "total_fees_usd",
+        "telegram",
+        "webhook",
+        "token",
+        "credential",
+        "secret",
+        "api_key",
+        "private",
+        "account",
+        "balance",
+        "order_payload",
+        "sendable",
+        "live",
+        "pnl",
+        '"net_profit_usd": 0',
+        '"expected_funding_usd": 0',
+        '"total_fees_usd": 0',
+    )
+    for forbidden_field in forbidden_fields:
+        assert forbidden_field not in lowered_preview
+
+    assert first_output == (
+        "Paper Session Display Command Text Preview\n"
+        f"command_text_path={command_text_path}\n"
+        f"intended_display_payload_json_path={display_payload_path}\n"
+        f"preview_json_path={preview_path}\n"
+        f"session_report_json_path={report_path}\n"
+    )
+
+
+@pytest.mark.parametrize(
+    "command_text",
+    (
+        "",
+        "paper-session-report-display",
+        "paper-session-report-display --session-report-json-path",
+        "paper-session-report-display --session-report-json-path ''",
+        "paper-session-report-display --session-report-json-path --chat-id",
+        "paper-session-report-display --session-report-json-path --net-profit-usd",
+        "paper-session-report-display --session-report-json-path --display-payload-json-path",
+        "paper-session-report-display --session-report-json-path=/tmp/report.json",
+        "paper-session-report-display /tmp/report.json --session-report-json-path",
+        "paper-session-report-display --wrong-flag /tmp/report.json",
+        "paper-session-report-display --session-report-json-path /tmp/report.json extra",
+        "paper-session-report-display --session-report-json-path /tmp/report.json --chat-id 1",
+        "paper-session-report-display --session-report-json-path /tmp/report.json --route-id route-1",
+        "paper-session-report-display --session-report-json-path /tmp/report.json --net-profit-usd 0",
+        "render-paper-session-report --session-report-json-path /tmp/report.json",
+        "paper-trade-session --routes-json-path /tmp/routes.json",
+        "paper-session-report-display --session-report-json-path '/tmp/report.json",
+    ),
+)
+def test_build_paper_session_display_command_text_preview_rejects_malformed_text_before_artifact(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path,
+    command_text: str,
+) -> None:
+    calls: list[str] = []
+
+    class ForbiddenRiseXAdapter:
+        name = "RiseX"
+
+        def __init__(self) -> None:
+            calls.append("risex_adapter")
+            raise AssertionError("command text preview must not construct adapters")
+
+    class ForbiddenHyperliquidAdapter:
+        name = "Hyperliquid"
+
+        def __init__(self) -> None:
+            calls.append("hedge_adapter")
+            raise AssertionError("command text preview must not construct adapters")
+
+    class ForbiddenLedger:
+        def __init__(self, *_args: object, **_kwargs: object) -> None:
+            calls.append("ledger")
+            raise AssertionError("command text preview must not instantiate ledgers")
+
+    def forbidden_runner(**_kwargs: object) -> DecisionResult:
+        calls.append("runner")
+        raise AssertionError("command text preview must not run sessions")
+
+    def forbidden_lifecycle(**_kwargs: object) -> object:
+        calls.append("paper_lifecycle")
+        raise AssertionError("command text preview must not call paper lifecycle")
+
+    def forbidden_artifact_write(_path: str, _payload: object) -> None:
+        calls.append("artifact_write")
+        raise AssertionError("malformed command text must fail before artifact write")
+
+    monkeypatch.setattr(cli, "RiseXObservationAdapter", ForbiddenRiseXAdapter)
+    monkeypatch.setattr(cli, "HyperliquidObservationAdapter", ForbiddenHyperliquidAdapter)
+    monkeypatch.setattr(cli, "InMemoryLedger", ForbiddenLedger)
+    monkeypatch.setattr(cli, "SQLiteLedger", ForbiddenLedger)
+    monkeypatch.setattr(cli, "run_real_data_research_route_with_snapshot", forbidden_runner)
+    monkeypatch.setattr(cli, "run_paper_lifecycle", forbidden_lifecycle)
+    monkeypatch.setattr(cli, "_write_json_artifact", forbidden_artifact_write)
+
+    display_payload_path = tmp_path / "display-payload.json"
+    preview_path = tmp_path / "display-command-text-preview.json"
+
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main(
+            _build_paper_session_display_command_text_preview_args(
+                tmp_path,
+                command_text,
+                display_payload_json_path=display_payload_path,
+                preview_json_output_path=preview_path,
+            )
+        )
+
+    assert exc_info.value.code == 2
+    assert calls == []
+    assert not display_payload_path.exists()
+    assert not preview_path.exists()
+    captured = capsys.readouterr()
+    assert captured.out == ""
+
+
+def test_build_paper_session_display_command_text_preview_rejects_payload_parser_failure_before_artifact(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path,
+) -> None:
+    calls: list[str] = []
+
+    def failing_display_payload_validator(_payload_text: str) -> str:
+        calls.append("display_payload_validator")
+        raise cli.argparse.ArgumentTypeError("display payload parser failed")
+
+    def forbidden_artifact_write(_path: str, _payload: object) -> None:
+        calls.append("artifact_write")
+        raise AssertionError("parser failure must fail before artifact write")
+
+    monkeypatch.setattr(
+        cli,
+        "_paper_session_report_path_from_display_command_payload",
+        failing_display_payload_validator,
+    )
+    monkeypatch.setattr(cli, "_write_json_artifact", forbidden_artifact_write)
+
+    report_path = tmp_path / "paper-session-report.json"
+    display_payload_path = tmp_path / "display-payload.json"
+    preview_path = tmp_path / "display-command-text-preview.json"
+    command_text = (
+        "paper-session-report-display --session-report-json-path "
+        f"{shlex.quote(str(report_path))}"
+    )
+
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main(
+            _build_paper_session_display_command_text_preview_args(
+                tmp_path,
+                command_text,
+                display_payload_json_path=display_payload_path,
+                preview_json_output_path=preview_path,
+            )
+        )
+
+    assert exc_info.value.code == 2
+    assert calls == ["display_payload_validator"]
+    assert not display_payload_path.exists()
+    assert not preview_path.exists()
+    captured = capsys.readouterr()
+    assert captured.out == ""
+
+
+@pytest.mark.parametrize(
+    "omitted",
+    (
+        "command_text_path",
+        "display_payload_json_path",
+        "preview_json_output_path",
+    ),
+)
+def test_build_paper_session_display_command_text_preview_requires_explicit_paths(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+    omitted: str,
+) -> None:
+    calls: list[str] = []
+
+    def forbidden_read_text(self, *_args: object, **_kwargs: object) -> str:
+        calls.append(str(self))
+        raise AssertionError("command text must not be read when paths are absent")
+
+    def forbidden_artifact_write(_path: str, _payload: object) -> None:
+        calls.append("artifact_write")
+        raise AssertionError("artifact must not be written when paths are absent")
+
+    monkeypatch.setattr(cli.Path, "read_text", forbidden_read_text)
+    monkeypatch.setattr(cli, "_write_json_artifact", forbidden_artifact_write)
+
+    args = ["build-paper-session-display-command-text-preview"]
+    if omitted != "command_text_path":
+        args.extend(
+            [
+                "--paper-session-display-command-text-path",
+                str(tmp_path / "display-command.txt"),
+            ]
+        )
+    if omitted != "display_payload_json_path":
+        args.extend(["--display-payload-json-path", str(tmp_path / "payload.json")])
+    if omitted != "preview_json_output_path":
+        args.extend(["--preview-json-output-path", str(tmp_path / "preview.json")])
+
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main(args)
+
+    assert exc_info.value.code == 2
+    assert calls == []
+
+
+def test_build_paper_session_display_command_text_preview_rejects_payload_path_collision(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+) -> None:
+    calls: list[str] = []
+
+    def forbidden_read_text(self, *_args: object, **_kwargs: object) -> str:
+        calls.append(str(self))
+        raise AssertionError("command text must not be read when paths collide")
+
+    def forbidden_artifact_write(_path: str, _payload: object) -> None:
+        calls.append("artifact_write")
+        raise AssertionError("artifact must not be written when paths collide")
+
+    monkeypatch.setattr(cli.Path, "read_text", forbidden_read_text)
+    monkeypatch.setattr(cli, "_write_json_artifact", forbidden_artifact_write)
+
+    output_path = tmp_path / "colliding-display-payload-and-preview.json"
+    args = [
+        "build-paper-session-display-command-text-preview",
+        "--paper-session-display-command-text-path",
+        str(tmp_path / "display-command.txt"),
+        "--display-payload-json-path",
+        str(output_path),
+        "--preview-json-output-path",
+        str(output_path),
+    ]
+
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main(args)
+
+    assert exc_info.value.code == 2
+    assert calls == []
+    assert not output_path.exists()
+
+
+def test_build_paper_session_display_command_text_preview_has_no_forbidden_runtime_behavior() -> None:
+    builder_source = (
+        inspect.getsource(cli._run_build_paper_session_display_command_text_preview)
+        + inspect.getsource(cli._paper_session_display_command_text_preview_json)
+    )
+    lowered = builder_source.lower()
+
+    assert "_paper_session_display_command_payload_from_command_text" in builder_source
+    assert "_paper_session_report_path_from_display_command_payload" in builder_source
+    assert "_write_json_artifact" in builder_source
+    assert "shlex.join" in builder_source
+    assert "_run_render_paper_session_report" not in builder_source
+    assert "_run_build_paper_session_display_payload" not in builder_source
+    assert "_paper_session_display_command_preview_json" not in builder_source
+    assert "json.loads" not in builder_source
+    assert "run_real_data_research_route" not in builder_source
+    assert "run_paper_lifecycle" not in builder_source
+    assert "InMemoryLedger" not in builder_source
+    assert "SQLiteLedger" not in builder_source
+    assert "RiseXObservationAdapter" not in builder_source
+    assert "HyperliquidObservationAdapter" not in builder_source
+    assert "apps.live_runner" not in builder_source
+    assert "core.execution" not in builder_source
     assert "reconciliation" not in lowered
     assert "replay" not in lowered
     assert "telegram" not in lowered

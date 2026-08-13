@@ -353,6 +353,35 @@ def _build_parser() -> argparse.ArgumentParser:
         handler=_run_parse_paper_session_display_command_text
     )
 
+    build_paper_session_display_command_text_preview = subparsers.add_parser(
+        "build-paper-session-display-command-text-preview",
+        help=(
+            "Build a local preview artifact for a manual paper session report "
+            "display command text parser command."
+        ),
+    )
+    build_paper_session_display_command_text_preview.add_argument(
+        "--paper-session-display-command-text-path",
+        required=True,
+        type=_non_empty,
+        help="Explicit local display command text fixture path.",
+    )
+    build_paper_session_display_command_text_preview.add_argument(
+        "--display-payload-json-path",
+        required=True,
+        type=_non_empty,
+        help="Intended explicit local JSON display payload fixture path.",
+    )
+    build_paper_session_display_command_text_preview.add_argument(
+        "--preview-json-output-path",
+        required=True,
+        type=_non_empty,
+        help="Explicit local JSON preview/manifest artifact path to write.",
+    )
+    build_paper_session_display_command_text_preview.set_defaults(
+        handler=_run_build_paper_session_display_command_text_preview
+    )
+
     render_paper_session_report = subparsers.add_parser(
         "render-paper-session-report",
         help="Render an already-written local paper session report JSON to stdout.",
@@ -1137,6 +1166,34 @@ def _paper_session_display_command_preview_json(
     }
 
 
+def _paper_session_display_command_text_preview_json(
+    *,
+    command_text_path: str,
+    display_payload_json_path: str,
+    session_report_json_path: str,
+) -> dict[str, object]:
+    command_args = [
+        "python3",
+        "-m",
+        "apps.cli.main",
+        "parse-paper-session-display-command-text",
+        "--paper-session-display-command-text-path",
+        command_text_path,
+        "--display-payload-json-path",
+        display_payload_json_path,
+    ]
+    return {
+        "schema_version": 1,
+        "command_text_fixture_path": command_text_path,
+        "intended_display_payload_json_path": display_payload_json_path,
+        "normalized_session_report_json_path": session_report_json_path,
+        "manual_command": {
+            "argv": command_args,
+            "text": shlex.join(command_args),
+        },
+    }
+
+
 def _paper_report_mapping(value: object, field_name: str) -> Mapping[str, object]:
     if not isinstance(value, Mapping):
         raise argparse.ArgumentTypeError(f"{field_name} must be an object")
@@ -1610,6 +1667,45 @@ def _run_parse_paper_session_display_command_text(
     print("Paper Session Display Command Text Parser")
     print(f"command_text_path={args.paper_session_display_command_text_path}")
     print(f"display_payload_json_path={args.display_payload_json_path}")
+    print(f"session_report_json_path={session_report_json_path}")
+
+
+def _run_build_paper_session_display_command_text_preview(
+    args: argparse.Namespace,
+    parser: argparse.ArgumentParser,
+) -> None:
+    if args.display_payload_json_path == args.preview_json_output_path:
+        parser.error("display-payload-json-path and preview-json-output-path must differ")
+
+    try:
+        command_text = Path(
+            args.paper_session_display_command_text_path
+        ).read_text(encoding="utf-8")
+        payload = _paper_session_display_command_payload_from_command_text(
+            command_text
+        )
+        session_report_json_path = _paper_session_report_path_from_display_command_payload(
+            json.dumps(payload, sort_keys=True)
+        )
+    except OSError as exc:
+        parser.error(f"paper-session-display-command-text-path could not be read: {exc}")
+    except argparse.ArgumentTypeError as exc:
+        parser.error(str(exc))
+
+    if payload["session_report_json_path"] != session_report_json_path:
+        parser.error("display payload session_report_json_path did not round-trip")
+
+    preview = _paper_session_display_command_text_preview_json(
+        command_text_path=args.paper_session_display_command_text_path,
+        display_payload_json_path=args.display_payload_json_path,
+        session_report_json_path=session_report_json_path,
+    )
+    _write_json_artifact(args.preview_json_output_path, preview)
+
+    print("Paper Session Display Command Text Preview")
+    print(f"command_text_path={args.paper_session_display_command_text_path}")
+    print(f"intended_display_payload_json_path={args.display_payload_json_path}")
+    print(f"preview_json_path={args.preview_json_output_path}")
     print(f"session_report_json_path={session_report_json_path}")
 
 
