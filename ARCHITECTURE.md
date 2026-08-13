@@ -112,6 +112,7 @@ Any non-terminal Capture may transition to `FAILED`. Capture states with possibl
 - Offline route-candidate orchestration happens only in `core/pipeline/offline_scan.py`.
 - Broad Scan and Focused Refresh orchestration happens only in `core/pipeline/scan_refresh.py`.
 - One-route real-data research orchestration happens only in `apps/research_runner/real_data.py`.
+- Manual one-route real-data CLI input validation and output formatting happen only in `apps/cli/main.py`.
 - Non-sending execution planning happens only in `core/execution/planning.py`.
 - Guarded live runner readiness without orders happens only in `apps/live_runner/guarded.py`.
 - Explicit approval-gated order placement boundaries happen only in `core/execution/orders.py`.
@@ -310,6 +311,16 @@ RX-030 adds one read-only monitoring dashboard surface:
 4. Missing, malformed, stale, cross-capture, cross-route, cross-settlement, unverified, unreconciled, non-ready, false approval, stale approval, or boundary-blocked evidence renders as missing or blocked display state.
 5. Missing economics remain missing display values rather than zero.
 6. It does not call `evaluate_route()`, assemble snapshots, calculate EV/profitability, calculate VWAP/liquidity, replay funding or ledger history, write ledger events, call adapters, check live-gate bundles, plan execution, run guarded live readiness, call an approval boundary, use credentials, perform network I/O, construct sendable requests, place orders, mutate route eligibility, enable live trading, add route statuses, add reject reasons, or create a second decision, snapshot, verifier, ledger-write, replay, economics, live-runner, execution-planning, or order path.
+
+RX-038 adds one manual real-data CLI entry point:
+
+1. `apps/cli/main.py` owns the `real-data-route` command.
+2. The command accepts exactly one explicit RiseX plus Hyperliquid route using existing `RouteCandidate` fields: route/capture identity, venues, symbols, opposing entry sides, and target notional.
+3. The command rejects missing or malformed identity, venue, symbol, side, mode, target notional, or non-timezone-aware assembly timestamp inputs before adapter construction.
+4. After validation, it instantiates the existing read-only public RiseX and Hyperliquid observation adapters and calls `run_real_data_research_route()`.
+5. Route snapshot creation still flows through the RX-025 runner and RX-024 adapter handoff, and route decisions still flow through `evaluate_route()` only through the runner.
+6. Output is deterministic and preserves missing `DecisionResult` economics as `None` rather than zero.
+7. It does not discover routes, rank routes, poll, loop, write ledger events, start paper lifecycle, verify funding settlement, reconcile ledgers, plan execution, run guarded live readiness, call approval-boundary execution, use private/account/auth endpoints, use credentials, read account state, construct sendable requests or order payloads, place orders, enable live trading, add route statuses, add reject reasons, or create a second decision, snapshot, verifier, ledger-write, replay, economics, execution-planning, or live execution path.
 
 RX-005 adds deterministic offline orchestration over multiple fake route candidates:
 

@@ -2,25 +2,25 @@
 
 ## Task ID
 
-RX-038 - One-Route Real Data CLI Toward Live Readiness
+RX-039 - Public One-Route Economics Source Completion
 
 ## Objective
 
-After this Product Owner roadmap direction gate is reviewer-accepted, add a manual CLI entry point for one explicitly supplied RiseX plus Hyperliquid route. The CLI must use the existing read-only public RiseX and Hyperliquid adapters, the existing one-route real-data snapshot handoff, and the existing one-route real-data research runner/evaluate path. Keep the work read-only, public-data-only, one-route-at-a-time, fail-closed, and non-trading.
+After the manual one-route real-data CLI task is reviewer-accepted, add the narrowest source-aware public-data-only economics completion needed for one explicit RiseX plus Hyperliquid research route. The work should let the existing real-data research path use public, explicit, route-notional-aware economics values when they are actually available, while preserving unknown or missing public inputs as unknown and fail-closed. Keep the work read-only, public-data-only, one-route-at-a-time, deterministic in tests, and non-trading.
 
 ## Starting baseline
 
-Start from reviewer-accepted `main` after this Product Owner roadmap direction gate is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
+Start from reviewer-accepted `main` after the manual one-route real-data CLI task is finalized. Before edits, verify exact local `HEAD`, `main`, and `origin/main` values from git state instead of trusting chat memory.
 
 ## Branch
 
-Create and work on `task/rx-038-one-route-real-data-cli-toward-live-readiness`. Do not implement on `main`.
+Create and work on `task/rx-039-public-one-route-economics-source-completion`. Do not implement on `main`.
 
 ## Before changing files
 
 Run the repository preflight from `AGENTS.md`. Stop without edits if the worktree is dirty, remote is wrong, branch is wrong, `origin/HEAD` is not `origin/main`, `HEAD` does not match the accepted starting baseline, or unrelated branch work would be mixed into this task.
 
-If Control Tower selected this task autonomously, verify from the source-of-truth repository docs that the task is non-dangerous: one manual read-only public-data CLI entry point for one explicit route, with no live trading, private/account endpoints, credentials, orders, sendable exchange request construction, automation, or financially dangerous action. Stop before edits unless explicit user approval exists for any hard-stop category.
+If Control Tower selected this task autonomously, verify from the source-of-truth repository docs that the task is non-dangerous: one source-aware public-data-only economics completion step for one explicit route, with no live trading, private/account endpoints, credentials, orders, sendable exchange request construction, automation, or financially dangerous action. Stop before edits unless explicit user approval exists for any hard-stop category.
 
 Read:
 
@@ -37,20 +37,16 @@ Read:
 
 ## Allowed scope
 
-- Add one manual CLI entry point for one explicitly supplied route.
-- Use the existing `RouteCandidate` contract for route identity, venues, symbols, entry sides, and target notional.
-- Use the existing read-only public `RiseXObservationAdapter`.
-- Use the existing read-only public `HyperliquidObservationAdapter`.
-- Use the existing `assemble_route_snapshot_from_adapters()` handoff only through the existing real-data research runner.
-- Use the existing `run_real_data_research_route()` path and existing `evaluate_route(route, snapshot, mode)` decision path.
-- Accept exactly one route at a time from explicit CLI inputs, including explicit route identity, symbols, opposing entry sides, target notional, evaluation mode, and timezone-aware assembly timestamp.
-- Fail closed on missing, unknown, malformed, non-finite, zero, negative, or contradictory CLI inputs.
-- Preserve unknown values as unknown; unknown values must never silently become zero or default economics.
-- Print or return the resulting one-route decision in a deterministic, inspectable CLI format.
-- `apps/cli/main.py`
-- Focused CLI tests under `tests/`
-- Invariant tests only if needed to lock the CLI boundary.
-- Governance docs needed to record the completed handoff and next task.
+- Add or adjust the smallest source-aware public-data-only economics completion for one explicitly supplied RiseX plus Hyperliquid route.
+- Use the existing `RouteCandidate`, `VenueObservation`, `EstimatedValue`, `FeeModel`, `FundingSnapshot`, `DecisionResult`, and `EvaluationMode` contracts unless a tiny contract extension is strictly necessary and immediately covered by focused tests.
+- Use existing read-only public RiseX and Hyperliquid adapter data only.
+- Preserve public funding-rate or fee-source metadata from existing public responses only when needed for source-aware completion.
+- Convert public economics inputs to USD cash values only when the source is explicit, public, route-notional-aware, and mathematically grounded by the existing one-route target notional.
+- Keep unknown, missing, malformed, ungrounded, or account-tier-dependent economics unknown; they must not become zero or default economics.
+- Keep the existing one-route real-data research runner and existing `evaluate_route(route, snapshot, mode)` decision path.
+- Keep the manual real-data CLI one-route-at-a-time and deterministic in output format.
+- Add focused deterministic tests with monkeypatched or injected public data; no network-dependent tests.
+- Update governance/source-of-truth docs needed to record the completed handoff and next task.
 
 ## Forbidden scope
 
@@ -85,11 +81,9 @@ Read:
 - No funding settlement verification.
 - No ledger reconciliation.
 - No route discovery, ranking, acceptance, eligibility mutation, or Capture state transitions.
-- No changes to venue adapter behavior beyond instantiating the existing read-only public adapters from the manual CLI.
-- No new adapter endpoints, private/account/auth endpoints, or network-dependent tests.
-- No route evaluation logic changes.
-- No snapshot assembly logic changes.
-- No profitability, EV, fee, funding, VWAP/liquidity, basis, spread, price-impact, slippage, max-level, hidden-buffer, or safety-margin changes.
+- No private/account/auth adapter endpoints, and no network-dependent tests.
+- No route evaluation logic changes except the minimum required to consume already-source-aware completed economics if existing contracts require it.
+- No profitability, EV, fee, funding, VWAP/liquidity, basis, spread, price-impact, slippage, max-level, hidden-buffer, or safety-margin rule changes.
 - No new route statuses.
 - No new reject reasons.
 - No canary architecture.
@@ -100,27 +94,25 @@ Read:
 ## Implementation requirements
 
 - Treat this as the next ordinary non-dangerous product/runtime step toward live readiness, not as live trading.
-- Implement only a manual CLI entry point for one explicit route supplied by the caller.
-- Keep the CLI read-only public data only.
-- Instantiate or use only the existing public read-only RiseX and Hyperliquid adapters.
-- Delegate real-data snapshot creation and route evaluation to the existing one-route real-data research runner path.
-- Require explicit CLI input for route identity, RiseX symbol, Hyperliquid symbol, opposing entry sides, target notional, evaluation mode, and timezone-aware assembly timestamp.
-- Parse target notional as `Decimal` and fail closed on missing, non-numeric, non-finite, zero, or negative values.
-- Reject malformed or non-timezone-aware timestamps before any adapter call.
-- Reject missing or invalid mode, side, identity, venue, or symbol inputs before any adapter call.
-- Do not silently convert unknown or malformed values to zero.
-- Adapter or snapshot handoff failures must continue to fail closed through the existing real-data research runner behavior.
+- Complete only the public-data economics sources needed by one explicit RiseX plus Hyperliquid real-data research route.
+- Keep the work source-aware: every completed economics value must carry an explicit non-`UNKNOWN` source that truthfully reflects the public input used.
+- Do not convert missing, unknown, malformed, account-specific, or ungrounded economics to zero.
+- Do not use credentials, private/account endpoints, account balances/state, or account-tier assumptions.
+- Keep adapters read-only and public-data-only; adapters may fetch and normalize public data only and must not evaluate routes, calculate EV, send orders, write ledgers, or assemble cross-venue snapshots.
+- Keep route decisions flowing through the existing real-data research runner and the existing `evaluate_route(route, snapshot, mode)` path.
 - Keep one route per invocation. Do not add multiple-route inputs, route scanning, discovery, ranking, watchlists, polling, loops, or refresh behavior.
-- Keep tests deterministic with injected or monkeypatched adapters; do not require live network availability.
+- Preserve existing no-argument fake CLI behavior.
+- Preserve manual one-route real-data CLI fail-closed input validation.
+- Keep tests deterministic with injected or monkeypatched public responses; do not require live network availability.
 - Preserve RX-033 Control Tower autonomy for ordinary non-dangerous tasks grounded in source-of-truth repository docs.
 - Preserve one RX task equals one clean executor task and one task branch.
 - Preserve `NEXT_TASK.md` as exactly one next task and require the handoff validator to pass.
 - Preserve reviewer acceptance as the only way to mark a task accepted.
 - Preserve Parent ownership of branch discipline, final diff review, validation, commit, push, and final report.
-- Do not add new functions, classes, dataclasses, enums, modules, wrappers, config values, trace fields, future hooks, or contracts unless strictly necessary for the CLI entry point and immediately covered by focused tests.
-- Worker policy: one supervised worker required because this task touches the CLI boundary for real public market data and the route evaluation handoff toward live readiness.
+- Do not add new functions, classes, dataclasses, enums, modules, wrappers, config values, trace fields, future hooks, or contracts unless strictly necessary for this one-route source-aware economics completion and immediately covered by focused tests.
+- Worker policy: one supervised worker required because this task touches public market-data normalization and source-aware economics toward live readiness.
 - The worker is required for design support before implementation edits and may continue only if Parent explicitly asks for implementation support.
-- At DESIGN CHECKPOINT, the worker must answer whether the planned CLI is one-route-only, read-only public-data-only, uses existing adapters/handoff/runner/evaluate path, excludes all hard-stop categories, fails closed on malformed input, preserves unknown values as unknown, avoids new owner paths, remains one-task/one-branch compliant, preserves reviewer acceptance, and preserves Parent ownership.
+- At DESIGN CHECKPOINT, the worker must answer whether the planned economics completion is one-route-only, read-only public-data-only, source-aware, uses existing route/observation/runner/evaluate contracts, excludes all hard-stop categories, preserves unknown values as unknown, avoids new owner paths and second economics/decision/snapshot paths, remains one-task/one-branch compliant, preserves reviewer acceptance, and preserves Parent ownership.
 - The worker must stop at DESIGN CHECKPOINT before implementation edits and wait for Parent approval or steering before continuing.
 - The worker must also stop at CODE CHECKPOINT, TEST CHECKPOINT, and VALIDATION CHECKPOINT if it continues beyond design support.
 - Parent owns steering, final diff review, validation, commit, push, and final report.
@@ -129,18 +121,21 @@ Read:
 
 ## Required files
 
+- Likely `core/venues/risex.py`
+- Likely `core/venues/hyperliquid.py`
+- Likely `apps/research_runner/real_data.py`
 - Likely `apps/cli/main.py`
-- Focused CLI tests under `tests/`
+- Focused tests under `tests/`
 - Likely `STATUS.md`
 - Likely `IMPLEMENTATION_PLAN.md`
 - Likely `DECISIONS.md`
 - Likely `NEXT_TASK.md`
-- Other governance docs only if strictly necessary.
+- Other source-of-truth docs only if strictly necessary.
 
 ## Required tests
 
 - `python3 scripts/validate_next_task.py`
-- Focused CLI tests added or changed by this task
+- Focused tests added or changed by this task
 - `python3 -m pytest tests/invariant`
 - `python3 -m pytest`
 - `python3 -m compileall apps core storage tests scripts`
