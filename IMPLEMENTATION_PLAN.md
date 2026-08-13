@@ -31,6 +31,7 @@ The original product direction remains hedged funding capture on RiseX with hedg
 - RX-029 added an explicit approval-gated order placement boundary downstream of guarded no-order readiness and non-sending execution planning.
 - RX-030 added a read-only monitoring dashboard renderer for already-derived deterministic fixture evidence without adding decisions, polling, network I/O, or orders.
 - RX-031 recorded the review-directed no-additional-fix disposition after RX-030 and prepared a Product Owner roadmap authorization gate without changing product behavior.
+- RX-032 recorded the narrowed Product Owner authorization for exactly one next governance/docs task without changing product behavior or removing hard approval gates.
 - RX-Q001 and RX-Q002 added repository workflow, handoff validation, and supervised-worker governance.
 
 ## Accepted Offline Safety-Hardening Detour
@@ -45,7 +46,7 @@ RX-030 — Read-Only Monitoring Dashboard Without Decisions Or Orders is reviewe
 
 ## Current Product Branch Progress
 
-No product branch is active after RX-031 finalization. RX-031 was metadata-only: local repo/git evidence and the GitHub connector did not expose additional actionable reviewer feedback after RX-030 finalization, so no dashboard or product code changed.
+No product branch is active after RX-032 finalization. RX-032 was metadata-only: it recorded the narrowed Product Owner authorization for exactly one next governance/docs task and did not change product behavior or remove hard approval gates.
 
 ## Current Product Handoff
 

@@ -1,9 +1,11 @@
 # Status
 
-- Current branch: `task/rx-032-product-owner-roadmap-authorization-gate`.
-- Current task: RX-032 — Product Owner Roadmap Authorization Gate.
+- Current branch: `main`.
+- Current task: RX-032 — Product Owner Roadmap Authorization Gate finalization.
 - RX-032 starting baseline: `1eee2c26e40030b1ba7a3935d4eb6483acfd9a81`
-- RX-032 review state: implementation complete on task branch; pending reviewer acceptance.
+- RX-032 review state: reviewer-accepted and finalized on `main`.
+- Accepted RX-032 implementation HEAD: `9ee0e56a0ecb6be7c95182047353774db11a3155`
+- RX-032 completion is recorded without a final `main` HEAD in this file to avoid self-referential handoff metadata; use git history for the exact finalization commit.
 - RX-032 disposition: Product Owner authorization, as narrowed by Control Tower, is recorded as authorization to prepare exactly one next governance/docs task: RX-033 Control Tower Autonomous Task Selection Governance. This does not remove explicit approval gates for live trading, order placement, sendable exchange requests, private endpoints, credentials, account balances/state, destructive reset, unsafe scope, or financially dangerous actions.
 - RX-031 starting baseline: `917da9e241862f9c744e78fbc795f732f0f92f5f`
 - RX-031 review state: reviewer-accepted and finalized on `main`.
@@ -81,7 +83,7 @@
 - Accepted baseline branch: `main`
 - Current accepted `main` governance task: RX-Q004.
 - Current accepted `main` product task: RX-030.
-- Current RX task state: RX-032 is implementation-complete on its task branch and pending reviewer acceptance; latest accepted product task remains RX-030 and latest accepted metadata follow-up remains RX-031.
+- Current RX task state: RX-032 is reviewer-accepted and finalized on `main`; latest accepted product task remains RX-030 and latest accepted metadata/governance follow-up is RX-032.
 
 RX-Q004 consolidated the roadmap and rulebook only. It preserved RX-018 as the latest accepted product baseline, classified RX-008 through RX-016 as accepted fail-closed offline safety hardening rather than a product strategy change, and prepared RX-020 as the immediate next implementation task before this branch.
 RX-019 is the completed reviewer-directed repository handoff metadata follow-up on `main`.
@@ -105,7 +107,7 @@ RX-013 remains the previous accepted product baseline before RX-014.
 RX-012 remains the previous accepted product baseline before RX-013.
 RX-Q001 remains the previous accepted governance baseline before RX-Q002.
 RX-011 remains the previous accepted product implementation baseline before RX-012.
-`NEXT_TASK.md` is prepared for RX-033 after RX-032 implementation on this task branch.
+`NEXT_TASK.md` is prepared for RX-033 after RX-032 finalization on `main`.
 RX-031 found no additional explicit actionable reviewer feedback in local repo/git evidence or GitHub connector context after RX-030 finalization. RX-031 is accepted metadata-only follow-up work and does not change dashboard or product code.
 RX-030 remains the latest accepted product task and adds one read-only dashboard renderer for already-derived deterministic fixture evidence only. It does not add route discovery, polling, adapters, route evaluation, snapshot assembly, funding verification, ledger reconciliation, live-gate bundle checking, execution planning, guarded live execution, approval-boundary execution, ledger writes, network I/O, or orders.
 
@@ -220,7 +222,7 @@ RX-030 remains the latest accepted product task and adds one read-only dashboard
 ## Current roadmap status
 
 - RX-008 through RX-016 are accepted fail-closed offline safety-hardening detour tasks.
-- RX-032 records Product Owner authorization, as narrowed by Control Tower, for exactly one next governance/docs task that may change workflow autonomy for future non-dangerous RX tasks.
+- RX-032 is reviewer-accepted and finalized on `main`; it records Product Owner authorization, as narrowed by Control Tower, for exactly one next governance/docs task that may change workflow autonomy for future non-dangerous RX tasks.
 - RX-022 is reviewer-accepted and finalized on `main`.
 - RX-023 is reviewer-accepted and finalized on `main`.
 - RX-024 is reviewer-accepted and finalized on `main`.
@@ -231,6 +233,7 @@ RX-030 remains the latest accepted product task and adds one read-only dashboard
 - RX-029 is reviewer-accepted and finalized on `main`.
 - RX-030 is reviewer-accepted and finalized on `main`.
 - RX-031 is reviewer-accepted and finalized on `main`.
+- RX-032 is reviewer-accepted and finalized on `main`.
 - The next recommended task is RX-033 Control Tower Autonomous Task Selection Governance.
 - The RX-032 authorization does not permit live trading, adapters, private endpoints, credentials, account-state access, sendable exchange requests, order placement, destructive resets, unsafe scope, or financially dangerous actions without explicit user approval.
 - A future roadmap stage is not permission to implement live trading, adapters, network calls, execution planning, monitoring, dashboards, or orders before that exact task is authorized and accepted.
@@ -245,6 +248,14 @@ RX-030 remains the latest accepted product task and adds one read-only dashboard
 - `git diff --check`: exit 0
 - `git diff --cached --check`: exit 0
 - `git status --short`: `M DECISIONS.md`; `M IMPLEMENTATION_PLAN.md`; `M NEXT_TASK.md`; `M STATUS.md`
+
+## Tests last reported for RX-032 finalization on main
+
+- `python3 scripts/validate_next_task.py`: `NEXT_TASK.md: OK`
+- `python3 -m pytest tests/invariant`: `37 passed in 0.26s`
+- `python3 -m pytest`: `560 passed in 0.82s`
+- `python3 -m compileall apps core storage tests scripts`: exit 0
+- `python3 -m apps.cli.main`: exit 0; Broad Scan BTC `PAPER_ELIGIBLE`, ETH `REJECTED`; Focused Refresh BTC `PAPER_ELIGIBLE`, ETH `REJECTED`
 
 ## Tests last reported for RX-031 finalization on main
 
